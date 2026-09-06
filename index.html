@@ -1379,33 +1379,58 @@ select.exec-close{ background:rgba(76,175,109,0.15); color:var(--green); }
 #login-overlay{
   position:fixed; inset:0; top:0; right:0; bottom:0; left:0; z-index:200;
   display:flex; align-items:center; justify-content:center;
+  overflow:hidden;
   background:
-    radial-gradient(ellipse at 30% 20%, rgba(255,199,44,0.1), transparent 42%),
-    radial-gradient(ellipse at 70% 80%, rgba(74,144,217,0.06), transparent 40%),
-    radial-gradient(ellipse at 50% 50%, rgba(255,199,44,0.03), transparent 60%),
-    var(--bg);
+    radial-gradient(ellipse 130% 110% at 50% 42%, transparent 42%, rgba(3,4,6,0.62) 100%),
+    radial-gradient(ellipse 55% 48% at 16% 10%, rgba(255,199,44,0.13), transparent 58%),
+    radial-gradient(ellipse 48% 42% at 88% 6%, rgba(74,144,217,0.10), transparent 55%),
+    radial-gradient(ellipse 46% 40% at 82% 96%, rgba(255,199,44,0.07), transparent 58%),
+    radial-gradient(ellipse 40% 36% at 4% 92%, rgba(74,144,217,0.06), transparent 58%),
+    linear-gradient(150deg, #16191e 0%, #0e1014 42%, #08090c 100%);
   padding:20px;
+}
+#login-overlay::before{
+  content:''; position:absolute; inset:0; z-index:0; pointer-events:none;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.028) 1px, transparent 1px);
+  background-size:46px 46px;
+  -webkit-mask-image:radial-gradient(ellipse 78% 68% at 50% 40%, #000 0%, transparent 78%);
+  mask-image:radial-gradient(ellipse 78% 68% at 50% 40%, #000 0%, transparent 78%);
+}
+#login-overlay::after{
+  content:''; position:absolute; inset:0; z-index:0; pointer-events:none;
+  background:radial-gradient(ellipse 58% 48% at 50% 34%, rgba(255,199,44,0.12), transparent 62%);
+  animation:loginGlowPulse 7s ease-in-out infinite;
+}
+@keyframes loginGlowPulse{
+  0%,100%{ opacity:0.5; }
+  50%{ opacity:1; }
 }
 #login-overlay.hidden{ display:none; }
 .login-card{
-  width:100%; max-width:420px;
+  width:100%; max-width:320px;
   background:
-    radial-gradient(ellipse at top center, rgba(255,199,44,0.08), transparent 55%),
-    linear-gradient(165deg, #1e2229 0%, #16191f 100%);
-  border:1px solid rgba(255,199,44,0.22); border-radius:14px;
-  padding:38px 32px 34px; box-shadow:0 20px 56px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04), inset 0 1px 0 rgba(255,255,255,0.05);
-  position:relative; overflow:hidden;
+    radial-gradient(ellipse at top center, rgba(255,199,44,0.10), transparent 58%),
+    linear-gradient(165deg, rgba(34,38,46,0.32) 0%, rgba(20,23,29,0.34) 100%);
+  border:1px solid rgba(255,199,44,0.35); border-radius:14px;
+  padding:22px 18px 20px;
+  box-shadow:0 28px 70px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05), 0 0 46px rgba(255,199,44,0.07), inset 0 1px 0 rgba(255,255,255,0.06);
+  position:relative; z-index:1; overflow:hidden;
+  -webkit-backdrop-filter: blur(14px) saturate(135%);
+  backdrop-filter: blur(14px) saturate(135%);
+  font-size:12.5px;
 }
 .login-card::before{
   content:''; position:absolute; top:0; left:0; right:0; height:3px;
   background:linear-gradient(90deg, transparent, var(--yellow), transparent);
   opacity:0.85;
 }
-.login-card .field{ margin-bottom:16px; }
+.login-card .field{ margin-bottom:10px; }
 .login-card .login-brand{
   display:flex; flex-direction:column; align-items:center;
-  text-align:center; margin-bottom:28px; position:relative;
-  padding-bottom:18px;
+  text-align:center; margin-bottom:16px; position:relative;
+  padding-bottom:12px;
 }
 .login-card .login-brand::after{
   content:''; position:absolute; left:12%; right:12%; bottom:0; height:2px;
@@ -1413,31 +1438,31 @@ select.exec-close{ background:rgba(76,175,109,0.15); color:var(--green); }
   opacity:0.6; border-radius:2px;
 }
 .login-card .login-brand .logo-badge{
-  background:#fff; border-radius:12px; padding:12px 18px; margin-bottom:16px;
+  background:#fff; border-radius:9px; padding:7px 12px; margin-bottom:10px;
   display:inline-flex; align-items:center; justify-content:center;
   box-shadow:0 8px 28px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.12), 0 0 32px rgba(255,199,44,0.18);
 }
-.login-card .login-brand .logo-badge img{ display:block; height:42px; width:auto; }
+.login-card .login-brand .logo-badge img{ display:block; height:28px; width:auto; }
 .login-card .login-brand .mark{
-  justify-content:center; font-size:22px; text-align:center;
+  justify-content:center; font-size:15px; text-align:center;
   line-height:1.2; color:var(--yellow); font-weight:700;
-  font-family:'Oswald',sans-serif; letter-spacing:1.4px; text-transform:uppercase;
+  font-family:'Oswald',sans-serif; letter-spacing:1px; text-transform:uppercase;
   text-shadow:0 0 28px rgba(255,199,44,0.5), 0 2px 0 rgba(0,0,0,0.35);
 }
 .login-card .login-brand .sub{
-  margin-top:10px; margin-bottom:0; text-align:center;
-  color:#C5CDD8; font-weight:500; letter-spacing:0.8px;
+  margin-top:6px; margin-bottom:0; text-align:center;
+  color:#C5CDD8; font-weight:500; letter-spacing:0.6px;
   text-transform:uppercase; font-family:'JetBrains Mono',monospace;
-  font-size:9.5px; opacity:0.95; line-height:1.5; max-width:320px;
+  font-size:7.5px; opacity:0.95; line-height:1.4; max-width:250px;
 }
 .login-card .login-brand .sub .sub-control{
-  color:var(--yellow); font-weight:700; letter-spacing:1.2px;
+  color:var(--yellow); font-weight:700; letter-spacing:1px;
   text-shadow:0 0 14px rgba(255,199,44,0.45);
 }
 .login-card .login-brand .sub-badge{
-  display:inline-block; margin-top:12px; padding:4px 14px; border-radius:20px;
-  font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700;
-  letter-spacing:1.4px; text-transform:uppercase;
+  display:inline-block; margin-top:8px; padding:3px 10px; border-radius:16px;
+  font-family:'JetBrains Mono',monospace; font-size:7.5px; font-weight:700;
+  letter-spacing:1px; text-transform:uppercase;
   color:#1b1500; background:linear-gradient(135deg, #FFC72C 0%, #e8b020 100%);
   box-shadow:0 3px 14px rgba(255,199,44,0.4), inset 0 1px 0 rgba(255,255,255,0.4);
 }
@@ -1453,30 +1478,34 @@ select.exec-close{ background:rgba(76,175,109,0.15); color:var(--green); }
 /* ===== LOGIN / REGISTER — INPUT DENGAN IKON EMAS ===== */
 .login-input-group{
   position:relative; display:flex; align-items:center;
-  background:var(--panel-2); border:1px solid var(--line); border-radius:var(--radius);
+  background:rgba(37,41,50,0.45); border:1px solid rgba(255,255,255,0.12); border-radius:var(--radius);
   transition:border-color .12s, box-shadow .12s;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
 }
+.login-card .btn{ padding:7px 14px; font-size:11px; width:100%; justify-content:center; }
+.login-card label{ font-size:10.5px; }
 .login-input-group:focus-within{ border-color:var(--yellow); box-shadow:0 0 0 3px rgba(255,199,44,0.1); }
 .login-input-group .login-input-icon{
   flex-shrink:0; display:flex; align-items:center; justify-content:center;
-  width:38px; color:var(--yellow-dim); transition:color .12s;
+  width:30px; color:var(--yellow-dim); transition:color .12s;
 }
 .login-input-group:focus-within .login-input-icon{ color:var(--yellow); }
-.login-input-group .login-input-icon svg{ width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.login-input-group .login-input-icon svg{ width:13px; height:13px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 .login-input-group input{
-  border:none; background:transparent; padding:9px 10px 9px 0; flex:1; min-width:0;
+  border:none; background:transparent; padding:6px 8px 6px 0; flex:1; min-width:0; font-size:12.5px;
 }
 .login-input-group input:focus{ border:none; }
 .login-input-group .login-toggle-pw{
   flex-shrink:0; display:flex; align-items:center; justify-content:center;
-  width:38px; height:100%; color:var(--text-faint); cursor:pointer; background:none; border:none; padding:0;
+  width:30px; height:100%; color:var(--text-faint); cursor:pointer; background:none; border:none; padding:0;
 }
 .login-input-group .login-toggle-pw:hover{ color:var(--yellow); }
 .login-input-group .login-toggle-pw.active{ color:var(--yellow); }
-.login-input-group .login-toggle-pw svg{ width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.login-input-group .login-toggle-pw svg{ width:13px; height:13px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 
 .login-switch{
-  text-align:center; margin-top:16px; font-size:12px; color:var(--text-dim);
+  text-align:center; margin-top:12px; font-size:11px; color:var(--text-dim);
 }
 .login-switch a{ color:var(--yellow); font-weight:600; text-decoration:none; cursor:pointer; }
 .login-switch a:hover{ text-decoration:underline; }
@@ -1485,7 +1514,7 @@ select.exec-close{ background:rgba(76,175,109,0.15); color:var(--green); }
 #recover-panel{ display:none; }
 #recover-panel.active{ display:block; }
 .login-forgot{
-  text-align:center; margin-top:12px; font-size:12px;
+  text-align:center; margin-top:10px; font-size:11px;
 }
 .login-forgot a{
   color:#A8B5C4; text-decoration:none; cursor:pointer;
@@ -19188,6 +19217,7 @@ function buildAutoRcaFromMatches(compKey, unitCode, matches){
     unitCode: String(unitCode|| (latest&&latest.unitCode) || '').toUpperCase(),
     component: compKey,
     codeBD,
+    codes: Array.from(new Set(codes)),
     problem,
     why1, why2, why3, why4, why5,
     category,
@@ -19340,9 +19370,54 @@ function fillRcaCompFilter(){
     sorted.map(c=>'<option value="'+c+'">'+c+'</option>').join('');
   if(prev && sorted.indexOf(prev)>=0) sel.value = prev;
 }
+/** Sinkronkan ulang kolom "Komponen" pada RCA otomatis dengan kategori komponen TERKINI
+ *  dari record Daily Maintenance (bdCategory) sumbernya. Diperlukan karena RCA otomatis
+ *  hanya menyalin komponen sekali saat pertama kali dibuat (klik baris Pareto / Generate
+ *  Otomatis) — kalau Supervisor/Mekanik kemudian mengedit kategori komponen record
+ *  Breakdown tsb di Daily Maintenance (mis. Hydraulic -> Attachment), baris RCA yang sudah
+ *  terlanjur dibuat sebelumnya tidak ikut berubah tanpa fungsi ini. RCA yang komponennya
+ *  sudah diedit manual oleh user (bukan autoGenerated) tidak disentuh. */
+function syncRcaComponentsWithBreakdown(){
+  try{
+    if(!Array.isArray(rcaRecords) || !rcaRecords.length) return false;
+    const source = (typeof cbmBreakdownRecords==='function') ? cbmBreakdownRecords() : [];
+    if(!source.length) return false;
+    // Peta codeBD -> komponen (high-level) TERKINI berdasarkan data Daily Maintenance saat ini
+    const codeToComp = {};
+    source.forEach(r=>{
+      const code = String(r.codeBD||'').trim();
+      if(!code) return;
+      const gk = cbmGroupKeyOfComp(r._cbmComp);
+      if(gk) codeToComp[code] = gk;
+    });
+    let changed = false;
+    rcaRecords.forEach(r=>{
+      if(!r.autoGenerated) return; // jangan timpa RCA yang sudah diedit manual komponennya
+      const codes = (Array.isArray(r.codes) && r.codes.length) ? r.codes : (r.codeBD ? [r.codeBD] : []);
+      if(!codes.length) return;
+      // Hitung komponen mayoritas terkini dari kode BD yang jadi sumber RCA ini
+      const tally = {};
+      codes.forEach(c=>{
+        const gk = codeToComp[String(c).trim()];
+        if(gk) tally[gk] = (tally[gk]||0)+1;
+      });
+      const keys = Object.keys(tally);
+      if(!keys.length) return; // sumbernya sudah tidak ada di Breakdown lagi — biarkan apa adanya
+      const majority = keys.sort((a,b)=> tally[b]-tally[a])[0];
+      if(majority && majority !== r.component){
+        r.component = majority;
+        r.updatedAt = new Date().toISOString();
+        changed = true;
+      }
+    });
+    return changed;
+  }catch(e){ console.warn('syncRcaComponentsWithBreakdown error', e); return false; }
+}
+
 function renderCbmRca(){
   const tbody = document.getElementById('cbm-rca-tbody');
   if(!tbody) return;
+  if(syncRcaComponentsWithBreakdown()){ saveRcaRecords(); }
   fillRcaCompFilter();
 
   const stF = (document.getElementById('rca-filter-status')||{}).value || '';
