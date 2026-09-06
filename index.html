@@ -2099,7 +2099,7 @@ body.role-mechanic #history-filters{ display:none !important; }
           <div class="panel-head">
             <h2><span class="tag">SYNC</span> Sheet Performance + Fallback Manual</h2>
             <div class="toolbar">
-              <button type="button" class="btn small" id="mapa-sync-perf-btn" title="Ambil W/S/R terbaru dari sheet performance di Google Spreadsheet">☁ Sync dari Sheet Performance</button>
+              <button type="button" class="btn small" id="mapa-sync-perf-btn" title="Ambil W/S/R terbaru dari sheet performance di Google Spreadsheet">☁ Sync from Performance Sheet</button>
               <button type="button" class="btn secondary small" id="mapa-template-btn">⬇ Unduh Template</button>
               <button type="button" class="btn danger" id="mapa-clear-btn" style="display:none;">Hapus Data</button>
             </div>
@@ -2130,13 +2130,13 @@ body.role-mechanic #history-filters{ display:none !important; }
         <div class="panel-head" style="margin-bottom:16px; flex-wrap:wrap; gap:10px;">
           <h2>Performance Unit A2B</h2>
           <div class="toolbar" style="align-items:center; gap:8px;">
-            <button type="button" class="btn small" id="unit-sync-perf-btn" title="Ambil W/S/R & Total Jam Kerja dari sheet performance">☁ Sync dari Sheet Performance</button>
+            <button type="button" class="btn small" id="unit-sync-perf-btn" title="Fetch W/S/R & Total Working Hours from performance sheet">☁ Sync from Performance Sheet</button>
           </div>
         </div>
 
         <div class="panel period-panel" style="margin-bottom:16px;">
           <div class="panel-head" style="margin-bottom:8px;">
-            <h2><span class="tag">FILTER</span> PERIODE KPI REKAP</h2>
+            <h2><span class="tag">FILTER</span> KPI PERIOD (LOCKED)</h2>
           </div>
           <div class="toolbar period-range-row" style="align-items:center; gap:10px; flex-wrap:wrap;">
             <span class="period-range-label">PERIODE</span>
@@ -2144,12 +2144,12 @@ body.role-mechanic #history-filters{ display:none !important; }
               <span class="period-input-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></span>
               <input type="date" id="unit-period-start" class="period-date-input">
             </div>
-            <span class="period-range-sep">sd</span>
+            <span class="period-range-sep">to</span>
             <div class="field period-input-group period-date-group" style="margin-bottom:0;">
               <span class="period-input-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></span>
               <input type="date" id="unit-period-end" class="period-date-input">
             </div>
-            <button type="button" class="btn secondary small" id="unit-period-reset-btn" title="Hapus filter tanggal dan tampilkan semua periode">✕ All Periods</button>
+            <button type="button" class="btn secondary small" id="unit-period-reset-btn" title="Clear date filter and show all periods">✕ All Periods</button>
           </div>
         </div>
 
@@ -2278,7 +2278,7 @@ body.role-mechanic #history-filters{ display:none !important; }
               <div class="field"><label>&nbsp;</label><div class="hint" style="margin-top:8px;">Pilih Unit No untuk menampilkan checklist Pre Inspection sesuai tipe unit.</div></div>
             </div>
 
-            <div class="scroll-top-track" id="preins-checklist-scroll-top" style="margin-top:6px;" title="Geser untuk melihat kolom lainnya"><div class="scroll-top-track-inner" id="preins-checklist-scroll-top-inner"></div></div>
+            <div class="scroll-top-track" id="preins-checklist-scroll-top" style="margin-top:6px;" title="Scroll to view other columns"><div class="scroll-top-track-inner" id="preins-checklist-scroll-top-inner"></div></div>
             <div class="table-wrap" id="preins-checklist-table-wrap">
               <table id="preins-checklist-table">
                 <thead><tr>
@@ -2317,7 +2317,7 @@ body.role-mechanic #history-filters{ display:none !important; }
             <select id="preins-filter-status"><option value="">Semua Status</option><option value="OK">OK</option><option value="Ada Temuan">Ada Temuan</option></select>
             <button class="btn small secondary" id="preins-clear-filter">Clear Filter</button>
           </div>
-          <div class="scroll-top-track" id="preins-scroll-top" title="Geser untuk melihat kolom lainnya"><div class="scroll-top-track-inner" id="preins-scroll-top-inner"></div></div>
+          <div class="scroll-top-track" id="preins-scroll-top" title="Scroll to view other columns"><div class="scroll-top-track-inner" id="preins-scroll-top-inner"></div></div>
           <div class="table-wrap" id="preins-table-wrap">
             <table id="preins-table">
               <thead><tr>
@@ -2383,7 +2383,7 @@ body.role-mechanic #history-filters{ display:none !important; }
               <div class="field"><label>HM / KM Akhir</label><input type="number" id="p2h-hmakhir" min="0" step="1"></div>
             </div>
 
-            <div class="scroll-top-track" id="p2h-checklist-scroll-top" style="margin-top:6px;" title="Geser untuk melihat kolom lainnya"><div class="scroll-top-track-inner" id="p2h-checklist-scroll-top-inner"></div></div>
+            <div class="scroll-top-track" id="p2h-checklist-scroll-top" style="margin-top:6px;" title="Scroll to view other columns"><div class="scroll-top-track-inner" id="p2h-checklist-scroll-top-inner"></div></div>
             <div class="table-wrap" id="p2h-checklist-table-wrap">
               <table id="p2h-checklist-table">
                 <thead><tr>
@@ -2415,7 +2415,7 @@ body.role-mechanic #history-filters{ display:none !important; }
             <select id="p2h-filter-status"><option value="">Semua Status</option><option value="Normal">Normal</option><option value="Ada Temuan">Ada Temuan</option></select>
             <button class="btn small secondary" id="p2h-clear-filter">Clear Filter</button>
           </div>
-          <div class="scroll-top-track" id="p2h-scroll-top" title="Geser untuk melihat kolom lainnya"><div class="scroll-top-track-inner" id="p2h-scroll-top-inner"></div></div>
+          <div class="scroll-top-track" id="p2h-scroll-top" title="Scroll to view other columns"><div class="scroll-top-track-inner" id="p2h-scroll-top-inner"></div></div>
           <div class="table-wrap" id="p2h-table-wrap">
             <table id="p2h-table">
               <thead><tr>
@@ -2550,7 +2550,7 @@ body.role-mechanic #history-filters{ display:none !important; }
 
         <div class="panel">
           <div class="panel-head"><h2>Record Daily Maintenance</h2><div class="toolbar"><button type="button" class="btn secondary" id="daily-import-service-btn">⤓ Import Service Report (Historis)</button><button type="button" class="btn secondary" id="daily-refresh-btn" title="Ambil ulang data terbaru dari database">⟲ Refresh Data</button><button type="button" class="btn" id="daily-sync-sheets-btn" title="Kirim semua record Daily Maintenance ke Google Sheets tab data">☁ Sync ke Sheet data</button><button type="button" class="btn danger" id="daily-bulk-delete-btn" title="Hapus banyak record sekaligus berdasarkan rentang Code BD, mis. 363-371">🗑 Hapus by Code BD</button></div></div>
-          <div class="scroll-top-track" id="daily-scroll-top" title="Geser untuk melihat kolom lainnya"><div class="scroll-top-track-inner" id="daily-scroll-top-inner"></div></div>
+          <div class="scroll-top-track" id="daily-scroll-top" title="Scroll to view other columns"><div class="scroll-top-track-inner" id="daily-scroll-top-inner"></div></div>
           <div class="table-wrap" id="daily-table-wrap">
             <table id="daily-record-table">
               <thead><tr>
@@ -2609,9 +2609,9 @@ body.role-mechanic #history-filters{ display:none !important; }
               <button type="button" class="btn secondary small" id="plan-period-reset-btn" title="Tampilkan semua jadwal Open">✕ Reset</button>
               <button type="button" class="btn small secondary" id="plan-period-this-month-btn" title="Filter ke bulan berjalan (Open)">Bulan Ini</button>
             </div>
-            <div class="hint" id="plan-daily-wh-status" style="margin-top:10px; margin-bottom:0;">sumber: <b>sheet performance</b> (W/hari) · auto-sync harian aktif · Last Synced: —</div>
+            <div class="hint" id="plan-daily-wh-status" style="margin-top:10px; margin-bottom:0;">source: <b>performance sheet</b> (WH/day) · daily auto-sync active · Last Synced: —</div>
           </div>
-          <div class="scroll-top-track" id="plan-scroll-top" title="Geser untuk melihat kolom lainnya"><div class="scroll-top-track-inner" id="plan-scroll-top-inner"></div></div>
+          <div class="scroll-top-track" id="plan-scroll-top" title="Scroll to view other columns"><div class="scroll-top-track-inner" id="plan-scroll-top-inner"></div></div>
           <div class="table-wrap" id="plan-table-wrap">
             <table id="plan-table">
               <thead><tr>
@@ -2659,7 +2659,7 @@ body.role-mechanic #history-filters{ display:none !important; }
             </select>
             <button type="button" class="btn small secondary" id="plan-record-clear-filter" title="Reset filter unit &amp; periode bulan">Reset</button>
           </div>
-          <div class="scroll-top-track" id="plan-record-scroll-top" title="Geser untuk melihat kolom lainnya"><div class="scroll-top-track-inner" id="plan-record-scroll-top-inner"></div></div>
+          <div class="scroll-top-track" id="plan-record-scroll-top" title="Scroll to view other columns"><div class="scroll-top-track-inner" id="plan-record-scroll-top-inner"></div></div>
           <div class="table-wrap" id="plan-record-table-wrap">
             <table id="plan-record-table">
               <thead><tr>
@@ -2780,7 +2780,7 @@ body.role-mechanic #history-filters{ display:none !important; }
             <select id="ps-filter-status"><option value="">Semua Status</option><option value="Open">Open</option><option value="Close">Close</option></select>
             <button class="btn small secondary" id="ps-clear-filter">Clear Filter</button>
           </div>
-          <div class="scroll-top-track" id="planningsystem-scroll-top" title="Geser untuk melihat kolom lainnya"><div class="scroll-top-track-inner" id="planningsystem-scroll-top-inner"></div></div>
+          <div class="scroll-top-track" id="planningsystem-scroll-top" title="Scroll to view other columns"><div class="scroll-top-track-inner" id="planningsystem-scroll-top-inner"></div></div>
           <div class="table-wrap" id="planningsystem-table-wrap">
             <table id="planningsystem-table">
               <thead><tr>
@@ -2803,7 +2803,7 @@ body.role-mechanic #history-filters{ display:none !important; }
             <div class="sp-kpi"><div class="sp-kpi-label">Total Durasi (jam)</div><div class="sp-kpi-val" id="ps-hist-kpi-hours">0</div></div>
             <div class="sp-kpi"><div class="sp-kpi-label">Komponen Terbanyak</div><div class="sp-kpi-val" id="ps-hist-kpi-topcomp" style="font-size:16px;">—</div></div>
           </div>
-          <div class="scroll-top-track" id="ps-hist-scroll-top" title="Geser untuk melihat kolom lainnya"><div class="scroll-top-track-inner" id="ps-hist-scroll-top-inner"></div></div>
+          <div class="scroll-top-track" id="ps-hist-scroll-top" title="Scroll to view other columns"><div class="scroll-top-track-inner" id="ps-hist-scroll-top-inner"></div></div>
           <div class="table-wrap" id="ps-hist-table-wrap">
             <table id="ps-hist-table">
               <thead><tr>
@@ -2821,28 +2821,28 @@ body.role-mechanic #history-filters{ display:none !important; }
       <!-- SUMMARY (termasuk Historical Report yang digabungkan di sini) -->
       <section class="view" id="view-summary">
         <div class="panel-head" style="margin-bottom:16px;">
-          <h2>Mechanic Activity Report — Ringkasan Report Daily Maintenance</h2>
-          <div class="summary-month-wrap" title="Pilih bulan laporan">
-            <label class="summary-month-label" for="s-month">Bulan</label>
+          <h2>Mechanic Activity Report — Daily Maintenance Summary</h2>
+          <div class="summary-month-wrap" title="Select report month">
+            <label class="summary-month-label" for="s-month">Month</label>
             <input type="month" id="s-month" class="summary-month-input">
           </div>
         </div>
 
         <div class="grid grid-4" id="summary-kpi-grid" style="margin-bottom:20px;"></div>
 
-        <div class="section-title">Grafik Ringkasan</div>
+        <div class="section-title">Summary Charts</div>
         <div class="grid grid-2 summary-charts-row" style="margin-bottom:20px;">
           <div class="panel summary-chart-panel" style="margin-bottom:0;">
             <div class="panel-head"><h2>Total Job per Mechanic</h2></div>
             <div id="summary-bar-chart" class="summary-chart-body"></div>
           </div>
           <div class="panel summary-chart-panel" style="margin-bottom:0;">
-            <div class="panel-head"><h2>Komposisi Kategori Pekerjaan</h2></div>
+            <div class="panel-head"><h2>Job Category Composition</h2></div>
             <div id="summary-donut-chart" class="summary-chart-body summary-chart-body--donut"></div>
           </div>
         </div>
         <div class="panel summary-chart-panel summary-chart-panel--status" style="margin-bottom:20px;">
-          <div class="panel-head"><h2>Komposisi Status Job</h2></div>
+          <div class="panel-head"><h2>Job Status Composition</h2></div>
           <div id="summary-status-chart" class="summary-chart-body summary-chart-body--donut"></div>
         </div>
 
@@ -2850,12 +2850,12 @@ body.role-mechanic #history-filters{ display:none !important; }
           <div class="panel-head">
             <h2>Detail Summary per Mechanic</h2>
           </div>
-          <div class="scroll-top-track" id="summary-scroll-top" title="Geser untuk melihat kolom lainnya"><div class="scroll-top-track-inner" id="summary-scroll-top-inner"></div></div>
+          <div class="scroll-top-track" id="summary-scroll-top" title="Scroll to view other columns"><div class="scroll-top-track-inner" id="summary-scroll-top-inner"></div></div>
           <div class="table-wrap" id="summary-table-wrap">
             <table id="summary-table">
               <thead><tr>
-                <th>Mechanic</th><th>Total Job</th><th>Breakdown</th><th>Daily Maint.</th><th>Periodical</th>
-                <th>Total Durasi (jam)</th><th>Rata² Durasi (jam)</th><th>Job Close</th><th>% Completion</th>
+                <th>Mechanic</th><th>Total Jobs</th><th>Breakdown</th><th>Daily Maint.</th><th>Periodical</th>
+                <th>Total Duration (hrs)</th><th>Avg Duration (hrs)</th><th>Job Close</th><th>% Completion</th>
               </tr></thead>
               <tbody id="summary-tbody"></tbody>
             </table>
@@ -2866,7 +2866,7 @@ body.role-mechanic #history-filters{ display:none !important; }
           <div class="panel-head">
             <h2>Summary Mechanic Activity</h2>
           </div>
-          <div class="scroll-top-track" id="summary-all-scroll-top" title="Geser untuk melihat kolom bulan lainnya"><div class="scroll-top-track-inner" id="summary-all-scroll-top-inner"></div></div>
+          <div class="scroll-top-track" id="summary-all-scroll-top" title="Scroll to view other months"><div class="scroll-top-track-inner" id="summary-all-scroll-top-inner"></div></div>
           <div class="table-wrap" id="summary-all-table-wrap">
             <table id="summary-all-table">
               <thead id="summary-all-thead"></thead>
@@ -2888,12 +2888,12 @@ body.role-mechanic #history-filters{ display:none !important; }
             <button class="btn small secondary" id="h-clear">Clear Filter</button>
             <button class="btn small" id="h-export">⬇ Export CSV</button>
           </div>
-          <div class="scroll-top-track" id="history-scroll-top" title="Geser untuk melihat kolom lainnya"><div class="scroll-top-track-inner" id="history-scroll-top-inner"></div></div>
+          <div class="scroll-top-track" id="history-scroll-top" title="Scroll to view other columns"><div class="scroll-top-track-inner" id="history-scroll-top-inner"></div></div>
           <div class="table-wrap" id="history-table-wrap">
             <table id="history-table">
               <thead><tr>
                 <th>Tanggal</th><th>Unit Code</th><th>Type</th><th>HM</th><th>Kategori</th><th>Job Desc</th>
-                <th>Durasi</th><th>Mechanic</th><th>Area</th><th>Status</th><th>Approval</th><th>Approved By</th>
+                <th>Duration</th><th>Mechanic</th><th>Area</th><th>Status</th><th>Approval</th><th>Approved By</th>
               </tr></thead>
               <tbody id="history-tbody"></tbody>
             </table>
@@ -2941,7 +2941,7 @@ body.role-mechanic #history-filters{ display:none !important; }
             <select id="bdreport-filter-unit"><option value="">Semua Unit</option></select>
             <button class="btn small secondary" id="bdreport-clear-filter">Clear Filter</button>
           </div>
-          <div class="scroll-top-track" id="bdreport-scroll-top" title="Geser untuk melihat kolom lainnya"><div class="scroll-top-track-inner" id="bdreport-scroll-top-inner"></div></div>
+          <div class="scroll-top-track" id="bdreport-scroll-top" title="Scroll to view other columns"><div class="scroll-top-track-inner" id="bdreport-scroll-top-inner"></div></div>
           <div class="table-wrap" id="bdreport-table-wrap">
             <table id="bdreport-table">
               <thead><tr>
@@ -3108,7 +3108,7 @@ body.role-mechanic #history-filters{ display:none !important; }
               </select>
               <button type="button" class="btn small secondary" id="rca-clear-filter">Clear Filter</button>
             </div>
-            <div class="scroll-top-track" id="rca-scroll-top" title="Geser untuk melihat kolom lainnya"><div class="scroll-top-track-inner" id="rca-scroll-top-inner"></div></div>
+            <div class="scroll-top-track" id="rca-scroll-top" title="Scroll to view other columns"><div class="scroll-top-track-inner" id="rca-scroll-top-inner"></div></div>
             <div class="table-wrap" id="rca-table-wrap">
               <table id="rca-table">
                 <thead><tr>
@@ -5448,9 +5448,11 @@ function maPaFromRows(rows){
 
 /** Selesaikan MA & PA: performance sheet (periode cocok) → HM → upload manual. */
 function resolveMaPa(unitCode, startStr, endStr){
-  // 1) Sheet performance — HANYA jika periode filter cocok dengan periode di sheet
+  // 1) Sheet performance — HANYA jika filter PERSIS = periode sheet (bukan subset)
   if(mapaData && mapaData.fromPerformance && mapaData.rows && mapaData.rows.length
-      && performancePeriodMatches(startStr||null, endStr||null)){
+      && (typeof performancePeriodExactMatch==='function'
+          ? performancePeriodExactMatch(startStr||null, endStr||null)
+          : performancePeriodMatches(startStr||null, endStr||null))){
     if(unitCode){
       const rows = mapaData.rows.filter(r=>String(r.unit||'').trim().toUpperCase()===String(unitCode).toUpperCase());
       if(rows.length) return maPaFromRows(rows);
@@ -7521,11 +7523,11 @@ function populateUnitWeekPeriodSelect(){
       }
     }catch(_e){ window._unitPeriodTouched = false; }
   }
-  // Default ke periode sheet HANYA jika user belum pernah mengubah filter.
-  if(!window._unitPeriodTouched && perfKey){
-    const [ps, pe] = perfKey.split('_');
-    startEl.value = ps;
-    endEl.value = pe;
+  // LOCK: filter periode web TIDAK mengikuti update periode sheet performance.
+  // Hanya restore dari sessionStorage user; jangan auto-isi dari sheet period.
+  // Sheet sync hanya meng-update data W/S/R, bukan input tanggal filter.
+  if(!window._unitPeriodTouched){
+    // biarkan nilai input apa adanya (kosong = All Periods, atau yang sudah di-set user)
   }
 
   const hintEl = document.getElementById('unit-period-hint');
@@ -7534,15 +7536,15 @@ function populateUnitWeekPeriodSelect(){
       const s = startEl.value || '';
       const e = endEl.value || '';
       if(s || e){
-        hintEl.innerHTML = `Filter periode manual aktif: <b>${formatPerformancePeriodLabel(s||'…', e||'…')}</b>. W/S/R &amp; MA/PA memakai sheet performance <i>hanya jika</i> cocok dengan periode sheet; selain itu dihitung dari Monitoring HM. MTBS/MTTR/PMR/SA selalu mengikuti rentang ini.`;
+        hintEl.innerHTML = `Manual period filter locked: <b>${formatPerformancePeriodLabel(s||'…', e||'…')}</b>. Independent from sheet period. W/S/R &amp; MA/PA use performance sheet only when ranges match; otherwise calculated from Monitoring HM. MTBS/MTTR/PMR/SA always follow this range.`;
       } else {
-        hintEl.innerHTML = 'Filter: <b>All Periods</b>. W/S/R &amp; MA/PA memakai data sheet performance (jika ada).';
+        hintEl.innerHTML = 'Filter: <b>All Periods</b> (locked — independent from sheet). W/S/R &amp; MA/PA use performance sheet data if available.';
       }
     } else if(perfKey){
       const [ps, pe] = perfKey.split('_');
-      hintEl.innerHTML = `Periode default mengikuti sheet performance: <b>${formatPerformancePeriodLabel(ps, pe)}</b>. Working Hours &amp; MA/PA sinkron otomatis jika filter cocok, sedangkan MTBS/MTTR/PMR/SA dihitung ulang dari record pada rentang tanggal ini. Ubah tanggal di atas atau klik "✕ All Periods" untuk melihat data tanpa batasan tanggal.`;
+      hintEl.innerHTML = `Web period filter (locked): <b>${formatPerformancePeriodLabel(ps, pe)}</b>. Does not auto-follow sheet period updates. Change dates above or click "✕ All Periods". W/S/R &amp; MA/PA use sheet only when ranges match; MTBS/MTTR/PMR/SA use this date range.`;
     } else {
-      hintEl.innerHTML = 'Belum ada periode dari sheet performance. Klik <b>☁ Sync dari Sheet Performance</b> agar periode (tanggal · bulan · tahun) terisi, atau atur tanggal secara manual di atas.';
+      hintEl.innerHTML = 'No period set. Choose dates above (locked — will not follow sheet updates), or click <b>☁ Sync from Performance Sheet</b> to load W/S/R data only (period filter stays as you set it).';
     }
   }
 }
@@ -7639,22 +7641,96 @@ function unitIconSVG(category){
  *   Waktu Operasi (W) | Standby (S) | Breakdown (R) | Total Jam Kerja (T)
  * Periode filter harus cocok dengan periodStart–periodEnd sheet. Fallback: Monitoring HM.
  */
+function performancePeriodExactMatch(startStr, endStr){
+  if(!mapaData || !mapaData.fromPerformance) return false;
+  const ps = (mapaData.periodStart || '').trim();
+  const pe = (mapaData.periodEnd || '').trim();
+  if(!ps || !pe) return false;
+  if(!startStr && !endStr){
+    const today = new Date();
+    const todayStr = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+    return todayStr >= ps && todayStr <= pe;
+  }
+  return String(startStr) === ps && String(endStr) === pe;
+}
+
+/**
+ * W/S/R/T per unit untuk kartu Performance Unit.
+ * PRIORITAS LIVE SYNC dari sheet performance (Waktu Operasi / Standby / Breakdown / Total Jam Kerja)
+ * agar angka di web SELALU sama dengan sheet saat data performance tersedia.
+ * Filter periode KPI (MTBS/MTTR/dll) tetap independen — hanya memfilter job & KPI rekap.
+ */
 function getUnitWorkingHours(unitCode, startStr, endStr){
-  if(mapaData && mapaData.fromPerformance && mapaData.rows && mapaData.rows.length
-      && performancePeriodMatches(startStr||null, endStr||null)){
-    const row = mapaData.rows.find(r=>String(r.unit||'').trim().toUpperCase()===String(unitCode||'').trim().toUpperCase());
+  const code = String(unitCode||'').trim().toUpperCase();
+
+  // 1) LIVE: selalu pakai sheet performance jika ada baris unit (sumber kebenaran W/S/R/T)
+  if(mapaData && mapaData.rows && mapaData.rows.length){
+    const row = mapaData.rows.find(r=>String(r.unit||'').trim().toUpperCase()===code);
     if(row){
       const w = Number(row.workingHours != null ? row.workingHours : row.w) || 0;
       const s = Number(row.s) || 0;
       const r = Number(row.r) || 0;
       let t = Number(row.totalWorkingHours != null ? row.totalWorkingHours : row.t);
       if(isNaN(t) || t <= 0) t = w + s + r;
-      return { w, s, r, t, source:'performance' };
+      return {
+        w: Math.round(w*10)/10,
+        s: Math.round(s*10)/10,
+        r: Math.round(r*10)/10,
+        t: Math.round(t*10)/10,
+        source: mapaData.fromPerformance ? 'performance' : 'mapa'
+      };
     }
   }
+
+  // 2) Fallback: telemetri harian pada rentang filter (jika sheet belum ada unit)
+  try{
+    const tels = (hmTelemetryRecords||[]).filter(r=>{
+      if(String(r.unitCode||'').trim().toUpperCase() !== code) return false;
+      const d = String(r.tanggal||'').slice(0,10);
+      if(!d) return false;
+      if(startStr && d < startStr) return false;
+      if(endStr && d > endStr) return false;
+      return true;
+    });
+    if(tels.length){
+      let w = 0, actual = 0, idle = 0;
+      tels.forEach(r=>{
+        const aw = Number(r.actualWorkingHours);
+        const wh = Number(r.workingHours);
+        const id = Number(r.idlingHours);
+        if(!isNaN(aw) && aw > 0) actual += aw;
+        else if(!isNaN(wh) && wh > 0) actual += wh;
+        if(!isNaN(wh) && wh > 0) w += wh;
+        if(!isNaN(id) && id > 0) idle += id;
+      });
+      if(actual <= 0) actual = w;
+      if(idle <= 0 && w > actual) idle = w - actual;
+      const R = (dailyRecords||[])
+        .filter(r=>String(r.unitCode||'').trim().toUpperCase()===code
+          && r.category==='Breakdown' && r.approvalStatus==='Approved'
+          && r.tanggal && (!startStr || r.tanggal>=startStr) && (!endStr || r.tanggal<=endStr))
+        .reduce((s,r)=>s+(Number(r.duration)||0),0);
+      const t = actual + idle + R;
+      return {
+        w: Math.round(actual*10)/10,
+        s: Math.round(idle*10)/10,
+        r: Math.round(R*10)/10,
+        t: Math.round(t*10)/10,
+        source: 'telemetry'
+      };
+    }
+  }catch(_e){}
+
+  // 3) Fallback Monitoring HM
   const hmwsr = hmWSRForUnit(unitCode, startStr||null, endStr||null);
   if(hmwsr){
-    return { w: hmwsr.W, s: hmwsr.S, r: hmwsr.R, t: (hmwsr.W + hmwsr.S + hmwsr.R), source:'hm' };
+    return {
+      w: Math.round((hmwsr.W||0)*10)/10,
+      s: Math.round((hmwsr.S||0)*10)/10,
+      r: Math.round((hmwsr.R||0)*10)/10,
+      t: Math.round(((hmwsr.W||0)+(hmwsr.S||0)+(hmwsr.R||0))*10)/10,
+      source: 'hm'
+    };
   }
   return { w:null, s:null, r:null, t:null, source:null };
 }
@@ -7691,7 +7767,7 @@ function renderUnitCards(){
     const sumSc = unitKpiKeys.reduce((s,key)=> s + kpiWeightedScore(key, k[key]||0), 0);
     const avgAch = totalW > 0 ? (sumSc / totalW * 100) : 0;
     const avgCol = avgAch>=90 ? 'var(--green)' : avgAch>=75 ? 'var(--yellow)' : 'var(--red)';
-    const srcLabel = wh.source==='performance' ? 'sheet performance' : (wh.source==='hm' ? 'Monitoring HM' : '—');
+    const srcLabel = wh.source==='performance' ? 'performance sheet' : (wh.source==='telemetry' ? 'daily telemetry' : (wh.source==='hm' ? 'Monitoring HM' : '—'));
     return `<div class="unit-card">
       <div class="unit-visual">${(()=>{ const photo = getUnitPhoto(u.category, u.type); return photo ? `<img src="${photo}" alt="${u.type}" class="unit-photo">` : unitIconSVG(u.category); })()}</div>
       <div class="cat-label">${u.category}</div>
@@ -10167,40 +10243,69 @@ function calcHmSekarangFromPerformanceLive(unitCode){
   const perf = (typeof getPerformanceWByUnit==='function') ? getPerformanceWByUnit()[code] : null;
   if(!perf) return null;
   const todayStr = new Date().toISOString().slice(0,10);
+  const workHours = Math.max(0, Number(perf.workHours) || 0); // (Total − Standby) dari sheet performance
 
-  // PRIORITAS 1: HM Sekarang live-incremental dari Code.gs (anti-mundur per-shift).
-  // Ini sudah dihitung sebagai state kumulatif di sheet performance sendiri, jadi
-  // tidak perlu baseline-before-period lagi & tidak akan jatuh saat D2/G2 direset.
-  //
-  // PENTING: date HARUS hari ini (bukan mapaData.periodEnd / D2-G2 sheet performance yang
-  // sering basi/manual) — karena nilai ini SUDAH live/up-to-date by construction (di-update
-  // server setiap kali sheet performance disync). Kalau date-nya dibuat seolah "stale",
-  // fungsi calcHmSekarang() di luar akan menambah proyeksi WH-harian LAGI di atasnya →
-  // DOUBLE COUNTING (jam kerja yang sama dihitung 2x: sekali di server, sekali lagi di sini).
+  // PRIORITAS 1: HM Sekarang live-incremental dari Code.gs (sudah include WH sheet).
+  // date = hari ini → layer luar tidak menambah proyeksi lagi.
   if(perf.hmSekarangLive != null){
     return {
-      hm: perf.hmSekarangLive,
+      hm: Number(perf.hmSekarangLive),
       date: todayStr,
-      workHours: perf.workHours,
+      workHours,
       source: 'performance-live-incremental'
     };
   }
 
-  // FALLBACK (Code.gs versi lama, belum ada field hmSekarang): baseline-before-period
-  // + akumulasi Waktu Operasi sejak periodStart — bisa jatuh kalau D2/G2 direset.
-  const asOfDate = String(mapaData.periodEnd || mapaData.updatedAt || '').slice(0,10) || todayStr;
+  // PRIORITAS 2: Proyeksi dari Working Hours sheet performance
+  //   HM Actual = HM baseline (sebelum periodStart) + Waktu Operasi kumulatif (T − S)
+  // Setiap kali sheet performance update W/S/T → workHours berubah → HM Actual ikut.
   if(!mapaData.periodStart) return null;
-  const baseline = getHmBaselineBeforePeriod(code, mapaData.periodStart);
-  if(!baseline || baseline.hm == null || isNaN(Number(baseline.hm))) return null;
-  const workHours = Math.max(0, Number(perf.workHours) || 0); // T − S, live dari sheet performance
-  const hmNow = Math.round((Number(baseline.hm) + workHours) * 10) / 10;
+  let baselineHm = null, baselineDate = '';
+  try{
+    const baseline = (typeof getHmBaselineBeforePeriod==='function')
+      ? getHmBaselineBeforePeriod(code, mapaData.periodStart) : null;
+    if(baseline && baseline.hm != null && !isNaN(Number(baseline.hm))){
+      baselineHm = Number(baseline.hm);
+      baselineDate = String(baseline.date||'').slice(0,10);
+    }
+  }catch(_e){}
+
+  // Jika tidak ada baseline sebelum periode, pakai monitoring HM terakhir yang ≤ periodEnd
+  if(baselineHm == null){
+    try{
+      const mon = (typeof getActualMonitoringHM==='function')
+        ? getActualMonitoringHM(code, '', mapaData.periodStart) : null;
+      if(mon && mon.hm != null && !isNaN(Number(mon.hm))){
+        baselineHm = Number(mon.hm);
+        baselineDate = String(mon.tanggal||'').slice(0,10);
+      }
+    }catch(_e){}
+  }
+  if(baselineHm == null) return null;
+
+  let hmNow = Math.round((baselineHm + workHours) * 10) / 10;
+
+  // Anti-mundur: jika Monitoring HM Akhir terbaru (dalam/selepas period) lebih tinggi, pakai itu
+  // (sheet performance kadang lag vs View-SEN-HM).
+  try{
+    const monNow = (typeof getActualMonitoringHM==='function')
+      ? getActualMonitoringHM(code, '', '') : null;
+    if(monNow && monNow.hm != null && !isNaN(Number(monNow.hm))){
+      const mh = Number(monNow.hm);
+      if(mh > hmNow + 0.05){
+        hmNow = mh;
+        baselineDate = String(monNow.tanggal||baselineDate).slice(0,10);
+      }
+    }
+  }catch(_e){}
+
   return {
     hm: hmNow,
-    date: asOfDate,
-    baseline: baseline.hm,
-    baselineDate: baseline.date,
+    date: todayStr,
+    baseline: baselineHm,
+    baselineDate,
     workHours,
-    source: 'performance-live-shift'
+    source: 'performance-wh-projection'
   };
 }
 
@@ -10330,10 +10435,15 @@ function calcHmSekarang(unitCode, asOfDateStr){
 
   const asOfStr = periodEnd || periodStart || (new Date().toISOString().slice(0,10));
 
-  // Proyeksi: H+1 setelah lastDate s/d asOf, memakai WH HARIAN AKTUAL per tanggal
-  // (sheet Jam Kerja Harian / telemetri). Hari tanpa data → rata-rata recent / performance.
+  // Jika baseline sudah dari sheet performance (Waktu Operasi T−S / hmSekarangLive),
+  // JANGAN tambah proyeksi WH/hari lagi — itu sumber double-count yang membuat
+  // kolom HM Actual Plan Service melaju lebih cepat dari HM aktual di sheet.
+  const fromPerformanceSheet = /performance-live/i.test(String(source||''));
+
+  // Proyeksi: H+1 setelah lastDate s/d asOf, memakai WH HARIAN AKTUAL per tanggal.
+  // Hanya untuk baseline Monitoring / service-close / manual — BUKAN performance sheet.
   let daysElapsed = 0;
-  if(hmNow!=null && lastDate && String(lastDate).length>=10){
+  if(!fromPerformanceSheet && hmNow!=null && lastDate && String(lastDate).length>=10){
     try{
       const proj = projectHmDeltaWithDailyWh(unitCode, String(lastDate).slice(0,10), asOfStr);
       daysElapsed = proj.days || 0;
@@ -10355,13 +10465,10 @@ function calcHmSekarang(unitCode, asOfDateStr){
     }
   }
 
-  // SAFETY-NET anti-mundur: performance-live-shift kadang under-count kalau periode/baseline
-  // sheet performance ter-reset (workHours akumulasi jadi lebih pendek dari yang seharusnya),
-  // dan karena date-nya diklaim "hari ini" ia lolos tanpa proyeksi tambahan di atas.
-  // Di sini kita selalu hitung ULANG jalur "Monitoring HM aktual + proyeksi WH-harian s/d hari ini"
-  // secara independen, lalu pakai yang LEBIH TINGGI — HM odometer cuma boleh naik, tidak boleh
-  // lebih rendah dari proyeksi yang sudah terbukti akurat sebelumnya.
-  if(actual && actual.hm!=null && !isNaN(Number(actual.hm))){
+  // SAFETY-NET anti-mundur: hanya jika BELUM pakai performance sheet.
+  // Kalau sudah pakai Waktu Operasi sheet, safety-net proyeksi monitoring+WH/hari
+  // justru menggelembungkan HM di atas angka operasional aktual.
+  if(!fromPerformanceSheet && actual && actual.hm!=null && !isNaN(Number(actual.hm))){
     try{
       const actualDateStr = String(actual.tanggal||'').slice(0,10);
       const projFromActual = projectHmDeltaWithDailyWh(unitCode, actualDateStr, asOfStr);
@@ -10684,13 +10791,40 @@ function correctAllUnitsHmSekarang(){
   const map = {};
   units.forEach(code=>{
     try{
-      const cur = calcHmSekarang(code, asOf || undefined);
-      if(cur && cur.hmNow!=null && !isNaN(Number(cur.hmNow))){
-        map[String(code).toUpperCase()] = {
-          hm: Number(cur.hmNow),
-          date: cur.lastDate || new Date().toISOString().slice(0,10),
-          source: cur.source || ''
-        };
+      // Prioritas: proyeksi dari Working Hours sheet performance (update live).
+      // HM Actual = baseline + (T − S) / hmSekarangLive → ikut berubah saat WH sheet di-update.
+      let hm = null, date = '', source = '';
+      try{
+        const perfLive = (typeof calcHmSekarangFromPerformanceLive==='function')
+          ? calcHmSekarangFromPerformanceLive(code) : null;
+        if(perfLive && perfLive.hm!=null && !isNaN(Number(perfLive.hm))){
+          hm = Number(perfLive.hm);
+          date = String(perfLive.date||'').slice(0,10) || new Date().toISOString().slice(0,10);
+          source = perfLive.source || 'performance-wh-projection';
+        }
+      }catch(_p){}
+      // Anti-mundur: Monitoring HM Akhir lebih tinggi menang
+      try{
+        const mon = (typeof getActualMonitoringHM==='function') ? getActualMonitoringHM(code, '', '') : null;
+        if(mon && mon.hm!=null && !isNaN(Number(mon.hm))){
+          const mh = Number(mon.hm);
+          if(hm==null || mh > hm + 0.05){
+            hm = mh;
+            date = String(mon.tanggal||'').slice(0,10) || date;
+            source = mon.source || 'monitoring-hm-akhir';
+          }
+        }
+      }catch(_m){}
+      if(hm==null){
+        const cur = calcHmSekarang(code, asOf || undefined);
+        if(cur && cur.hmNow!=null && !isNaN(Number(cur.hmNow))){
+          hm = Number(cur.hmNow);
+          date = cur.lastDate || new Date().toISOString().slice(0,10);
+          source = cur.source || '';
+        }
+      }
+      if(hm!=null){
+        map[String(code).toUpperCase()] = { hm, date, source };
       }
     }catch(_e){}
   });
@@ -10790,7 +10924,7 @@ function updatePlanDailyWhStatusUI(){
   const n = (typeof dailyWhRecords!=='undefined' && dailyWhRecords) ? dailyWhRecords.length : 0;
   const ts = meta.updatedAt ? String(meta.updatedAt).replace('T',' ').slice(0,19) : '—';
   const src = meta.source || (n ? 'lokal' : 'performance');
-  el.innerHTML = 'sumber: <b>'+src+'</b> · Last Synced: <b>'+ts+'</b>'+
+  el.innerHTML = 'source: <b>'+src+'</b> · Last Synced: <b>'+ts+'</b>'+
     (meta.lastError ? ' · <span style="color:var(--orange)">'+String(meta.lastError).slice(0,80)+'</span>' : '');
 }
 
@@ -13427,7 +13561,7 @@ sMonth.addEventListener('change', renderSummary);
 function summaryBarChart(items){
   // items: [{label, value, bd, daily, periodical}] — stacked bar warna = komposisi kategori
   // Breakdown #E5484D · Daily #4A90D9 · Periodical #FFC72C (sama donut Komposisi Kategori)
-  if(!items.length) return `<div class="hint" style="padding:20px 0;">Tidak ada data pada bulan ini.</div>`;
+  if(!items.length) return `<div class="hint" style="padding:20px 0;">No data for this month.</div>`;
   const max = Math.max(1, ...items.map(d=>d.value));
   const legend = `<div style="display:flex; flex-wrap:wrap; gap:12px 16px; margin-bottom:12px; font-size:11px; color:#D2D8E0;">
     <span style="display:inline-flex; align-items:center; gap:6px;"><i style="width:10px;height:10px;border-radius:2px;background:#E5484D;display:inline-block;"></i>Breakdown</span>
@@ -13472,7 +13606,7 @@ function summaryBarChart(items){
 function summaryDonutChart(segments){
   // segments: [{label, value, color}] — donut chart komposisi kategori, gaya konsisten dgn gauge KPI dashboard
   const total = segments.reduce((a,s)=>a+s.value,0);
-  if(!total) return `<div class="hint" style="padding:20px 0;">Tidak ada data pada bulan ini.</div>`;
+  if(!total) return `<div class="hint" style="padding:20px 0;">No data for this month.</div>`;
   const r = 62, cx = 84, cy = 84, sw = 22, circumference = 2*Math.PI*r;
   let offsetJob = 0;
   const arcs = segments.filter(s=>s.value>0).map(s=>{
@@ -13509,24 +13643,24 @@ function renderSummaryKPICards(rows, byMech){
 
   grid.innerHTML = `
     <div class="summary-kpi">
-      <div class="sk-label">Mechanic Aktif</div>
+      <div class="sk-label">Active Mechanics</div>
       <div class="sk-val">${totalMechanic}</div>
-      <div class="sk-sub">Mekanik dengan record bulan ini</div>
+      <div class="sk-sub">Mechanics with records this month</div>
     </div>
     <div class="summary-kpi">
-      <div class="sk-label">Total Job</div>
+      <div class="sk-label">Total Jobs</div>
       <div class="sk-val">${totalJob}</div>
-      <div class="sk-sub">Record Daily Maintenance bulan ini</div>
+      <div class="sk-sub">Daily Maintenance records this month</div>
     </div>
     <div class="summary-kpi">
-      <div class="sk-label">Total Durasi</div>
-      <div class="sk-val">${totalDur.toFixed(1)}<span style="font-size:15px;font-weight:600;"> jam</span></div>
-      <div class="sk-sub">Akumulasi durasi perbaikan</div>
+      <div class="sk-label">Total Duration</div>
+      <div class="sk-val">${totalDur.toFixed(1)}<span style="font-size:15px;font-weight:600;"> hrs</span></div>
+      <div class="sk-sub">Accumulated repair duration</div>
     </div>
     <div class="summary-kpi">
-      <div class="sk-label">Rata² % Completion</div>
+      <div class="sk-label">Avg % Completion</div>
       <div class="sk-val" style="color:${completionColor};">${avgCompletion.toFixed(0)}%</div>
-      <div class="sk-sub">Job Close dibanding Total Job</div>
+      <div class="sk-sub">Closed jobs vs total jobs</div>
     </div>`;
 }
 
@@ -13682,14 +13816,14 @@ function renderSummary(){
       { label:'Progress', value: stProgress, color:'#FFC72C' },
       { label:'Open', value: stOpen, color:'#E5484D' },
     ]) + `<div style="width:100%; text-align:center; margin-top:8px; font-size:11px; color:var(--text-faint);">
-      Total ${stTotal} job · Close ${stClose} · Progress ${stProgress} · Open ${stOpen}
+      Total ${stTotal} jobs · Close ${stClose} · Progress ${stProgress} · Open ${stOpen}
     </div>`;
   }
 
   const tbody = document.getElementById('summary-tbody');
   const names = Object.keys(byMech);
   if(!names.length){
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="9">Tidak ada data pada bulan ini.</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="9">No data for this month.</td></tr>`;
     attachTopScroll('summary');
     return;
   }
@@ -13755,7 +13889,7 @@ function renderSummaryAllMonths(){
 
   if(!months.length || !names.length){
     thead.innerHTML = '<tr><th>Mechanic</th><th>Total</th></tr>';
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="2">Belum ada data Daily Maintenance untuk ditampilkan.</td></tr>';
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="2">No Daily Maintenance data to display.</td></tr>';
     try{ attachTopScroll('summary-all'); }catch(_e){}
     return;
   }
@@ -16696,7 +16830,7 @@ async function fetchDailyWorkingHoursFromSheets(opts){
     };
     await saveDailyWhRecords();
     if(opts.manual){
-      alert('✓ WH harian tersinkron: '+upserted+' baris (sumber: '+(data.source||data.sheet||'sheet')+').\nPlan Service memakai WH dari performance/harian.');
+      alert('✓ WH harian tersinkron: '+upserted+' baris (source: '+(data.source||data.sheet||'sheet')+').\nPlan Service uses WH from performance/daily.');
     }
     return { ok:true, changed:true, rows: upserted };
   }catch(e){
@@ -16755,7 +16889,8 @@ async function autoSyncPerformanceAndRefresh(which){
     // force:false → hormati TTL (tidak spam network tiap pindah menu)
     await ensurePerformanceSynced({ force:false });
   }catch(e){ console.warn('auto sync performance', e); }
-  if(which==='units' || which==='all'){
+  // Selalu refresh kartu unit agar W/S/R/T live dari sheet performance
+  if(which==='units' || which==='all' || which==='dashboard'){
     try{ renderUnitCards(); }catch(_e){}
   }
   if(which==='dashboard' || which==='all'){
@@ -16813,7 +16948,7 @@ function updatePlanAutoSyncStatus(extra){
   const hh = String(t.getHours()).padStart(2,'0');
   const mm = String(t.getMinutes()).padStart(2,'0');
   const note = extra ? (' · '+extra) : '';
-  el.innerHTML = 'sumber: <b>sheet performance</b> (W/hari) · auto-sync harian aktif · terakhir: <b>'+hh+':'+mm+'</b>'+note;
+  el.innerHTML = 'source: <b>performance sheet</b> (WH/day) · daily auto-sync active · last: <b>'+hh+':'+mm+'</b>'+note;
 }
 
 /**
@@ -16867,10 +17002,22 @@ async function runPlanHmLiveSyncCycle(opts){
     const planActive = planView && planView.classList.contains('active');
     const needRefresh = perfChanged || hmChanged || dayChanged || dailyWhChanged || forceDay || !!opts.force;
 
+    // Selalu re-hitung HM Actual dari Working Hours performance bila sheet berubah
+    if(perfChanged || hmChanged || dailyWhChanged || forceDay || !!opts.force){
+      try{
+        const corr = (typeof correctAllUnitsHmSekarang==='function') ? correctAllUnitsHmSekarang() : null;
+        if(corr && corr.touched > 0){
+          try{ if(typeof savePlan==='function') savePlan(); }catch(_s){}
+        }
+      }catch(_c){}
+    }
+
     if(needRefresh){
       if(dash && dash.classList.contains('active')){
         try{ renderDashboard(); }catch(_e){}
       }
+      // Performance W/S/R/T → selalu refresh kartu (live sync sheet)
+      try{ renderUnitCards(); }catch(_e){}
       if(units && units.classList.contains('active')){
         try{ renderUnitCards(); }catch(_e){}
       }
@@ -16911,7 +17058,7 @@ async function runPlanHmLiveSyncCycle(opts){
     try{
       updatePlanAutoSyncStatus(
         forceDay ? ('force harian '+todayStr) :
-        (hmTouched ? (hmTouched+' unit HM di-update') : 'poll')
+        (hmTouched ? (hmTouched+' units HM updated') : 'poll')
       );
     }catch(_e){}
 
@@ -17141,7 +17288,9 @@ document.getElementById('unit-sync-perf-btn')?.addEventListener('click', functio
 function onUnitPeriodDateChange(){
   window._unitPeriodTouched = true;
   if(typeof persistUnitPeriodFilter==='function') persistUnitPeriodFilter();
-  // Auto-sync live dari sheet performance saat filter periode Master Unit berubah
+  // Langsung hitung ulang kartu sesuai filter (jangan tunggu sync)
+  try{ renderUnitCards(); }catch(_e){}
+  // Sync data sheet di background (tidak menimpa filter)
   autoSyncPerformanceAndRefresh('units');
 }
 document.getElementById('unit-period-start')?.addEventListener('change', onUnitPeriodDateChange);
@@ -17153,6 +17302,7 @@ document.getElementById('unit-period-reset-btn')?.addEventListener('click', func
   if(s) s.value = '';
   if(e) e.value = '';
   if(typeof persistUnitPeriodFilter==='function') persistUnitPeriodFilter();
+  try{ renderUnitCards(); }catch(_e){}
   autoSyncPerformanceAndRefresh('units');
 });
 
