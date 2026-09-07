@@ -13765,6 +13765,289 @@ function renderSummary(){
   renderSummaryAllMonths();
 }
 
+/** Ringkasan Breakdown Category per bulan (semua bulan, semua mekanik digabung):
+ *  baris = Breakdown Category (Breakdown / Daily Maintenance / Periodical),
+ *  kolom = setiap bulan (YYYY-MM) + Average + Total.
+ *  Average = total kategori tsb dibagi jumlah bulan yang punya data (bukan dibagi 12 bulan kalender). */
+const SUMMARY_CATEGORIES = [
+  { key:'Breakdown',  label:'Breakdown',          color:'#E5484D' },
+  { key:'Daily',      label:'Daily Maintenance',  color:'#4A90D9' },
+  { key:'Periodical', label:'Periodical',          color:'#FFC72C' },
+];
+function summaryCategoryBarChart(months, byCatMonth){
+  // Diagram kolom berkelompok — gaya premium: gradient fill, glow halus, gridline referensi,
+  // legend berbentuk pill, tipografi Oswald/JetBrains Mono konsisten dengan tema aplikasi.
+  if(!months.length) return `<div class="hint" style="padding:24px 0; text-align:center;">No data to display.</div>`;
+
+  let max = 1;
+  months.forEach(m=>{
+    SUMMARY_CATEGORIES.forEach(c=>{
+      max = Math.max(max, (byCatMonth[c.key] && byCatMonth[c.key][m]) || 0);
+    });
+  });
+  // Bulatkan skala atas ke angka yang enak dibaca untuk gridline (mis. 5, 10, 15, 20…)
+  const magnitude = Math.pow(10, Math.floor(Math.log10(Math.max(1, max))));
+  const step = magnitude / 2 || 1;
+  const niceMax = Math.max(step, Math.ceil(max / step) * step);
+
+  const legend = `<div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:20px;">` +
+    SUMMARY_CATEGORIES.map(c=>`<span style="display:inline-flex; align-items:center; gap:7px; padding:6px 14px; border-radius:20px; background:rgba(255,255,255,0.03); border:1px solid ${c.color}3d; font-size:10px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; color:#D2D8E0;">
+      <i style="width:8px; height:8px; border-radius:50%; background:${c.color}; box-shadow:0 0 8px ${c.color}aa; display:inline-block; flex-shrink:0;"></i>${c.label}
+    </span>`).join('') +
+    `</div>`;
+
+  const W = Math.max(440, months.length*116), H = 258, padL = 34, padR = 18, padT = 26, padB = 40;
+  const baseY = H - padB, chartH = baseY - padT;
+  const groupW = (W - padL - padR) / months.length;
+  const barGap = 7;
+  const barW = Math.max(11, (groupW - barGap*(SUMMARY_CATEGORIES.length+1)) / SUMMARY_CATEGORIES.length);
+
+  // Gridline horizontal referensi (samar, putus-putus) + label skala
+  const gridSteps = 4;
+  let grid = '';
+  for(let i=0; i<=gridSteps; i++){
+    const y = padT + chartH*(i/gridSteps);
+    const val = Math.round(niceMax*(1-i/gridSteps));
+    const isBase = i===gridSteps;
+    grid += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W-padR}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,${isBase?0.14:0.06})" stroke-width="1" ${isBase?'':'stroke-dasharray="2,4"'}/>`;
+    grid += `<text x="${(padL-8).toFixed(1)}" y="${(y+3).toFixed(1)}" text-anchor="end" font-size="8.5" fill="#5C636B" font-family="JetBrains Mono, monospace">${val}</text>`;
+  }
+
+  let defs = `<defs>`;
+  SUMMARY_CATEGORIES.forEach((c,ci)=>{
+    defs += `<linearGradient id="catGrad${ci}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${c.color}" stop-opacity="0.98"/>
+      <stop offset="100%" stop-color="${c.color}" stop-opacity="0.5"/>
+    </linearGradient>`;
+  });
+  defs += `</defs>`;
+
+  let bars = '', labels = '';
+  months.forEach((m,gi)=>{
+    const groupX = padL + gi*groupW;
+    if(gi>0) bars += `<line x1="${groupX.toFixed(1)}" y1="${padT}" x2="${groupX.toFixed(1)}" y2="${baseY}" stroke="rgba(255,255,255,0.045)" stroke-width="1"/>`;
+    SUMMARY_CATEGORIES.forEach((c,ci)=>{
+      const v = (byCatMonth[c.key] && byCatMonth[c.key][m]) || 0;
+      const h = v ? Math.max(4, chartH * (v/niceMax)) : 0;
+      const x = groupX + barGap + ci*(barW+barGap);
+      const y = baseY - h;
+      bars += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" rx="4" ry="4"
+        fill="url(#catGrad${ci})" stroke="${c.color}" stroke-opacity="0.55" stroke-width="0.7"
+        style="filter:drop-shadow(0 0 5px ${c.color}55);"/>`;
+      if(v>0) bars += `<text x="${(x+barW/2).toFixed(1)}" y="${(y-6).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="700" fill="${c.color}" font-family="JetBrains Mono, monospace">${v}</text>`;
+    });
+    labels += `<text x="${(groupX+groupW/2).toFixed(1)}" y="${(H-14).toFixed(1)}" text-anchor="middle" font-size="10.5" font-weight="600" letter-spacing="0.5" fill="#B9C0C9" font-family="Oswald, sans-serif" style="text-transform:uppercase;">${summaryMonthLabel(m)}</text>`;
+  });
+
+  return `<div style="background:linear-gradient(165deg,#161b22 0%,#10141a 100%); border:1px solid var(--line); border-radius:12px; padding:22px 18px 14px;">
+    ${legend}
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%; height:auto; display:block; overflow:visible;">
+      ${defs}
+      ${grid}
+      ${bars}
+      ${labels}
+    </svg>
+  </div>`;
+}
+/** Bangun HTML section "Breakdown Category per Month" (chart + tabel summary) untuk disisipkan
+ *  langsung di dalam KPI Chart Dashboard (di atas Grafik Quarter). Data dihitung ulang dari
+ *  dailyRecords setiap kali dipanggil, sehingga otomatis ter-update saat ada input/perubahan
+ *  baru di Daily Maintenance (lewat renderAll() -> renderDashboard() -> renderKPIChartDashboard()). */
+/* ---- Auto Sync "Breakdown Category per Month" (chart + tabel summary) → Google Sheets tab "Dashboard" ----
+   Memakai action generik yang sama dengan sync lain ('sync' + parameter sheet), sehingga TIDAK perlu
+   mengubah code.gs sama sekali — sheet "Dashboard" akan dibuat otomatis oleh Apps Script (sama seperti
+   tab Record Service / Historical Breakdown / RCA), dan sheet lain sama sekali tidak tersentuh karena
+   nama sheet tujuan ('Dashboard') unik dan terpisah dari semua sync lainnya. */
+const BCAT_SYNC_TTL_MS = 30000; // jangan spam Apps Script — auto sync max tiap 30 detik
+let _bcatLastSyncAt = 0;
+let _bcatSyncInFlight = null;
+
+/** Kumpulkan agregat Breakdown Category per bulan dari dailyRecords (dipakai bareng oleh
+ *  tampilan chart/tabel dan payload sync, supaya datanya selalu identik). */
+function collectBreakdownCategoryData(){
+  const monthSet = new Set();
+  const byCatMonth = {}; // category key -> { monthKey: count }
+  SUMMARY_CATEGORIES.forEach(c=> byCatMonth[c.key] = {});
+
+  (dailyRecords || []).forEach(r=>{
+    if(!r || !r.tanggal || r.tanggal.length < 7) return;
+    const mk = String(r.tanggal).slice(0, 7); // YYYY-MM
+    if(!/^\d{4}-\d{2}$/.test(mk)) return;
+    if(!byCatMonth[r.category]) return; // kategori di luar 3 kategori standar dilewati
+    monthSet.add(mk);
+    byCatMonth[r.category][mk] = (byCatMonth[r.category][mk] || 0) + 1;
+  });
+
+  return { months: Array.from(monthSet).sort(), byCatMonth };
+}
+
+/** Format PIVOT — dibuat identik 1:1 dengan tabel "Detail Summary Breakdown Category" &
+ *  chart "Breakdown Category per Month" yang tampil di web (buildSummaryCategoryDashboardSectionHTML()):
+ *  1 baris per kategori, 1 kolom per bulan (label bulan sebagai nama kolom, mis. "Sep 2026"),
+ *  ditutup kolom Average & Total, plus baris TOTAL di akhir yang menjumlahkan tiap kolom bulan.
+ *  CATATAN: karena jumlah kolom bulan ini dinamis (nambah tiap bulan berjalan), header sheet
+ *  "Dashboard" hanya ter-generate ulang saat sheet dalam keadaan kosong (perilaku default code.gs
+ *  yang tidak diubah). Jadi kalau sudah masuk bulan baru dan kolomnya belum ikut muncul di sheet,
+ *  cukup kosongkan/hapus ulang tab "Dashboard" lalu buka ulang menu Dashboard di web supaya
+ *  auto-sync membuat header barunya dari nol (sama seperti langkah perbaikan sebelumnya). */
+function buildBreakdownCategorySyncRecords(months, byCatMonth){
+  const records = [];
+  const monthTotals = {};
+  months.forEach(m=> monthTotals[m] = 0);
+  let grand = 0;
+
+  SUMMARY_CATEGORIES.forEach(c=>{
+    const row = { 'Breakdown Category': c.label };
+    let total = 0;
+    months.forEach(m=>{
+      const v = (byCatMonth[c.key] && byCatMonth[c.key][m]) || 0;
+      total += v;
+      monthTotals[m] += v;
+      row[summaryMonthLabel(m)] = v;
+    });
+    const avg = months.length ? (total/months.length) : 0;
+    row['Average'] = Number(avg.toFixed(1));
+    row['Total'] = total;
+    grand += total;
+    records.push(row);
+  });
+
+  // Baris TOTAL — sama persis dengan totalRow di buildSummaryCategoryDashboardSectionHTML()
+  const totalRow = { 'Breakdown Category': 'TOTAL' };
+  months.forEach(m=>{ totalRow[summaryMonthLabel(m)] = monthTotals[m] || 0; });
+  totalRow['Average'] = months.length ? Number((grand/months.length).toFixed(1)) : 0;
+  totalRow['Total'] = grand;
+  records.push(totalRow);
+
+  return records;
+}
+
+async function syncBreakdownCategoryToSheets(opts){
+  opts = opts || {};
+  if(!BACKEND_CONFIG.sheetsWebAppUrl){
+    if(opts.manual) alert('⚠ sheetsWebAppUrl belum diisi di BACKEND_CONFIG. Deploy Apps Script dulu, lalu tempel URL /exec.');
+    return { ok:false, error:'no_url' };
+  }
+  const { months, byCatMonth } = collectBreakdownCategoryData();
+  const records = buildBreakdownCategorySyncRecords(months, byCatMonth);
+  const statusEl = document.getElementById('bcat-sync-status');
+  try{
+    const res = await fetch(BACKEND_CONFIG.sheetsWebAppUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'sync',
+        sheet: 'Dashboard',
+        spreadsheetId: BACKEND_CONFIG.sheetsSpreadsheetId || '',
+        records,
+        syncedAt: new Date().toISOString()
+      })
+    });
+    let data = null;
+    try{ data = await res.json(); }catch(_e){ data = null; }
+    _bcatLastSyncAt = Date.now();
+    const nowLabel = new Date().toLocaleTimeString('id-ID');
+    if(data && data.ok){
+      if(statusEl) statusEl.textContent = '✓ Synced '+nowLabel;
+      if(opts.manual) alert('✓ Berhasil Auto Sync Breakdown Category ke sheet "Dashboard".\nBuka spreadsheet dan refresh tab Dashboard.');
+    } else if(data && data.error){
+      if(statusEl) statusEl.textContent = '⚠ Sync gagal';
+      if(opts.manual) alert('⚠ Auto Sync gagal: '+data.error);
+    } else {
+      if(statusEl) statusEl.textContent = '✓ Terkirim '+nowLabel;
+      if(opts.manual) alert('✓ Permintaan Auto Sync terkirim ('+records.length+' baris).\nCek tab "Dashboard" di spreadsheet.');
+    }
+    return data || { ok:true };
+  }catch(e){
+    console.error('Auto Sync Breakdown Category ke Google Sheets gagal', e);
+    if(statusEl) statusEl.textContent = '⚠ Sync gagal';
+    if(opts.manual) alert('⚠ Auto Sync gagal: '+(e.message||e)+'\nPastikan Apps Script sudah di-deploy (Who has access: Anyone).');
+    return { ok:false, error:String(e) };
+  }
+}
+
+/** Dipanggil diam-diam setiap kali panel dirender (mis. setiap ada input/perubahan baru
+ *  di Daily Maintenance yang memicu renderAll() -> renderDashboard()). Dibatasi TTL supaya
+ *  tidak membanjiri Apps Script saat banyak render berturut-turut dalam waktu singkat. */
+function autoSyncBreakdownCategoryDashboard(){
+  try{
+    if(!BACKEND_CONFIG.sheetsWebAppUrl) return;
+    if(_bcatSyncInFlight) return;
+    const age = Date.now() - (_bcatLastSyncAt || 0);
+    if(age < BCAT_SYNC_TTL_MS) return;
+    _bcatSyncInFlight = syncBreakdownCategoryToSheets({ manual:false })
+      .catch(()=>{})
+      .finally(()=>{ _bcatSyncInFlight = null; });
+  }catch(e){ console.warn('autoSyncBreakdownCategoryDashboard', e); }
+}
+
+function buildSummaryCategoryDashboardSectionHTML(){
+  const { months, byCatMonth } = collectBreakdownCategoryData();
+
+  const chartHtml = months.length
+    ? summaryCategoryBarChart(months, byCatMonth)
+    : `<div class="hint" style="padding:20px 0; text-align:center;">No data to display.</div>`;
+
+  let tableHtml;
+  if(!months.length){
+    tableHtml = `<table class="dash-sum-table"><thead><tr><th>Breakdown Category</th><th>Average</th><th>Total</th></tr></thead>
+      <tbody><tr><td colspan="3" style="text-align:center;color:var(--text-faint);padding:18px;">No Daily Maintenance data to display.</td></tr></tbody></table>`;
+  } else {
+    const monthTotals = {};
+    months.forEach(m=> monthTotals[m] = 0);
+    let grand = 0;
+
+    const bodyRows = SUMMARY_CATEGORIES.map(c=>{
+      const row = byCatMonth[c.key] || {};
+      let total = 0;
+      const cells = months.map(m=>{
+        const v = row[m] || 0;
+        total += v;
+        monthTotals[m] += v;
+        return '<td style="text-align:center;'+(v? 'font-weight:600;color:var(--text);':'color:var(--text-faint);')+'">'+(v||'—')+'</td>';
+      }).join('');
+      const avg = months.length ? (total/months.length) : 0;
+      grand += total;
+      return '<tr><td style="font-weight:600;white-space:nowrap;">' +
+        '<span style="display:inline-flex;align-items:center;gap:6px;"><i style="width:10px;height:10px;border-radius:2px;background:'+c.color+';display:inline-block;flex-shrink:0;"></i>'+c.label+'</span></td>' +
+        cells +
+        '<td style="text-align:center;font-weight:700;color:var(--text);">'+avg.toFixed(1)+'</td>' +
+        '<td style="text-align:center;font-weight:700;color:var(--yellow);">'+total+'</td></tr>';
+    }).join('');
+
+    const totalRow = '<tr style="background:rgba(255,199,44,0.08);">' +
+      '<td style="font-weight:700;">TOTAL</td>' +
+      months.map(m=>'<td style="text-align:center;font-weight:700;color:var(--yellow);">'+(monthTotals[m]||0)+'</td>').join('') +
+      '<td style="text-align:center;font-weight:700;color:var(--yellow);">'+(months.length ? (grand/months.length).toFixed(1) : '0.0')+'</td>' +
+      '<td style="text-align:center;font-weight:700;color:var(--yellow);font-size:13px;">'+grand+'</td></tr>';
+
+    tableHtml = `<table class="dash-sum-table">
+      <thead><tr><th>Breakdown Category</th>${months.map(m=>'<th title="'+m+'" style="text-align:center;">'+summaryMonthLabel(m)+'</th>').join('')}<th style="text-align:center;color:var(--yellow);">Average</th><th style="text-align:center;color:var(--yellow);">Total</th></tr></thead>
+      <tbody>${bodyRows}${totalRow}</tbody>
+    </table>`;
+  }
+
+  // Auto sync diam-diam ke sheet "Dashboard" (dibatasi TTL, tidak memblokir render UI)
+  autoSyncBreakdownCategoryDashboard();
+
+  return `<div class="dash-mid-grid">
+    <div class="dash-panel">
+      <div class="chart-panel-title-row">
+        <div class="dash-panel-title" style="margin-bottom:0;">Breakdown Category per Month</div>
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <span id="bcat-sync-status" style="font-size:9px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.5px;"></span>
+          <button type="button" class="btn small" onclick="syncBreakdownCategoryToSheets({manual:true})" title="Kirim chart &amp; tabel summary Breakdown Category ke sheet &quot;Dashboard&quot; di spreadsheet Maintenance">☁ Auto Sync</button>
+        </div>
+      </div>
+      ${chartHtml}
+    </div>
+    <div class="dash-panel">
+      <div class="dash-panel-title">Summary Breakdown Category per Month</div>
+      <div style="overflow-x:auto;">${tableHtml}</div>
+    </div>
+  </div>`;
+}
+
 /** Tabel ringkasan Mechanic Activity semua bulan:
  *  baris = mekanik, kolom = setiap bulan (YYYY-MM) + Total.
  *  Nilai sel = jumlah job (Daily Maintenance) yang melibatkan mekanik tsb.
@@ -15734,6 +16017,7 @@ function renderKPIChartDashboard(k, globalStats){
       </div>
     </div>`;
     })()}
+    ${buildSummaryCategoryDashboardSectionHTML()}
     <div class="dash-mid-grid">
       <div class="dash-panel">
         <div class="chart-panel-title-row">
