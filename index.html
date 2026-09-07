@@ -13961,7 +13961,12 @@ async function syncBreakdownCategoryToSheets(opts){
     const nowLabel = new Date().toLocaleTimeString('id-ID');
     if(data && data.ok){
       if(statusEl) statusEl.textContent = '✓ Synced '+nowLabel;
-      if(opts.manual) alert('✓ Berhasil Auto Sync Breakdown Category ke sheet "Dashboard".\nBuka spreadsheet dan refresh tab Dashboard.');
+      if(opts.manual){
+        alert('✓ Berhasil Auto Sync Breakdown Category ke sheet "Dashboard".\nLanjut sync Monthly KPI…');
+        try{
+          await syncMonthlyKpiAchievementToSheets(window.__trendMonthsForSync||[], window.__monthlyKpiDefsForSync||[], {manual:true});
+        }catch(_e){}
+      }
     } else if(data && data.error){
       if(statusEl) statusEl.textContent = '⚠ Sync gagal';
       if(opts.manual) alert('⚠ Auto Sync gagal: '+data.error);
@@ -14050,7 +14055,7 @@ async function syncMonthlyKpiAchievementToSheets(trendMonths, monthlyKpiDefs, op
         sheet: 'Dashboard',
         block: 'monthly_kpi_achievement',
         forceReplace: true,
-        fullReset: !!opts.manual,
+        fullReset: false,
         spreadsheetId: BACKEND_CONFIG.sheetsSpreadsheetId || '',
         records,
         syncedAt: new Date().toISOString()
