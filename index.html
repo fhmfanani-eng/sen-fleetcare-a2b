@@ -13946,12 +13946,9 @@ async function syncBreakdownCategoryToSheets(opts){
       body: JSON.stringify({
         action: 'sync',
         sheet: 'Dashboard',
-        // block + forceReplace: dipakai oleh patch code.gs (lihat file terpisah yang disertakan)
-        // supaya Apps Script SELALU menghapus baris blok ini sebelum menulis ulang — bukan hanya
-        // saat sheet kosong. Ini akar penyebab duplikat: sync lama hanya reset header saat sheet
-        // kosong, jadi baris versi lama menumpuk dengan baris versi baru saat skema berubah.
         block: 'breakdown_category',
         forceReplace: true,
+        fullReset: !!opts.manual,
         spreadsheetId: BACKEND_CONFIG.sheetsSpreadsheetId || '',
         records,
         syncedAt: new Date().toISOString()
@@ -14053,6 +14050,7 @@ async function syncMonthlyKpiAchievementToSheets(trendMonths, monthlyKpiDefs, op
         sheet: 'Dashboard',
         block: 'monthly_kpi_achievement',
         forceReplace: true,
+        fullReset: !!opts.manual,
         spreadsheetId: BACKEND_CONFIG.sheetsSpreadsheetId || '',
         records,
         syncedAt: new Date().toISOString()
