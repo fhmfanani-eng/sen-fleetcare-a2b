@@ -13861,6 +13861,7 @@ function summaryCategoryBarChart(months, byCatMonth){
 const BCAT_SYNC_TTL_MS = 30000; // jangan spam Apps Script — auto sync max tiap 30 detik
 let _bcatLastSyncAt = 0;
 let _bcatSyncInFlight = null;
+let _bcatLastPayloadHash = ''; // guard tambahan: skip kirim ulang kalau datanya persis sama (anti-duplikat sisi klien)
 
 /** Kumpulkan agregat Breakdown Category per bulan dari dailyRecords (dipakai bareng oleh
  *  tampilan chart/tabel dan payload sync, supaya datanya selalu identik). */
@@ -13931,6 +13932,13 @@ async function syncBreakdownCategoryToSheets(opts){
   const { months, byCatMonth } = collectBreakdownCategoryData();
   const records = buildBreakdownCategorySyncRecords(months, byCatMonth);
   const statusEl = document.getElementById('bcat-sync-status');
+  // Anti-duplikat sisi klien: kalau data persis sama dgn sync terakhir & ini bukan klik manual,
+  // jangan kirim ulang sama sekali (TTL 30 detik saja tidak cukup kalau user diam >30 detik
+  // di halaman Dashboard, render tetap terpanggil ulang dgn data identik).
+  const payloadHash = JSON.stringify(records);
+  if(!opts.manual && payloadHash === _bcatLastPayloadHash){
+    return { ok:true, skipped:true };
+  }
   try{
     const res = await fetch(BACKEND_CONFIG.sheetsWebAppUrl, {
       method: 'POST',
@@ -13938,6 +13946,12 @@ async function syncBreakdownCategoryToSheets(opts){
       body: JSON.stringify({
         action: 'sync',
         sheet: 'Dashboard',
+        // block + forceReplace: dipakai oleh patch code.gs (lihat file terpisah yang disertakan)
+        // supaya Apps Script SELALU menghapus baris blok ini sebelum menulis ulang — bukan hanya
+        // saat sheet kosong. Ini akar penyebab duplikat: sync lama hanya reset header saat sheet
+        // kosong, jadi baris versi lama menumpuk dengan baris versi baru saat skema berubah.
+        block: 'breakdown_category',
+        forceReplace: true,
         spreadsheetId: BACKEND_CONFIG.sheetsSpreadsheetId || '',
         records,
         syncedAt: new Date().toISOString()
@@ -13946,6 +13960,7 @@ async function syncBreakdownCategoryToSheets(opts){
     let data = null;
     try{ data = await res.json(); }catch(_e){ data = null; }
     _bcatLastSyncAt = Date.now();
+    _bcatLastPayloadHash = payloadHash;
     const nowLabel = new Date().toLocaleTimeString('id-ID');
     if(data && data.ok){
       if(statusEl) statusEl.textContent = '✓ Synced '+nowLabel;
@@ -13979,6 +13994,106 @@ function autoSyncBreakdownCategoryDashboard(){
       .catch(()=>{})
       .finally(()=>{ _bcatSyncInFlight = null; });
   }catch(e){ console.warn('autoSyncBreakdownCategoryDashboard', e); }
+}
+
+/* ---- Auto Sync "Monthly KPI Achievement" (chart + tabel % capaian per bulan) → Google Sheets
+   tab "Dashboard" ---- Sama pola dengan Breakdown Category di atas: 1 baris per KPI (MA, PA,
+   MTBS, MTTR, PMR, SA) + baris Average, 1 kolom per bulan (persis dengan tabel "Monthly KPI
+   Achievement" yang tampil di panel Dashboard web). Ditulis ke BLOK TERPISAH ('monthly_kpi_
+   achievement') di sheet "Dashboard" yang sama dengan Breakdown Category, supaya kedua tabel
+   bisa hidup berdampingan di satu sheet tanpa saling menimpa atau berduplikasi — lihat patch
+   code.gs terlampir untuk cara Apps Script memisahkan blok berdasarkan marker baris. */
+const MKPI_SYNC_TTL_MS = 30000;
+let _mkpiLastSyncAt = 0;
+let _mkpiSyncInFlight = null;
+let _mkpiLastPayloadHash = '';
+
+function buildMonthlyKpiAchievementSyncRecords(trendMonths, monthlyKpiDefs){
+  const monthCols = trendMonths.map(m => summaryMonthLabel(m.key));
+  const records = monthlyKpiDefs.map(d=>{
+    const row = { 'KPI': d.label };
+    trendMonths.forEach((m,i)=>{
+      const pct = (m.pct && m.pct[d.key] != null) ? m.pct[d.key] : 0;
+      row[monthCols[i]] = Math.round(pct);
+    });
+    return row;
+  });
+  const avgRow = { 'KPI': 'Average' };
+  trendMonths.forEach((m,i)=>{
+    const vals = monthlyKpiDefs.map(d => (m.pct && m.pct[d.key] != null) ? m.pct[d.key] : 0);
+    const avg = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0;
+    avgRow[monthCols[i]] = Math.round(avg);
+  });
+  records.push(avgRow);
+  return records;
+}
+
+async function syncMonthlyKpiAchievementToSheets(trendMonths, monthlyKpiDefs, opts){
+  opts = opts || {};
+  if(!BACKEND_CONFIG.sheetsWebAppUrl){
+    if(opts.manual) alert('⚠ sheetsWebAppUrl belum diisi di BACKEND_CONFIG. Deploy Apps Script dulu, lalu tempel URL /exec.');
+    return { ok:false, error:'no_url' };
+  }
+  if(!trendMonths || !trendMonths.length){
+    if(opts.manual) alert('Belum ada data bulanan untuk disinkronkan.');
+    return { ok:true, written:0 };
+  }
+  const records = buildMonthlyKpiAchievementSyncRecords(trendMonths, monthlyKpiDefs);
+  const payloadHash = JSON.stringify(records);
+  if(!opts.manual && payloadHash === _mkpiLastPayloadHash){
+    return { ok:true, skipped:true };
+  }
+  const statusEl = document.getElementById('mkpi-sync-status');
+  try{
+    const res = await fetch(BACKEND_CONFIG.sheetsWebAppUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'sync',
+        sheet: 'Dashboard',
+        block: 'monthly_kpi_achievement',
+        forceReplace: true,
+        spreadsheetId: BACKEND_CONFIG.sheetsSpreadsheetId || '',
+        records,
+        syncedAt: new Date().toISOString()
+      })
+    });
+    let data = null;
+    try{ data = await res.json(); }catch(_e){ data = null; }
+    _mkpiLastSyncAt = Date.now();
+    _mkpiLastPayloadHash = payloadHash;
+    const nowLabel = new Date().toLocaleTimeString('id-ID');
+    if(data && data.ok){
+      if(statusEl) statusEl.textContent = '✓ Synced '+nowLabel;
+      if(opts.manual) alert('✓ Berhasil Auto Sync Monthly KPI Achievement ke sheet "Dashboard".\nBuka spreadsheet dan refresh tab Dashboard.');
+    } else if(data && data.error){
+      if(statusEl) statusEl.textContent = '⚠ Sync gagal';
+      if(opts.manual) alert('⚠ Auto Sync gagal: '+data.error);
+    } else {
+      if(statusEl) statusEl.textContent = '✓ Terkirim '+nowLabel;
+      if(opts.manual) alert('✓ Permintaan Auto Sync terkirim ('+records.length+' baris).\nCek tab "Dashboard" di spreadsheet.');
+    }
+    return data || { ok:true };
+  }catch(e){
+    console.error('Auto Sync Monthly KPI Achievement ke Google Sheets gagal', e);
+    if(statusEl) statusEl.textContent = '⚠ Sync gagal';
+    if(opts.manual) alert('⚠ Auto Sync gagal: '+(e.message||e)+'\nPastikan Apps Script sudah di-deploy (Who has access: Anyone).');
+    return { ok:false, error:String(e) };
+  }
+}
+
+/** Dipanggil diam-diam dari renderKPIChartDashboard() setiap kali panel Dashboard dirender.
+ *  Dibatasi TTL + payload-hash supaya tidak membanjiri Apps Script. */
+function autoSyncMonthlyKpiAchievementDashboard(trendMonths, monthlyKpiDefs){
+  try{
+    if(!BACKEND_CONFIG.sheetsWebAppUrl) return;
+    if(_mkpiSyncInFlight) return;
+    const age = Date.now() - (_mkpiLastSyncAt || 0);
+    if(age < MKPI_SYNC_TTL_MS) return;
+    _mkpiSyncInFlight = syncMonthlyKpiAchievementToSheets(trendMonths, monthlyKpiDefs, { manual:false })
+      .catch(()=>{})
+      .finally(()=>{ _mkpiSyncInFlight = null; });
+  }catch(e){ console.warn('autoSyncMonthlyKpiAchievementDashboard', e); }
 }
 
 function buildSummaryCategoryDashboardSectionHTML(){
@@ -15001,6 +15116,7 @@ function renderKPIChartDashboard(k, globalStats){
       }
     }catch(e){}
     // Daily Maintenance Approved dates also feed getKPIPeriodOptions; ensure any extra tanggal months
+    // eslint-disable-next-line
     dailyRecords.forEach(r=>{ if(r.tanggal && r.tanggal.length>=7) periodSet.add(r.tanggal.slice(0,7)); });
     const keysAsc = Array.from(periodSet).filter(p=>/^\d{4}-\d{2}$/.test(p)).sort();
     keysAsc.forEach(key=>{
@@ -15022,6 +15138,14 @@ function renderKPIChartDashboard(k, globalStats){
       });
     });
   }
+
+  // Auto sync diam-diam "Monthly KPI Achievement" (chart + tabel) ke sheet "Dashboard",
+  // blok terpisah dari Breakdown Category (dibatasi TTL, tidak memblokir render UI).
+  autoSyncMonthlyKpiAchievementDashboard(trendMonths, monthlyKpiDefs);
+  // Disimpan di window supaya tombol "☁ Auto Sync" manual (onclick inline, scope global)
+  // selalu bisa mengambil data trend/KPI TERBARU tanpa perlu re-render ulang.
+  window.__trendMonthsForSync = trendMonths;
+  window.__monthlyKpiDefsForSync = monthlyKpiDefs;
 
   function sparklineSVG(values, color){
     const W=120, H=22, pad=2;
@@ -15298,7 +15422,11 @@ function renderKPIChartDashboard(k, globalStats){
       <div style="margin-top:14px">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px">
           <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;font-weight:600">Monthly KPI Achievement</div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap">${legend}</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span id="mkpi-sync-status" style="font-size:9px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.5px;"></span>
+            <button type="button" class="btn small" onclick="syncMonthlyKpiAchievementToSheets(window.__trendMonthsForSync||[], window.__monthlyKpiDefsForSync||[], {manual:true})" title="Kirim chart &amp; tabel Monthly KPI Achievement ke sheet &quot;Dashboard&quot; di spreadsheet Maintenance">☁ Auto Sync</button>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">${legend}</div>
+          </div>
         </div>
         ${monthlyAchievement4DSVG()}
         <div style="overflow-x:auto;border:1px solid var(--line);border-radius:6px">
