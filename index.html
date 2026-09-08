@@ -2097,16 +2097,19 @@ body.role-mechanic #history-filters{ display:none !important; }
         <div class="section-title">Data Sumber MA &amp; PA</div>
         <div class="panel" style="margin-bottom:20px;">
           <div class="panel-head">
-            <h2><span class="tag">SYNC</span> Sheet Performance + Fallback Manual</h2>
+            <h2><span class="tag">LIVE</span> Sheet Performance — Auto Sync</h2>
             <div class="toolbar">
-              <button type="button" class="btn small" id="mapa-sync-perf-btn" title="Ambil W/S/R terbaru dari sheet performance di Google Spreadsheet">☁ Sync from Performance Sheet</button>
+              <button type="button" class="btn small" id="mapa-sync-kpi-btn" data-label="☁ Auto Sync KPI → Maintenance" title="Mengisi Acv./Score di tab Maintenance (SEN KPI Performance). Hanya minggu yang sudah jatuh tempo.">☁ Auto Sync KPI → Maintenance</button>
               <button type="button" class="btn secondary small" id="mapa-template-btn">⬇ Unduh Template</button>
               <button type="button" class="btn danger" id="mapa-clear-btn" style="display:none;">Hapus Data</button>
             </div>
           </div>
-          <!-- Pilih File (fallback manual) dihapus dari UI; input disembunyikan agar listener lama aman -->
+          <!-- Tombol Sync from Performance Sheet dihapus: sync live otomatis lewat startPerformanceLiveSync(). -->
+          <!-- Input file disembunyikan agar listener lama aman -->
           <input type="file" id="mapa-file-input" accept=".csv,.xlsx,.xls" style="display:none;" aria-hidden="true">
-          <div id="mapa-upload-status" class="hint"></div>
+          <!-- Tombol manual disembunyikan (tetap di DOM agar listener lama tidak error) -->
+          <button type="button" id="mapa-sync-perf-btn" style="display:none;" aria-hidden="true" tabindex="-1">Sync Performance (hidden)</button>
+          <div id="mapa-upload-status" class="hint">☁ Sheet performance disinkronkan otomatis (live). Tidak perlu klik manual. Untuk mengisi Acv./Score di sheet Maintenance, gunakan <b>Auto Sync KPI</b>.</div>
         </div>
 
         <div class="section-title" style="display:none">Dashboard KPI</div>
@@ -2135,9 +2138,6 @@ body.role-mechanic #history-filters{ display:none !important; }
         </div>
 
         <div class="panel period-panel" style="margin-bottom:16px;">
-          <div class="panel-head" style="margin-bottom:8px;">
-            <h2><span class="tag">FILTER</span> KPI PERIOD (LOCKED)</h2>
-          </div>
           <div class="toolbar period-range-row" style="align-items:center; gap:10px; flex-wrap:wrap;">
             <span class="period-range-label">PERIODE</span>
             <div class="field period-input-group period-date-group" style="margin-bottom:0;">
@@ -7643,7 +7643,7 @@ function populateUnitWeekPeriodSelect(){
       const [ps, pe] = perfKey.split('_');
       hintEl.innerHTML = `Web period filter (locked): <b>${formatPerformancePeriodLabel(ps, pe)}</b>. Does not auto-follow sheet period updates. Change dates above or click "✕ All Periods". W/S/R &amp; MA/PA use sheet only when ranges match; MTBS/MTTR/PMR/SA use this date range.`;
     } else {
-      hintEl.innerHTML = 'No period set. Choose dates above (locked — will not follow sheet updates), or click <b>☁ Sync from Performance Sheet</b> to load W/S/R data only (period filter stays as you set it).';
+      hintEl.innerHTML = 'No period set. Choose dates above (locked — will not follow sheet updates), or wait for live auto-sync from the performance sheet (period filter stays as you set it). On Dashboard, use <b>Auto Sync KPI</b> only to fill Maintenance Acv./Score.';
     }
   }
 }
@@ -16797,11 +16797,9 @@ async function fetchPerformanceFromSheets(opts){
         rows.length + ' unit · W: ' + totalW.toFixed(1) +
         ' · S: ' + totalS.toFixed(1) +
         ' · R: ' + totalR.toFixed(1) + ' jam');
-      // Setelah sync performance manual, ikut push KPI ke tab Maintenance
-      try{ await syncMaintenanceKPIToSheet({ force:true, manual:true }); }catch(_e){}
-    } else {
-      try{ await syncMaintenanceKPIToSheet({ force:false, manual:false }); }catch(_e){}
     }
+    // TIDAK push ke sheet Maintenance di sini.
+    // Hanya tombol Auto Sync KPI yang boleh menulis, dan hanya periode yang sudah jatuh tempo.
     return { ok:true, rows: rows.length, totalW, totalS, totalR, totalT, changed:true };
   }catch(e){
     console.error('fetchPerformanceFromSheets gagal', e);
@@ -16958,6 +16956,11 @@ async function syncMaintenanceKPIToSheet(opts){
   }
   if(_maintKpiInFlight && !opts.manual) return _maintKpiInFlight;
 
+  // LOCK: hanya perintah manual (tombol Auto Sync KPI) yang boleh menulis ke sheet Maintenance
+  if(!opts.manual){
+    return { ok:true, skipped:'auto_disabled', message:'Sync Maintenance hanya via Auto Sync KPI' };
+  }
+
   const run = (async ()=>{
     try{
       // Pastikan MA/PA dari performance sudah segar sebelum hitung
@@ -16972,22 +16975,27 @@ async function syncMaintenanceKPIToSheet(opts){
         periods = fallbackMaintenancePeriodsForMonth(now.getFullYear(), now.getMonth()+1);
       }
 
-      // Hanya sync minggu yang sudah mulai (start <= hari ini)
+      // LOCK periode: HANYA minggu yang sudah selesai (end < hari ini).
+      // Contoh: W1 1–10 Sept → baru boleh sync mulai 11 Sept.
       const today = toDateStr(new Date());
-      const toSync = periods.filter(p=>p.start && p.start <= today);
+      const toSync = periods.filter(p => p.end && String(p.end) < String(today));
       if(!toSync.length){
-        if(opts.manual) alert('ℹ Tidak ada periode minggu yang perlu di-sync.');
-        return { ok:true, synced:0, detail:[] };
+        const openOnes = periods.filter(p => p.start && (!p.end || String(p.end) >= String(today)))
+          .map(p => (p.week||'') + ' ' + (p.month||'') + ' (sampai ' + (p.end||'?') + ')').join(', ');
+        alert('ℹ Tidak ada periode yang sudah jatuh tempo.\n' +
+          'Kolom Acv./Score hanya diisi setelah tanggal akhir minggu lewat.\n' +
+          (openOnes ? ('Masih berjalan: ' + openOnes) : 'Tidak ada periode terbuka di cache.'));
+        return { ok:true, synced:0, detail:[], lockedOpenPeriods:true };
       }
 
       const detail = [];
       let okCount = 0, failCount = 0;
       for(const p of toSync){
         const items = buildMaintenanceKpiItems(p.start, p.end);
-        // Skip minggu yang sama sekali belum punya data (semua 0) kecuali manual force
+        // Skip minggu tanpa data
         const hasData = items.some(it=>Number(it.acu)>0);
-        if(!hasData && !opts.manual){
-          detail.push({ month:p.month, week:p.week, skipped:'no_data' });
+        if(!hasData){
+          detail.push({ month:p.month, week:p.week, skipped:'no_data', periodEnd:p.end });
           continue;
         }
         const payload = {
@@ -17567,8 +17575,8 @@ async function runPlanHmLiveSyncCycle(opts){
       dailyWhChanged = !!(dwhRes && dwhRes.ok && (dwhRes.changed || forceDay || (newDwh && newDwh !== prevDwh)));
     }catch(_e){}
 
-    // 3) Push KPI ke tab Maintenance (silent)
-    try{ await syncMaintenanceKPIToSheet({ force:false, manual:false }); }catch(_e){}
+    // 3) TIDAK push KPI ke Maintenance di live cycle.
+    //    Sheet Maintenance hanya diisi lewat tombol Auto Sync KPI (periode sudah jatuh tempo).
 
     const dash = document.getElementById('view-dashboard');
     const units = document.getElementById('view-database');
