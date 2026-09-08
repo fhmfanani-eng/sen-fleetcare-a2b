@@ -2155,16 +2155,6 @@ body.role-mechanic #history-filters{ display:none !important; }
 
         <div class="grid grid-2" id="unit-cards"></div>
 
-        <!-- RINGKASAN KPI PER UNIT & BULAN (auto — dihitung ulang otomatis tiap bulan berjalan) -->
-        <div class="panel" style="margin-top:16px;">
-          <div class="panel-head" style="flex-wrap:wrap; gap:8px;">
-            <h2><span class="tag">AUTO</span> Trend &amp; Summary KPI Per Unit &amp; Bulan</h2>
-            <span class="hint" id="unit-monthly-updated-hint" style="margin:0;"></span>
-          </div>
-          <div class="hint" style="margin-bottom:12px;">Grafik &amp; tabel di bawah dihitung otomatis dari data Daily Maintenance (Approved) &amp; Monitoring HM untuk <b>6 bulan terakhir</b> (mengikuti bulan berjalan) — tidak perlu di-generate manual, otomatis bergeser tiap awal bulan baru berikutnya.</div>
-          <div id="unit-monthly-chart" style="width:100%; min-height:280px; margin-bottom:18px;"></div>
-          <div class="table-wrap" id="unit-monthly-table-wrap" style="overflow-x:auto;"></div>
-        </div>
 
       </section>
 
@@ -7906,23 +7896,8 @@ function unitMonthlySummaryTableHTML(months){
  *  titik yang sudah memanggil renderUnitCards() (buka menu Performance, sync sheet,
  *  live-refresh berkala, dsb) — tanpa perlu hook baru & tanpa perlu di-generate manual. */
 function renderUnitMonthlySummary(){
-  const chartWrap = document.getElementById('unit-monthly-chart');
-  const tableWrap = document.getElementById('unit-monthly-table-wrap');
-  if(!chartWrap || !tableWrap) return; // panel belum ada di DOM saat ini
-  try{
-    const months = getRecentMonthsList(6);
-    chartWrap.innerHTML = unitMonthlyTrendSVG(months);
-    tableWrap.innerHTML = unitMonthlySummaryTableHTML(months);
-    const hintEl = document.getElementById('unit-monthly-updated-hint');
-    if(hintEl){
-      const now = new Date();
-      const stamp = now.toLocaleString('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
-      hintEl.textContent = '⟲ Auto-update tiap bulan · terakhir dihitung ' + stamp;
-    }
-  }catch(e){
-    console.error('renderUnitMonthlySummary gagal:', e);
-    chartWrap.innerHTML = `<div style="padding:24px;text-align:center;color:var(--text-faint);font-size:12px">Gagal memuat grafik trend bulanan.</div>`;
-  }
+  /* Panel Trend & Summary KPI Per Unit & Bulan di menu Performance telah dihapus. */
+  return;
 }
 
 function renderUnitCards(){
