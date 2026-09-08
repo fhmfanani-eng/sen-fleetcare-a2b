@@ -2155,6 +2155,17 @@ body.role-mechanic #history-filters{ display:none !important; }
 
         <div class="grid grid-2" id="unit-cards"></div>
 
+        <!-- RINGKASAN KPI PER UNIT & BULAN (auto — dihitung ulang otomatis tiap bulan berjalan) -->
+        <div class="panel" style="margin-top:16px;">
+          <div class="panel-head" style="flex-wrap:wrap; gap:8px;">
+            <h2><span class="tag">AUTO</span> Trend &amp; Summary KPI Per Unit &amp; Bulan</h2>
+            <span class="hint" id="unit-monthly-updated-hint" style="margin:0;"></span>
+          </div>
+          <div class="hint" style="margin-bottom:12px;">Grafik &amp; tabel di bawah dihitung otomatis dari data Daily Maintenance (Approved) &amp; Monitoring HM untuk <b>6 bulan terakhir</b> (mengikuti bulan berjalan) — tidak perlu di-generate manual, otomatis bergeser tiap awal bulan baru berikutnya.</div>
+          <div id="unit-monthly-chart" style="width:100%; min-height:280px; margin-bottom:18px;"></div>
+          <div class="table-wrap" id="unit-monthly-table-wrap" style="overflow-x:auto;"></div>
+        </div>
+
       </section>
 
       <!-- DATABASE AKUN — khusus Supervisor / PJO -->
@@ -3417,6 +3428,76 @@ function kpiWeightedScore(key, value){
   const w = KPI_WEIGHT[key]||0;
   return (tier/100) * w;
 }
+
+/* ============================================================================
+ * KPI FORMULA LOCK — self-test otomatis (jalan tiap kali halaman dimuat).
+ *
+ * Tujuan: mengunci kpiTierScore()/KPI_TARGET/KPI_WEIGHT supaya SELALU sama
+ * dengan tabel resmi "KEY PERFORMANCE INDICATOR" (Operational) yang dipakai
+ * perusahaan. Kalau suatu saat ada perubahan kode (sengaja/tidak sengaja)
+ * yang membuat rumus menyimpang dari tabel resmi ini, error langsung
+ * kelihatan di console DAN muncul sebagai banner merah kecil di pojok layar —
+ * tidak lagi diam-diam salah seperti kasus MTBS 3041 jam sebelumnya.
+ *
+ * Referensi resmi (dari tabel KPI Operational):
+ *   MA / PA : <70%=60% | 70–89%=80% | ≥90%=100%   (target 90%,  weight 15% / 15%)
+ *   MTBS    : <64 jam=60% | 64–80 jam=80% | >80 jam=100%  (target 80 jam, weight 10%)
+ *   MTTR    : >45 jam=60% | 36–45 jam=80% | <36 jam=100%  (target 36 jam, weight 10%)
+ *   PMR     : <85%=60% | 85–90%=80% | >90%=100%   (target 90%,  weight 10%)
+ *   SA      : <85%=60% | 85–90%=80% | >90%=100%   (target 90%,  weight 10%)
+ *
+ * JANGAN ubah angka referensi di bawah ini kecuali tabel KPI resmi dari
+ * perusahaan memang berubah — dan kalau berubah, update BERSAMAAN dengan
+ * kpiTierScore()/KPI_TARGET/KPI_WEIGHT di atas supaya tetap sinkron.
+ * ============================================================================ */
+(function kpiFormulaLockSelfTest(){
+  try{
+    const expectWeight = { ma:15, pa:15, mtbs:10, mttr:10, pmr:10, sa:10 };
+    const expectTarget = { ma:90, pa:90, mtbs:80, mttr:36, pmr:90, sa:90 };
+    // [key, value, expectedTierScore] — mencakup titik di bawah/tepat di/di atas tiap batas.
+    const cases = [
+      ['ma',   60, 60], ['ma',   69.9, 60], ['ma',   70, 80], ['ma',   89, 80], ['ma',   90, 100], ['ma',   95, 100],
+      ['pa',   60, 60], ['pa',   69.9, 60], ['pa',   70, 80], ['pa',   89, 80], ['pa',   90, 100], ['pa',   95, 100],
+      ['mtbs', 30, 60], ['mtbs', 63.9, 60], ['mtbs', 64, 80], ['mtbs', 80, 80], ['mtbs', 80.1, 100], ['mtbs', 100, 100],
+      ['mttr', 50, 60], ['mttr', 45.1, 60], ['mttr', 45, 80], ['mttr', 36, 80], ['mttr', 35.9, 100], ['mttr', 0, 100],
+      ['pmr',  60, 60], ['pmr',  84.9, 60], ['pmr',  85, 80], ['pmr',  90, 80], ['pmr',  90.1, 100],
+      ['sa',   60, 60], ['sa',   84.9, 60], ['sa',   85, 80], ['sa',   90, 80], ['sa',   90.1, 100]
+    ];
+    const errors = [];
+    cases.forEach(([key,val,expected])=>{
+      const got = kpiTierScore(key, val);
+      if(got !== expected) errors.push(`kpiTierScore('${key}', ${val}) = ${got}% — seharusnya ${expected}% (sesuai tabel resmi)`);
+    });
+    Object.keys(expectWeight).forEach(k=>{
+      if((KPI_WEIGHT[k]||0) !== expectWeight[k]) errors.push(`KPI_WEIGHT.${k} = ${KPI_WEIGHT[k]} — seharusnya ${expectWeight[k]}`);
+    });
+    Object.keys(expectTarget).forEach(k=>{
+      if((KPI_TARGET[k]||0) !== expectTarget[k]) errors.push(`KPI_TARGET.${k} = ${KPI_TARGET[k]} — seharusnya ${expectTarget[k]}`);
+    });
+    window.__KPI_FORMULA_LOCK_ERRORS__ = errors;
+    if(errors.length){
+      console.error('[KPI FORMULA LOCK] Rumus KPI TIDAK sesuai tabel resmi:\n- ' + errors.join('\n- '));
+      const showBanner = ()=>{
+        try{
+          const el = document.createElement('div');
+          el.id = 'kpi-lock-warning-banner';
+          el.style.cssText = 'position:fixed;left:12px;bottom:12px;z-index:99999;max-width:420px;'
+            + 'background:#3a1216;border:1px solid #E5484D;border-radius:8px;color:#ffd7d7;'
+            + 'font:12px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;padding:10px 12px;'
+            + 'box-shadow:0 10px 30px rgba(0,0,0,.5)';
+          el.innerHTML = '<b style="color:#ff8a8f">⚠ KPI FORMULA LOCK GAGAL</b><br>'
+            + 'Rumus perhitungan KPI menyimpang dari tabel resmi. Lihat console (F12) untuk detail, '
+            + 'atau hubungi developer sebelum data KPI ini dipakai/dilaporkan.';
+          document.body.appendChild(el);
+        }catch(_e){}
+      };
+      if(document.body) showBanner();
+      else document.addEventListener('DOMContentLoaded', showBanner);
+    }
+  }catch(e){
+    console.error('[KPI FORMULA LOCK] Self-test gagal dijalankan:', e);
+  }
+})();
 
 // Imported from "Plan Schedule Next Service Juli-Desember 2026.xlsx" — sheet "Plan Next Service"
 // Imported from "Report_Maintenance_A2B.xlsx" — realisasi service Jan-Jul 2026 dijadikan riwayat
@@ -7256,24 +7337,46 @@ function hmWSRForUnit(unitCode, startStr, endStr){
   const S = Math.max(T - W - R, 0);
   return { W, S, R, T };
 }
+// PERBAIKAN ANTI-ANOMALI (MTBS meledak jadi ribuan jam, mis. SBD-103 = 3041 jam untuk periode
+// 1–8 September): HM (hour meter) unit secara FISIK tidak mungkin bertambah lebih cepat dari waktu
+// kalender yang benar-benar berlalu. Kalau salah satu record Daily Maintenance punya input HM yang
+// keliru (salah ketik / ter-loncat ribuan jam / HM unit lain kepencet), selisih Math.max-Math.min
+// pada unit tsb bisa jauh melebihi rentang tanggal record yang ada — sehingga MTBS (Total Working
+// Hours ÷ Jumlah Breakdown, atau langsung Total Working Hours kalau tidak ada breakdown sama sekali
+// pada periode itu) meledak jadi angka yang mustahil, walau tampil "100% ACHIEVED". Fungsi ini
+// membatasi (cap) selisih HM ke rentang kalender riil (jumlah hari tanggal pertama→terakhir × 24 jam)
+// dari record-record yang dipakai, supaya satu input yang salah tidak merusak MTBS di seluruh
+// dashboard maupun saat disinkronkan ke spreadsheet KPI (sheet Maintenance).
+function capHMByCalendarSpan(totalHM, records){
+  if(!(totalHM>0) || !records || !records.length) return totalHM;
+  const dates = records.map(r=>r.tanggal).filter(Boolean).sort();
+  if(dates.length < 2) return totalHM;
+  const calSpanHours = daysBetweenInclusive(dates[0], dates[dates.length-1]) * 24;
+  return Math.min(totalHM, calSpanHours);
+}
 // PERBAIKAN: hitung total jam HM (elapsed) secara BENAR untuk perhitungan gabungan banyak unit.
 // Sebelumnya totalHM dihitung dari (Math.max - Math.min) atas SEMUA nilai HM tercampur dari
 // berbagai unit sekaligus — padahal tiap unit punya angka HM meter dasar yang jauh berbeda
 // (mis. SPC-104 ~1000 jam, SWA-101 ~5000 jam), sehingga selisihnya jadi angka raksasa yang tidak
 // berarti apa-apa (bukan jam operasional riil) dan selalu jauh melebihi target MTBS (80 jam) —
 // akibatnya MTBS selalu mentok/capped 100% di grafik "Rekap KPI Triwulan" walau data breakdown
-// sudah lengkap & approved. Sekarang HM dikelompokkan PER UNIT dulu, baru dijumlahkan.
+// sudah lengkap & approved. Sekarang HM dikelompokkan PER UNIT dulu, baru dijumlahkan — dan setiap
+// selisih per unit di-cap ke rentang kalendernya sendiri (lihat capHMByCalendarSpan) supaya anomali
+// HM pada satu unit tidak ikut membengkakkan MTBS gabungan.
 function totalHMByUnit(records){
   const byUnit = {};
   records.forEach(r=>{
     const v = Number(r.hm)||0;
     if(v<=0 || !r.unitCode) return;
     if(!byUnit[r.unitCode]) byUnit[r.unitCode] = [];
-    byUnit[r.unitCode].push(v);
+    byUnit[r.unitCode].push(r);
   });
   let total = 0;
-  Object.values(byUnit).forEach(vals=>{
-    if(vals.length) total += (Math.max(...vals) - Math.min(...vals));
+  Object.values(byUnit).forEach(recs=>{
+    const vals = recs.map(r=>Number(r.hm)||0).filter(v=>v>0);
+    if(!vals.length) return;
+    const rawSpan = Math.max(...vals) - Math.min(...vals);
+    total += capHMByCalendarSpan(rawSpan, recs);
   });
   return total;
 }
@@ -7317,7 +7420,10 @@ function computeUnitKPIs(unitCode){
   const approvedRecords = dailyRecords.filter(r=>r.unitCode===unitCode && r.approvalStatus==='Approved');
   const bdCount = approvedRecords.filter(r=>r.category==='Breakdown').length;
   const hmValues = approvedRecords.map(r=>Number(r.hm)||0).filter(v=>v>0);
-  const totalHM = hmValues.length ? Math.max(...hmValues) - Math.min(...hmValues) : 0;
+  const rawTotalHM = hmValues.length ? Math.max(...hmValues) - Math.min(...hmValues) : 0;
+  // PERBAIKAN: cap ke rentang kalender riil data unit ini (lihat capHMByCalendarSpan) supaya satu
+  // input HM yang salah (typo/loncat ribuan jam) tidak membuat MTBS meledak jadi angka mustahil.
+  const totalHM = capHMByCalendarSpan(rawTotalHM, approvedRecords);
   const mtbs = bdCount>0 ? (totalHM / bdCount) : totalHM;
 
   // MTTR = rata-rata jam repair (Total Jam Breakdown / Jumlah Repair) — format spreadsheet
@@ -7350,7 +7456,12 @@ function computeUnitKPIsForRange(unitCode, startStr, endStr){
   const approvedRecords = dailyRecords.filter(r=>r.unitCode===unitCode && r.approvalStatus==='Approved' && r.tanggal && r.tanggal>=startStr && r.tanggal<=endStr);
   const bdCount = approvedRecords.filter(r=>r.category==='Breakdown').length;
   const hmValues = approvedRecords.map(r=>Number(r.hm)||0).filter(v=>v>0);
-  const totalHM = hmValues.length ? Math.max(...hmValues) - Math.min(...hmValues) : 0;
+  const rawTotalHM = hmValues.length ? Math.max(...hmValues) - Math.min(...hmValues) : 0;
+  // PERBAIKAN: cap ke rentang kalender riil periode/data unit ini (lihat capHMByCalendarSpan) supaya
+  // satu input HM yang salah (typo/loncat ribuan jam) tidak membuat MTBS meledak jadi angka mustahil
+  // — inilah penyebab SBD-103 pernah tampil 3041.0 jam (100% ACHIEVED) untuk periode 1–8 September,
+  // padahal periode itu maksimum fisik hanya ±8×24 = 192 jam.
+  const totalHM = capHMByCalendarSpan(rawTotalHM, approvedRecords);
   const mtbs = bdCount>0 ? (totalHM / bdCount) : totalHM;
 
   // MTTR = rata-rata jam repair (Total Jam Breakdown / Jumlah Repair) — format spreadsheet
@@ -7665,6 +7776,155 @@ function fmtHours(v){
   return (Math.abs(n - Math.round(n)) < 0.05) ? String(Math.round(n)) : n.toFixed(1);
 }
 
+/* ============================================================================
+ * TREND & SUMMARY KPI PER UNIT & BULAN — panel "AUTO" di menu Performance.
+ *
+ * Semua fungsi di bawah ini otomatis mengikuti bulan berjalan (dihitung dari
+ * `new Date()` setiap kali dipanggil) — TIDAK ada tanggal/bulan yang di-hardcode,
+ * jadi saat bulan berganti, grafik & tabel otomatis bergeser ke 6 bulan terakhir
+ * yang baru tanpa perlu update kode atau input manual apa pun.
+ * Sumber data: computeUnitKPIsForRange() (Daily Maintenance Approved + Monitoring HM),
+ * jadi otomatis ikut ter-cap oleh perbaikan anti-anomali HM (capHMByCalendarSpan)
+ * dan ikut dikunci oleh KPI FORMULA LOCK — tidak ada rumus baru yang diciptakan di sini.
+ * ============================================================================ */
+
+/** Warna garis per unit di grafik trend (konsisten selama unit sama). */
+const UNIT_TREND_COLORS = { 'SWA-101':'#FFC72C', 'SWA-102':'#4CAF6D', 'SBD-103':'#3B82F6', 'SPC-104':'#A78BFA' };
+function unitTrendColor(code){ return UNIT_TREND_COLORS[code] || '#9AA0A8'; }
+
+/** Daftar `count` bulan terakhir (termasuk bulan berjalan), otomatis dari tanggal hari ini. */
+function getRecentMonthsList(count){
+  const now = new Date();
+  const months = [];
+  for(let i=count-1;i>=0;i--){
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    const y = d.getFullYear(), m = d.getMonth();
+    const start = toDateStr(new Date(y,m,1));
+    const end = toDateStr(new Date(y,m+1,0));
+    const label = d.toLocaleDateString('id-ID',{month:'short',year:'numeric'});
+    months.push({ key: y+'-'+pad2(m+1), start, end, label, isCurrent: i===0 });
+  }
+  return months;
+}
+
+/** Average Achievement % satu unit pada satu bulan — formula SAMA PERSIS dengan kartu unit
+ *  (kpiWeightedScore/KPI_WEIGHT), supaya angka di panel ini selalu sinkron dengan kartu di atasnya. */
+function computeUnitMonthlyAchievement(unitCode, monthObj){
+  const k = computeUnitKPIsForRange(unitCode, monthObj.start, monthObj.end);
+  const unitKpiKeys = ['mtbs','mttr','pmr','sa','ma','pa'];
+  const totalW = unitKpiKeys.reduce((s,key)=> s + (KPI_WEIGHT[key]||0), 0);
+  const sumSc = unitKpiKeys.reduce((s,key)=> s + kpiWeightedScore(key, k[key]||0), 0);
+  const avgAch = totalW>0 ? (sumSc/totalW*100) : 0;
+  return { ...k, avgAch };
+}
+
+/** Grafik multi-line: % Achievement tiap unit, per bulan (6 bulan terakhir, auto-geser). */
+function unitMonthlyTrendSVG(months){
+  const W=680, H=300, padL=46, padR=120, padT=32, padB=40;
+  const chartW=W-padL-padR, chartH=H-padT-padB;
+  const n = months.length;
+  if(!n) return `<div style="padding:24px;text-align:center;color:var(--text-faint);font-size:12px">Belum ada data bulan.</div>`;
+  const xAt = i => padL + (n<=1? chartW/2 : i/(n-1)*chartW);
+  const yAt = v => padT + chartH*(1 - Math.max(0,Math.min(125,v))/125);
+  const grid = [0,25,50,75,100,125].map(v=>{
+    const y=yAt(v);
+    return `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${(padL+chartW).toFixed(1)}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+      <text x="${padL-8}" y="${(y+3.5).toFixed(1)}" text-anchor="end" font-size="10" fill="#5C636B" font-family="JetBrains Mono, monospace">${v}</text>`;
+  }).join('');
+  const targetY = yAt(90);
+  const targetLine = `<line x1="${padL}" y1="${targetY.toFixed(1)}" x2="${(padL+chartW).toFixed(1)}" y2="${targetY.toFixed(1)}" stroke="#E5484D" stroke-width="1" stroke-dasharray="4 4" opacity="0.55"/>
+    <text x="${padL+4}" y="${(targetY-5).toFixed(1)}" font-size="9" fill="#E5484D" font-family="JetBrains Mono, monospace">TARGET 90%</text>`;
+  const seriesPts = UNITS.map(u=>{
+    const color = unitTrendColor(u.code);
+    const pts = months.map((m,i)=>{
+      const ach = computeUnitMonthlyAchievement(u.code, m).avgAch;
+      return { x:xAt(i), y:yAt(ach), v:ach };
+    });
+    return { code:u.code, color, pts };
+  });
+  const lines = seriesPts.map(s=>{
+    const path = s.pts.map((p,i)=>(i?'L':'M')+p.x.toFixed(1)+' '+p.y.toFixed(1)).join(' ');
+    const dots = s.pts.map(p=>`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4" fill="#15171b" stroke="${s.color}" stroke-width="2.2"/><circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="1.8" fill="${s.color}"/>`).join('');
+    return `<path d="${path}" fill="none" stroke="${s.color}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>${dots}`;
+  }).join('');
+  const endEntries = seriesPts.map(s=>{
+    const last = s.pts[s.pts.length-1];
+    return { code:s.code, color:s.color, y:last.y, v:last.v };
+  }).sort((a,b)=>a.y-b.y);
+  for(let i=1;i<endEntries.length;i++){
+    if(endEntries[i].y - endEntries[i-1].y < 14) endEntries[i].y = endEntries[i-1].y + 14;
+  }
+  const endLabels = endEntries.map(e=>{
+    const lx = padL+chartW+8;
+    return `<line x1="${(padL+chartW).toFixed(1)}" y1="${e.y.toFixed(1)}" x2="${lx.toFixed(1)}" y2="${e.y.toFixed(1)}" stroke="${e.color}" stroke-width="1" opacity="0.45"/>
+      <circle cx="${(lx+6).toFixed(1)}" cy="${e.y.toFixed(1)}" r="4" fill="${e.color}"/>
+      <text x="${(lx+15).toFixed(1)}" y="${(e.y+3.5).toFixed(1)}" font-size="10" font-weight="700" fill="${e.color}" font-family="JetBrains Mono, monospace">${e.code} ${Math.round(e.v)}%</text>`;
+  }).join('');
+  const xLabels = months.map((m,i)=>{
+    const x=xAt(i); const isLast = i===n-1;
+    return `<text x="${x.toFixed(1)}" y="${H-14}" text-anchor="middle" font-size="11" font-weight="${isLast?'700':'600'}" fill="${isLast?'#EDEEF0':'#8B929A'}" font-family="JetBrains Mono, monospace">${m.label}</text>`;
+  }).join('');
+  const baseline = `<line x1="${padL}" y1="${(padT+chartH).toFixed(1)}" x2="${(padL+chartW).toFixed(1)}" y2="${(padT+chartH).toFixed(1)}" stroke="rgba(255,255,255,0.12)" stroke-width="1.2"/>
+    <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${(padT+chartH).toFixed(1)}" stroke="rgba(255,255,255,0.1)" stroke-width="1.2"/>`;
+  const yHint = `<text x="10" y="${padT-12}" font-size="9" fill="#5C636B" font-family="JetBrains Mono, monospace" letter-spacing="0.5">% ACHIEVEMENT / UNIT</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:100%;overflow:visible">
+    ${grid}${targetLine}${baseline}${lines}${endLabels}${xLabels}${yHint}
+  </svg>`;
+}
+
+/** Tabel summary: baris = unit, kolom = bulan (auto 6 bulan terakhir), sel = % Achievement
+ *  (hover untuk lihat rincian MTBS/MTTR/PMR/SA/MA/PA bulan tsb). Baris terakhir = rata-rata semua unit. */
+function unitMonthlySummaryTableHTML(months){
+  function cellColor(pct){
+    if(pct>=100) return '#4CAF6D';
+    if(pct>=75) return '#FFC72C';
+    return '#E5484D';
+  }
+  const head = `<tr><th style="text-align:left;padding:8px 10px;white-space:nowrap;">Unit</th>${months.map(m=>`<th style="text-align:center;padding:8px 10px;white-space:nowrap;${m.isCurrent?'color:var(--yellow);':''}">${m.label}${m.isCurrent?' <span style="font-size:9px;">●berjalan</span>':''}</th>`).join('')}</tr>`;
+  const rows = UNITS.map(u=>{
+    const cells = months.map(m=>{
+      const r = computeUnitMonthlyAchievement(u.code, m);
+      const col = cellColor(r.avgAch);
+      const title = `MTBS ${(r.mtbs||0).toFixed(1)}j · MTTR ${(r.mttr||0).toFixed(1)}j · PMR ${(r.pmr||0).toFixed(0)}% · SA ${(r.sa||0).toFixed(0)}% · MA ${(r.ma||0).toFixed(0)}% · PA ${(r.pa||0).toFixed(0)}%`;
+      return `<td title="${escUH(title)}" style="text-align:center;padding:8px 10px;font-family:'JetBrains Mono',monospace;font-weight:700;color:${col};cursor:help;white-space:nowrap;">${r.avgAch.toFixed(1)}%</td>`;
+    }).join('');
+    return `<tr style="border-top:1px solid rgba(255,255,255,.06)"><td style="padding:8px 10px;font-family:'JetBrains Mono',monospace;color:var(--yellow);font-weight:700;white-space:nowrap;">${escUH(u.code)}</td>${cells}</tr>`;
+  }).join('');
+  const avgRow = `<tr style="border-top:2px solid rgba(255,199,44,.35);background:rgba(255,199,44,.04)"><td style="padding:8px 10px;font-weight:700;white-space:nowrap;">Rata-rata</td>${months.map(m=>{
+    const vals = UNITS.map(u=>computeUnitMonthlyAchievement(u.code,m).avgAch);
+    const avg = vals.length ? vals.reduce((s,v)=>s+v,0)/vals.length : 0;
+    return `<td style="text-align:center;padding:8px 10px;font-family:'JetBrains Mono',monospace;font-weight:700;color:${cellColor(avg)};white-space:nowrap;">${avg.toFixed(1)}%</td>`;
+  }).join('')}</tr>`;
+  return `<table style="width:100%;border-collapse:collapse;font-size:12px;min-width:${360+months.length*100}px">
+    <thead style="background:rgba(255,255,255,.03)">${head}</thead>
+    <tbody>${rows}${avgRow}</tbody>
+  </table>`;
+}
+
+/** Render panel "AUTO — Trend & Summary KPI Per Unit & Bulan" di menu Performance.
+ *  Dipanggil dari dalam renderUnitCards() supaya otomatis ikut ter-refresh di SETIAP
+ *  titik yang sudah memanggil renderUnitCards() (buka menu Performance, sync sheet,
+ *  live-refresh berkala, dsb) — tanpa perlu hook baru & tanpa perlu di-generate manual. */
+function renderUnitMonthlySummary(){
+  const chartWrap = document.getElementById('unit-monthly-chart');
+  const tableWrap = document.getElementById('unit-monthly-table-wrap');
+  if(!chartWrap || !tableWrap) return; // panel belum ada di DOM saat ini
+  try{
+    const months = getRecentMonthsList(6);
+    chartWrap.innerHTML = unitMonthlyTrendSVG(months);
+    tableWrap.innerHTML = unitMonthlySummaryTableHTML(months);
+    const hintEl = document.getElementById('unit-monthly-updated-hint');
+    if(hintEl){
+      const now = new Date();
+      const stamp = now.toLocaleString('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      hintEl.textContent = '⟲ Auto-update tiap bulan · terakhir dihitung ' + stamp;
+    }
+  }catch(e){
+    console.error('renderUnitMonthlySummary gagal:', e);
+    chartWrap.innerHTML = `<div style="padding:24px;text-align:center;color:var(--text-faint);font-size:12px">Gagal memuat grafik trend bulanan.</div>`;
+  }
+}
+
 function renderUnitCards(){
   populateUnitWeekPeriodSelect();
   const startEl = document.getElementById('unit-period-start');
@@ -7718,6 +7978,7 @@ function renderUnitCards(){
       </div>
     </div>`;
   }).join('');
+  renderUnitMonthlySummary();
 }
 
 /* ---- Modal Histori Unit (dipicu klik Total Job / Breakdown di kartu Master Unit) ----
