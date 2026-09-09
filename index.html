@@ -4,10 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SEN-FleetCare — Heavy Equipment Maintenance Management Control System</title>
+<meta name="theme-color" content="#15171b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SEN-FleetCare">
+<meta name="application-name" content="SEN-FleetCare">
+<meta name="description" content="Heavy Equipment Maintenance Management Control System">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2315171b'/%3E%3Cpath d='M22.7 10.3a4 4 0 0 0-5.4 5.4l-8.6 8.6a2 2 0 1 0 2.8 2.8l8.6-8.6a4 4 0 0 0 5.4-5.4l-3 3-2-2 3-3z' fill='none' stroke='%23FFC72C' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='36' fill='%2315171b'/%3E%3Cpath d='M128 58a22 22 0 0 0-30 30l-48 48a11 11 0 1 0 16 16l48-48a22 22 0 0 0 30-30l-17 17-11-11 17-17z' fill='none' stroke='%23FFC72C' stroke-width='10' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link id="pwa-manifest-link" rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 :root{
   --bg:#15171b;
@@ -138,6 +148,17 @@ body{
 .nav-item[data-view="bdreport"] .num{ background:rgba(168,120,255,0.15); color:#c3a6ff; }
 .nav-item[data-view="cbm"] .num{ background:rgba(64,196,140,0.15); color:#6fe0b0; }
 .nav-item[data-view="sparepart"] .num{ background:rgba(255,199,44,0.18); color:#FFC72C; }
+/* Semua tombol/panel "sync/kirim ke WA Group" di menu Plan Schedule Maintenance
+   (Schedule Planning Maintenance & Plan Daily Maintenance) hanya boleh terlihat
+   oleh Fahmi Fanani. Body diberi class "role-wa-sync-allowed" lewat updateRoleUI()
+   hanya saat yang login adalah Fahmi Fanani. */
+body:not(.role-wa-sync-allowed) #ps-send-group-wa,
+body:not(.role-wa-sync-allowed) #pdm-send-group-wa,
+body:not(.role-wa-sync-allowed) #ps-notify-panel,
+body:not(.role-wa-sync-allowed) #pdm-notify-panel,
+body:not(.role-wa-sync-allowed) .wa-sync-only-fahmi{
+  display:none !important;
+}
 .sp-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px;}
 @media(max-width:900px){.sp-kpi-grid{grid-template-columns:repeat(2,1fr);}}
 .sp-kpi{background:linear-gradient(165deg,#161b22 0%,#10141a 100%);border:1px solid var(--line);border-radius:10px;padding:14px 16px;}
@@ -1773,6 +1794,136 @@ body.role-mechanic #history-filters{ display:none !important; }
 .sidebar-foot{ cursor:pointer; }
 .sidebar-foot:hover{ color:var(--yellow); }
 
+/* ===== ACCOUNT QR CODE MODAL ===== */
+#qr-overlay{
+  display:none; position:fixed; inset:0; z-index:99999;
+  background:rgba(0,0,0,0.72); backdrop-filter:blur(4px);
+  align-items:flex-start; justify-content:center; padding:24px 12px; overflow-y:auto;
+}
+#qr-overlay.show{ display:flex; }
+.qr-modal{
+  width:100%; max-width:380px; margin:auto;
+  background:linear-gradient(165deg, #1a1f28 0%, #12161c 100%);
+  border:1px solid rgba(76,175,109,0.35); border-radius:14px;
+  box-shadow:0 24px 64px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04);
+  overflow:hidden;
+}
+.qr-head{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:14px 18px; border-bottom:1px solid rgba(76,175,109,0.25);
+  background:linear-gradient(180deg, rgba(76,175,109,0.1), transparent);
+}
+.qr-head h3{
+  font-family:'Oswald',sans-serif; font-size:15px; letter-spacing:0.8px;
+  text-transform:uppercase; color:var(--green); margin:0;
+  display:flex; align-items:center; gap:8px;
+}
+.qr-head h3 span.tag{
+  font-size:9px; background:var(--green); color:#0e1310; padding:2px 7px;
+  border-radius:4px; font-family:'JetBrains Mono',monospace; font-weight:700;
+}
+.qr-close{
+  width:32px; height:32px; border-radius:8px; border:1px solid var(--line);
+  background:transparent; color:var(--text-dim); cursor:pointer; font-size:18px; line-height:1;
+}
+.qr-close:hover{ color:var(--red); border-color:var(--red); }
+.qr-body{ padding:18px; text-align:center; }
+.qr-canvas-wrap{
+  background:#fff; border-radius:10px; padding:14px; display:inline-block;
+  box-shadow:0 6px 20px rgba(0,0,0,0.35);
+}
+.qr-user-info{ margin-top:14px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-dim); line-height:1.6; }
+.qr-user-info b{ color:var(--text); }
+.qr-toggle-row{
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  margin-top:14px; font-size:11.5px; color:var(--text-dim);
+  background:rgba(255,255,255,0.03); border:1px solid var(--line);
+  border-radius:8px; padding:9px 12px;
+}
+.qr-toggle-row input{ width:15px; height:15px; accent-color:var(--red); cursor:pointer; }
+.qr-toggle-row label{ cursor:pointer; user-select:none; }
+.qr-warn{
+  margin-top:10px; font-size:10px; color:var(--red); line-height:1.4;
+  display:none;
+}
+.qr-warn.show{ display:block; }
+.qr-actions{ display:flex; gap:8px; justify-content:center; margin-top:16px; }
+.qr-actions .btn{ font-size:11px; padding:8px 14px; }
+
+/* ===== SITE ACCESS QR ===== */
+#site-qr-overlay{
+  display:none; position:fixed; inset:0; z-index:99999;
+  background:rgba(0,0,0,0.72); backdrop-filter:blur(4px);
+  align-items:flex-start; justify-content:center; padding:24px 12px; overflow-y:auto;
+}
+#site-qr-overlay.show{ display:flex; }
+.site-qr-modal{
+  width:100%; max-width:380px; margin:auto;
+  background:linear-gradient(165deg, #1a1f28 0%, #12161c 100%);
+  border:1px solid rgba(255,199,44,0.35); border-radius:14px;
+  box-shadow:0 24px 64px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04);
+  overflow:hidden;
+}
+.site-qr-head{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:14px 18px; border-bottom:1px solid rgba(255,199,44,0.2);
+  background:linear-gradient(180deg, rgba(255,199,44,0.1), transparent);
+}
+.site-qr-head h3{
+  font-family:'Oswald',sans-serif; font-size:15px; letter-spacing:0.8px;
+  text-transform:uppercase; color:var(--yellow); margin:0;
+  display:flex; align-items:center; gap:8px;
+}
+.site-qr-head h3 span.tag{
+  font-size:9px; background:var(--yellow); color:#15171b; padding:2px 7px;
+  border-radius:4px; font-family:'JetBrains Mono',monospace; font-weight:700;
+}
+.site-qr-close{
+  width:32px; height:32px; border-radius:8px; border:1px solid var(--line);
+  background:transparent; color:var(--text-dim); cursor:pointer; font-size:18px; line-height:1;
+}
+.site-qr-close:hover{ color:var(--red); border-color:var(--red); }
+.site-qr-body{ padding:18px; text-align:center; }
+.site-qr-canvas-wrap{
+  background:#fff; border-radius:10px; padding:14px; display:inline-block;
+  box-shadow:0 6px 20px rgba(0,0,0,0.35);
+}
+.site-qr-url-field{ margin-top:14px; text-align:left; }
+.site-qr-url-field label{ font-size:10px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-faint); display:block; margin-bottom:5px; }
+.site-qr-url-field input{
+  width:100%; background:#0a0c10; border:1px solid var(--line); border-radius:8px;
+  padding:8px 10px; color:var(--text); font-family:'JetBrains Mono',monospace; font-size:11.5px;
+}
+.site-qr-url-display{
+  width:100%; background:#0a0c10; border:1px solid var(--line); border-radius:8px;
+  padding:8px 10px; color:var(--yellow); font-family:'JetBrains Mono',monospace; font-size:11.5px;
+  word-break:break-all;
+}
+.site-qr-hint{ font-size:11px; color:var(--text-dim); margin-top:10px; line-height:1.5; text-align:left; }
+.site-qr-url-row{ margin-top:12px; display:flex; gap:8px; align-items:stretch; }
+.site-qr-url-row .site-qr-url-display{ flex:1; min-width:0; margin:0; text-align:left; }
+.site-qr-url-row .btn{ flex-shrink:0; white-space:nowrap; }
+.site-qr-actions{ display:flex; gap:8px; justify-content:center; margin-top:16px; flex-wrap:wrap; }
+.site-qr-actions .btn{ font-size:11px; padding:8px 14px; }
+.site-qr-install{
+  margin-top:16px; padding:12px 12px 10px; text-align:left;
+  background:rgba(255,199,44,0.06); border:1px solid rgba(255,199,44,0.2); border-radius:10px;
+}
+.site-qr-install h4{
+  font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:0.6px;
+  text-transform:uppercase; color:var(--yellow); margin:0 0 8px;
+}
+.site-qr-install ul{ margin:0; padding-left:18px; color:var(--text-dim); font-size:11px; line-height:1.55; }
+.site-qr-install li{ margin-bottom:4px; }
+.site-qr-install li b{ color:var(--text); font-weight:600; }
+.site-qr-install .install-actions{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+.site-qr-install .install-actions .btn{ font-size:11px; padding:7px 12px; }
+.site-qr-share-status{
+  min-height:16px; margin-top:8px; font-size:11px; color:var(--green);
+  font-family:'JetBrains Mono',monospace; text-align:center;
+}
+.site-qr-install .btn:disabled{ opacity:0.55; cursor:not-allowed; }
+
 </style>
 </head>
 <body>
@@ -1832,16 +1983,13 @@ body.role-mechanic #history-filters{ display:none !important; }
 <div id="ps-close-overlay">
   <div class="detail-modal" style="max-width:480px;">
     <div class="detail-modal-head">
-      <h3>Isi Jam Pekerjaan</h3>
+      <h3>Update Status Pekerjaan</h3>
       <button type="button" class="detail-modal-close" id="ps-close-modal-close" title="Tutup">✕</button>
     </div>
     <div class="detail-modal-body">
       <div class="hint" style="margin-bottom:14px;" id="ps-close-info">—</div>
+      <div class="hint" style="margin-bottom:14px;">Hanya <b>Fahmi Fanani</b> yang dapat mengubah status di sini.</div>
       <div class="field"><label>Tgl Pekerjaan</label><input type="date" id="ps-close-workdate" required></div>
-      <div class="grid grid-2">
-        <div class="field"><label>Jam Mulai Pekerjaan</label><input type="time" id="ps-close-jammulai" required></div>
-        <div class="field"><label>Jam Selesai Pekerjaan</label><input type="time" id="ps-close-jamselesai" required></div>
-      </div>
       <div class="field"><label>Status</label>
         <select id="ps-close-status" required>
           <option value="Open">Open</option>
@@ -1923,6 +2071,7 @@ body.role-mechanic #history-filters{ display:none !important; }
       </form>
       <div class="login-forgot"><a id="show-recover-link">Forgot password / recover account?</a></div>
       <div class="login-switch">Don't have an account? <a id="show-register-link">Create new account</a></div>
+      <div class="login-switch" style="display:none;"><a id="show-site-qr-link">▦ Show Web Access QR Code</a></div>
     </div>
 
     <div id="register-panel">
@@ -2570,7 +2719,7 @@ body.role-mechanic #history-filters{ display:none !important; }
       <!-- PLAN SERVICE (auto-sync: W sheet performance — tanpa Daily Maintenance, tanpa batasan periode) -->
       <section class="view" id="view-plan">
         <div class="panel">
-          <div class="panel-head">
+          <div class="panel-head" id="plan-panel-head">
             <h2>Plan Schedule Service <span class="tag">AUTO SYNC · 4 UNIT LOCK</span></h2>
             <div class="toolbar">
               <button type="button" class="btn small" id="btn-sync-plan-all" title="Sync performance + HM + Jam Kerja Harian, lalu generate jadwal otomatis">☁ Sync & Generate Otomatis</button>
@@ -2578,7 +2727,7 @@ body.role-mechanic #history-filters{ display:none !important; }
               <button type="button" class="btn small secondary" id="btn-rebuild-plan" title="Hapus semua plan lama dan buat ulang dari W sheet performance">🗑 Hapus & Generate Ulang</button>
             </div>
           </div>
-          <div class="panel period-panel" style="margin-bottom:14px; padding:14px 16px;">
+          <div class="panel period-panel" id="plan-period-panel" style="margin-bottom:14px; padding:14px 16px;">
             <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
               <span class="period-range-label">Filter Periode (Open)</span>
               <div class="field period-input-group" style="margin-bottom:0; min-width:140px;">
@@ -2707,7 +2856,7 @@ body.role-mechanic #history-filters{ display:none !important; }
           </div>
         </div>
 
-        <div class="hint" id="ps-mechanic-input-hint" style="display:none; margin-bottom:16px;">Rencana maintenance bulanan dibuat &amp; ditugaskan oleh <b>Supervisor</b>. Kalau ada rencana yang jadi tugas Anda, cari baris-nya di tabel <b>Planning Maintenance</b> di bawah lalu tekan tombol <b>"＋ Isi Jam"</b> untuk mengisi Tgl Pekerjaan &amp; Jam Mulai/Selesai — status akan otomatis berubah jadi <b>Close</b> begitu selesai diisi.</div>
+        <div class="hint" id="ps-mechanic-input-hint" style="display:none; margin-bottom:16px;">Rencana maintenance bulanan dibuat &amp; ditugaskan oleh <b>Supervisor</b>. Menu ini bersifat <b>monitoring saja</b> — mekanik hanya dapat memantau tabel <b>Planning Maintenance</b> di bawah dan tidak bisa menginput/mengubah data. Perubahan status menjadi <b>Close</b> hanya dapat dilakukan oleh <b>Fahmi Fanani</b>.</div>
 
         <div class="panel" id="planningsystem-input-panel">
           <div class="panel-head"><h2><span class="tag">INPUT</span> Rencana Maintenance Bulanan</h2></div>
@@ -2743,11 +2892,8 @@ body.role-mechanic #history-filters{ display:none !important; }
             </div>
             <div id="ps-exec-fields">
               <div class="hint" style="margin:4px 0 10px;">Kolom di bawah ini diisi oleh mekanik pelaksana saat mengerjakan rencana ini.</div>
-              <div class="grid grid-4">
+              <div class="grid grid-2">
                 <div class="field"><label>Tgl Pekerjaan</label><input type="date" id="ps-workdate"></div>
-                <div class="field"><label>Jam Mulai Pekerjaan</label><input type="time" id="ps-jammulai"></div>
-                <div class="field"><label>Jam Selesai Pekerjaan</label><input type="time" id="ps-jamselesai"></div>
-                <div class="field"><label>Duration Pekerjaan</label><input type="text" id="ps-duration" disabled placeholder="Otomatis"></div>
               </div>
               <div class="field"><label>Status</label>
                 <select id="ps-status" required>
@@ -2763,8 +2909,18 @@ body.role-mechanic #history-filters{ display:none !important; }
           </form>
         </div>
 
+        <div class="panel" id="ps-notify-panel" style="display:none;">
+          <div class="panel-head"><h2 style="color:var(--yellow);">📲 Kirim Rencana Maintenance ke WhatsApp Group</h2></div>
+          <div class="banner" id="ps-notify-summary"></div>
+          <div class="toolbar" id="ps-notify-buttons"></div>
+          <div class="hint" style="margin-top:8px;">Klik tombol di atas untuk membuka WhatsApp dengan pesan sudah terisi otomatis — pilih <b>Grup WhatsApp</b> tujuan lalu tekan Kirim.</div>
+        </div>
+
         <div class="panel">
-          <div class="panel-head"><h2>Schedule Planning Maintenance</h2></div>
+          <div class="panel-head">
+            <h2>Schedule Planning Maintenance</h2>
+            <button type="button" class="btn small wa-sync-only-fahmi" id="ps-send-group-wa" style="background:#25D366; color:#07301c;">📲 Kirim Rekap ke Grup WhatsApp</button>
+          </div>
           <div class="filters">
             <input type="month" id="ps-month" style="width:auto;">
             <select id="ps-filter-unit"><option value="">Semua Unit</option></select>
@@ -2786,9 +2942,66 @@ body.role-mechanic #history-filters{ display:none !important; }
             <table id="planningsystem-table">
               <thead><tr>
                 <th>Unit Code</th><th>Type Unit</th><th>Mechanic</th><th>Job Description</th><th>Component</th><th>No PR</th>
-                <th>Plan Tgl Eksekusi</th><th>Due Date</th><th>Tgl Pekerjaan</th><th>Jam Mulai</th><th>Jam Selesai</th><th>Duration</th><th>Status</th><th></th>
+                <th>Plan Tgl Eksekusi</th><th>Due Date</th><th>Tgl Pekerjaan</th><th>Status</th><th></th>
               </tr></thead>
               <tbody id="planningsystem-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- PLAN DAILY MAINTENANCE -->
+        <div class="panel" id="pdm-input-panel">
+          <div class="panel-head"><h2><span class="tag">INPUT</span> Plan Daily Maintenance</h2></div>
+          <form id="form-plandaily">
+            <div class="grid grid-4">
+              <div class="field"><label>Date</label><input type="date" id="pdm-date" required></div>
+              <div class="field" style="grid-column:span 2;"><label>Unit <span class="hint" style="font-weight:400;">(bisa lebih dari 1)</span></label>
+                <div style="display:flex; gap:6px;">
+                  <input type="text" id="pdm-unit-input" list="pdm-unit-list" placeholder="Pilih atau ketik Unit lalu Enter/Tambah…" autocomplete="off" style="text-transform:uppercase; flex:1;">
+                  <datalist id="pdm-unit-list"></datalist>
+                  <button type="button" class="btn small secondary" id="pdm-unit-add" style="flex-shrink:0;">＋ Tambah</button>
+                </div>
+                <div id="pdm-unit-chips" style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;"></div>
+                <div class="hint" id="pdm-unit-hint" style="margin-top:6px;">Belum ada unit ditambahkan.</div>
+              </div>
+              <div class="field"><label>PIC/Mekanik 1</label><select id="pdm-pic" required></select></div>
+            </div>
+            <div class="grid grid-3">
+              <div class="field"><label>PIC/Mekanik 2 <span class="hint" style="font-weight:400;">(opsional)</span></label><select id="pdm-pic2"><option value="">— Tidak ada —</option></select></div>
+              <div class="field"><label>PIC/Mekanik 3 <span class="hint" style="font-weight:400;">(opsional)</span></label><select id="pdm-pic3"><option value="">— Tidak ada —</option></select></div>
+            </div>
+            <div class="field"><label>Job Activity</label><textarea id="pdm-jobactivity" required placeholder="Uraian aktivitas pekerjaan hari ini..."></textarea></div>
+            <div class="toolbar">
+              <button type="submit" class="btn">＋ Tambah Plan Harian</button>
+              <button type="reset" class="btn secondary" id="pdm-reset">Reset Form</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="panel" id="pdm-notify-panel" style="display:none;">
+          <div class="panel-head"><h2 style="color:var(--yellow);">📲 Kirim Plan Daily Maintenance ke WhatsApp Group</h2></div>
+          <div class="banner" id="pdm-notify-summary"></div>
+          <div class="toolbar" id="pdm-notify-buttons"></div>
+          <div class="hint" style="margin-top:8px;">Klik tombol di atas untuk membuka WhatsApp dengan pesan sudah terisi otomatis — pilih <b>Grup WhatsApp</b> tujuan lalu tekan Kirim.</div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Plan Daily Maintenance</h2>
+            <button type="button" class="btn small wa-sync-only-fahmi" id="pdm-send-group-wa" style="background:#25D366; color:#07301c;">📲 Sync ke Grup WhatsApp</button>
+          </div>
+          <div class="filters">
+            <input type="date" id="pdm-filter-date" style="width:auto;">
+            <select id="pdm-filter-unit"><option value="">Semua Unit</option></select>
+            <button class="btn small secondary" id="pdm-clear-filter">Clear Filter</button>
+          </div>
+          <div class="scroll-top-track" id="pdm-scroll-top" title="Scroll to view other columns"><div class="scroll-top-track-inner" id="pdm-scroll-top-inner"></div></div>
+          <div class="table-wrap" id="pdm-table-wrap">
+            <table id="pdm-table">
+              <thead><tr>
+                <th>Date</th><th>Unit</th><th>Job Activity</th><th>PIC/Mekanik</th><th></th>
+              </tr></thead>
+              <tbody id="pdm-tbody"></tbody>
             </table>
           </div>
         </div>
@@ -2798,10 +3011,9 @@ body.role-mechanic #history-filters{ display:none !important; }
           <div class="panel-head">
             <h2><span class="tag">HISTORY</span> Planning Maintenance</h2>
           </div>
-          <div class="grid grid-4" id="ps-hist-kpi" style="margin-bottom:14px;">
+          <div class="grid grid-3" id="ps-hist-kpi" style="margin-bottom:14px;">
             <div class="sp-kpi"><div class="sp-kpi-label">Total Close</div><div class="sp-kpi-val" id="ps-hist-kpi-total">0</div></div>
             <div class="sp-kpi"><div class="sp-kpi-label">Unit Tersentuh</div><div class="sp-kpi-val" id="ps-hist-kpi-units">0</div></div>
-            <div class="sp-kpi"><div class="sp-kpi-label">Total Durasi (jam)</div><div class="sp-kpi-val" id="ps-hist-kpi-hours">0</div></div>
             <div class="sp-kpi"><div class="sp-kpi-label">Komponen Terbanyak</div><div class="sp-kpi-val" id="ps-hist-kpi-topcomp" style="font-size:16px;">—</div></div>
           </div>
           <div class="scroll-top-track" id="ps-hist-scroll-top" title="Scroll to view other columns"><div class="scroll-top-track-inner" id="ps-hist-scroll-top-inner"></div></div>
@@ -2810,8 +3022,7 @@ body.role-mechanic #history-filters{ display:none !important; }
               <thead><tr>
                 <th>Unit Code</th><th>Type Unit</th><th>Mechanic</th>
                 <th>Component</th><th>No PR</th><th>Job Description</th>
-                <th>Plan Tgl</th><th>Due Date</th><th>Tgl Pekerjaan</th>
-                <th>Jam Mulai</th><th>Jam Selesai</th><th>Duration</th><th>Status</th>
+                <th>Plan Tgl</th><th>Due Date</th><th>Tgl Pekerjaan</th><th>Status</th>
               </tr></thead>
               <tbody id="ps-hist-tbody"></tbody>
             </table>
@@ -5428,6 +5639,7 @@ function sanitizePlanServiceUnits(){
   return planRecords;
 }
 let planningSystemRecords = [];
+let planDailyRecords = [];
 let rcaRecords = []; // Root Cause Analysis (CBM Pareto)
 let cbmLastParetoRows = []; // breakdown rows terakhir dari Pareto (untuk auto-fill RCA)
 let p2hRecords = [];
@@ -5777,6 +5989,10 @@ async function loadData(){
       await savePlanningSystem();
     }
   }catch(e){ console.warn('merge planningsystem seed failed', e); }
+  try{
+    const pdm = await appStorage.get('plan-daily-records');
+    planDailyRecords = pdm ? JSON.parse(pdm.value) : [];
+  }catch(e){ planDailyRecords = []; }
   try{
     const rca = await appStorage.get('rca-records');
     rcaRecords = rca ? JSON.parse(rca.value) : [];
@@ -6162,6 +6378,16 @@ async function refreshPlanningSystemRecords(){
 async function savePlanningSystem(){
   try{ await appStorage.set('planning-system-records', JSON.stringify(planningSystemRecords)); }
   catch(e){ console.error('save planning system failed', e); }
+}
+async function refreshPlanDailyRecords(){
+  try{
+    const pdm = await appStorage.get('plan-daily-records');
+    if(pdm) planDailyRecords = JSON.parse(pdm.value);
+  }catch(e){ console.error('refresh plan daily records gagal', e); }
+}
+async function savePlanDaily(){
+  try{ await appStorage.set('plan-daily-records', JSON.stringify(planDailyRecords)); }
+  catch(e){ console.error('save plan daily failed', e); }
 }
 async function saveRcaRecords(){
   try{ await appStorage.set('rca-records', JSON.stringify(rcaRecords)); }
@@ -6734,6 +6960,263 @@ function getAccountsList(){
   const registered = registeredUsers.map(u=>({ ...u, source:'registered' }));
   return system.concat(registered);
 }
+/* ===== ACCOUNT QR CODE ===== */
+let __qrCurrentUser = null;
+let __qrInstance = null;
+function buildAccountQRPayload(u, includePassword){
+  if(includePassword){
+    return `SEN-FLEETCARE-LOGIN\nUsername: ${u.username}\nPassword: ${u.password||''}`;
+  }
+  return `SEN-FLEETCARE-USER\nUsername: ${u.username}\nNama: ${u.name||''}`;
+}
+function renderAccountQR(){
+  if(!__qrCurrentUser) return;
+  const includePw = !!document.getElementById('qr-include-password')?.checked;
+  const payload = buildAccountQRPayload(__qrCurrentUser, includePw);
+  const holder = document.getElementById('qr-canvas');
+  holder.innerHTML = '';
+  __qrInstance = new QRCode(holder, {
+    text: payload,
+    width: 220,
+    height: 220,
+    colorDark: '#15171b',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.M
+  });
+  document.getElementById('qr-warn')?.classList.toggle('show', includePw);
+}
+window.openAccountQR = function(username){
+  const canManage = isFahmiFanani();
+  if(!canManage) return;
+  const list = getAccountsList();
+  const u = list.find(x=>x.username===username);
+  if(!u) return;
+  __qrCurrentUser = u;
+  document.getElementById('qr-info-name').textContent = u.name || '—';
+  document.getElementById('qr-info-username').textContent = 'Username: ' + u.username;
+  const cb = document.getElementById('qr-include-password');
+  if(cb) cb.checked = false;
+  renderAccountQR();
+  document.getElementById('qr-overlay')?.classList.add('show');
+};
+function closeAccountQR(){
+  document.getElementById('qr-overlay')?.classList.remove('show');
+  __qrCurrentUser = null;
+}
+document.getElementById('qr-close')?.addEventListener('click', closeAccountQR);
+document.getElementById('qr-close-2')?.addEventListener('click', closeAccountQR);
+document.getElementById('qr-overlay')?.addEventListener('click', (e)=>{ if(e.target.id==='qr-overlay') closeAccountQR(); });
+document.getElementById('qr-include-password')?.addEventListener('change', renderAccountQR);
+document.getElementById('qr-download')?.addEventListener('click', ()=>{
+  const holder = document.getElementById('qr-canvas');
+  const img = holder?.querySelector('img');
+  const canvas = holder?.querySelector('canvas');
+  const src = img ? img.src : (canvas ? canvas.toDataURL('image/png') : null);
+  if(!src || !__qrCurrentUser) return;
+  const a = document.createElement('a');
+  a.href = src;
+  a.download = `qr-${__qrCurrentUser.username}.png`;
+  a.click();
+});
+document.addEventListener('keydown', (e)=>{
+  if(e.key==='Escape' && document.getElementById('qr-overlay')?.classList.contains('show')) closeAccountQR();
+});
+
+/* ===== SITE ACCESS QR ===== */
+let __siteQrInstance = null;
+let __deferredInstallPrompt = null;
+const SITE_QR_FALLBACK_URL = 'https://sen-fleetcare-a2b.vercel.app/';
+function getSiteQrUrl(){
+  try{
+    if(typeof location !== 'undefined' && location.protocol && location.protocol !== 'file:' && location.origin){
+      const path = (location.pathname || '/').replace(/\/index\.html?$/i, '/');
+      return location.origin + (path || '/');
+    }
+  }catch(_e){}
+  return SITE_QR_FALLBACK_URL;
+}
+const SITE_QR_URL = getSiteQrUrl();
+
+function siteQrGetPngDataUrl(){
+  const holder = document.getElementById('site-qr-canvas');
+  if(!holder) return null;
+  const img = holder.querySelector('img');
+  const canvas = holder.querySelector('canvas');
+  if(img && img.src) return img.src;
+  if(canvas){ try{ return canvas.toDataURL('image/png'); }catch(_e){} }
+  return null;
+}
+function siteQrSetStatus(msg, isError){
+  const el = document.getElementById('site-qr-share-status');
+  if(!el) return;
+  el.textContent = msg || '';
+  el.style.color = isError ? 'var(--red)' : 'var(--green)';
+  if(msg){
+    clearTimeout(siteQrSetStatus._t);
+    siteQrSetStatus._t = setTimeout(()=>{ el.textContent = ''; }, 3500);
+  }
+}
+function updateSiteQrInstallButton(){
+  const btn = document.getElementById('site-qr-install-app');
+  if(!btn) return;
+  const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  if(standalone){ btn.textContent = '✓ App Installed'; btn.disabled = true; return; }
+  btn.disabled = false;
+  btn.textContent = __deferredInstallPrompt ? '⬇ Install App' : '⬇ How to Install';
+}
+function renderSiteQR(){
+  const holder = document.getElementById('site-qr-canvas');
+  const urlEl = document.getElementById('site-qr-url-display');
+  if(!holder) return;
+  holder.innerHTML = '';
+  if(urlEl) urlEl.textContent = SITE_QR_URL;
+  __siteQrInstance = new QRCode(holder, {
+    text: SITE_QR_URL, width: 220, height: 220,
+    colorDark: '#15171b', colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.M
+  });
+  siteQrSetStatus('');
+  updateSiteQrInstallButton();
+}
+function openSiteQR(){
+  renderSiteQR();
+  document.getElementById('site-qr-overlay')?.classList.add('show');
+}
+function closeSiteQR(){
+  document.getElementById('site-qr-overlay')?.classList.remove('show');
+}
+async function siteQrCopyLink(){
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(SITE_QR_URL);
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = SITE_QR_URL; ta.setAttribute('readonly','');
+      ta.style.position='fixed'; ta.style.left='-9999px';
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    siteQrSetStatus('Link copied to clipboard');
+    return true;
+  }catch(e){ siteQrSetStatus('Could not copy link', true); return false; }
+}
+function siteQrDownloadPng(){
+  const src = siteQrGetPngDataUrl();
+  if(!src){ siteQrSetStatus('QR image not ready', true); return; }
+  const a = document.createElement('a');
+  a.href = src; a.download = 'sen-fleetcare-web-access-qr.png';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  siteQrSetStatus('QR image downloaded');
+}
+async function siteQrShare(){
+  const src = siteQrGetPngDataUrl();
+  const shareData = {
+    title: 'SEN-FleetCare Web Access',
+    text: 'Open SEN-FleetCare: ' + SITE_QR_URL,
+    url: SITE_QR_URL
+  };
+  try{
+    if(src && typeof navigator.canShare === 'function'){
+      try{
+        const res = await fetch(src);
+        const blob = await res.blob();
+        const file = new File([blob], 'sen-fleetcare-web-access-qr.png', { type: 'image/png' });
+        const withFile = { ...shareData, files: [file] };
+        if(navigator.canShare(withFile)){
+          await navigator.share(withFile);
+          siteQrSetStatus('Shared successfully');
+          return;
+        }
+      }catch(_e){}
+    }
+    if(typeof navigator.share === 'function'){
+      await navigator.share(shareData);
+      siteQrSetStatus('Shared successfully');
+      return;
+    }
+    await siteQrCopyLink();
+    siteQrSetStatus('Share not available — link copied instead');
+  }catch(e){
+    if(e && e.name === 'AbortError') return;
+    try{ await siteQrCopyLink(); siteQrSetStatus('Share failed — link copied instead'); }
+    catch(_e){ siteQrSetStatus('Share failed', true); }
+  }
+}
+async function siteQrInstallApp(){
+  if(__deferredInstallPrompt){
+    try{
+      __deferredInstallPrompt.prompt();
+      const choice = await __deferredInstallPrompt.userChoice;
+      siteQrSetStatus(choice && choice.outcome === 'accepted' ? 'App install started' : 'Install dismissed');
+      __deferredInstallPrompt = null;
+      updateSiteQrInstallButton();
+    }catch(e){ siteQrSetStatus('Install prompt failed', true); }
+    return;
+  }
+  const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  if(standalone){ siteQrSetStatus('App is already installed'); updateSiteQrInstallButton(); return; }
+  const ua = navigator.userAgent || '';
+  let tip = 'Follow the Install Web App steps below for your device.';
+  if(/iPhone|iPad|iPod/i.test(ua)) tip = 'iOS: Safari → Share → Add to Home Screen.';
+  else if(/Android/i.test(ua)) tip = 'Android: Chrome menu (⋮) → Install app / Add to Home screen.';
+  else tip = 'Desktop: Chrome/Edge address-bar install icon, or menu → Install app.';
+  siteQrSetStatus(tip);
+  document.querySelector('.site-qr-install')?.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+function siteQrOpenSite(){
+  try{ window.open(SITE_QR_URL, '_blank', 'noopener,noreferrer'); }
+  catch(_e){ location.href = SITE_QR_URL; }
+}
+function setupPwaInstallSupport(){
+  try{
+    const link = document.getElementById('pwa-manifest-link') || document.querySelector('link[rel="manifest"]');
+    if(link && (!link.getAttribute('href') || link.getAttribute('href') === '#')){
+      const iconSvg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%2315171b'/%3E%3Cpath d='M360 150a64 64 0 0 0-88 88L140 370a32 32 0 1 0 46 46l132-132a64 64 0 0 0 88-88l-48 48-32-32 48-48z' fill='none' stroke='%23FFC72C' stroke-width='28' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E";
+      const manifest = {
+        name:'SEN-FleetCare', short_name:'SEN-FleetCare',
+        description:'Heavy Equipment Maintenance Management Control System',
+        start_url:'./', scope:'./', display:'standalone', orientation:'any',
+        background_color:'#15171b', theme_color:'#15171b',
+        icons:[
+          {src:iconSvg, sizes:'any', type:'image/svg+xml', purpose:'any'},
+          {src:iconSvg, sizes:'512x512', type:'image/svg+xml', purpose:'maskable'}
+        ]
+      };
+      link.setAttribute('href', URL.createObjectURL(new Blob([JSON.stringify(manifest)], {type:'application/manifest+json'})));
+    }
+  }catch(e){ console.warn('PWA manifest setup failed', e); }
+  if('serviceWorker' in navigator && (location.protocol === 'http:' || location.protocol === 'https:')){
+    // Catatan: fallback registrasi SW dari blob: URL sengaja dihapus — service worker
+    // tidak bisa didaftarkan dari blob: URL di browser manapun (selalu gagal & memicu
+    // warning di console). Di preview sandbox (protokol blob-request:/blob:) registrasi
+    // SW otomatis dilewati; fitur PWA tetap aktif normal saat web sudah di-host di http/https.
+    navigator.serviceWorker.register('sw.js', { scope:'./' }).catch(err=> console.warn('SW register failed', err));
+  }
+}
+document.getElementById('show-site-qr-link')?.addEventListener('click', openSiteQR);
+document.getElementById('site-qr-close')?.addEventListener('click', closeSiteQR);
+document.getElementById('site-qr-close-2')?.addEventListener('click', closeSiteQR);
+document.getElementById('site-qr-overlay')?.addEventListener('click', (e)=>{ if(e.target.id==='site-qr-overlay') closeSiteQR(); });
+document.getElementById('site-qr-download')?.addEventListener('click', siteQrDownloadPng);
+document.getElementById('site-qr-share')?.addEventListener('click', ()=>{ siteQrShare(); });
+document.getElementById('site-qr-copy-link')?.addEventListener('click', ()=>{ siteQrCopyLink(); });
+document.getElementById('site-qr-install-app')?.addEventListener('click', ()=>{ siteQrInstallApp(); });
+document.getElementById('site-qr-open-site')?.addEventListener('click', siteQrOpenSite);
+document.addEventListener('keydown', (e)=>{
+  if(e.key==='Escape' && document.getElementById('site-qr-overlay')?.classList.contains('show')) closeSiteQR();
+});
+window.addEventListener('beforeinstallprompt', (e)=>{
+  e.preventDefault();
+  __deferredInstallPrompt = e;
+  updateSiteQrInstallButton();
+});
+window.addEventListener('appinstalled', ()=>{
+  __deferredInstallPrompt = null;
+  updateSiteQrInstallButton();
+  siteQrSetStatus('App installed');
+});
+try{ setupPwaInstallSupport(); }catch(_e){}
+
 function renderAccountsTable(){
   const tbody = document.getElementById('accounts-tbody');
   if(!tbody) return;
@@ -6773,7 +7256,9 @@ function renderAccountsTable(){
     const accessBtn = canManageAccounts
       ? `<button type="button" class="btn small secondary" onclick="openAccessModal('${escUH(u.username)}')">Atur Akses</button><div class="hint" style="margin-top:4px;">${summarizeAccess(u)}</div>`
       : `<span class="hint" style="margin:0;">${summarizeAccess(u)}</span>`;
-    const action = canDelete ? `<button class="btn danger" onclick="deleteRegisteredAccount('${escUH(u.username)}')">Hapus</button>` : (u.source==='system' ? `<span class="hint" style="margin:0;">—</span>` : '');
+    const deleteBtn = canDelete ? `<button class="btn danger" onclick="deleteRegisteredAccount('${escUH(u.username)}')">Hapus</button>` : (u.source==='system' ? `<span class="hint" style="margin:0;">—</span>` : '');
+    const qrBtn = `<button type="button" class="btn small secondary" style="margin-top:4px;" onclick="openAccountQR('${escUH(u.username)}')" title="Tampilkan QR Code akun ini">▦ QR</button>`;
+    const action = `${deleteBtn}${qrBtn}`;
     const pw = u.password || '—';
     const pwCell = `<span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--yellow); letter-spacing:0.3px;">${escUH(pw)}</span>`;
     return `<tr><td>${escUH(u.name)}</td><td style="font-family:'JetBrains Mono',monospace; font-size:12px;">${escUH(u.username)}</td><td>${pwCell}</td><td>${escUH(pos)}</td><td>${roleLabel}</td><td>${sourceLabel}</td><td>${accessBtn}</td><td>${action}</td></tr>`;
@@ -7132,6 +7617,8 @@ function updateRoleUI(){
   document.body.classList.toggle('role-pjo', currentPosition()==='PJO');
   const isMechanicUser = !!(loggedInUser && ((loggedInUser.role||'')==='Mechanic' || (loggedInUser.position||'')==='Mechanic'));
   document.body.classList.toggle('role-mechanic', isMechanicUser);
+  // Tombol/panel sync WA Group di Plan Schedule Maintenance hanya untuk Fahmi Fanani.
+  document.body.classList.toggle('role-wa-sync-allowed', isFahmiFanani());
   if(userInfoEl){ userInfoEl.textContent = loggedInUser ? (loggedInUser.name || loggedInUser.username || '—') : '—'; }
   const banner = document.getElementById('daily-role-banner');
   if(banner){
@@ -7145,6 +7632,18 @@ function updateRoleUI(){
         : 'Setiap record baru berstatus <b>&nbsp;Pending Approval&nbsp;</b> dan menunggu konfirmasi Supervisor sebelum masuk perhitungan KPI resmi.';
     }
   }
+
+  // Header "Plan Schedule Service" (toolbar Sync/Hapus) + bar Filter Periode di atasnya
+  // hanya boleh terlihat oleh Fahmi Fanani — user lain tidak melihat tampilan ini sama sekali.
+  const planPanelHead = document.getElementById('plan-panel-head');
+  if(planPanelHead) planPanelHead.style.display = isFahmiFanani() ? '' : 'none';
+  const planPeriodPanel = document.getElementById('plan-period-panel');
+  if(planPeriodPanel) planPeriodPanel.style.display = isFahmiFanani() ? '' : 'none';
+
+  // Form input "Plan Daily Maintenance" (Date, Unit, PIC/Mekanik, Job Activity) di menu
+  // Plan Schedule Maintenance hanya boleh terlihat & diisi oleh Fahmi Fanani.
+  const pdmInputPanel = document.getElementById('pdm-input-panel');
+  if(pdmInputPanel) pdmInputPanel.style.display = isFahmiFanani() ? '' : 'none';
 
   // Visibilitas menu mengikuti akses panel efektif (default posisi + override dari Database Akun)
   navItems.forEach(item=>{
@@ -12344,8 +12843,6 @@ function toggleSupervisorExecFields(){
   if(!box) return;
   box.style.display = isSupervisor ? 'none' : '';
   document.getElementById('ps-workdate').required = false;
-  document.getElementById('ps-jammulai').required = false;
-  document.getElementById('ps-jamselesai').required = false;
   document.getElementById('ps-status').required = !isSupervisor;
 }
 
@@ -12382,21 +12879,6 @@ function populatePicMechanicSelect(){
 }
 populatePicMechanicSelect();
 
-/* Menghitung Duration Pekerjaan otomatis dari Jam Mulai - Jam Selesai pada form input. */
-function computePsDurationField(){
-  const mulai = document.getElementById('ps-jammulai').value;
-  const selesai = document.getElementById('ps-jamselesai').value;
-  const out = document.getElementById('ps-duration');
-  if(!mulai || !selesai){ out.value=''; return; }
-  const [mh,mm] = mulai.split(':').map(Number);
-  const [sh,sm] = selesai.split(':').map(Number);
-  let mins = (sh*60+sm) - (mh*60+mm);
-  if(mins < 0) mins += 24*60; // lewat tengah malam
-  out.value = (mins/60).toFixed(1) + ' jam';
-}
-document.getElementById('ps-jammulai').addEventListener('change', computePsDurationField);
-document.getElementById('ps-jamselesai').addEventListener('change', computePsDurationField);
-
 const psFilterUnit = document.getElementById('ps-filter-unit');
 function refreshPsFilterUnitOptions(){
   if(!psFilterUnit) return;
@@ -12432,8 +12914,6 @@ document.getElementById('form-planningsystem').addEventListener('submit', async 
   }
   const isSupervisor = currentRole()==='Supervisor';
   const mech2User = getAllUsers().find(u=>u.username===document.getElementById('ps-pic2').value);
-  const jamMulai = isSupervisor ? '' : document.getElementById('ps-jammulai').value;
-  const jamSelesai = isSupervisor ? '' : document.getElementById('ps-jamselesai').value;
   const unitCodeRaw = String(document.getElementById('ps-unitcode').value||'').trim().toUpperCase();
   if(!unitCodeRaw){
     alert('Unit Code wajib diisi (pilih dari daftar atau ketik manual).');
@@ -12454,8 +12934,6 @@ document.getElementById('form-planningsystem').addEventListener('submit', async 
     planDate: document.getElementById('ps-plandate').value,
     dueDate: document.getElementById('ps-duedate').value,
     workDate: isSupervisor ? '' : document.getElementById('ps-workdate').value,
-    jamMulai, jamSelesai,
-    jamTotal: isSupervisor ? '' : document.getElementById('ps-duration').value,
     status: isSupervisor ? 'Open' : document.getElementById('ps-status').value,
     createdBy: currentUserName(),
   };
@@ -12466,8 +12944,388 @@ document.getElementById('form-planningsystem').addEventListener('submit', async 
   try{ refreshPsFilterUnitOptions(); }catch(_e){}
   syncPsTypeFromUnit();
   populatePicMechanicSelect();
-  document.getElementById('ps-duration').value = '';
   renderPlanningTable();
+  try{ showPlanningNotifyPanel(rec); }catch(_e){ console.warn('showPlanningNotifyPanel', _e); }
+});
+
+/* ===== Kirim Plan Schedule Maintenance ke WhatsApp Group =====
+   WhatsApp tidak menyediakan API publik untuk mengirim langsung ke grup tanpa
+   WhatsApp Business API/bot. Solusi yang bisa dipakai di web statis ini adalah
+   membuka wa.me dengan pesan sudah terisi otomatis TANPA nomor tujuan — WhatsApp
+   akan menampilkan daftar chat (termasuk semua Grup) untuk dipilih, tinggal
+   tekan Kirim. Ini berlaku baik di WhatsApp Web maupun aplikasi HP. */
+function formatPlanningWALine(r){
+  const due = formatDateDMY(r.dueDate) || '-';
+  const plan = formatDateDMY(r.planDate) || '-';
+  return `• *${r.unitCode}* (${r.typeUnit||'-'}) — ${r.component}\n`+
+    `  Job: ${r.jobDesc||'-'}\n`+
+    `  PIC: ${getEffectiveMechanicDisplay(r)}${r.noPR ? ('   No PR: '+r.noPR) : ''}\n`+
+    `  Plan: ${plan}   Due: ${due}   Status: ${r.status}`;
+}
+
+function buildPlanningWAMessage(rec){
+  const lines = [];
+  lines.push('*PLAN SCHEDULE MAINTENANCE*');
+  lines.push('Rencana maintenance baru telah dibuat:');
+  lines.push('');
+  lines.push(formatPlanningWALine(rec));
+  lines.push('');
+  lines.push('Mohon dicatat & dipersiapkan. (SEN-FleetCare — Plan Schedule Maintenance)');
+  return lines.join('\n');
+}
+
+function buildPlanningWAMessageBulk(rows){
+  const today = new Date().toISOString().slice(0,10);
+  const monthInput = document.getElementById('ps-month');
+  const monthLabel = monthInput && monthInput.value
+    ? new Date(monthInput.value+'-01').toLocaleDateString('id-ID', { month:'long', year:'numeric' })
+    : 'Semua Periode';
+  const open = rows.filter(r=>r.status==='Open').length;
+  const overdue = rows.filter(r=>r.status==='Open' && r.dueDate && r.dueDate<today).length;
+  const lines = [];
+  lines.push('*REKAP PLAN SCHEDULE MAINTENANCE*');
+  lines.push(`Periode: ${monthLabel}`);
+  lines.push(`Total: ${rows.length}   Open: ${open}   Overdue: ${overdue}`);
+  lines.push('');
+  rows.slice(0, 30).forEach(r=>{ lines.push(formatPlanningWALine(r)); lines.push(''); });
+  if(rows.length > 30){ lines.push(`… dan ${rows.length-30} rencana lainnya.`); }
+  lines.push('(SEN-FleetCare — Plan Schedule Maintenance)');
+  return lines.join('\n');
+}
+
+function openPlanningWA(message){
+  // WhatsApp Plan Schedule Maintenance hanya boleh digunakan oleh Fahmi Fanani.
+  if(!isFahmiFanani()){
+    alert('Fitur Kirim ke Grup WhatsApp hanya tersedia untuk user Fahmi Fanani.');
+    return;
+  }
+  const encoded = encodeURIComponent(message);
+  window.open(`https://wa.me/?text=${encoded}`, '_blank', 'noopener');
+}
+
+function showPlanningNotifyPanel(rec){
+  if(!isFahmiFanani()) return;
+  const panel = document.getElementById('ps-notify-panel');
+  const summary = document.getElementById('ps-notify-summary');
+  const btnWrap = document.getElementById('ps-notify-buttons');
+  if(!panel || !summary || !btnWrap) return;
+  panel.style.display = '';
+  summary.textContent = `Rencana maintenance untuk unit ${rec.unitCode} berhasil disimpan. Kirim ke Grup WhatsApp sekarang?`;
+  const message = buildPlanningWAMessage(rec);
+  btnWrap.innerHTML = `<button type="button" class="btn" style="background:#25D366; color:#07301c;" onclick='openPlanningWA(${JSON.stringify(message)})'>📲 Kirim ke Grup WhatsApp</button>
+    <button type="button" class="btn secondary" onclick="document.getElementById('ps-notify-panel').style.display='none';">Tutup</button>`;
+}
+
+window.sendPlanningRowWA = function(id){
+  if(!isFahmiFanani()){
+    alert('Fitur Kirim ke Grup WhatsApp hanya tersedia untuk user Fahmi Fanani.');
+    return;
+  }
+  const rec = planningSystemRecords.find(r=>r.id===id);
+  if(!rec) return;
+  openPlanningWA(buildPlanningWAMessage(rec));
+};
+
+document.getElementById('ps-send-group-wa')?.addEventListener('click', ()=>{
+  if(!isFahmiFanani()){
+    alert('Fitur Kirim ke Grup WhatsApp hanya tersedia untuk user Fahmi Fanani.');
+    return;
+  }
+  const rows = filterPlanningRows();
+  if(!rows.length){ alert('Tidak ada rencana maintenance untuk dikirim sesuai filter saat ini.'); return; }
+  openPlanningWA(buildPlanningWAMessageBulk(rows));
+});
+
+/* ===== PLAN DAILY MAINTENANCE =====
+   Sub-fitur di menu Plan Schedule Maintenance untuk mencatat rencana kerja harian
+   dengan format ringkas: Date, Unit, Job Activity, PIC/Mekanik — lalu bisa langsung
+   di-sync ke Grup WhatsApp memakai mekanisme yang sama dengan Rekap Bulanan (wa.me
+   dengan pesan sudah terisi otomatis, tinggal pilih grup tujuan).
+   Kolom Unit mendukung input LEBIH DARI SATU unit per plan (tidak dibatasi jumlahnya) —
+   unit ditambahkan satu per satu sebagai "chip" sebelum form disimpan. */
+
+// Ambil array unit dari record, dengan fallback ke format lama (field "unit" tunggal)
+// supaya data yang sudah tersimpan sebelumnya tetap tampil normal.
+function getPdmUnitsArray(r){
+  if(Array.isArray(r.units) && r.units.length) return r.units;
+  if(r.unit) return [r.unit];
+  return [];
+}
+
+let pdmUnitsDraft = []; // unit-unit yang sudah ditambahkan di form, sebelum disimpan
+
+function renderPdmUnitChips(){
+  const wrap = document.getElementById('pdm-unit-chips');
+  const hint = document.getElementById('pdm-unit-hint');
+  if(!wrap) return;
+  if(!pdmUnitsDraft.length){
+    wrap.innerHTML = '';
+    if(hint) hint.textContent = 'Belum ada unit ditambahkan.';
+    return;
+  }
+  if(hint) hint.textContent = `${pdmUnitsDraft.length} unit ditambahkan.`;
+  wrap.innerHTML = pdmUnitsDraft.map((u,i)=>
+    `<span class="chip" style="display:inline-flex; align-items:center; gap:6px;">${escUH(u)}
+      <span onclick="removePdmUnitDraft(${i})" style="cursor:pointer; font-weight:700; opacity:0.75;" title="Hapus unit ini">×</span>
+    </span>`
+  ).join('');
+}
+
+function addPdmUnitDraft(){
+  const input = document.getElementById('pdm-unit-input');
+  if(!input) return;
+  const val = String(input.value||'').trim().toUpperCase();
+  if(!val) return;
+  if(!pdmUnitsDraft.includes(val)) pdmUnitsDraft.push(val);
+  input.value = '';
+  input.focus();
+  renderPdmUnitChips();
+}
+window.removePdmUnitDraft = function(idx){
+  pdmUnitsDraft.splice(idx,1);
+  renderPdmUnitChips();
+};
+document.getElementById('pdm-unit-add')?.addEventListener('click', addPdmUnitDraft);
+document.getElementById('pdm-unit-input')?.addEventListener('keydown', (e)=>{
+  if(e.key==='Enter'){ e.preventDefault(); addPdmUnitDraft(); }
+});
+
+function fillPdmUnitDatalist(){
+  const dl = document.getElementById('pdm-unit-list');
+  if(!dl) return;
+  const codes = new Set();
+  (typeof UNITS!=='undefined' && Array.isArray(UNITS) ? UNITS : []).forEach(u=>{
+    const c = String(u.code||'').trim();
+    if(c) codes.add(c);
+  });
+  try{ (planDailyRecords||[]).forEach(r=> getPdmUnitsArray(r).forEach(c=>{ if(c) codes.add(String(c).trim()); })); }catch(_e){}
+  const sorted = Array.from(codes).sort((a,b)=>a.localeCompare(b));
+  dl.innerHTML = sorted.map(c=>'<option value="'+String(c).replace(/"/g,'&quot;')+'"></option>').join('');
+}
+function populatePdmPicSelect(){
+  const sel = document.getElementById('pdm-pic');
+  if(!sel) return;
+  const prev = sel.value;
+  const mechanics = listMechanicUsersForDropdown();
+  sel.innerHTML = mechanics.map(m=>`<option value="${m.username}">${m.name}</option>`).join('');
+  if(loggedInUser && currentRole()==='Mechanic'){
+    sel.value = loggedInUser.username;
+  } else {
+    sel.value = mechanics.some(m=>m.username===prev) ? prev : '';
+  }
+  ['pdm-pic2','pdm-pic3'].forEach(id=>{
+    const s = document.getElementById(id);
+    if(!s) return;
+    const p = s.value;
+    s.innerHTML = '<option value="">— Tidak ada —</option>' + mechanics.map(m=>`<option value="${m.username}">${m.name}</option>`).join('');
+    s.value = mechanics.some(m=>m.username===p) ? p : '';
+  });
+}
+function refreshPdmFilterUnitOptions(){
+  const sel = document.getElementById('pdm-filter-unit');
+  if(!sel) return;
+  const prev = sel.value || '';
+  const codes = new Set();
+  (UNITS||[]).forEach(u=>{ const c=String(u.code||'').trim(); if(c) codes.add(c); });
+  try{ (planDailyRecords||[]).forEach(r=> getPdmUnitsArray(r).forEach(c=>{ if(c) codes.add(String(c).trim()); })); }catch(_e){}
+  const sorted = Array.from(codes).sort((a,b)=>a.localeCompare(b));
+  sel.innerHTML = '<option value="">Semua Unit</option>' + sorted.map(c=>'<option value="'+c+'">'+c+'</option>').join('');
+  if(prev && sorted.indexOf(prev)>=0) sel.value = prev;
+}
+document.getElementById('pdm-date').value = new Date().toISOString().slice(0,10);
+fillPdmUnitDatalist();
+populatePdmPicSelect();
+refreshPdmFilterUnitOptions();
+renderPdmUnitChips();
+
+function filterPlanDailyRows(){
+  const dateF = document.getElementById('pdm-filter-date')?.value || '';
+  const unitF = document.getElementById('pdm-filter-unit')?.value || '';
+  return (planDailyRecords||[]).filter(r=>{
+    if(dateF && r.date!==dateF) return false;
+    if(unitF && !getPdmUnitsArray(r).some(u=>String(u||'').toUpperCase()===unitF.toUpperCase())) return false;
+    return true;
+  }).sort((a,b)=> String(b.date||'').localeCompare(String(a.date||'')) || String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
+}
+
+function getPdmPicDisplay(r){
+  const names = [];
+  const u1 = getAllUsers().find(u=>u.username===r.picUsername);
+  names.push(u1 ? u1.name : (r.picUsername || ''));
+  if(r.pic2Username){
+    const u2 = getAllUsers().find(u=>u.username===r.pic2Username);
+    names.push(u2 ? u2.name : r.pic2Username);
+  }
+  if(r.pic3Username){
+    const u3 = getAllUsers().find(u=>u.username===r.pic3Username);
+    names.push(u3 ? u3.name : r.pic3Username);
+  }
+  const out = names.map(n=>String(n||'').trim()).filter(Boolean).join(', ');
+  return out || '—';
+}
+
+function renderPlanDailyTable(){
+  const tbody = document.getElementById('pdm-tbody');
+  if(!tbody) return;
+  const rows = filterPlanDailyRows();
+  const isSupervisor = currentRole()==='Supervisor';
+  if(!rows.length){
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="5">Belum ada Plan Daily Maintenance untuk filter ini.</td></tr>`;
+  } else {
+    tbody.innerHTML = rows.map(r=>{
+      const units = getPdmUnitsArray(r);
+      const unitCell = units.map(u=>`<span class="cat" style="margin:1px 3px 1px 0; display:inline-block;">${escUH(u)}</span>`).join('') || '—';
+      return `
+      <tr>
+        <td>${formatDateDMY(r.date)}</td>
+        <td style="white-space:normal; min-width:140px;">${unitCell}</td>
+        <td style="white-space:normal; min-width:220px;">${escUH(r.jobActivity||'—')}</td>
+        <td>${escUH(getPdmPicDisplay(r))}</td>
+        <td style="white-space:nowrap;">
+          <button class="btn small wa-sync-only-fahmi" style="background:#25D366; color:#07301c;" onclick="sendPlanDailyRowWA('${r.id}')" title="Kirim plan harian ini ke WhatsApp Group">📲 WA</button>
+          ${isSupervisor ? `<button class="btn danger" onclick="deletePlanDaily('${r.id}')">Hapus</button>` : ''}
+        </td>
+      </tr>`;
+    }).join('');
+  }
+  try{ attachTopScroll('pdm'); }catch(_e){}
+}
+
+document.getElementById('form-plandaily').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  // Kalau user masih mengetik unit di kolom input tapi lupa tekan "Tambah"/Enter,
+  // otomatis tambahkan dulu supaya tidak hilang begitu form disubmit.
+  const pendingInput = document.getElementById('pdm-unit-input');
+  if(pendingInput && String(pendingInput.value||'').trim()) addPdmUnitDraft();
+  if(!pdmUnitsDraft.length){ alert('Minimal 1 Unit wajib ditambahkan (bisa lebih dari 1 unit).'); return; }
+  const picUser = getAllUsers().find(u=>u.username===document.getElementById('pdm-pic').value);
+  if(!picUser){ alert('PIC/Mekanik 1 wajib dipilih.'); return; }
+  const pic2User = getAllUsers().find(u=>u.username===document.getElementById('pdm-pic2').value);
+  const pic3User = getAllUsers().find(u=>u.username===document.getElementById('pdm-pic3').value);
+  if(pic2User && pic2User.username===picUser.username){
+    alert('PIC/Mekanik 2 tidak boleh sama dengan PIC/Mekanik 1. Pilih mekanik lain atau kosongkan.');
+    return;
+  }
+  if(pic3User && (pic3User.username===picUser.username || (pic2User && pic3User.username===pic2User.username))){
+    alert('PIC/Mekanik 3 tidak boleh sama dengan PIC/Mekanik 1 atau PIC/Mekanik 2. Pilih mekanik lain atau kosongkan.');
+    return;
+  }
+  const rec = {
+    id: uid(),
+    date: document.getElementById('pdm-date').value,
+    units: pdmUnitsDraft.slice(),
+    jobActivity: document.getElementById('pdm-jobactivity').value,
+    picUsername: picUser.username,
+    picName: picUser.name,
+    pic2Username: pic2User ? pic2User.username : '',
+    pic2Name: pic2User ? pic2User.name : '',
+    pic3Username: pic3User ? pic3User.username : '',
+    pic3Name: pic3User ? pic3User.name : '',
+    createdBy: currentUserName(),
+    createdAt: new Date().toISOString(),
+  };
+  planDailyRecords.unshift(rec);
+  await savePlanDaily();
+  document.getElementById('form-plandaily').reset();
+  document.getElementById('pdm-date').value = new Date().toISOString().slice(0,10);
+  pdmUnitsDraft = [];
+  renderPdmUnitChips();
+  fillPdmUnitDatalist();
+  refreshPdmFilterUnitOptions();
+  populatePdmPicSelect();
+  renderPlanDailyTable();
+  try{ showPlanDailyNotifyPanel(rec); }catch(_e){ console.warn('showPlanDailyNotifyPanel', _e); }
+});
+document.getElementById('pdm-reset')?.addEventListener('click', ()=>{
+  pdmUnitsDraft = [];
+  renderPdmUnitChips();
+});
+
+window.deletePlanDaily = async function(id){
+  planDailyRecords = planDailyRecords.filter(r=>r.id!==id);
+  await savePlanDaily();
+  refreshPdmFilterUnitOptions();
+  renderPlanDailyTable();
+};
+
+[document.getElementById('pdm-filter-date'), document.getElementById('pdm-filter-unit')]
+  .forEach(el=> el?.addEventListener('change', renderPlanDailyTable));
+document.getElementById('pdm-clear-filter')?.addEventListener('click', ()=>{
+  document.getElementById('pdm-filter-date').value = '';
+  document.getElementById('pdm-filter-unit').value = '';
+  renderPlanDailyTable();
+});
+
+/* Format pesan WhatsApp sesuai format yang diminta:
+   Date            :
+   Unit            :
+   Job activity    :
+   PIC/Mekanik     :
+   Kolom Unit menampilkan semua unit (dipisah koma) jika lebih dari 1. */
+function buildPlanDailyWALine(r){
+  const unitsText = getPdmUnitsArray(r).join(', ') || '-';
+  return `Date          : ${formatDateDMY(r.date)}\n`+
+    `Unit          : ${unitsText}\n`+
+    `Job activity  : ${r.jobActivity||'-'}\n`+
+    `PIC/Mekanik   : ${getPdmPicDisplay(r)}`;
+}
+
+function buildPlanDailyWAMessage(rec){
+  const lines = [];
+  lines.push('*PLAN DAILY MAINTENANCE*');
+  lines.push('');
+  lines.push(buildPlanDailyWALine(rec));
+  lines.push('');
+  lines.push('(SEN-FleetCare — Plan Daily Maintenance)');
+  return lines.join('\n');
+}
+
+function buildPlanDailyWAMessageBulk(rows){
+  const dateF = document.getElementById('pdm-filter-date')?.value || '';
+  const label = dateF ? formatDateDMY(dateF) : 'Semua Tanggal';
+  const lines = [];
+  lines.push('*PLAN DAILY MAINTENANCE*');
+  lines.push(`Periode: ${label}`);
+  lines.push(`Total: ${rows.length}`);
+  lines.push('');
+  rows.slice(0, 30).forEach((r,i)=>{ lines.push(`${i+1}.`); lines.push(buildPlanDailyWALine(r)); lines.push(''); });
+  if(rows.length > 30){ lines.push(`… dan ${rows.length-30} plan lainnya.`); }
+  lines.push('(SEN-FleetCare — Plan Daily Maintenance)');
+  return lines.join('\n');
+}
+
+function showPlanDailyNotifyPanel(rec){
+  if(!isFahmiFanani()) return;
+  const panel = document.getElementById('pdm-notify-panel');
+  const summary = document.getElementById('pdm-notify-summary');
+  const btnWrap = document.getElementById('pdm-notify-buttons');
+  if(!panel || !summary || !btnWrap) return;
+  panel.style.display = '';
+  const unitsText = getPdmUnitsArray(rec).join(', ');
+  summary.textContent = `Plan Daily Maintenance untuk unit ${unitsText} (${formatDateDMY(rec.date)}) berhasil disimpan. Kirim ke Grup WhatsApp sekarang?`;
+  const message = buildPlanDailyWAMessage(rec);
+  btnWrap.innerHTML = `<button type="button" class="btn" style="background:#25D366; color:#07301c;" onclick='openPlanningWA(${JSON.stringify(message)})'>📲 Kirim ke Grup WhatsApp</button>
+    <button type="button" class="btn secondary" onclick="document.getElementById('pdm-notify-panel').style.display='none';">Tutup</button>`;
+}
+
+window.sendPlanDailyRowWA = function(id){
+  if(!isFahmiFanani()){
+    alert('Fitur Kirim ke Grup WhatsApp hanya tersedia untuk user Fahmi Fanani.');
+    return;
+  }
+  const rec = planDailyRecords.find(r=>r.id===id);
+  if(!rec) return;
+  openPlanningWA(buildPlanDailyWAMessage(rec));
+};
+
+document.getElementById('pdm-send-group-wa')?.addEventListener('click', ()=>{
+  if(!isFahmiFanani()){
+    alert('Fitur Kirim ke Grup WhatsApp hanya tersedia untuk user Fahmi Fanani.');
+    return;
+  }
+  const rows = filterPlanDailyRows();
+  if(!rows.length){ alert('Tidak ada Plan Daily Maintenance untuk dikirim sesuai filter saat ini.'); return; }
+  openPlanningWA(buildPlanDailyWAMessageBulk(rows));
 });
 
 /* Notifikasi untuk mekanik: tampil saat mekanik yang sedang login memiliki rencana
@@ -12579,30 +13437,15 @@ function renderPlanningTable(){
   const isSupervisor = currentRole()==='Supervisor';
 
   if(!rows.length){
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="14">Belum ada rencana maintenance untuk filter ini.</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="11">Belum ada rencana maintenance untuk filter ini.</td></tr>`;
   } else {
     tbody.innerHTML = rows.map(r=>{
       const isOverdue = r.status==='Open' && r.dueDate && r.dueDate<today;
       const statusPill = isOverdue
         ? `<span class="pill overdue">Overdue</span>`
         : `<span class="pill ${r.status==='Close'?'close':'open'}">${r.status}</span>`;
-      /* Jam Pekerjaan boleh diisi/diubah oleh user Mechanic yang menjadi PIC Mechanic 1 ATAU
-         PIC Mechanic 2 pada rencana tersebut (mekanik pelaksana). Supervisor/mekanik lain di
-         luar itu hanya bisa lihat. */
-      const isAssignedMechanic = !isSupervisor && loggedInUser &&
-        (loggedInUser.username===r.picUsername || loggedInUser.username===r.pic2Username);
-      let jamMulaiCell, jamSelesaiCell, durasiCell;
-      if(r.jamMulai && r.jamSelesai){
-        jamMulaiCell = `<span style="font-family:'JetBrains Mono',monospace; font-size:12px;">${r.jamMulai}</span>`;
-        jamSelesaiCell = `<span style="font-family:'JetBrains Mono',monospace; font-size:12px;">${r.jamSelesai}</span>`;
-        durasiCell = `<b>${r.jamTotal||'—'}</b>`;
-      } else if(isAssignedMechanic){
-        const fillBtn = `<button type="button" class="btn small secondary" onclick="promptJamPekerjaan('${r.id}')">＋ Isi Jam</button>`;
-        jamMulaiCell = fillBtn; jamSelesaiCell = `<span class="hint">—</span>`; durasiCell = `<span class="hint">—</span>`;
-      } else {
-        jamMulaiCell = `<span class="hint">—</span>`; jamSelesaiCell = `<span class="hint">—</span>`;
-        durasiCell = `<span class="hint">Menunggu diisi mekanik pelaksana</span>`;
-      }
+      /* Menu ini bersifat monitoring saja. Perubahan status (termasuk menandai Close)
+         hanya bisa dilakukan oleh user Fahmi Fanani — mekanik/user lain hanya memantau. */
       return `
       <tr>
         <td>${r.unitCode}</td>
@@ -12614,11 +13457,12 @@ function renderPlanningTable(){
         <td>${formatDateDMY(r.planDate)}</td>
         <td>${formatDateDMY(r.dueDate)}</td>
         <td>${formatDateDMY(r.workDate)}</td>
-        <td>${jamMulaiCell}</td>
-        <td>${jamSelesaiCell}</td>
-        <td>${durasiCell}</td>
         <td>${statusPill}</td>
-        <td>${isSupervisor ? `<button class="btn danger" onclick="deletePlanningSystem('${r.id}')">Hapus</button>` : ''}</td>
+        <td style="white-space:nowrap;">
+          <button class="btn small wa-sync-only-fahmi" style="background:#25D366; color:#07301c;" onclick="sendPlanningRowWA('${r.id}')" title="Kirim rencana ini ke WhatsApp Group">📲 WA</button>
+          ${isFahmiFanani() ? `<button type="button" class="btn small secondary" onclick="promptJamPekerjaan('${r.id}')">⚑ Update Status</button>` : ''}
+          ${isSupervisor ? `<button class="btn danger" onclick="deletePlanningSystem('${r.id}')">Hapus</button>` : ''}
+        </td>
       </tr>`;
     }).join('');
   }
@@ -12672,7 +13516,7 @@ function renderPlanningHistorical(){
 
   const rows = filterPlanningHistoricalRows();
   if(!rows.length){
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="13">Belum ada rencana Close.</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="10">Belum ada rencana Close.</td></tr>`;
   } else {
     tbody.innerHTML = rows.map(r=>`
       <tr>
@@ -12685,20 +13529,14 @@ function renderPlanningHistorical(){
         <td>${formatDateDMY(r.planDate)}</td>
         <td>${formatDateDMY(r.dueDate)}</td>
         <td>${formatDateDMY(r.workDate)}</td>
-        <td style="font-family:JetBrains Mono,monospace;font-size:12px;">${escUH(r.jamMulai||'—')}</td>
-        <td style="font-family:JetBrains Mono,monospace;font-size:12px;">${escUH(r.jamSelesai||'—')}</td>
-        <td><b>${escUH(r.jamTotal||'—')}</b></td>
         <td><span class="pill close">Close</span></td>
       </tr>`).join('');
   }
 
   // KPI
   const units = new Set(rows.map(r=>String(r.unitCode||'').trim()).filter(Boolean));
-  let totalHours = 0;
   const compCount = {};
   rows.forEach(r=>{
-    const jt = String(r.jamTotal||'').replace(/,/g,'.').match(/([\d.]+)/);
-    if(jt) totalHours += Number(jt[1])||0;
     const c = r.component || 'Other';
     compCount[c] = (compCount[c]||0)+1;
   });
@@ -12710,7 +13548,6 @@ function renderPlanningHistorical(){
   const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
   set('ps-hist-kpi-total', rows.length);
   set('ps-hist-kpi-units', units.size);
-  set('ps-hist-kpi-hours', Math.round(totalHours*10)/10);
   set('ps-hist-kpi-topcomp', topComp);
 
   try{ attachTopScroll('ps-hist'); }catch(_e){}
@@ -12721,27 +13558,20 @@ window.deletePlanningSystem = async function(id){
   await savePlanningSystem();
   renderPlanningTable();
 }
-/* Mengisi Tgl Pekerjaan & Jam Mulai/Selesai eksekusi — dibatasi untuk user Mechanic yang
-   menjadi PIC Mechanic 1 ATAU PIC Mechanic 2 pada rencana tersebut (mekanik pelaksana).
-   Supervisor maupun mekanik lain di luar itu tidak bisa mengisi jam pekerjaan mekanik lain.
-   Dropdown Status (Open/Close, default Close) dipilih mekanik sendiri sebelum disimpan lewat
-   modal "Isi Jam Pekerjaan". */
+/* Mengisi Tgl Pekerjaan & mengubah Status — menu Plan Schedule Maintenance bersifat
+   monitoring saja untuk semua user (termasuk mekanik & supervisor). Hanya user Fahmi Fanani
+   yang boleh mengubah status (termasuk menandai Close) lewat modal "Update Status Pekerjaan". */
 let psCloseActiveId = null;
 window.promptJamPekerjaan = function(id){
   const r = planningSystemRecords.find(x=>x.id===id);
   if(!r) return;
-  const isSupervisor = currentRole()==='Supervisor';
-  const isAssignedMechanic = !isSupervisor && loggedInUser &&
-    (loggedInUser.username===r.picUsername || loggedInUser.username===r.pic2Username);
-  if(!isAssignedMechanic){
-    alert('Jam pekerjaan hanya bisa diisi oleh mekanik yang menjadi PIC Mechanic 1 atau PIC Mechanic 2 pada rencana ini.');
+  if(!isFahmiFanani()){
+    alert('Perubahan status (termasuk menandai Close) hanya bisa dilakukan oleh Fahmi Fanani.');
     return;
   }
   psCloseActiveId = id;
   document.getElementById('ps-close-info').innerHTML = `<b>${r.unitCode}</b> — ${r.jobDesc||'—'} <br>Component: <b>${r.component}</b> · Due: <b>${formatDateDMY(r.dueDate)}</b>`;
   document.getElementById('ps-close-workdate').value = r.workDate || new Date().toISOString().slice(0,10);
-  document.getElementById('ps-close-jammulai').value = r.jamMulai || '';
-  document.getElementById('ps-close-jamselesai').value = r.jamSelesai || '';
   document.getElementById('ps-close-status').value = r.status==='Open' ? 'Open' : 'Close';
   document.getElementById('ps-close-overlay').classList.add('show');
 }
@@ -12755,20 +13585,14 @@ document.getElementById('ps-close-overlay').addEventListener('click', (e)=>{ if(
 document.getElementById('ps-close-save').addEventListener('click', async ()=>{
   const r = planningSystemRecords.find(x=>x.id===psCloseActiveId);
   if(!r) return closePsCloseModal();
+  if(!isFahmiFanani()){
+    alert('Perubahan status (termasuk menandai Close) hanya bisa dilakukan oleh Fahmi Fanani.');
+    return closePsCloseModal();
+  }
   const tgl = document.getElementById('ps-close-workdate').value;
-  const mulai = document.getElementById('ps-close-jammulai').value;
-  const selesai = document.getElementById('ps-close-jamselesai').value;
   const status = document.getElementById('ps-close-status').value;
   if(!tgl){ alert('Tgl Pekerjaan wajib diisi.'); return; }
-  if(!mulai || !selesai){ alert('Jam Mulai & Jam Selesai wajib diisi.'); return; }
-  const [mh,mm] = mulai.split(':').map(Number);
-  const [sh,sm] = selesai.split(':').map(Number);
-  let mins = (sh*60+sm) - (mh*60+mm);
-  if(mins < 0) mins += 24*60; // lewat tengah malam
   r.workDate = tgl;
-  r.jamMulai = mulai;
-  r.jamSelesai = selesai;
-  r.jamTotal = (mins/60).toFixed(1) + ' jam';
   r.status = status;
   await savePlanningSystem();
   closePsCloseModal();
@@ -21016,7 +21840,7 @@ function renderAll(){
   renderDailyTable();
   renderPlanTable();
   renderPlanningTable();
-  renderP2HTable();
+  renderPlanDailyTable();
   renderPreInspectionTable();
   renderPreInspectionPlans();
   renderPreInspectionMechanicNotify();
@@ -21382,6 +22206,66 @@ function subscribeDailyRealtime(){
   }
 })();
 </script>
+
+<!-- ACCOUNT QR CODE -->
+<div id="qr-overlay" role="dialog" aria-modal="true" aria-labelledby="qr-title">
+  <div class="qr-modal">
+    <div class="qr-head">
+      <h3 id="qr-title"><span class="tag">QR</span> QR Code Akun</h3>
+      <button type="button" class="qr-close" id="qr-close" aria-label="Tutup">&times;</button>
+    </div>
+    <div class="qr-body">
+      <div class="qr-canvas-wrap"><div id="qr-canvas"></div></div>
+      <div class="qr-user-info">
+        <div><b id="qr-info-name">—</b></div>
+        <div id="qr-info-username">—</div>
+      </div>
+      <div class="qr-toggle-row">
+        <input type="checkbox" id="qr-include-password">
+        <label for="qr-include-password">Sertakan Password (bisa langsung scan untuk login)</label>
+      </div>
+      <div class="qr-warn" id="qr-warn">⚠ QR ini akan memuat password dalam bentuk teks biasa. Jangan bagikan/foto QR ini sembarangan — siapa pun yang memindainya bisa langsung login sebagai akun ini.</div>
+      <div class="qr-actions">
+        <button type="button" class="btn secondary" id="qr-download">⬇ Download PNG</button>
+        <button type="button" class="btn secondary" id="qr-close-2">Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SITE ACCESS QR CODE -->
+<div id="site-qr-overlay" role="dialog" aria-modal="true" aria-labelledby="site-qr-title">
+  <div class="site-qr-modal">
+    <div class="site-qr-head">
+      <h3 id="site-qr-title"><span class="tag">QR</span> Web Access QR Code</h3>
+      <button type="button" class="site-qr-close" id="site-qr-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="site-qr-body">
+      <div class="site-qr-canvas-wrap"><div id="site-qr-canvas"></div></div>
+      <div class="site-qr-url-row">
+        <div class="site-qr-url-display" id="site-qr-url-display" title="Web access URL"></div>
+        <button type="button" class="btn secondary" id="site-qr-copy-link" title="Copy link">Copy Link</button>
+      </div>
+      <div class="site-qr-hint" id="site-qr-hint">Scan this QR with your phone camera to open SEN-FleetCare. Download or share the QR image, or install the web app on desktop and mobile.</div>
+      <div class="site-qr-actions">
+        <button type="button" class="btn secondary" id="site-qr-share">↗ Share QR</button>
+      </div>
+      <div class="site-qr-share-status" id="site-qr-share-status" aria-live="polite"></div>
+      <div class="site-qr-install">
+        <h4>Install Web App</h4>
+        <ul>
+          <li><b>Desktop (Chrome / Edge):</b> open this site → browser menu (⋮) → <b>Install app</b>, or use the install icon in the address bar.</li>
+          <li><b>Android (Chrome):</b> open this site → menu (⋮) → <b>Install app</b> / <b>Add to Home screen</b>.</li>
+          <li><b>iPhone / iPad (Safari):</b> open this site → Share → <b>Add to Home Screen</b>.</li>
+        </ul>
+        <div class="install-actions">
+          <button type="button" class="btn" id="site-qr-install-app">⬇ Install App</button>
+          <button type="button" class="btn secondary" id="site-qr-open-site">Open Site</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- WEB MAINTENANCE TOOL -->
 <button type="button" id="maint-fab" title="Web Maintenance Tool (Ctrl+Shift+M)" aria-label="Maintenance">
