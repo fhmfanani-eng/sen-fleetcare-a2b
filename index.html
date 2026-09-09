@@ -786,7 +786,7 @@ select.exec-close{ background:rgba(76,175,109,0.15); color:var(--green); }
 #rca-table th:nth-child(6), #rca-table td:nth-child(6){ width:90px; min-width:90px; white-space:nowrap; text-align:center; }
 #rca-table th:nth-child(7), #rca-table td:nth-child(7){ width:200px; min-width:180px; }
 #rca-table th:nth-child(8), #rca-table td:nth-child(8){ width:200px; min-width:180px; }
-#rca-table th:nth-child(9), #rca-table td:nth-child(9){ width:110px; min-width:100px; white-space:nowrap; }
+#rca-table th:nth-child(9), #rca-table td:nth-child(9){ width:140px; min-width:120px; }
 #rca-table th:nth-child(10), #rca-table td:nth-child(10){ width:100px; min-width:96px; white-space:nowrap; text-align:center; }
 #rca-table th:nth-child(11), #rca-table td:nth-child(11){ width:120px; min-width:110px; white-space:nowrap; text-align:center; }
 
@@ -856,10 +856,12 @@ select.exec-close{ background:rgba(76,175,109,0.15); color:var(--green); }
   text-align:left;
 }
 #rca-table .rca-pic{
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  max-width:110px;
+  white-space:normal;
+  line-height:1.35;
+  max-width:140px;
+  font-size:12px;
+  font-weight:500;
+  text-align:left;
 }
 
 
@@ -1983,6 +1985,10 @@ body.role-mechanic #history-filters{ display:none !important; }
       </div>
       <div class="field"><label>Corrective Action</label><textarea id="rca-edit-corrective" rows="2" placeholder="Perbaikan langsung…"></textarea></div>
       <div class="field"><label>Preventive Action</label><textarea id="rca-edit-preventive" rows="2" placeholder="Agar tidak berulang…"></textarea></div>
+      <div class="field"><label>PIC Mechanic</label>
+        <textarea id="rca-edit-pic" rows="2" placeholder="Nama mechanic — boleh lebih dari satu, pisahkan dengan · atau koma&#10;Contoh: Robertus G M · Alfius S"></textarea>
+        <div class="hint" style="margin-top:6px;">Bisa diisi manual. Beberapa mechanic: pisahkan dengan <b>·</b> atau koma. Otomatis dari Daily tetap bisa dilengkapi saat generate/render.</div>
+      </div>
       <div class="field"><label>Status</label>
         <select id="rca-edit-status">
           <option value="Open">Open</option>
@@ -20674,10 +20680,17 @@ function buildAutoRcaFromMatches(compKey, unitCode, matches){
   const repairs = sorted.map(r=>String(r.repairAction||'').trim()).filter(Boolean);
   const codes = sorted.map(r=>String(r.codeBD||'').trim()).filter(Boolean);
   const mechs = [];
-  sorted.forEach(r=>{
-    [r.mechanic,r.mechanic2,r.mechanic3,r.picName].forEach(m=>{
-      if(m && mechs.indexOf(m)<0) mechs.push(m);
+  function pushMechNames(raw){
+    String(raw==null?'':raw).split(/[,;|/]+|\s+·\s+|\s+&\s+/).forEach(part=>{
+      const m = part.trim();
+      if(!m || m==='—' || m==='-') return;
+      // skip jika sudah ada (case-insensitive)
+      if(mechs.some(x=>x.toLowerCase()===m.toLowerCase())) return;
+      mechs.push(m);
     });
+  }
+  sorted.forEach(r=>{
+    [r.mechanic, r.mechanic2, r.mechanic3, r.mechanic_2, r.mechanic_3, r.picName, r.manPower, r.man_power].forEach(pushMechNames);
   });
 
   const problem = descs.length
@@ -20706,7 +20719,10 @@ function buildAutoRcaFromMatches(compKey, unitCode, matches){
     : tpl.root;
 
   const category = rcaInferCategory(problem+' '+corrective, tpl.category);
-  const pic = mechs[0] || ((typeof currentUserName==='function') ? currentUserName() : '') || '';
+  // Semua mechanic dari Daily Maintenance (bukan hanya yang pertama)
+  const pic = mechs.length
+    ? mechs.join(' · ')
+    : (((typeof currentUserName==='function') ? currentUserName() : '') || '');
   const date = (latest && latest.tanggal) ? latest.tanggal : new Date().toISOString().slice(0,10);
   const codeBD = codes[0] || '';
 
@@ -20912,10 +20928,66 @@ function syncRcaComponentsWithBreakdown(){
   }catch(e){ console.warn('syncRcaComponentsWithBreakdown error', e); return false; }
 }
 
+/** Ambil daftar nama mechanic unik dari record Daily yang cocok unit+komponen RCA. */
+function rcaCollectMechanicsFromDaily(unitCode, component){
+  const mechs = [];
+  function pushMechNames(raw){
+    String(raw==null?'':raw).split(/[,;|/]+|\s+·\s+|\s+&\s+/).forEach(part=>{
+      const m = part.trim();
+      if(!m || m==='—' || m==='-') return;
+      if(mechs.some(x=>x.toLowerCase()===m.toLowerCase())) return;
+      mechs.push(m);
+    });
+  }
+  try{
+    const u = String(unitCode||'').trim().toUpperCase();
+    const comp = String(component||'').trim();
+    const source = (typeof cbmBreakdownRecords==='function') ? cbmBreakdownRecords()
+      : (typeof dailyRecords!=='undefined' && Array.isArray(dailyRecords) ? dailyRecords : []);
+    (source||[]).forEach(r=>{
+      const ru = String(r.unitCode||r.unit_code||'').trim().toUpperCase();
+      if(u && ru && ru!==u) return;
+      const rc = (typeof cbmGroupKeyOfComp==='function')
+        ? cbmGroupKeyOfComp(r._cbmComp || r.bdCategory || r.bd_category || r.component)
+        : String(r.bdCategory||r.bd_category||r.component||'').trim();
+      if(comp && rc && String(rc)!==comp) return;
+      [r.mechanic, r.mechanic2, r.mechanic3, r.mechanic_2, r.mechanic_3, r.picName, r.manPower, r.man_power].forEach(pushMechNames);
+    });
+  }catch(_e){}
+  return mechs;
+}
+
+/** Perbarui field pic RCA agar memuat semua mechanic dari Daily (bukan hanya 1 nama). */
+function enrichRcaPicsFromDaily(){
+  let changed = false;
+  try{
+    (rcaRecords||[]).forEach(r=>{
+      // Jika user sudah edit PIC manual di form Edit, jangan timpa
+      if(r.picManual) return;
+      const list = rcaCollectMechanicsFromDaily(r.unitCode, r.component);
+      if(!list.length) return;
+      const existing = String(r.pic||'').split(/\s*·\s*|[,;|/]+/).map(s=>s.trim()).filter(Boolean);
+      const merged = [];
+      existing.concat(list).forEach(m=>{
+        if(!m) return;
+        if(merged.some(x=>x.toLowerCase()===m.toLowerCase())) return;
+        merged.push(m);
+      });
+      const next = merged.join(' · ');
+      if(next && next!==String(r.pic||'')){
+        r.pic = next;
+        changed = true;
+      }
+    });
+  }catch(e){ console.warn('enrichRcaPicsFromDaily', e); }
+  return changed;
+}
+
 function renderCbmRca(){
   const tbody = document.getElementById('cbm-rca-tbody');
   if(!tbody) return;
   if(syncRcaComponentsWithBreakdown()){ saveRcaRecords(); }
+  if(enrichRcaPicsFromDaily()){ saveRcaRecords(); }
   fillRcaCompFilter();
 
   const stF = (document.getElementById('rca-filter-status')||{}).value || '';
@@ -20947,7 +21019,12 @@ function renderCbmRca(){
     const corrective = escUH(rcaCleanText(r.corrective) || '—');
     const preventive = escUH(rcaCleanText(r.preventive) || '—');
     const category = escUH(rcaCleanText(r.category) || '—');
-    const pic = escUH(rcaCleanText(r.pic) || '—');
+    const picRaw = rcaCleanText(r.pic) || '—';
+    const picTitle = escUH(picRaw);
+    // Tampilkan tiap mechanic di baris terpisah agar terbaca jika lebih dari satu
+    const picHtml = picRaw==='—'
+      ? '—'
+      : picRaw.split(/\s*·\s*/).map(n=>escUH(n.trim())).filter(Boolean).join('<br>');
     const unit = escUH(String(r.unitCode||'').trim());
     const comp = escUH(String(r.component||'').trim() || '—');
     return `<tr data-rca-id="${escUH(r.id)}">
@@ -20959,7 +21036,7 @@ function renderCbmRca(){
       <td class="rca-cat">${category}</td>
       <td class="rca-text" title="${corrective}"><div class="rca-clip">${corrective}</div></td>
       <td class="rca-text" title="${preventive}"><div class="rca-clip">${preventive}</div></td>
-      <td class="rca-pic">${pic}</td>
+      <td class="rca-pic" title="${picTitle}">${picHtml}</td>
       <td><span class="pill ${stClass}">${escUH(st)}</span></td>
       <td>
         <div class="rca-actions">
@@ -20988,6 +21065,7 @@ window.editRcaRecord = function(id){
   set('rca-edit-category', r.category||'Machine');
   set('rca-edit-corrective', r.corrective||'');
   set('rca-edit-preventive', r.preventive||'');
+  set('rca-edit-pic', r.pic||'');
   set('rca-edit-status', r.status||'Open');
   document.getElementById('rca-edit-overlay')?.classList.add('show');
 };
@@ -21017,6 +21095,17 @@ window.deleteRcaRecord = async function(id){
     r.category = document.getElementById('rca-edit-category').value || 'Machine';
     r.corrective = String(document.getElementById('rca-edit-corrective').value||'').trim();
     r.preventive = String(document.getElementById('rca-edit-preventive').value||'').trim();
+    // Normalisasi multi-mechanic: koma/semicolon/newline → pemisah " · "
+    let picVal = String(document.getElementById('rca-edit-pic')?.value||'').trim();
+    picVal = picVal
+      .replace(/[\r\n;|/]+/g, ' · ')
+      .replace(/\s*,\s*/g, ' · ')
+      .replace(/\s*·\s*/g, ' · ')
+      .replace(/(?:\s*·\s*){2,}/g, ' · ')
+      .replace(/^\s*·\s*|\s*·\s*$/g, '')
+      .trim();
+    r.pic = picVal;
+    r.picManual = true; // kunci dari edit form — tidak ditimpa auto-enrich
     r.status = document.getElementById('rca-edit-status').value || 'Open';
     r.updatedAt = new Date().toISOString();
     r.updatedBy = (typeof currentUserName==='function') ? currentUserName() : '';
