@@ -1546,6 +1546,21 @@ select.exec-close{ background:rgba(76,175,109,0.15); color:var(--green); }
 .login-switch a:hover{ text-decoration:underline; }
 #login-panel.hidden-panel{ display:none; }
 
+
+/* LOGIN — Web Access QR */
+.login-site-qr{ margin-top:12px; }
+.login-site-qr a{
+  display:flex; align-items:center; justify-content:center; gap:6px;
+  width:100%; padding:9px 12px; border:1px solid rgba(255,199,44,.42);
+  border-radius:8px; color:var(--yellow); background:rgba(255,199,44,.07);
+  font-family:'Oswald',sans-serif; font-size:11px; font-weight:700;
+  letter-spacing:.35px; text-decoration:none; cursor:pointer;
+  transition:background .15s, border-color .15s, transform .12s;
+}
+.login-site-qr a:hover{
+  background:rgba(255,199,44,.13); border-color:var(--yellow); transform:translateY(-1px);
+}
+
 /* ROLE-BASED NAV VISIBILITY */
 .nav-item.role-hidden{ display:none !important; }
 
@@ -1794,62 +1809,6 @@ body.role-mechanic #history-filters{ display:none !important; }
 .sidebar-foot{ cursor:pointer; }
 .sidebar-foot:hover{ color:var(--yellow); }
 
-/* ===== ACCOUNT QR CODE MODAL ===== */
-#qr-overlay{
-  display:none; position:fixed; inset:0; z-index:99999;
-  background:rgba(0,0,0,0.72); backdrop-filter:blur(4px);
-  align-items:flex-start; justify-content:center; padding:24px 12px; overflow-y:auto;
-}
-#qr-overlay.show{ display:flex; }
-.qr-modal{
-  width:100%; max-width:380px; margin:auto;
-  background:linear-gradient(165deg, #1a1f28 0%, #12161c 100%);
-  border:1px solid rgba(76,175,109,0.35); border-radius:14px;
-  box-shadow:0 24px 64px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04);
-  overflow:hidden;
-}
-.qr-head{
-  display:flex; align-items:center; justify-content:space-between; gap:12px;
-  padding:14px 18px; border-bottom:1px solid rgba(76,175,109,0.25);
-  background:linear-gradient(180deg, rgba(76,175,109,0.1), transparent);
-}
-.qr-head h3{
-  font-family:'Oswald',sans-serif; font-size:15px; letter-spacing:0.8px;
-  text-transform:uppercase; color:var(--green); margin:0;
-  display:flex; align-items:center; gap:8px;
-}
-.qr-head h3 span.tag{
-  font-size:9px; background:var(--green); color:#0e1310; padding:2px 7px;
-  border-radius:4px; font-family:'JetBrains Mono',monospace; font-weight:700;
-}
-.qr-close{
-  width:32px; height:32px; border-radius:8px; border:1px solid var(--line);
-  background:transparent; color:var(--text-dim); cursor:pointer; font-size:18px; line-height:1;
-}
-.qr-close:hover{ color:var(--red); border-color:var(--red); }
-.qr-body{ padding:18px; text-align:center; }
-.qr-canvas-wrap{
-  background:#fff; border-radius:10px; padding:14px; display:inline-block;
-  box-shadow:0 6px 20px rgba(0,0,0,0.35);
-}
-.qr-user-info{ margin-top:14px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-dim); line-height:1.6; }
-.qr-user-info b{ color:var(--text); }
-.qr-toggle-row{
-  display:flex; align-items:center; justify-content:center; gap:8px;
-  margin-top:14px; font-size:11.5px; color:var(--text-dim);
-  background:rgba(255,255,255,0.03); border:1px solid var(--line);
-  border-radius:8px; padding:9px 12px;
-}
-.qr-toggle-row input{ width:15px; height:15px; accent-color:var(--red); cursor:pointer; }
-.qr-toggle-row label{ cursor:pointer; user-select:none; }
-.qr-warn{
-  margin-top:10px; font-size:10px; color:var(--red); line-height:1.4;
-  display:none;
-}
-.qr-warn.show{ display:block; }
-.qr-actions{ display:flex; gap:8px; justify-content:center; margin-top:16px; }
-.qr-actions .btn{ font-size:11px; padding:8px 14px; }
-
 /* ===== SITE ACCESS QR ===== */
 #site-qr-overlay{
   display:none; position:fixed; inset:0; z-index:99999;
@@ -2071,7 +2030,7 @@ body.role-mechanic #history-filters{ display:none !important; }
       </form>
       <div class="login-forgot"><a id="show-recover-link">Forgot password / recover account?</a></div>
       <div class="login-switch">Don't have an account? <a id="show-register-link">Create new account</a></div>
-      <div class="login-switch" style="display:none;"><a id="show-site-qr-link">▦ Show Web Access QR Code</a></div>
+      <div class="login-switch login-site-qr"><a id="show-site-qr-link" href="javascript:void(0)">▦ QR CODE ALAMAT WEB — DOWNLOAD / SHARE</a></div>
     </div>
 
     <div id="register-panel">
@@ -6960,68 +6919,6 @@ function getAccountsList(){
   const registered = registeredUsers.map(u=>({ ...u, source:'registered' }));
   return system.concat(registered);
 }
-/* ===== ACCOUNT QR CODE ===== */
-let __qrCurrentUser = null;
-let __qrInstance = null;
-function buildAccountQRPayload(u, includePassword){
-  if(includePassword){
-    return `SEN-FLEETCARE-LOGIN\nUsername: ${u.username}\nPassword: ${u.password||''}`;
-  }
-  return `SEN-FLEETCARE-USER\nUsername: ${u.username}\nNama: ${u.name||''}`;
-}
-function renderAccountQR(){
-  if(!__qrCurrentUser) return;
-  const includePw = !!document.getElementById('qr-include-password')?.checked;
-  const payload = buildAccountQRPayload(__qrCurrentUser, includePw);
-  const holder = document.getElementById('qr-canvas');
-  holder.innerHTML = '';
-  __qrInstance = new QRCode(holder, {
-    text: payload,
-    width: 220,
-    height: 220,
-    colorDark: '#15171b',
-    colorLight: '#ffffff',
-    correctLevel: QRCode.CorrectLevel.M
-  });
-  document.getElementById('qr-warn')?.classList.toggle('show', includePw);
-}
-window.openAccountQR = function(username){
-  const canManage = isFahmiFanani();
-  if(!canManage) return;
-  const list = getAccountsList();
-  const u = list.find(x=>x.username===username);
-  if(!u) return;
-  __qrCurrentUser = u;
-  document.getElementById('qr-info-name').textContent = u.name || '—';
-  document.getElementById('qr-info-username').textContent = 'Username: ' + u.username;
-  const cb = document.getElementById('qr-include-password');
-  if(cb) cb.checked = false;
-  renderAccountQR();
-  document.getElementById('qr-overlay')?.classList.add('show');
-};
-function closeAccountQR(){
-  document.getElementById('qr-overlay')?.classList.remove('show');
-  __qrCurrentUser = null;
-}
-document.getElementById('qr-close')?.addEventListener('click', closeAccountQR);
-document.getElementById('qr-close-2')?.addEventListener('click', closeAccountQR);
-document.getElementById('qr-overlay')?.addEventListener('click', (e)=>{ if(e.target.id==='qr-overlay') closeAccountQR(); });
-document.getElementById('qr-include-password')?.addEventListener('change', renderAccountQR);
-document.getElementById('qr-download')?.addEventListener('click', ()=>{
-  const holder = document.getElementById('qr-canvas');
-  const img = holder?.querySelector('img');
-  const canvas = holder?.querySelector('canvas');
-  const src = img ? img.src : (canvas ? canvas.toDataURL('image/png') : null);
-  if(!src || !__qrCurrentUser) return;
-  const a = document.createElement('a');
-  a.href = src;
-  a.download = `qr-${__qrCurrentUser.username}.png`;
-  a.click();
-});
-document.addEventListener('keydown', (e)=>{
-  if(e.key==='Escape' && document.getElementById('qr-overlay')?.classList.contains('show')) closeAccountQR();
-});
-
 /* ===== SITE ACCESS QR ===== */
 let __siteQrInstance = null;
 let __deferredInstallPrompt = null;
@@ -7193,15 +7090,24 @@ function setupPwaInstallSupport(){
     navigator.serviceWorker.register('sw.js', { scope:'./' }).catch(err=> console.warn('SW register failed', err));
   }
 }
-document.getElementById('show-site-qr-link')?.addEventListener('click', openSiteQR);
-document.getElementById('site-qr-close')?.addEventListener('click', closeSiteQR);
-document.getElementById('site-qr-close-2')?.addEventListener('click', closeSiteQR);
-document.getElementById('site-qr-overlay')?.addEventListener('click', (e)=>{ if(e.target.id==='site-qr-overlay') closeSiteQR(); });
-document.getElementById('site-qr-download')?.addEventListener('click', siteQrDownloadPng);
-document.getElementById('site-qr-share')?.addEventListener('click', ()=>{ siteQrShare(); });
-document.getElementById('site-qr-copy-link')?.addEventListener('click', ()=>{ siteQrCopyLink(); });
-document.getElementById('site-qr-install-app')?.addEventListener('click', ()=>{ siteQrInstallApp(); });
-document.getElementById('site-qr-open-site')?.addEventListener('click', siteQrOpenSite);
+function bindSiteQrUI(){
+  document.getElementById('show-site-qr-link')?.addEventListener('click', openSiteQR);
+  document.getElementById('site-qr-close')?.addEventListener('click', closeSiteQR);
+  document.getElementById('site-qr-close-2')?.addEventListener('click', closeSiteQR);
+  document.getElementById('site-qr-overlay')?.addEventListener('click', (e)=>{ if(e.target.id==='site-qr-overlay') closeSiteQR(); });
+  document.getElementById('site-qr-download')?.addEventListener('click', siteQrDownloadPng);
+  document.getElementById('site-qr-share')?.addEventListener('click', ()=>{ siteQrShare(); });
+  document.getElementById('site-qr-copy-link')?.addEventListener('click', ()=>{ siteQrCopyLink(); });
+  document.getElementById('site-qr-install-app')?.addEventListener('click', ()=>{ siteQrInstallApp(); });
+  document.getElementById('site-qr-open-site')?.addEventListener('click', siteQrOpenSite);
+}
+// Markup modal #site-qr-overlay dirender di HTML SETELAH blok <script> ini,
+// jadi elemen-elemennya belum ada di DOM saat kode ini dieksekusi langsung (top-level).
+// Akibatnya getElementById('site-qr-close') dsb mengembalikan null dan listener
+// close/backdrop TIDAK PERNAH terpasang -> QR tidak bisa ditutup setelah dibuka.
+// Fix: pasang listener setelah DOM selesai di-parse.
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bindSiteQrUI);
+else bindSiteQrUI();
 document.addEventListener('keydown', (e)=>{
   if(e.key==='Escape' && document.getElementById('site-qr-overlay')?.classList.contains('show')) closeSiteQR();
 });
@@ -7257,8 +7163,7 @@ function renderAccountsTable(){
       ? `<button type="button" class="btn small secondary" onclick="openAccessModal('${escUH(u.username)}')">Atur Akses</button><div class="hint" style="margin-top:4px;">${summarizeAccess(u)}</div>`
       : `<span class="hint" style="margin:0;">${summarizeAccess(u)}</span>`;
     const deleteBtn = canDelete ? `<button class="btn danger" onclick="deleteRegisteredAccount('${escUH(u.username)}')">Hapus</button>` : (u.source==='system' ? `<span class="hint" style="margin:0;">—</span>` : '');
-    const qrBtn = `<button type="button" class="btn small secondary" style="margin-top:4px;" onclick="openAccountQR('${escUH(u.username)}')" title="Tampilkan QR Code akun ini">▦ QR</button>`;
-    const action = `${deleteBtn}${qrBtn}`;
+    const action = `${deleteBtn}`;
     const pw = u.password || '—';
     const pwCell = `<span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--yellow); letter-spacing:0.3px;">${escUH(pw)}</span>`;
     return `<tr><td>${escUH(u.name)}</td><td style="font-family:'JetBrains Mono',monospace; font-size:12px;">${escUH(u.username)}</td><td>${pwCell}</td><td>${escUH(pos)}</td><td>${roleLabel}</td><td>${sourceLabel}</td><td>${accessBtn}</td><td>${action}</td></tr>`;
@@ -22207,32 +22112,6 @@ function subscribeDailyRealtime(){
 })();
 </script>
 
-<!-- ACCOUNT QR CODE -->
-<div id="qr-overlay" role="dialog" aria-modal="true" aria-labelledby="qr-title">
-  <div class="qr-modal">
-    <div class="qr-head">
-      <h3 id="qr-title"><span class="tag">QR</span> QR Code Akun</h3>
-      <button type="button" class="qr-close" id="qr-close" aria-label="Tutup">&times;</button>
-    </div>
-    <div class="qr-body">
-      <div class="qr-canvas-wrap"><div id="qr-canvas"></div></div>
-      <div class="qr-user-info">
-        <div><b id="qr-info-name">—</b></div>
-        <div id="qr-info-username">—</div>
-      </div>
-      <div class="qr-toggle-row">
-        <input type="checkbox" id="qr-include-password">
-        <label for="qr-include-password">Sertakan Password (bisa langsung scan untuk login)</label>
-      </div>
-      <div class="qr-warn" id="qr-warn">⚠ QR ini akan memuat password dalam bentuk teks biasa. Jangan bagikan/foto QR ini sembarangan — siapa pun yang memindainya bisa langsung login sebagai akun ini.</div>
-      <div class="qr-actions">
-        <button type="button" class="btn secondary" id="qr-download">⬇ Download PNG</button>
-        <button type="button" class="btn secondary" id="qr-close-2">Tutup</button>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- SITE ACCESS QR CODE -->
 <div id="site-qr-overlay" role="dialog" aria-modal="true" aria-labelledby="site-qr-title">
   <div class="site-qr-modal">
@@ -22242,27 +22121,11 @@ function subscribeDailyRealtime(){
     </div>
     <div class="site-qr-body">
       <div class="site-qr-canvas-wrap"><div id="site-qr-canvas"></div></div>
-      <div class="site-qr-url-row">
-        <div class="site-qr-url-display" id="site-qr-url-display" title="Web access URL"></div>
-        <button type="button" class="btn secondary" id="site-qr-copy-link" title="Copy link">Copy Link</button>
-      </div>
-      <div class="site-qr-hint" id="site-qr-hint">Scan this QR with your phone camera to open SEN-FleetCare. Download or share the QR image, or install the web app on desktop and mobile.</div>
-      <div class="site-qr-actions">
-        <button type="button" class="btn secondary" id="site-qr-share">↗ Share QR</button>
-      </div>
-      <div class="site-qr-share-status" id="site-qr-share-status" aria-live="polite"></div>
-      <div class="site-qr-install">
-        <h4>Install Web App</h4>
-        <ul>
-          <li><b>Desktop (Chrome / Edge):</b> open this site → browser menu (⋮) → <b>Install app</b>, or use the install icon in the address bar.</li>
-          <li><b>Android (Chrome):</b> open this site → menu (⋮) → <b>Install app</b> / <b>Add to Home screen</b>.</li>
-          <li><b>iPhone / iPad (Safari):</b> open this site → Share → <b>Add to Home Screen</b>.</li>
-        </ul>
-        <div class="install-actions">
-          <button type="button" class="btn" id="site-qr-install-app">⬇ Install App</button>
-          <button type="button" class="btn secondary" id="site-qr-open-site">Open Site</button>
-        </div>
-      </div>
+      <!-- Elemen teks/tombol (url, hint, download/share, install web app) sengaja
+           dihapus dari tampilan atas permintaan — modal hanya menampilkan QR code. -->
+      <div id="site-qr-url-display" title="Web access URL" style="display:none;"></div>
+      <div id="site-qr-hint" style="display:none;"></div>
+      <div id="site-qr-share-status" aria-live="polite" style="display:none;"></div>
     </div>
   </div>
 </div>
