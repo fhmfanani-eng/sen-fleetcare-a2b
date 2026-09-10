@@ -15993,7 +15993,7 @@ function renderKPIChartDashboard(k, globalStats){
   const monthlyChartOptions = getKPIPeriodOptions();
   const activeMonthlyChartPeriod = (kpiMonthlyChartPeriodValue && monthlyChartOptions.includes(kpiMonthlyChartPeriodValue)) ? kpiMonthlyChartPeriodValue : '';
   const kMonthly = computeKPIsFor(activeMonthlyChartPeriod);
-  const monthlyChartSelectHtml = `<select class="trend-quarter-select" onchange="onKpiMonthlyChartPeriodChange(this)">
+  const monthlyChartSelectHtml = `<select class="trend-quarter-select" style="width:200px;" onchange="onKpiMonthlyChartPeriodChange(this)">
     <option value="" ${activeMonthlyChartPeriod===''?'selected':''}>All Periods</option>
     ${monthlyChartOptions.map(p=>{
       const [y,m] = p.split('-').map(Number);
@@ -16995,52 +16995,8 @@ function renderKPIChartDashboard(k, globalStats){
         <h2 class="dash-hero-title">MAINTENANCE KPI DASHBOARD</h2>
         <div class="dash-hero-sub">Heavy Equipment Maintenance Performance KPI</div>
       </div>
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <span style="font-size:9px;color:var(--green);text-transform:uppercase;letter-spacing:.5px;display:inline-flex;align-items:center;gap:4px"><span class="status-dot" style="margin-right:0"></span>Live Sync</span>
-        <span style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px">Period</span>
-        ${monthlyChartSelectHtml}
-      </div>
     </div>
-    <div class="kpi-dash-grid">${gaugeCardsHtml}</div>
-    ${(() => { const _trend = multiTrendSVG(); return `
-    <div class="dash-quad-grid">
-      <div class="dash-panel">
-        <div class="dash-panel-title">TREND KPI MAINTENANCE <span>(All Months · % Achievement)</span></div>
-        <div class="dash-panel-chart-fill">${_trend.chartSvg}</div>
-      </div>
-      <div class="dash-panel">
-        <div class="dash-panel-title">Comparison vs Target</div>
-        <div class="dash-panel-chart-fill">${comparisonBarsSVG()}</div>
-      </div>
-      <div class="dash-panel">
-        <div class="dash-panel-title">MTBS <span>All Months Trend (Hours)</span></div>
-        <div class="dash-panel-chart-fill">${mtbsTrendSVG()}</div>
-      </div>
-      <div class="dash-panel">
-        <div class="dash-panel-title">MTTR <span>All Months Trend (Hours)</span></div>
-        <div class="dash-panel-chart-fill">${mttrTrendSVG()}</div>
-      </div>
-    </div>
-    <div class="dash-panel" style="position:relative">
-        <div class="dash-panel-title">KPI MAINTENANCE SUMMARY</div>
-        <div style="overflow-x:auto">
-          <table class="dash-sum-table">
-            <thead><tr><th>KPI</th><th>Target</th><th>Value</th><th>Status</th><th>Trend</th></tr></thead>
-            <tbody>${sumRows}</tbody>
-          </table>
-        </div>
-      </div>
-    <div class="dash-mid-grid">
-      <div class="dash-panel">
-        <div class="dash-panel-title">Contribution to Reliability</div>
-        <div class="dash-contrib-wrap">
-          ${contribDonutSVG()}
-          <div class="dash-contrib-legend">${contribLegend}</div>
-        </div>
-      </div>
-      <div class="dash-panel">${_trend.tableHtml}</div>
-    </div>
-    `; })()}
+    ${buildSummaryCategoryDashboardSectionHTML()}
     ${(() => {
       const yearOpts = getServiceYearOptions();
       if(kpiServiceYearValue && !yearOpts.includes(kpiServiceYearValue)) kpiServiceYearValue = '';
@@ -17119,7 +17075,53 @@ function renderKPIChartDashboard(k, globalStats){
       </div>
     </div>`;
     })()}
-    ${buildSummaryCategoryDashboardSectionHTML()}
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;margin-bottom:10px">
+      <span style="font-size:9px;color:var(--green);text-transform:uppercase;letter-spacing:.5px;display:inline-flex;align-items:center;gap:6px">
+        <span class="status-dot" style="margin-right:0"></span>Live Sync
+        <span style="font-size:10px;color:var(--text-dim);letter-spacing:.5px">Period</span>
+      </span>
+      ${monthlyChartSelectHtml}
+    </div>
+    <div class="kpi-dash-grid">${gaugeCardsHtml}</div>
+    ${(() => { const _trend = multiTrendSVG(); return `
+    <div class="dash-quad-grid">
+      <div class="dash-panel">
+        <div class="dash-panel-title">TREND KPI MAINTENANCE <span>(All Months · % Achievement)</span></div>
+        <div class="dash-panel-chart-fill">${_trend.chartSvg}</div>
+      </div>
+      <div class="dash-panel">
+        <div class="dash-panel-title">Comparison vs Target</div>
+        <div class="dash-panel-chart-fill">${comparisonBarsSVG()}</div>
+      </div>
+      <div class="dash-panel">
+        <div class="dash-panel-title">MTBS <span>All Months Trend (Hours)</span></div>
+        <div class="dash-panel-chart-fill">${mtbsTrendSVG()}</div>
+      </div>
+      <div class="dash-panel">
+        <div class="dash-panel-title">MTTR <span>All Months Trend (Hours)</span></div>
+        <div class="dash-panel-chart-fill">${mttrTrendSVG()}</div>
+      </div>
+    </div>
+    <div class="dash-panel" style="position:relative">
+        <div class="dash-panel-title">KPI MAINTENANCE SUMMARY</div>
+        <div style="overflow-x:auto">
+          <table class="dash-sum-table">
+            <thead><tr><th>KPI</th><th>Target</th><th>Value</th><th>Status</th><th>Trend</th></tr></thead>
+            <tbody>${sumRows}</tbody>
+          </table>
+        </div>
+      </div>
+    <div class="dash-mid-grid">
+      <div class="dash-panel">
+        <div class="dash-panel-title">Contribution to Reliability</div>
+        <div class="dash-contrib-wrap">
+          ${contribDonutSVG()}
+          <div class="dash-contrib-legend">${contribLegend}</div>
+        </div>
+      </div>
+      <div class="dash-panel">${_trend.tableHtml}</div>
+    </div>
+    `; })()}
     <div class="dash-mid-grid">
       <div class="dash-panel">
         <div class="chart-panel-title-row">
