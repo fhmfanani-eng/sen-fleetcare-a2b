@@ -1539,6 +1539,15 @@ select.exec-close{ background:rgba(76,175,109,0.15); color:var(--green); }
 .login-forgot{
   text-align:center; margin-top:10px; font-size:11px;
 }
+.login-forgot-signup{
+  text-align:center; margin-top:12px; font-size:11.5px; color:var(--text-dim);
+}
+.login-forgot-signup a{
+  color:var(--yellow); font-weight:600; text-decoration:none; cursor:pointer;
+}
+.login-forgot-signup a:hover{ text-decoration:underline; }
+.login-forgot-signup .login-link-sep{ color:var(--text-dim); font-weight:500; }
+
 .login-forgot a{
   color:#A8B5C4; text-decoration:none; cursor:pointer;
   border-bottom:1px solid transparent; transition:color .15s, border-color .15s;
@@ -1845,6 +1854,10 @@ body.role-mechanic #history-filters{ display:none !important; }
 }
 .site-qr-close:hover{ color:var(--red); border-color:var(--red); }
 .site-qr-body{ padding:18px; text-align:center; }
+.site-qr-caption{
+  margin:12px 0 0; font-size:11.5px; color:var(--text-dim);
+  letter-spacing:0.3px; line-height:1.4;
+}
 .site-qr-canvas-wrap{
   background:#fff; border-radius:10px; padding:14px; display:inline-block;
   box-shadow:0 6px 20px rgba(0,0,0,0.35);
@@ -2019,14 +2032,14 @@ body.role-mechanic #history-filters{ display:none !important; }
           <label>Username</label>
           <div class="login-input-group">
             <span class="login-input-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span>
-            <input type="text" id="login-username" autocomplete="username" placeholder="Enter username" required>
+            <input type="text" id="login-username" autocomplete="username" placeholder="" required>
           </div>
         </div>
         <div class="field">
           <label>Password</label>
           <div class="login-input-group">
             <span class="login-input-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></span>
-            <input type="password" id="login-password" autocomplete="current-password" placeholder="Enter password" required>
+            <input type="password" id="login-password" autocomplete="current-password" placeholder="" required>
             <button type="button" class="login-toggle-pw" id="toggle-login-password" aria-label="Show password"><svg viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg></button>
           </div>
         </div>
@@ -2034,9 +2047,12 @@ body.role-mechanic #history-filters{ display:none !important; }
         <div id="login-success" class="login-success" style="display:none;"></div>
         <button type="submit" class="btn" style="width:100%; justify-content:center; margin-top:4px;">Sign In</button>
       </form>
-      <div class="login-forgot"><a id="show-recover-link">Forgot password / recover account?</a></div>
-      <div class="login-switch">Don't have an account? <a id="show-register-link">Create new account</a></div>
-      <div class="login-switch login-site-qr"><a id="show-site-qr-link" href="javascript:void(0)">▦ QR CODE ALAMAT WEB — DOWNLOAD / SHARE</a></div>
+      <div class="login-switch login-forgot-signup">
+        <a id="show-recover-link">Forgot Password</a>
+        <span class="login-link-sep"> / </span>
+        <a id="show-register-link">Sign Up</a>
+      </div>
+      <div class="login-switch login-site-qr"><a id="show-site-qr-link" href="javascript:void(0)">▦ WEB ACCESS QR CODE — DOWNLOAD / SHARE</a></div>
     </div>
 
     <div id="register-panel">
@@ -22212,11 +22228,13 @@ function subscribeDailyRealtime(){
     </div>
     <div class="site-qr-body">
       <div class="site-qr-canvas-wrap"><div id="site-qr-canvas"></div></div>
-      <!-- Elemen teks/tombol (url, hint, download/share, install web app) sengaja
-           dihapus dari tampilan atas permintaan — modal hanya menampilkan QR code. -->
       <div id="site-qr-url-display" title="Web access URL" style="display:none;"></div>
-      <div id="site-qr-hint" style="display:none;"></div>
-      <div id="site-qr-share-status" aria-live="polite" style="display:none;"></div>
+      <div class="site-qr-actions">
+        <button type="button" class="btn" id="site-qr-download">⬇ Download QR</button>
+        <button type="button" class="btn secondary" id="site-qr-share">↗ Share QR</button>
+      </div>
+      <div id="site-qr-share-status" class="site-qr-share-status" aria-live="polite"></div>
+      <div id="site-qr-hint" class="site-qr-hint" style="display:none;"></div>
     </div>
   </div>
 </div>
