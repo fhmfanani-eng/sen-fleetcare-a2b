@@ -148,15 +148,25 @@ body{
 .nav-item[data-view="bdreport"] .num{ background:rgba(168,120,255,0.15); color:#c3a6ff; }
 .nav-item[data-view="cbm"] .num{ background:rgba(64,196,140,0.15); color:#6fe0b0; }
 .nav-item[data-view="sparepart"] .num{ background:rgba(255,199,44,0.18); color:#FFC72C; }
-/* Semua tombol/panel "sync/kirim ke WA Group" di menu Plan Schedule Maintenance
-   (Schedule Planning Maintenance & Plan Daily Maintenance) hanya boleh terlihat
-   oleh Fahmi Fanani. Body diberi class "role-wa-sync-allowed" lewat updateRoleUI()
-   hanya saat yang login adalah Fahmi Fanani. */
+/* Semua tombol/panel "sync / auto sync / kirim ke WA Group" di SELURUH menu
+   (Dashboard, Database Unit, Daily Maintenance, Plan Schedule Service, Record
+   Service Unit, RCA, dsb.) hanya boleh terlihat & dipakai oleh Fahmi Fanani.
+   Body diberi class "role-wa-sync-allowed" lewat updateRoleUI() hanya saat
+   yang login adalah Fahmi Fanani. User lain tidak melihat tombol-tombol ini
+   sama sekali di menu manapun. */
 body:not(.role-wa-sync-allowed) #ps-send-group-wa,
 body:not(.role-wa-sync-allowed) #pdm-send-group-wa,
 body:not(.role-wa-sync-allowed) #ps-notify-panel,
 body:not(.role-wa-sync-allowed) #pdm-notify-panel,
-body:not(.role-wa-sync-allowed) .wa-sync-only-fahmi{
+body:not(.role-wa-sync-allowed) #mapa-sync-kpi-btn,
+body:not(.role-wa-sync-allowed) #unit-sync-perf-btn,
+body:not(.role-wa-sync-allowed) #daily-sync-sheets-btn,
+body:not(.role-wa-sync-allowed) #btn-sync-plan-all,
+body:not(.role-wa-sync-allowed) #btn-sync-daily-wh,
+body:not(.role-wa-sync-allowed) #plan-record-sync-sheets-btn,
+body:not(.role-wa-sync-allowed) #rca-sync-sheets-btn,
+body:not(.role-wa-sync-allowed) .wa-sync-only-fahmi,
+body:not(.role-wa-sync-allowed) .sync-only-fahmi{
   display:none !important;
 }
 .sp-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px;}
@@ -9111,6 +9121,7 @@ async function syncDailyToSheets(opts){
 }
 
 document.getElementById('daily-sync-sheets-btn')?.addEventListener('click', async ()=>{
+  if(!isFahmiFanani()){ alert('Fitur Sync hanya tersedia untuk user Fahmi Fanani.'); return; }
   const btn = document.getElementById('daily-sync-sheets-btn');
   if(btn){ btn.disabled = true; btn.textContent = '☁ Menyinkronkan...'; }
   try{ await syncDailyToSheets({ manual:true }); }
@@ -9180,6 +9191,7 @@ async function syncPlanServiceToSheets(opts){
 }
 
 document.getElementById('plan-record-sync-sheets-btn')?.addEventListener('click', async ()=>{
+  if(!isFahmiFanani()){ alert('Fitur Sync hanya tersedia untuk user Fahmi Fanani.'); return; }
   const btn = document.getElementById('plan-record-sync-sheets-btn');
   if(btn){ btn.disabled = true; btn.textContent = '☁ Menyinkronkan...'; }
   try{ await syncPlanServiceToSheets({ manual:true }); }
@@ -9371,6 +9383,7 @@ async function syncRcaToSheets(opts){
 }
 
 document.getElementById('rca-sync-sheets-btn')?.addEventListener('click', async ()=>{
+  if(!isFahmiFanani()){ alert('Fitur Sync hanya tersedia untuk user Fahmi Fanani.'); return; }
   const btn = document.getElementById('rca-sync-sheets-btn');
   if(btn){ btn.disabled = true; btn.textContent = '☁ Menyinkronkan...'; }
   try{ await syncRcaToSheets({ manual:true }); }
@@ -11804,6 +11817,7 @@ async function onPlanPeriodChange(){
 document.getElementById('plan-period-year')?.addEventListener('change', onPlanPeriodChange);
 document.getElementById('plan-period-month')?.addEventListener('change', onPlanPeriodChange);
 document.getElementById('btn-sync-daily-wh')?.addEventListener('click', async ()=>{
+  if(!isFahmiFanani()){ alert('Fitur Sync hanya tersedia untuk user Fahmi Fanani.'); return; }
   const btn = document.getElementById('btn-sync-daily-wh');
   if(btn){ btn.disabled=true; btn.textContent='☁ Sync...'; }
   try{
@@ -12500,7 +12514,10 @@ async function syncPlanAll(){
     if(btn){ btn.disabled=false; btn.textContent='☁ Sync & Generate Otomatis'; }
   }
 }
-document.getElementById('btn-sync-plan-all')?.addEventListener('click', syncPlanAll);
+document.getElementById('btn-sync-plan-all')?.addEventListener('click', ()=>{
+  if(!isFahmiFanani()){ alert('Fitur Sync hanya tersedia untuk user Fahmi Fanani.'); return; }
+  syncPlanAll();
+});
 
 document.getElementById('btn-rebuild-plan')?.addEventListener('click', async ()=>{
   if(!confirm('Hapus SEMUA jadwal Plan Service lama dan generate ulang dari W sheet performance? Jadwal Agustus SWA-101 5500 HM dan SPC-104 3000 HM akan dipulihkan otomatis.')) return;
@@ -15141,7 +15158,7 @@ function buildSummaryCategoryDashboardSectionHTML(){
         <div class="dash-panel-title" style="margin-bottom:0;">Breakdown Category per Month</div>
         <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
           <span id="bcat-sync-status" style="font-size:9px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.5px;"></span>
-          <button type="button" class="btn small" onclick="syncBreakdownCategoryToSheets({manual:true})" title="Kirim chart &amp; tabel summary Breakdown Category ke sheet &quot;Dashboard&quot; di spreadsheet Maintenance">☁ Auto Sync</button>
+          <button type="button" class="btn small sync-only-fahmi" onclick="if(typeof isFahmiFanani==='function' &amp;&amp; isFahmiFanani()){ syncBreakdownCategoryToSheets({manual:true}); } else { alert('Fitur Sync hanya tersedia untuk user Fahmi Fanani.'); }" title="Kirim chart &amp; tabel summary Breakdown Category ke sheet &quot;Dashboard&quot; di spreadsheet Maintenance">☁ Auto Sync</button>
         </div>
       </div>
       ${chartHtml}
@@ -16414,7 +16431,7 @@ function renderKPIChartDashboard(k, globalStats){
           <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;font-weight:600">Monthly KPI Achievement</div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             <span id="mkpi-sync-status" style="font-size:9px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.5px;"></span>
-            <button type="button" class="btn small" onclick="syncMonthlyKpiAchievementToSheets(window.__trendMonthsForSync||[], window.__monthlyKpiDefsForSync||[], {manual:true})" title="Kirim chart &amp; tabel Monthly KPI Achievement ke sheet &quot;Dashboard&quot; di spreadsheet Maintenance">☁ Auto Sync</button>
+            <button type="button" class="btn small sync-only-fahmi" onclick="if(typeof isFahmiFanani==='function' &amp;&amp; isFahmiFanani()){ syncMonthlyKpiAchievementToSheets(window.__trendMonthsForSync||[], window.__monthlyKpiDefsForSync||[], {manual:true}); } else { alert('Fitur Sync hanya tersedia untuk user Fahmi Fanani.'); }" title="Kirim chart &amp; tabel Monthly KPI Achievement ke sheet &quot;Dashboard&quot; di spreadsheet Maintenance">☁ Auto Sync</button>
             <div style="display:flex;gap:6px;flex-wrap:wrap">${legend}</div>
           </div>
         </div>
@@ -18603,6 +18620,7 @@ document.getElementById('mapa-sync-perf-btn')?.addEventListener('click', functio
 });
 
 document.getElementById('mapa-sync-kpi-btn')?.addEventListener('click', async function(){
+  if(!isFahmiFanani()){ alert('Fitur Sync hanya tersedia untuk user Fahmi Fanani.'); return; }
   const btn = document.getElementById('mapa-sync-kpi-btn');
   if(btn){ btn.disabled = true; btn.textContent = '☁ Menyinkronkan KPI…'; }
   try{
@@ -18615,6 +18633,7 @@ document.getElementById('mapa-sync-kpi-btn')?.addEventListener('click', async fu
 });
 
 document.getElementById('unit-sync-perf-btn')?.addEventListener('click', function(){
+  if(!isFahmiFanani()){ alert('Fitur Sync hanya tersedia untuk user Fahmi Fanani.'); return; }
   runPerformanceSyncFromUI(document.getElementById('unit-sync-perf-btn'));
 });
 
