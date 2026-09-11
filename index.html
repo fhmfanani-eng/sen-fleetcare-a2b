@@ -2249,7 +2249,7 @@ body.role-mechanic #history-filters{ display:none !important; }
           <input type="file" id="mapa-file-input" accept=".csv,.xlsx,.xls" style="display:none;" aria-hidden="true">
           <!-- Tombol manual disembunyikan (tetap di DOM agar listener lama tidak error) -->
           <button type="button" id="mapa-sync-perf-btn" style="display:none;" aria-hidden="true" tabindex="-1">Sync Performance (hidden)</button>
-          <div id="mapa-upload-status" class="hint">☁ Sheet performance disinkronkan otomatis (live). Tidak perlu klik manual. Untuk mengisi Acv./Score di sheet Maintenance, gunakan <b>Auto Sync KPI</b>.</div>
+          <div id="mapa-upload-status" class="hint">☁ Sheet performance disinkronkan otomatis (live) → sumber MA/PA. Periode kolom Acv./Score mengikuti <b>sheet Maintenance</b> (W1–W4). SA hanya dari kategori <b>Periodical Maintenance</b> (Approved). Klik <b>Auto Sync KPI</b> untuk mengisi Acv./Score.</div>
         </div>
 
         <div class="section-title" style="display:none">Dashboard KPI</div>
@@ -7868,8 +7868,8 @@ function computeUnitKPIs(unitCode){
   // Service Accuracy (SA): dihitung dari data Daily Maintenance (kategori Periodical, sudah Approved),
   // berdasarkan flag Plan/Unplan tiap record — bukan lagi dari data Plan Service (Plan Service hanya
   // dipakai untuk monitoring jadwal, tidak lagi jadi sumber perhitungan KPI).
-  const periodicalRecords = approvedRecords.filter(r=>r.category!=='Breakdown');
-  const plannedServiceCount = periodicalRecords.filter(r=>r.planUnplan==='Plan').length;
+  const periodicalRecords = approvedRecords.filter(r=>r.category==='Periodical');
+  const plannedServiceCount = periodicalRecords.filter(r=> (typeof cbmIsPlan==='function' ? cbmIsPlan(r.planUnplan||r.plan_unplan) : /^plan/i.test(String(r.planUnplan||r.plan_unplan||'')) && !/unplan/i.test(String(r.planUnplan||r.plan_unplan||''))) ).length;
   const sa = periodicalRecords.length ? (plannedServiceCount/periodicalRecords.length*100) : 0;
 
   const { ma, pa } = resolveMaPa(unitCode, null, null);
@@ -7913,8 +7913,8 @@ function computeUnitKPIsForRange(unitCode, startStr, endStr){
   // terlihat "belum sinkron" saat difilter mingguan/bulanan. Supaya semua KPI di kartu unit selalu
   // konsisten & benar-benar mencerminkan filter yang aktif, SA sekarang HANYA dihitung dari record
   // Periodical pada periode tsb — kalau belum ada, tampil 0% (bukan diam-diam pakai data periode lain).
-  const periodicalRecords = approvedRecords.filter(r=>r.category!=='Breakdown');
-  const plannedServiceCount = periodicalRecords.filter(r=>r.planUnplan==='Plan').length;
+  const periodicalRecords = approvedRecords.filter(r=>r.category==='Periodical');
+  const plannedServiceCount = periodicalRecords.filter(r=> (typeof cbmIsPlan==='function' ? cbmIsPlan(r.planUnplan||r.plan_unplan) : /^plan/i.test(String(r.planUnplan||r.plan_unplan||'')) && !/unplan/i.test(String(r.planUnplan||r.plan_unplan||''))) ).length;
   const sa = periodicalRecords.length ? (plannedServiceCount/periodicalRecords.length*100) : 0;
 
   // MA & PA: prioritaskan seed sheet performance, lalu HM periode, lalu mapa upload.
@@ -9458,7 +9458,7 @@ function renderDailyTable(){
       <td>${fmtDur(r.duration)}</td>
       <td>${fmtDur(r.totalBreakdown)}</td>
       <td><span class="cat ${r.category}">${categoryLabel(r.category)}</span></td>
-      <td><span class="pill ${r.planUnplan==='Plan'?'planned':'overdue'}">${r.planUnplan||'—'}</span></td>
+      <td><span class="pill ${(typeof cbmIsPlan==='function'?cbmIsPlan(r.planUnplan):r.planUnplan==='Plan')?'planned':'overdue'}">${r.planUnplan||'—'}</span></td>
       <td style="white-space:normal; min-width:180px;">${r.jobDesc||'—'}</td>
       <td style="white-space:normal; min-width:180px;">${r.repairAction||'—'}</td>
       <td>${[r.mechanic, r.mechanic2, r.mechanic3].filter(Boolean).join(', ') || '—'}</td>
@@ -17254,8 +17254,8 @@ function computeKPIs(){
   // Service Accuracy (SA): dihitung dari data Daily Maintenance (kategori Periodical, sudah Approved),
   // berdasarkan flag Plan/Unplan tiap record — bukan lagi dari data Plan Service (Plan Service hanya
   // dipakai untuk monitoring jadwal, tidak lagi jadi sumber perhitungan KPI).
-  const periodicalRecordsAll = approvedRecords.filter(r=>r.category!=='Breakdown');
-  const plannedServiceCountAll = periodicalRecordsAll.filter(r=>r.planUnplan==='Plan').length;
+  const periodicalRecordsAll = approvedRecords.filter(r=>r.category==='Periodical');
+  const plannedServiceCountAll = periodicalRecordsAll.filter(r=> (typeof cbmIsPlan==='function' ? cbmIsPlan(r.planUnplan||r.plan_unplan) : /^plan/i.test(String(r.planUnplan||r.plan_unplan||'')) && !/unplan/i.test(String(r.planUnplan||r.plan_unplan||''))) ).length;
   const sa = periodicalRecordsAll.length ? (plannedServiceCountAll/periodicalRecordsAll.length*100) : 0;
 
   // overduePlans: statistik monitoring Plan Service (dipakai utk kartu "Plan Overdue"), tidak lagi
@@ -17322,8 +17322,8 @@ function computeKPIsForRange(startStr, endStr){
   // punya record Periodical sendiri) dihapus — itu membuat SA tidak sinkron dengan filter periode yang
   // dipilih, berbeda dari MTBS/MTTR/PMR yang selalu ketat ke periode tsb. Sekarang SA HANYA dari data
   // pada periode yang difilter (0% kalau memang belum ada input Periodical di periode itu).
-  const periodicalRecordsRange = approvedRecords.filter(r=>r.category!=='Breakdown');
-  const plannedServiceCountRange = periodicalRecordsRange.filter(r=>r.planUnplan==='Plan').length;
+  const periodicalRecordsRange = approvedRecords.filter(r=>r.category==='Periodical');
+  const plannedServiceCountRange = periodicalRecordsRange.filter(r=> (typeof cbmIsPlan==='function' ? cbmIsPlan(r.planUnplan||r.plan_unplan) : /^plan/i.test(String(r.planUnplan||r.plan_unplan||'')) && !/unplan/i.test(String(r.planUnplan||r.plan_unplan||''))) ).length;
   const sa = periodicalRecordsRange.length ? (plannedServiceCountRange/periodicalRecordsRange.length*100) : 0;
 
   // MA & PA: dari sheet performance (W/S/R) HANYA jika filter subset periode sheet,
@@ -17634,36 +17634,66 @@ function buildMaintenanceKpiItems(startStr, endStr){
     ? computeKPIsForRange(startStr, endStr)
     : { ma:0, pa:0, mtbs:0, mttr:0, pmr:0, sa:0 };
 
-  // Pastikan MA/PA selalu diisi untuk rentang minggu ini (bukan 0 karena terlewat).
-  // Urutan: (1) Monitoring HM di rentang minggu → (2) sheet performance bila overlap → (3) tetap 0.
-  if(!(Number(k.ma)>0) || !(Number(k.pa)>0)){
-    try{
-      const mp = (typeof resolveMaPaForWeek==='function')
-        ? resolveMaPaForWeek(startStr, endStr)
-        : (typeof resolveMaPa==='function' ? resolveMaPa(null, startStr, endStr) : null);
-      if(mp){
-        if(!(Number(k.ma)>0) && Number(mp.ma)>0) k.ma = Number(mp.ma);
-        if(!(Number(k.pa)>0) && Number(mp.pa)>0) k.pa = Number(mp.pa);
-      }
-    }catch(_e){}
-  }
+  // MA/PA: SELALU dari performance (periode kolom = sheet Maintenance, bukan performance).
+  try{
+    const mp = (typeof resolveMaPaForWeek==='function')
+      ? resolveMaPaForWeek(startStr, endStr)
+      : (typeof resolveMaPa==='function' ? resolveMaPa(null, startStr, endStr) : null);
+    if(mp && (Number(mp.ma)>0 || Number(mp.pa)>0)){
+      if(mp.ma != null && mp.ma !== '') k.ma = Number(mp.ma) || 0;
+      if(mp.pa != null && mp.pa !== '') k.pa = Number(mp.pa) || 0;
+    }
+  }catch(_e){}
+
+  // Alias baris KPI di sheet Maintenance (SEN KPI PERFORMANCE)
+  const KPI_SHEET_ALIASES = {
+    ma:   ['Unit Mechanical Availability','Mechanical Availability','UNIT MECHANICAL AVAILABILITY','MECHANICAL AVAILABILITY','MA'],
+    pa:   ['Unit Physical Availability','Physical Availability','UNIT PHYSICAL AVAILABILITY','PHYSICAL AVAILABILITY','PA'],
+    mtbs: ['MTBS - Average','MTBS','Mean Time Between Stoppages','MEAN TIME BETWEEN STOPPAGES'],
+    mttr: ['MTTR - Average','MTTR','Mean Time To Repair','MEAN TIME TO REPAIR'],
+    pmr:  ['Planned Maintenance Ratio','PMR','PLANNED MAINTENANCE RATIO'],
+    sa:   ['Serviced Accuracy','Service Accuracy','SERVICED ACCURACY','SERVICE ACCURACY','Serviced Accuracy (SA)','Planned Maintenance Schedule Compliance']
+  };
 
   const keys = ['ma','pa','mtbs','mttr','pmr','sa'];
   return keys.map(key=>{
     const acu = Number(k[key])||0;
     // score = poin bobot (mis. 15 untuk MA full) — sesuai kontrak Apps Script
     const score = Math.round((kpiWeightedScore(key, acu) + Number.EPSILON) * 100) / 100;
-    return { key, acu: Math.round(acu * 100) / 100, score };
+    return {
+      key,
+      acu: Math.round(acu * 100) / 100,
+      score,
+      // bantu Apps Script menemukan baris KPI di sheet Maintenance
+      labels: KPI_SHEET_ALIASES[key] || [key],
+      name: (KPI_SHEET_ALIASES[key] && KPI_SHEET_ALIASES[key][0]) || key
+    };
   });
 }
 
 /**
- * MA/PA khusus per minggu:
- * - Jika rentang ≤ 14 hari (mingguan), prioritaskan Monitoring HM pada tanggal minggu itu
- *   supaya W1/W2/W3 bisa berbeda.
- * - Jika HM kosong, pakai sheet performance (biasanya data bulanan) bila overlap.
+ * MA/PA khusus per minggu — alur resmi: sheet Performance → web → sheet Maintenance.
+ * 1) Sheet performance (sumber utama MA/PA). Match longgar: minggu yang overlap /
+ *    subset periode performance (biasanya bulanan) tetap pakai angka performance.
+ * 2) Monitoring HM per minggu (fallback jika performance tidak tersedia / tidak overlap).
+ * 3) Upload manual mapaData (bukan fromPerformance).
  */
 function resolveMaPaForWeek(startStr, endStr){
+  /* MA/PA untuk sync sheet Maintenance:
+   * Periode kolom (W1–W4) HANYA dari header sheet Maintenance.
+   * Nilai MA/PA SELALU dari sheet performance bila ada (tidak digate periode performance).
+   */
+  // 1) PRIORITAS: sheet performance — abaikan cocok/tidaknya periode performance
+  try{
+    if(mapaData && mapaData.fromPerformance && mapaData.rows && mapaData.rows.length){
+      if(typeof maPaFromRows === 'function'){
+        const mp = maPaFromRows(mapaData.rows);
+        if(mp && ((Number(mp.ma)||0) > 0 || (Number(mp.pa)||0) > 0)) return mp;
+      }
+    }
+  }catch(_e){}
+
+  // 2) Monitoring HM per minggu
   const spanDays = (function(){
     try{
       if(!startStr || !endStr) return 999;
@@ -17672,8 +17702,6 @@ function resolveMaPaForWeek(startStr, endStr){
       return Math.round((b - a) / 86400000) + 1;
     }catch(_e){ return 999; }
   })();
-
-  // 1) HM per minggu (lebih akurat untuk W1 vs W2 vs W3)
   if(spanDays <= 14 && typeof hmWSRGlobal === 'function'){
     try{
       const hm = hmWSRGlobal(startStr||null, endStr||null);
@@ -17683,7 +17711,7 @@ function resolveMaPaForWeek(startStr, endStr){
     }catch(_e){}
   }
 
-  // 2) resolveMaPa standar (performance overlap → HM → manual)
+  // 3) resolveMaPa standar (performance ketat → HM → manual)
   if(typeof resolveMaPa === 'function'){
     return resolveMaPa(null, startStr||null, endStr||null);
   }
