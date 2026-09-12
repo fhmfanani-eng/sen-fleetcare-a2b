@@ -2234,12 +2234,18 @@ body.role-mechanic #history-filters{ display:none !important; }
       <section class="view active" id="view-dashboard">
         <div class="banner">⛭ Data tersimpan otomatis dan dibagikan ke seluruh pengguna panel ini (shared workshop database).</div>
 
-        <div class="section-title">Data Sumber MA &amp; PA</div>
+        <div class="section-title" style="display:none">Dashboard KPI</div>
+        <div id="kpi-chart-dashboard" style="margin-bottom:20px;"></div>
+        <!-- Park host: panel MA/PA disimpan di sini saat innerHTML dashboard di-rebuild, supaya tidak ikut terhapus -->
+        <div id="mapa-source-park" style="display:none" aria-hidden="true"></div>
+
+        <!-- DATA SUMBER MA & PA — dipindah ke bawah tabel SERVICE ACHIEVEMENT lewat JS (preserve button IDs) -->
+        <div id="mapa-source-block">
+        <div class="section-title">MA &amp; PA Data Source</div>
         <div class="panel" style="margin-bottom:20px;">
           <div class="panel-head">
             <h2><span class="tag">LIVE</span> Sheet Performance — Auto Sync</h2>
             <div class="toolbar">
-              <button type="button" class="btn small" id="mapa-sync-kpi-btn" data-label="☁ Auto Sync KPI → Maintenance" title="Mengisi Acv./Score di tab Maintenance (SEN KPI Performance). Hanya minggu yang sudah jatuh tempo.">☁ Auto Sync KPI → Maintenance</button>
               <button type="button" class="btn secondary small" id="mapa-template-btn">⬇ Unduh Template</button>
               <button type="button" class="btn danger" id="mapa-clear-btn" style="display:none;">Hapus Data</button>
             </div>
@@ -2249,11 +2255,9 @@ body.role-mechanic #history-filters{ display:none !important; }
           <input type="file" id="mapa-file-input" accept=".csv,.xlsx,.xls" style="display:none;" aria-hidden="true">
           <!-- Tombol manual disembunyikan (tetap di DOM agar listener lama tidak error) -->
           <button type="button" id="mapa-sync-perf-btn" style="display:none;" aria-hidden="true" tabindex="-1">Sync Performance (hidden)</button>
-          <div id="mapa-upload-status" class="hint">☁ Sheet performance disinkronkan otomatis (live) → sumber MA/PA. Periode kolom Acv./Score mengikuti <b>sheet Maintenance</b> (W1–W4). SA hanya dari kategori <b>Periodical Maintenance</b> (Approved). Klik <b>Auto Sync KPI</b> untuk mengisi Acv./Score.</div>
+          <div id="mapa-upload-status" class="hint">☁ Sheet performance auto-synced (live) → primary MA/PA source on web. Use <b>Performance</b> menu for <b>Auto Sync KPI → Maintenance</b> (Acv./Score for due W1–W4 from Maintenance sheet). SA from <b>Periodical Maintenance</b> (Approved) only.</div>
         </div>
-
-        <div class="section-title" style="display:none">Dashboard KPI</div>
-        <div id="kpi-chart-dashboard" style="margin-bottom:20px;"></div>
+        </div>
 
 
         <!-- kpi-grid gauge cards dihapus — diganti tabel detail di chart monthly/quarterly -->
@@ -2295,6 +2299,33 @@ body.role-mechanic #history-filters{ display:none !important; }
 
         <div class="grid grid-2" id="unit-cards"></div>
 
+        <!-- Satu panel: KPI Average + tombol Auto Sync KPI → Maintenance -->
+        <div class="panel" id="perf-kpi-avg-panel" style="margin-top:18px;margin-bottom:18px;">
+          <div class="panel-head">
+            <h2><span class="tag">AVG</span> KPI Average — All Units</h2>
+            <div class="toolbar">
+              <button type="button" class="btn small" id="mapa-sync-kpi-btn" data-label="☁ Auto Sync KPI → Maintenance" title="Mengisi Acv./Score di sheet Maintenance sesuai filter periode web. Jika filter kosong (All Periods) → semua minggu yang sudah jatuh tempo. Jika filter diisi → hanya kolom minggu yang overlap filter tersebut.">☁ Auto Sync KPI → Maintenance</button>
+            </div>
+          </div>
+          <div class="hint" id="perf-kpi-avg-period-hint" style="display:none;"></div>
+<div class="hint" id="perf-maint-period-hint" style="display:none;"></div>
+          <div style="overflow-x:auto">
+            <table class="dash-sum-table" id="perf-kpi-avg-table">
+              <thead>
+                <tr>
+                  <th style="text-align:left">KPI</th>
+                  <th style="text-align:left">Target</th>
+                  <th style="text-align:center">Average Value</th>
+                  <th style="text-align:center">Avg Achievement</th>
+                  <th style="text-align:left">Status</th>
+                </tr>
+              </thead>
+              <tbody id="perf-kpi-avg-tbody">
+                <tr><td colspan="5" class="hint" style="text-align:center;padding:16px;">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
 
       </section>
 
@@ -3537,7 +3568,7 @@ const KPI_INFO = {
   mttr: {
     full: 'Mean Time To Repair (MTTR)',
     formula: 'Total Breakdown Repair Duration ÷ Number of Repairs',
-    desc: 'Average repair time (hours) per breakdown event only (category = Breakdown). Achievement % of weight: <36 hrs = 100%, 36–45 hrs = 80%, >45 hrs = 60%. Lower is better. 0 hrs (no repair) = 100%. Source: Approved Daily Maintenance (Breakdown records) duration in the selected period.',
+    desc: 'Average repair time (hours) per repair activity — includes Breakdown, Daily Maintenance, and Periodical Maintenance records with a duration (service maintenance, low power, etc.), both Plan and Unplan. Achievement % of weight: <36 hrs = 100%, 36–45 hrs = 80%, >45 hrs = 60%. Lower is better. 0 hrs (no repair) = 100%. Source: Approved Daily Maintenance duration in the selected period.',
     unit: ' hrs', higherBetter: false
   },
   pmr: {
@@ -3548,8 +3579,8 @@ const KPI_INFO = {
   },
   sa: {
     full: 'Service Accuracy (SA)',
-    formula: '(Periodical jobs flagged Plan ÷ Total Approved Periodical) × 100%',
-    desc: 'Planned Maintenance Schedule Compliance. Achievement % of weight: >90% = 100%, 85–90% = 80%, <85% = 60%. Higher is better (target >90%). Computed only from records in the filter period — no fallback to other periods.',
+    formula: '(Plan Service Close ÷ Total Plan Service) × 100%',
+    desc: 'Planned Maintenance Schedule Compliance — SINKRON dengan tabel SERVICE ACHIEVEMENT. SA = Plan Service Close/Done ÷ Total. Filter minggu: bila tidak ada plan di minggu tsb, otomatis pakai bulan yang sama (kolom bulan Service Achievement). Target 90%. Achievement: >90%=100%, 85–90%=80%, <85%=60%.',
     unit: '%', higherBetter: true
   },
   ma: {
@@ -5690,9 +5721,11 @@ function performancePeriodMatches(startStr, endStr){
   const today = new Date();
   const todayStr = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
 
-  // All Periods: hanya pakai jika hari ini masih di dalam periode sheet
+  // All Periods: pakai data LIVE sheet performance (sumber utama MA/PA di web).
+  // Periode filter bulanan/mingguan tetap ketat (subset) agar tidak menempel angka
+  // periode lain. Label periode sheet tetap ditampilkan di status bar.
   if(!startStr && !endStr){
-    return todayStr >= ps && todayStr <= pe;
+    return true;
   }
   // Kedua sisi filter diisi → filter harus subset periode performance (bukan sekadar overlap)
   if(startStr && endStr){
@@ -5710,14 +5743,21 @@ function performancePeriodMatches(startStr, endStr){
 }
 
 function maPaFromRows(rows){
-  const W = rows.reduce((s,r)=>s+(Number(r.w)||0),0);
-  const S = rows.reduce((s,r)=>s+(Number(r.s)||0),0);
-  const R = rows.reduce((s,r)=>s+(Number(r.r)||0),0);
-  return {
-    ma: (W+R)>0 ? (W/(W+R)*100) : 0,
-    pa: (W+S+R)>0 ? ((W+S)/(W+S+R)*100) : 0,
-    W, S, R
-  };
+  /* LOCK: rumus resmi MA/PA dari sheet performance (W/S/R jam).
+   * MA = W / (W+R) × 100
+   * PA = (W+S) / (W+S+R) × 100
+   * Clamp 0–100; NaN → 0. Jangan ubah tanpa update kpiPerformanceSyncLockSelfTest. */
+  const list = Array.isArray(rows) ? rows : [];
+  const W = list.reduce((s,r)=>s+(Number(r.w)||0),0);
+  const S = list.reduce((s,r)=>s+(Number(r.s)||0),0);
+  const R = list.reduce((s,r)=>s+(Number(r.r)||0),0);
+  let ma = (W+R)>0 ? (W/(W+R)*100) : 0;
+  let pa = (W+S+R)>0 ? ((W+S)/(W+S+R)*100) : 0;
+  if(!isFinite(ma)) ma = 0;
+  if(!isFinite(pa)) pa = 0;
+  ma = Math.max(0, Math.min(100, ma));
+  pa = Math.max(0, Math.min(100, pa));
+  return { ma, pa, W, S, R };
 }
 
 /** Selesaikan MA & PA: performance sheet (periode cocok) → HM → upload manual. */
@@ -7839,9 +7879,65 @@ function maPaFromWSR(wsr){
 /* ================= DATABASE UNIT VIEW ================= */
 /* KPI per unit dihitung otomatis dari data yang sudah ada — tidak perlu input manual:
    - MTBS, MTTR, PMR: dari record Daily Maintenance (approved) milik unit tsb.
-   - Service Accuracy (SA): dari record Plan Service milik unit tsb.
+   - Service Accuracy (SA): dari Plan Service Close/Total (sinkron SERVICE ACHIEVEMENT).
    - MA & PA: otomatis dari data Monitoring HM milik unit tsb (fallback ke file jam operasional manual
      kalau unit tsb belum ada data HM). */
+/**
+ * Service Accuracy (SA) — SINKRON dengan tabel SERVICE ACHIEVEMENT di Dashboard.
+ * Sumber: Plan Service (planRecords), bukan Daily Periodical Plan/Unplan.
+ * SA = (Close / Total) × 100
+ * Close = execStatus==='Close' ATAU status==='Done'
+ *
+ * Filter rentang (opsional):
+ * 1) Hitung Plan Service dengan planDate di [start,end].
+ * 2) Jika filter aktif tapi TIDAK ada plan di minggu tsb (sering terjadi di filter
+ *    W1–W4 performance), perluas ke **bulan kalender** yang overlap filter —
+ *    sama seperti kolom bulan di SERVICE ACHIEVEMENT — agar SA tidak jatuh 0% palsu.
+ * 3) All Periods (tanpa start/end): seluruh planRecords (sama % Ach overall).
+ */
+function computeServiceAccuracySA(unitCode, startStr, endStr){
+  const code = unitCode ? String(unitCode).trim().toUpperCase() : '';
+
+  function countInRange(ps, pe){
+    let total = 0, closed = 0;
+    (planRecords||[]).forEach(r=>{
+      if(!r) return;
+      if(code){
+        const uc = String(r.unitCode||'').trim().toUpperCase();
+        if(uc !== code) return;
+      }
+      const planDate = String(r.planDate||'').slice(0,10);
+      if(!planDate || planDate.length < 10) return;
+      if(ps && planDate < ps) return;
+      if(pe && planDate > pe) return;
+      total++;
+      if(r.execStatus==='Close' || r.status==='Done') closed++;
+    });
+    return { total, closed };
+  }
+
+  const ps = startStr ? String(startStr).slice(0,10) : '';
+  const pe = endStr ? String(endStr).slice(0,10) : '';
+
+  let { total, closed } = countInRange(ps, pe);
+
+  // Fallback bulan: filter minggu performance sering tidak memuat planDate Plan Service
+  // (jadwal service jarang tepat di W1–W4). Perluas ke bulan yang overlap agar SA
+  // selaras SERVICE ACHIEVEMENT (kolom bulan), bukan 0% palsu.
+  if(total === 0 && ps && pe){
+    const y1 = Number(ps.slice(0,4)), m1 = Number(ps.slice(5,7));
+    const y2 = Number(pe.slice(0,4)), m2 = Number(pe.slice(5,7));
+    if(y1 && m1 && y2 && m2){
+      const monthStart = String(y1).padStart(4,'0') + '-' + String(m1).padStart(2,'0') + '-01';
+      const lastDay = new Date(y2, m2, 0).getDate(); // hari terakhir bulan pe
+      const monthEnd = String(y2).padStart(4,'0') + '-' + String(m2).padStart(2,'0') + '-' + String(lastDay).padStart(2,'0');
+      ({ total, closed } = countInRange(monthStart, monthEnd));
+    }
+  }
+
+  return total > 0 ? (closed / total * 100) : 0;
+}
+
 function computeUnitKPIs(unitCode){
   const approvedRecords = dailyRecords.filter(r=>r.unitCode===unitCode && r.approvalStatus==='Approved');
   const bdCount = approvedRecords.filter(r=>r.category==='Breakdown').length;
@@ -7852,11 +7948,12 @@ function computeUnitKPIs(unitCode){
   const totalHM = capHMByCalendarSpan(rawTotalHM, approvedRecords);
   const mtbs = bdCount>0 ? (totalHM / bdCount) : totalHM;
 
-  // MTTR = rata-rata jam repair (Total Jam Breakdown / Jumlah Repair) — format spreadsheet
-  // MTTR = rata-rata jam repair HANYA dari record kategori Breakdown (Total Jam Breakdown / Jumlah
-  // Repair) — sesuai kalimat formula resmi di sheet KPI. Record Daily/Periodical Maintenance yang
-  // punya field durasi kerja (bukan repair breakdown) tidak lagi ikut dihitung ke MTTR.
-  const mttrEligible = approvedRecords.filter(r=>r.category==='Breakdown' && r.duration!==null && r.duration!==undefined);
+  // MTTR = Total Jam Repair / Jumlah Repair — SEMUA aktivitas repair berdurasi (Breakdown, Daily, Periodical; Plan/Unplan).
+  // KOREKSI: MTTR dihitung dari SEMUA aktivitas repair yang punya durasi kerja, baik kategori
+  // Breakdown, Daily Maintenance, maupun Periodical Maintenance, dan baik status Plan maupun
+  // Unplan — sesuai contoh perhitungan (Jumlah Repair = jam repair, termasuk repair service
+  // maintenance, low power, dll). Tidak lagi dibatasi hanya ke category === 'Breakdown'.
+  const mttrEligible = approvedRecords.filter(r=>r.duration!==null && r.duration!==undefined && Number(r.duration)>0);
   const mttr = mttrEligible.length ? (mttrEligible.reduce((s,r)=>s+(Number(r.duration)||0),0)/mttrEligible.length) : 0;
 
   // PMR = Planned Maintenance HOURS / Total Maintenance HOURS — sesuai kalimat formula resmi di sheet
@@ -7865,12 +7962,8 @@ function computeUnitKPIs(unitCode){
   const totalMaintHours = approvedRecords.reduce((s,r)=>s+(Number(r.duration)||0),0);
   const pmr = totalMaintHours>0 ? (plannedHours/totalMaintHours*100) : 0;
 
-  // Service Accuracy (SA): dihitung dari data Daily Maintenance (kategori Periodical, sudah Approved),
-  // berdasarkan flag Plan/Unplan tiap record — bukan lagi dari data Plan Service (Plan Service hanya
-  // dipakai untuk monitoring jadwal, tidak lagi jadi sumber perhitungan KPI).
-  const periodicalRecords = approvedRecords.filter(r=>r.category==='Periodical');
-  const plannedServiceCount = periodicalRecords.filter(r=> (typeof cbmIsPlan==='function' ? cbmIsPlan(r.planUnplan||r.plan_unplan) : /^plan/i.test(String(r.planUnplan||r.plan_unplan||'')) && !/unplan/i.test(String(r.planUnplan||r.plan_unplan||''))) ).length;
-  const sa = periodicalRecords.length ? (plannedServiceCount/periodicalRecords.length*100) : 0;
+  // Service Accuracy (SA) — sinkron SERVICE ACHIEVEMENT: Plan Service Close/Total × 100
+  const sa = computeServiceAccuracySA(unitCode, null, null);
 
   const { ma, pa } = resolveMaPa(unitCode, null, null);
   return { mtbs, mttr, pmr, sa, ma, pa };
@@ -7890,11 +7983,12 @@ function computeUnitKPIsForRange(unitCode, startStr, endStr){
   const totalHM = capHMByCalendarSpan(rawTotalHM, approvedRecords);
   const mtbs = bdCount>0 ? (totalHM / bdCount) : totalHM;
 
-  // MTTR = rata-rata jam repair (Total Jam Breakdown / Jumlah Repair) — format spreadsheet
-  // MTTR = rata-rata jam repair HANYA dari record kategori Breakdown (Total Jam Breakdown / Jumlah
-  // Repair) — sesuai kalimat formula resmi di sheet KPI. Record Daily/Periodical Maintenance yang
-  // punya field durasi kerja (bukan repair breakdown) tidak lagi ikut dihitung ke MTTR.
-  const mttrEligible = approvedRecords.filter(r=>r.category==='Breakdown' && r.duration!==null && r.duration!==undefined);
+  // MTTR = Total Jam Repair / Jumlah Repair — SEMUA aktivitas repair berdurasi (Breakdown, Daily, Periodical; Plan/Unplan).
+  // KOREKSI: MTTR dihitung dari SEMUA aktivitas repair yang punya durasi kerja, baik kategori
+  // Breakdown, Daily Maintenance, maupun Periodical Maintenance, dan baik status Plan maupun
+  // Unplan — sesuai contoh perhitungan (Jumlah Repair = jam repair, termasuk repair service
+  // maintenance, low power, dll). Tidak lagi dibatasi hanya ke category === 'Breakdown'.
+  const mttrEligible = approvedRecords.filter(r=>r.duration!==null && r.duration!==undefined && Number(r.duration)>0);
   const mttr = mttrEligible.length ? (mttrEligible.reduce((s,r)=>s+(Number(r.duration)||0),0)/mttrEligible.length) : 0;
 
   // PMR = Planned Maintenance HOURS / Total Maintenance HOURS — sesuai kalimat formula resmi di sheet
@@ -7903,19 +7997,8 @@ function computeUnitKPIsForRange(unitCode, startStr, endStr){
   const totalMaintHours = approvedRecords.reduce((s,r)=>s+(Number(r.duration)||0),0);
   const pmr = totalMaintHours>0 ? (plannedHours/totalMaintHours*100) : 0;
 
-  // Service Accuracy (SA): dihitung dari data Daily Maintenance (kategori Periodical, sudah Approved)
-  // pada rentang tanggal tsb saja, berdasarkan flag Plan/Unplan tiap record — bukan lagi dari data Plan
-  // Service (Plan Service hanya dipakai untuk monitoring jadwal).
-  // CATATAN PERBAIKAN: sebelumnya ada fallback ke data kumulatif s/d akhir periode kalau minggu/bulan
-  // yang difilter belum punya record Periodical sendiri. Itu justru membuat angka SA TIDAK sinkron
-  // dengan filter yang dipilih (SA diam-diam menampilkan data dari LUAR periode, sementara
-  // MTBS/MTTR/PMR di kartu yang sama tetap ketat ke periode terpilih) — inilah penyebab data KPI
-  // terlihat "belum sinkron" saat difilter mingguan/bulanan. Supaya semua KPI di kartu unit selalu
-  // konsisten & benar-benar mencerminkan filter yang aktif, SA sekarang HANYA dihitung dari record
-  // Periodical pada periode tsb — kalau belum ada, tampil 0% (bukan diam-diam pakai data periode lain).
-  const periodicalRecords = approvedRecords.filter(r=>r.category==='Periodical');
-  const plannedServiceCount = periodicalRecords.filter(r=> (typeof cbmIsPlan==='function' ? cbmIsPlan(r.planUnplan||r.plan_unplan) : /^plan/i.test(String(r.planUnplan||r.plan_unplan||'')) && !/unplan/i.test(String(r.planUnplan||r.plan_unplan||''))) ).length;
-  const sa = periodicalRecords.length ? (plannedServiceCount/periodicalRecords.length*100) : 0;
+  // Service Accuracy (SA) — sinkron SERVICE ACHIEVEMENT: Plan Service Close/Total × 100 (filter planDate)
+  const sa = computeServiceAccuracySA(unitCode, startStr||null, endStr||null);
 
   // MA & PA: prioritaskan seed sheet performance, lalu HM periode, lalu mapa upload.
   const { ma, pa } = resolveMaPa(unitCode, startStr, endStr);
@@ -8039,30 +8122,39 @@ function populateUnitWeekPeriodSelect(){
   const startEl = document.getElementById('unit-period-start');
   const endEl = document.getElementById('unit-period-end');
   if(!startEl || !endEl) return;
-  const perfKey = getPerformancePeriodKey();
+  const perfKey = getPerformancePeriodKey(); // hanya untuk label/hint, TIDAK mengisi filter
 
-  // Restore preferensi filter user (session) supaya sync/refresh tidak selalu
-  // menimpa ke periode sheet performance.
+  // Filter Performance menu INDEPENDEN dari periode sheet performance.
+  // Default = All Periods (input kosong). Hanya restore jika user pernah set manual.
   if(typeof window._unitPeriodTouched === 'undefined'){
     try{
       const saved = sessionStorage.getItem('ucare_unit_period');
       if(saved){
         const o = JSON.parse(saved);
         window._unitPeriodTouched = !!o.touched;
-        if(o.touched){
+        if(o.touched && (o.start || o.end)){
           if(typeof o.start === 'string') startEl.value = o.start;
           if(typeof o.end === 'string') endEl.value = o.end;
+        } else {
+          window._unitPeriodTouched = false;
+          startEl.value = '';
+          endEl.value = '';
         }
       } else {
         window._unitPeriodTouched = false;
+        startEl.value = '';
+        endEl.value = '';
       }
-    }catch(_e){ window._unitPeriodTouched = false; }
+    }catch(_e){
+      window._unitPeriodTouched = false;
+      startEl.value = '';
+      endEl.value = '';
+    }
   }
-  // LOCK: filter periode web TIDAK mengikuti update periode sheet performance.
-  // Hanya restore dari sessionStorage user; jangan auto-isi dari sheet period.
-  // Sheet sync hanya meng-update data W/S/R, bukan input tanggal filter.
+  // Belum di-set user → paksa All Periods (jangan warisi nilai dari sheet / auto-fill)
   if(!window._unitPeriodTouched){
-    // biarkan nilai input apa adanya (kosong = All Periods, atau yang sudah di-set user)
+    startEl.value = '';
+    endEl.value = '';
   }
 
   const hintEl = document.getElementById('unit-period-hint');
@@ -8073,13 +8165,13 @@ function populateUnitWeekPeriodSelect(){
       if(s || e){
         hintEl.innerHTML = `Manual period filter locked: <b>${formatPerformancePeriodLabel(s||'…', e||'…')}</b>. Independent from sheet period. W/S/R &amp; MA/PA use performance sheet only when ranges match; otherwise calculated from Monitoring HM. MTBS/MTTR/PMR/SA always follow this range.`;
       } else {
-        hintEl.innerHTML = 'Filter: <b>All Periods</b> (locked — independent from sheet). W/S/R &amp; MA/PA use performance sheet data if available.';
+        hintEl.innerHTML = 'Filter: <b>All Periods</b> — independen dari periode sheet performance. Kartu unit &amp; tabel KPI memakai seluruh data (semua periode).';
       }
     } else if(perfKey){
       const [ps, pe] = perfKey.split('_');
       hintEl.innerHTML = `Web period filter (locked): <b>${formatPerformancePeriodLabel(ps, pe)}</b>. Does not auto-follow sheet period updates. Change dates above or click "✕ All Periods". W/S/R &amp; MA/PA use sheet only when ranges match; MTBS/MTTR/PMR/SA use this date range.`;
     } else {
-      hintEl.innerHTML = 'No period set. Choose dates above (locked — will not follow sheet updates), or wait for live auto-sync from the performance sheet (period filter stays as you set it). On Dashboard, use <b>Auto Sync KPI</b> only to fill Maintenance Acv./Score.';
+      hintEl.innerHTML = 'Filter: <b>All Periods</b> (default). Pilih tanggal di atas untuk memfilter KPI &amp; membatasi <b>Auto Sync KPI → Maintenance</b> hanya ke kolom minggu yang overlap. Kosongkan / ✕ All Periods untuk kembali ke semua periode.';
     }
   }
 }
@@ -8177,7 +8269,10 @@ function unitIconSVG(category){
  * Periode filter harus cocok dengan periodStart–periodEnd sheet. Fallback: Monitoring HM.
  */
 function getUnitWorkingHours(unitCode, startStr, endStr){
-  if(mapaData && mapaData.fromPerformance && mapaData.rows && mapaData.rows.length
+  const hasRange = !!(startStr && endStr);
+  // All Periods: jangan terikat periode sheet performance — pakai Monitoring HM kumulatif.
+  // Filter aktif: boleh pakai sheet performance hanya jika rentang cocok dengan periode sheet.
+  if(hasRange && mapaData && mapaData.fromPerformance && mapaData.rows && mapaData.rows.length
       && performancePeriodMatches(startStr||null, endStr||null)){
     const row = mapaData.rows.find(r=>String(r.unit||'').trim().toUpperCase()===String(unitCode||'').trim().toUpperCase());
     if(row){
@@ -8189,9 +8284,21 @@ function getUnitWorkingHours(unitCode, startStr, endStr){
       return { w, s, r, t, source:'performance' };
     }
   }
-  const hmwsr = hmWSRForUnit(unitCode, startStr||null, endStr||null);
+  const hmwsr = hmWSRForUnit(unitCode, hasRange ? startStr : null, hasRange ? endStr : null);
   if(hmwsr){
     return { w: hmwsr.W, s: hmwsr.S, r: hmwsr.R, t: (hmwsr.W + hmwsr.S + hmwsr.R), source:'hm' };
+  }
+  // Fallback All Periods: jika HM kosong, tetap tampilkan angka performance sheet (snapshot) tanpa mengunci filter
+  if(!hasRange && mapaData && mapaData.fromPerformance && mapaData.rows && mapaData.rows.length){
+    const row = mapaData.rows.find(r=>String(r.unit||'').trim().toUpperCase()===String(unitCode||'').trim().toUpperCase());
+    if(row){
+      const w = Number(row.workingHours != null ? row.workingHours : row.w) || 0;
+      const s = Number(row.s) || 0;
+      const r = Number(row.r) || 0;
+      let t = Number(row.totalWorkingHours != null ? row.totalWorkingHours : row.t);
+      if(isNaN(t) || t <= 0) t = w + s + r;
+      return { w, s, r, t, source:'performance' };
+    }
   }
   return { w:null, s:null, r:null, t:null, source:null };
 }
@@ -8331,6 +8438,145 @@ function unitMonthlySummaryTableHTML(months){
  *  Dipanggil dari dalam renderUnitCards() supaya otomatis ikut ter-refresh di SETIAP
  *  titik yang sudah memanggil renderUnitCards() (buka menu Performance, sync sheet,
  *  live-refresh berkala, dsb) — tanpa perlu hook baru & tanpa perlu di-generate manual. */
+/**
+ * Tabel average masing-masing KPI di menu Performance (fleet-wide).
+ * Rata-rata dihitung dari nilai KPI setiap unit pada filter periode yang sama
+ * dengan kartu unit (weekPeriod / All Periods).
+ */
+/**
+ * Auto live-sync filter periode Performance dengan minggu aktif di sheet Maintenance.
+ * - Ambil periods via getMaintenancePeriods (W1–W4 + start/end).
+ * - Pilih minggu yang sedang berjalan (start<=today<=end), else minggu jatuh tempo terakhir.
+ * - Isi #unit-period-start / #unit-period-end HANYA jika user belum mengunci filter manual
+ *   (window._unitPeriodTouched !== true) ATAU opts.force.
+ */
+async function applyMaintenancePeriodToUnitFilter(opts){
+  opts = opts || {};
+  try{
+    // Filter web independen: JANGAN auto-isi dari sheet Maintenance / Performance.
+    // Hanya isi jika opts.force === true (perintah eksplisit).
+    if(!opts.force) return { ok:true, skipped:'web_filter_independent' };
+    if(!opts.force && window._unitPeriodTouched) return { ok:true, skipped:'user_locked' };
+    if(typeof fetchMaintenancePeriods !== 'function') return { ok:false, error:'no_fetch' };
+    const res = await fetchMaintenancePeriods(!!opts.force);
+    const periods = (res && res.periods) ? res.periods.filter(p=>p.week && p.week!=='TOTAL' && p.start && p.end) : [];
+    if(!periods.length) return { ok:false, error:'no_periods' };
+
+    const today = (typeof toDateStr==='function') ? toDateStr(new Date()) : new Date().toISOString().slice(0,10);
+    // Minggu berjalan
+    let pick = periods.find(p => String(p.start) <= today && String(p.end) >= today);
+    // Else minggu jatuh tempo terakhir (end < today), terbaru
+    if(!pick){
+      const due = periods.filter(p => String(p.end) < today)
+        .sort((a,b)=> String(b.end).localeCompare(String(a.end)));
+      pick = due[0] || periods[0];
+    }
+    if(!pick) return { ok:false, error:'no_pick' };
+
+    const s = document.getElementById('unit-period-start');
+    const e = document.getElementById('unit-period-end');
+    if(!s || !e) return { ok:false, error:'no_inputs' };
+
+    const changed = (s.value !== pick.start) || (e.value !== pick.end);
+    s.value = pick.start;
+    e.value = pick.end;
+
+    const hint = document.getElementById('perf-maint-period-hint');
+    if(hint){ hint.innerHTML = ''; hint.style.display = 'none'; }
+    if(typeof persistUnitPeriodFilter==='function'){
+      try{ persistUnitPeriodFilter(); }catch(_e){}
+    }
+    return { ok:true, changed, period:pick };
+  }catch(err){
+    console.warn('applyMaintenancePeriodToUnitFilter', err);
+    return { ok:false, error:String(err && err.message || err) };
+  }
+}
+
+function renderPerformanceKpiAverageTable(weekPeriod, rangeStart, rangeEnd, weekPeriodLabel){
+  const tbody = document.getElementById('perf-kpi-avg-tbody');
+  const hint = document.getElementById('perf-kpi-avg-period-hint');
+  if(!tbody) return;
+
+  const periodLabel = (weekPeriod && weekPeriodLabel)
+    ? weekPeriodLabel
+    : (weekPeriod ? String(weekPeriod).replace('_',' s/d ') : 'All Periods');
+  // Period hint disembunyikan di UI (elemen tetap ada, display:none)
+  if(hint){ hint.textContent = ''; hint.style.display = 'none'; }
+
+  const defs = [
+    { key:'ma',   label:'MA',   full:'Mechanical Availability', unit:'%',  target:KPI_TARGET.ma },
+    { key:'pa',   label:'PA',   full:'Physical Availability',   unit:'%',  target:KPI_TARGET.pa },
+    { key:'mtbs', label:'MTBS', full:'Mean Time Between Stoppages', unit:' hrs', target:KPI_TARGET.mtbs },
+    { key:'mttr', label:'MTTR', full:'Mean Time To Repair',     unit:' hrs', target:KPI_TARGET.mttr },
+    { key:'pmr',  label:'PMR',  full:'Planned Maintenance Ratio', unit:'%', target:KPI_TARGET.pmr },
+    { key:'sa',   label:'SA',   full:'Service Accuracy',        unit:'%',  target:KPI_TARGET.sa }
+  ];
+
+  const units = (typeof UNITS !== 'undefined' && Array.isArray(UNITS)) ? UNITS : [];
+  const perUnit = units.map(u=>{
+    try{
+      return computeUnitKPIsFor(u.code, weekPeriod || '');
+    }catch(_e){
+      return { ma:0, pa:0, mtbs:0, mttr:0, pmr:0, sa:0 };
+    }
+  });
+
+  function avgOf(key){
+    if(!perUnit.length) return 0;
+    const sum = perUnit.reduce((s,k)=> s + (Number(k[key])||0), 0);
+    return sum / perUnit.length;
+  }
+
+  function statusCell(key, value){
+    const tier = (typeof kpiTierScore === 'function') ? kpiTierScore(key, value) : 0;
+    let label = 'WATCH', color = 'var(--yellow)';
+    if(tier >= 100){ label = 'ACHIEVED'; color = 'var(--green)'; }
+    else if(tier <= 60){ label = 'BELOW'; color = 'var(--red)'; }
+    return `<span style="color:${color};font-weight:700;font-size:11px;letter-spacing:.3px">${label}</span>
+      <span style="color:var(--text-faint);font-size:10px;margin-left:6px">(${tier}%)</span>`;
+  }
+
+  const rows = defs.map(d=>{
+    const avg = avgOf(d.key);
+    const ach = (typeof kpiTierScore === 'function') ? kpiTierScore(d.key, avg) : 0;
+    const achCol = ach >= 100 ? 'var(--green)' : ach >= 80 ? 'var(--yellow)' : 'var(--red)';
+    const valStr = (d.unit === ' hrs')
+      ? (avg.toFixed(1) + d.unit)
+      : (avg.toFixed(1) + d.unit);
+    const tgtStr = (d.unit === ' hrs')
+      ? (d.target + d.unit)
+      : (d.target + d.unit);
+    return `<tr>
+      <td style="text-align:left">
+        <div style="font-weight:700;color:var(--text)">${d.label}</div>
+        <div style="font-size:10px;color:var(--text-faint)">${d.full}</div>
+      </td>
+      <td style="text-align:left;font-family:JetBrains Mono,monospace;color:var(--text-dim)">${tgtStr}</td>
+      <td style="text-align:center;font-family:Oswald,sans-serif;font-size:16px;font-weight:700;color:var(--yellow)">${valStr}</td>
+      <td style="text-align:center;font-family:Oswald,sans-serif;font-size:15px;font-weight:700;color:${achCol}">${ach.toFixed(0)}%</td>
+      <td style="text-align:left">${statusCell(d.key, avg)}</td>
+    </tr>`;
+  }).join('');
+
+  // Overall weighted average achievement (same formula as unit cards)
+  const keys = defs.map(d=>d.key);
+  const totalW = keys.reduce((s,key)=> s + (KPI_WEIGHT[key]||0), 0);
+  const fleetAvgByKey = {};
+  keys.forEach(key=>{ fleetAvgByKey[key] = avgOf(key); });
+  const sumSc = keys.reduce((s,key)=> s + (typeof kpiWeightedScore==='function' ? kpiWeightedScore(key, fleetAvgByKey[key]) : 0), 0);
+  const overall = totalW > 0 ? (sumSc / totalW * 100) : 0;
+  const ovCol = overall >= 90 ? 'var(--green)' : overall >= 75 ? 'var(--yellow)' : 'var(--red)';
+
+  const footer = `<tr style="background:rgba(255,199,44,0.06)">
+    <td colspan="2" style="text-align:left;font-weight:700;letter-spacing:.4px;text-transform:uppercase;font-size:11px;color:var(--text-dim)">Fleet Overall Average Achievement</td>
+    <td colspan="2" style="text-align:center;font-family:Oswald,sans-serif;font-size:18px;font-weight:700;color:${ovCol}">${overall.toFixed(1)}%</td>
+    <td style="text-align:left;font-size:11px;color:var(--text-faint)">Weighted · Σ Score ÷ Σ Weight</td>
+  </tr>`;
+
+  tbody.innerHTML = rows + footer;
+}
+
 function renderUnitMonthlySummary(){
   /* Panel Trend & Summary KPI Per Unit & Bulan di menu Performance telah dihapus. */
   return;
@@ -8338,6 +8584,11 @@ function renderUnitMonthlySummary(){
 
 function renderUnitCards(){
   populateUnitWeekPeriodSelect();
+  // Align filter with Maintenance sheet periods (non-blocking; re-render if changed)
+  // Filter periode: default All Periods (input kosong).
+  // Hanya aktif saat user memilih tanggal (perintah filter).
+  // Tidak auto-isi dari sheet Maintenance.
+
   const startEl = document.getElementById('unit-period-start');
   const endEl = document.getElementById('unit-period-end');
   const startVal = startEl?.value || '';
@@ -8389,6 +8640,7 @@ function renderUnitCards(){
       </div>
     </div>`;
   }).join('');
+  renderPerformanceKpiAverageTable(weekPeriod, rangeStart, rangeEnd, weekPeriodLabel);
   renderUnitMonthlySummary();
 }
 
@@ -17022,6 +17274,16 @@ function renderKPIChartDashboard(k, globalStats){
 
   const legendHtml = monthlyKpiDefs.map(d=>`<span><i style="background:${d.color}"></i>${d.label}</span>`).join('');
 
+  // PENTING: park panel MA/PA di luar #kpi-chart-dashboard SEBELUM innerHTML,
+  // supaya tidak ikut terhapus saat dashboard di-render ulang (pindah menu / refresh).
+  try{
+    const hold = document.getElementById('mapa-source-block');
+    const park = document.getElementById('mapa-source-park') || document.getElementById('view-dashboard');
+    if(hold && park && hold.parentNode !== park){
+      park.appendChild(hold);
+    }
+  }catch(_e){}
+
   wrap.innerHTML = `
     <div class="dash-hero-row">
       <div>
@@ -17106,7 +17368,8 @@ function renderKPIChartDashboard(k, globalStats){
           </table>
         </div>
       </div>
-    </div>`;
+    </div>
+    <div id="mapa-after-service-slot"></div>`;
     })()}
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;margin-bottom:10px">
       <span style="font-size:9px;color:var(--green);text-transform:uppercase;letter-spacing:.5px;display:inline-flex;align-items:center;gap:6px">
@@ -17116,6 +17379,15 @@ function renderKPIChartDashboard(k, globalStats){
       ${monthlyChartSelectHtml}
     </div>
     <div class="kpi-dash-grid">${gaugeCardsHtml}</div>
+    <div class="dash-panel" style="position:relative;margin-bottom:14px">
+        <div class="dash-panel-title">KPI MAINTENANCE SUMMARY</div>
+        <div style="overflow-x:auto">
+          <table class="dash-sum-table">
+            <thead><tr><th>KPI</th><th>Target</th><th>Value</th><th>Status</th><th>Trend</th></tr></thead>
+            <tbody>${sumRows}</tbody>
+          </table>
+        </div>
+      </div>
     ${(() => { const _trend = multiTrendSVG(); return `
     <div class="dash-quad-grid">
       <div class="dash-panel">
@@ -17135,15 +17407,6 @@ function renderKPIChartDashboard(k, globalStats){
         <div class="dash-panel-chart-fill">${mttrTrendSVG()}</div>
       </div>
     </div>
-    <div class="dash-panel" style="position:relative">
-        <div class="dash-panel-title">KPI MAINTENANCE SUMMARY</div>
-        <div style="overflow-x:auto">
-          <table class="dash-sum-table">
-            <thead><tr><th>KPI</th><th>Target</th><th>Value</th><th>Status</th><th>Trend</th></tr></thead>
-            <tbody>${sumRows}</tbody>
-          </table>
-        </div>
-      </div>
     <div class="dash-mid-grid">
       <div class="dash-panel">
         <div class="dash-panel-title">Contribution to Reliability</div>
@@ -17188,6 +17451,19 @@ function renderKPIChartDashboard(k, globalStats){
       </div>
     </div>
     ${kpiDetailOverlay}`;
+
+  // Kembalikan panel MA & PA Data Source ke slot di bawah tabel SERVICE ACHIEVEMENT
+  // (elemen DOM yang sama → event listener tombol tetap aktif)
+  try{
+    const hold = document.getElementById('mapa-source-block');
+    const slot = document.getElementById('mapa-after-service-slot');
+    if(hold && slot){
+      slot.appendChild(hold);
+      // pastikan terlihat (bukan display:none dari park host)
+      hold.style.display = '';
+    }
+  }catch(_e){}
+
 }
 
 
@@ -17238,11 +17514,12 @@ function computeKPIs(){
   const totalHM = totalHMByUnit(approvedRecords);
   const mtbs = bdCount>0 ? (totalHM / bdCount) : totalHM;
 
-  // MTTR = rata-rata jam repair (Total Jam Breakdown / Jumlah Repair) — format spreadsheet
-  // MTTR = rata-rata jam repair HANYA dari record kategori Breakdown (Total Jam Breakdown / Jumlah
-  // Repair) — sesuai kalimat formula resmi di sheet KPI. Record Daily/Periodical Maintenance yang
-  // punya field durasi kerja (bukan repair breakdown) tidak lagi ikut dihitung ke MTTR.
-  const mttrEligible = approvedRecords.filter(r=>r.category==='Breakdown' && r.duration!==null && r.duration!==undefined);
+  // MTTR = Total Jam Repair / Jumlah Repair — SEMUA aktivitas repair berdurasi (Breakdown, Daily, Periodical; Plan/Unplan).
+  // KOREKSI: MTTR dihitung dari SEMUA aktivitas repair yang punya durasi kerja, baik kategori
+  // Breakdown, Daily Maintenance, maupun Periodical Maintenance, dan baik status Plan maupun
+  // Unplan — sesuai contoh perhitungan (Jumlah Repair = jam repair, termasuk repair service
+  // maintenance, low power, dll). Tidak lagi dibatasi hanya ke category === 'Breakdown'.
+  const mttrEligible = approvedRecords.filter(r=>r.duration!==null && r.duration!==undefined && Number(r.duration)>0);
   const mttr = mttrEligible.length ? (mttrEligible.reduce((s,r)=>s+(Number(r.duration)||0),0)/mttrEligible.length) : 0;
 
   // PMR = Planned Maintenance HOURS / Total Maintenance HOURS — sesuai kalimat formula resmi di sheet
@@ -17254,9 +17531,8 @@ function computeKPIs(){
   // Service Accuracy (SA): dihitung dari data Daily Maintenance (kategori Periodical, sudah Approved),
   // berdasarkan flag Plan/Unplan tiap record — bukan lagi dari data Plan Service (Plan Service hanya
   // dipakai untuk monitoring jadwal, tidak lagi jadi sumber perhitungan KPI).
-  const periodicalRecordsAll = approvedRecords.filter(r=>r.category==='Periodical');
-  const plannedServiceCountAll = periodicalRecordsAll.filter(r=> (typeof cbmIsPlan==='function' ? cbmIsPlan(r.planUnplan||r.plan_unplan) : /^plan/i.test(String(r.planUnplan||r.plan_unplan||'')) && !/unplan/i.test(String(r.planUnplan||r.plan_unplan||''))) ).length;
-  const sa = periodicalRecordsAll.length ? (plannedServiceCountAll/periodicalRecordsAll.length*100) : 0;
+  // Service Accuracy (SA) — sinkron SERVICE ACHIEVEMENT: Plan Service Close/Total × 100
+  const sa = computeServiceAccuracySA(null, null, null);
 
   // overduePlans: statistik monitoring Plan Service (dipakai utk kartu "Plan Overdue"), tidak lagi
   // dipakai untuk menghitung SA — Plan Service kini murni untuk monitoring jadwal.
@@ -17302,11 +17578,12 @@ function computeKPIsForRange(startStr, endStr){
   const totalHM = totalHMByUnit(approvedRecords);
   const mtbs = bdCount>0 ? (totalHM / bdCount) : totalHM;
 
-  // MTTR = rata-rata jam repair (Total Jam Breakdown / Jumlah Repair) — format spreadsheet
-  // MTTR = rata-rata jam repair HANYA dari record kategori Breakdown (Total Jam Breakdown / Jumlah
-  // Repair) — sesuai kalimat formula resmi di sheet KPI. Record Daily/Periodical Maintenance yang
-  // punya field durasi kerja (bukan repair breakdown) tidak lagi ikut dihitung ke MTTR.
-  const mttrEligible = approvedRecords.filter(r=>r.category==='Breakdown' && r.duration!==null && r.duration!==undefined);
+  // MTTR = Total Jam Repair / Jumlah Repair — SEMUA aktivitas repair berdurasi (Breakdown, Daily, Periodical; Plan/Unplan).
+  // KOREKSI: MTTR dihitung dari SEMUA aktivitas repair yang punya durasi kerja, baik kategori
+  // Breakdown, Daily Maintenance, maupun Periodical Maintenance, dan baik status Plan maupun
+  // Unplan — sesuai contoh perhitungan (Jumlah Repair = jam repair, termasuk repair service
+  // maintenance, low power, dll). Tidak lagi dibatasi hanya ke category === 'Breakdown'.
+  const mttrEligible = approvedRecords.filter(r=>r.duration!==null && r.duration!==undefined && Number(r.duration)>0);
   const mttr = mttrEligible.length ? (mttrEligible.reduce((s,r)=>s+(Number(r.duration)||0),0)/mttrEligible.length) : 0;
 
   // PMR = Planned Maintenance HOURS / Total Maintenance HOURS — sesuai kalimat formula resmi di sheet
@@ -17315,16 +17592,8 @@ function computeKPIsForRange(startStr, endStr){
   const totalMaintHours = approvedRecords.reduce((s,r)=>s+(Number(r.duration)||0),0);
   const pmr = totalMaintHours>0 ? (plannedHours/totalMaintHours*100) : 0;
 
-  // Service Accuracy (SA): dihitung dari data Daily Maintenance (kategori Periodical, sudah Approved)
-  // pada rentang tanggal tsb saja, berdasarkan flag Plan/Unplan tiap record — bukan lagi dari data Plan
-  // Service (Plan Service hanya dipakai untuk monitoring jadwal).
-  // CATATAN PERBAIKAN: fallback ke data kumulatif s/d akhir periode (kalau bulan yang difilter belum
-  // punya record Periodical sendiri) dihapus — itu membuat SA tidak sinkron dengan filter periode yang
-  // dipilih, berbeda dari MTBS/MTTR/PMR yang selalu ketat ke periode tsb. Sekarang SA HANYA dari data
-  // pada periode yang difilter (0% kalau memang belum ada input Periodical di periode itu).
-  const periodicalRecordsRange = approvedRecords.filter(r=>r.category==='Periodical');
-  const plannedServiceCountRange = periodicalRecordsRange.filter(r=> (typeof cbmIsPlan==='function' ? cbmIsPlan(r.planUnplan||r.plan_unplan) : /^plan/i.test(String(r.planUnplan||r.plan_unplan||'')) && !/unplan/i.test(String(r.planUnplan||r.plan_unplan||''))) ).length;
-  const sa = periodicalRecordsRange.length ? (plannedServiceCountRange/periodicalRecordsRange.length*100) : 0;
+  // Service Accuracy (SA) — sinkron SERVICE ACHIEVEMENT pada rentang planDate (fleet-wide)
+  const sa = computeServiceAccuracySA(null, startStr||null, endStr||null);
 
   // MA & PA: dari sheet performance (W/S/R) HANYA jika filter subset periode sheet,
   // else Monitoring HM / 0. (performancePeriodMatches: ketat, bukan overlap)
@@ -17546,6 +17815,29 @@ async function fetchPerformanceFromSheets(opts){
         ? ('performance-sheet (' + data.periodStart + ' s/d ' + data.periodEnd + ')')
         : 'performance-sheet');
 
+    const psIn = String(data.periodStart || '').trim().slice(0,10);
+    const peIn = String(data.periodEnd || '').trim().slice(0,10);
+    // LOCK: periodStart/periodEnd wajib — tanpa ini MA/PA bisa menempel ke minggu salah
+    if(!psIn || !peIn || !/^\d{4}-\d{2}-\d{2}$/.test(psIn) || !/^\d{4}-\d{2}-\d{2}$/.test(peIn)){
+      const errMsg = 'Sheet performance tanpa periodStart/periodEnd valid (YYYY-MM-DD). Sync ditolak agar KPI tidak corrupt.';
+      console.error('[KPI-PERF LOCK]', errMsg, data);
+      if(opts.manual) alert('⚠ ' + errMsg);
+      return { ok:false, error: errMsg };
+    }
+    if(psIn > peIn){
+      const errMsg = 'periodStart > periodEnd di sheet performance — sync ditolak.';
+      if(opts.manual) alert('⚠ ' + errMsg);
+      return { ok:false, error: errMsg };
+    }
+    // Sanity: MA/PA agregat harus 0–100
+    const probe = (typeof maPaFromRows==='function') ? maPaFromRows(rows) : null;
+    if(probe && (probe.ma > 100.01 || probe.pa > 100.01 || probe.ma < 0 || probe.pa < 0)){
+      const errMsg = 'Hasil MA/PA di luar 0–100 dari sheet performance — sync ditolak.';
+      console.error('[KPI-PERF LOCK]', errMsg, probe);
+      if(opts.manual) alert('⚠ ' + errMsg);
+      return { ok:false, error: errMsg };
+    }
+
     mapaData = {
       rows,
       totalW,
@@ -17555,8 +17847,8 @@ async function fetchPerformanceFromSheets(opts){
       fileName: label,
       updatedAt: data.syncedAt || new Date().toISOString(),
       fromPerformance: true,
-      periodStart: data.periodStart || '',
-      periodEnd: data.periodEnd || ''
+      periodStart: psIn,
+      periodEnd: peIn
     };
     _perfLastFetchAt = Date.now();
     await saveMapaData();
@@ -17566,11 +17858,13 @@ async function fetchPerformanceFromSheets(opts){
       alert('✓ Sync sheet performance berhasil.\n' +
         rows.length + ' unit · W: ' + totalW.toFixed(1) +
         ' · S: ' + totalS.toFixed(1) +
-        ' · R: ' + totalR.toFixed(1) + ' jam');
+        ' · R: ' + totalR.toFixed(1) + ' jam\n' +
+        'Periode: ' + psIn + ' s/d ' + peIn +
+        (probe ? ('\nMA ' + probe.ma.toFixed(1) + '% · PA ' + probe.pa.toFixed(1) + '%') : ''));
     }
     // TIDAK push ke sheet Maintenance di sini.
     // Hanya tombol Auto Sync KPI yang boleh menulis, dan hanya periode yang sudah jatuh tempo.
-    return { ok:true, rows: rows.length, totalW, totalS, totalR, totalT, changed:true };
+    return { ok:true, rows: rows.length, totalW, totalS, totalR, totalT, changed:true, periodStart:psIn, periodEnd:peIn };
   }catch(e){
     console.error('fetchPerformanceFromSheets gagal', e);
     if(opts.manual) alert('⚠ Sync sheet performance gagal: ' + (e.message||e) +
@@ -17680,43 +17974,169 @@ function buildMaintenanceKpiItems(startStr, endStr){
  */
 function resolveMaPaForWeek(startStr, endStr){
   /* MA/PA untuk sync sheet Maintenance:
-   * Periode kolom (W1–W4) HANYA dari header sheet Maintenance.
-   * Nilai MA/PA SELALU dari sheet performance bila ada (tidak digate periode performance).
+   * - Periode kolom (W1–W4) HANYA dari header sheet Maintenance (p.start / p.end).
+   * - Nilai MA/PA dari sheet performance HANYA jika minggu overlap periode performance.
+   * - Jika minggu di luar periode performance → hitung dari Monitoring HM minggu tsb
+   *   (jangan tempel angka performance periode lain → hindari MA/PA palsu 100%).
    */
-  // 1) PRIORITAS: sheet performance — abaikan cocok/tidaknya periode performance
+  function weekOverlapsPerformance(ws, we){
+    try{
+      if(!mapaData || !mapaData.fromPerformance) return false;
+      const ps = String(mapaData.periodStart||'').trim();
+      const pe = String(mapaData.periodEnd||'').trim();
+      if(!ps || !pe || !ws || !we) return false;
+      // overlap: start <= pe && end >= ps
+      return String(ws) <= pe && String(we) >= ps;
+    }catch(_e){ return false; }
+  }
+
+  // 1) Sheet performance — hanya bila minggu overlap periode performance live
   try{
-    if(mapaData && mapaData.fromPerformance && mapaData.rows && mapaData.rows.length){
+    if(weekOverlapsPerformance(startStr, endStr)
+        && mapaData && mapaData.fromPerformance && mapaData.rows && mapaData.rows.length){
       if(typeof maPaFromRows === 'function'){
         const mp = maPaFromRows(mapaData.rows);
-        if(mp && ((Number(mp.ma)||0) > 0 || (Number(mp.pa)||0) > 0)) return mp;
+        if(mp && ((Number(mp.ma)||0) > 0 || (Number(mp.pa)||0) > 0 || (Number(mp.W)||0)+(Number(mp.R)||0)>0)){
+          return mp;
+        }
       }
     }
   }catch(_e){}
 
-  // 2) Monitoring HM per minggu
-  const spanDays = (function(){
-    try{
-      if(!startStr || !endStr) return 999;
-      const a = new Date(startStr+'T00:00:00');
-      const b = new Date(endStr+'T00:00:00');
-      return Math.round((b - a) / 86400000) + 1;
-    }catch(_e){ return 999; }
-  })();
-  if(spanDays <= 14 && typeof hmWSRGlobal === 'function'){
-    try{
-      const hm = hmWSRGlobal(startStr||null, endStr||null);
+  // 2) Monitoring HM khusus rentang minggu (W1–W4 dari sheet Maintenance)
+  try{
+    if(startStr && endStr && typeof hmWSRGlobal === 'function'){
+      const hm = hmWSRGlobal(startStr, endStr);
       if(hm && (Number(hm.W)||0)+(Number(hm.S)||0)+(Number(hm.R)||0) > 0){
         if(typeof maPaFromWSR === 'function') return maPaFromWSR(hm);
       }
-    }catch(_e){}
-  }
+    }
+  }catch(_e){}
 
-  // 3) resolveMaPa standar (performance ketat → HM → manual)
+  // 3) resolveMaPa standar (performance ketat subset → HM → manual)
   if(typeof resolveMaPa === 'function'){
     return resolveMaPa(null, startStr||null, endStr||null);
   }
   return { ma:0, pa:0 };
 }
+
+/**
+ * KPI × PERFORMANCE SYNC LOCK — self-test saat load.
+ * Mengunci:
+ *  1) Rumus maPaFromRows (MA/PA dari W/S/R)
+ *  2) performancePeriodMatches: All Periods → live performance; bulan → subset ketat
+ *  3) resolveMaPaForWeek: performance hanya jika minggu overlap periode sheet
+ * Jika salah satu gagal → console error + banner (sama pola KPI FORMULA LOCK).
+ */
+(function kpiPerformanceSyncLockSelfTest(){
+  try{
+    const errors = [];
+    // --- 1) maPaFromRows ---
+    if(typeof maPaFromRows !== 'function'){
+      errors.push('maPaFromRows tidak tersedia');
+    } else {
+      const a = maPaFromRows([{w:100,s:20,r:0}]);
+      if(Math.abs(a.ma - 100) > 0.01) errors.push('MA(W=100,R=0) harus 100, got '+a.ma);
+      if(Math.abs(a.pa - 100) > 0.01) errors.push('PA(W=100,S=20,R=0) harus 100, got '+a.pa);
+      const b = maPaFromRows([{w:80,s:10,r:20}]);
+      // MA = 80/100 = 80; PA = 90/110 ≈ 81.818
+      if(Math.abs(b.ma - 80) > 0.05) errors.push('MA(W=80,R=20) harus 80, got '+b.ma);
+      if(Math.abs(b.pa - (90/110*100)) > 0.05) errors.push('PA(W=80,S=10,R=20) salah, got '+b.pa);
+      const c = maPaFromRows([{w:0,s:0,r:0}]);
+      if(c.ma !== 0 || c.pa !== 0) errors.push('W=S=R=0 harus MA=PA=0');
+      const d = maPaFromRows([{w:50,s:0,r:50}]);
+      if(Math.abs(d.ma - 50) > 0.05) errors.push('MA(W=50,R=50) harus 50, got '+d.ma);
+    }
+
+    // --- 2) performancePeriodMatches dengan mock mapaData ---
+    if(typeof performancePeriodMatches === 'function'){
+      const bak = (typeof mapaData !== 'undefined') ? mapaData : null;
+      try{
+        // inject mock
+        mapaData = {
+          fromPerformance: true,
+          periodStart: '2026-08-01',
+          periodEnd: '2026-08-10',
+          rows: [{unit:'SWA-101', w:100, s:10, r:5}]
+        };
+        // All Periods → true (live source)
+        if(!performancePeriodMatches(null, null) && !performancePeriodMatches('', '')){
+          // function may treat '' same as null
+          if(!performancePeriodMatches(null, null))
+            errors.push('All Periods harus match performance live (return true)');
+        }
+        // subset OK
+        if(!performancePeriodMatches('2026-08-01','2026-08-10'))
+          errors.push('Filter = periode sheet harus match');
+        if(!performancePeriodMatches('2026-08-03','2026-08-07'))
+          errors.push('Filter subset periode sheet harus match');
+        // bulan penuh Agustus menembus pe → tidak match
+        if(performancePeriodMatches('2026-08-01','2026-08-31'))
+          errors.push('Filter Agustus penuh TIDAK boleh match performance 1–10 Agts');
+        // September → tidak match
+        if(performancePeriodMatches('2026-09-01','2026-09-30'))
+          errors.push('Filter September TIDAK boleh match performance Agustus');
+      } finally {
+        mapaData = bak;
+      }
+    } else {
+      errors.push('performancePeriodMatches tidak tersedia');
+    }
+
+    // --- 3) resolveMaPaForWeek overlap gate ---
+    if(typeof resolveMaPaForWeek === 'function'){
+      const bak = (typeof mapaData !== 'undefined') ? mapaData : null;
+      const bakHm = (typeof hmRecords !== 'undefined') ? hmRecords : null;
+      try{
+        mapaData = {
+          fromPerformance: true,
+          periodStart: '2026-08-01',
+          periodEnd: '2026-08-10',
+          rows: [{unit:'SWA-101', w:90, s:5, r:10}, {unit:'SWA-102', w:90, s:5, r:10}]
+        };
+        // overlap week → performance (MA = 180/200 = 90)
+        const ov = resolveMaPaForWeek('2026-08-01','2026-08-10');
+        if(Math.abs((ov && ov.ma) - 90) > 0.5)
+          errors.push('Week overlap performance harus MA≈90, got '+(ov && ov.ma));
+        // non-overlap week: jangan pakai performance 90% — boleh 0/HM
+        const no = resolveMaPaForWeek('2026-09-01','2026-09-10');
+        if(no && Math.abs(Number(no.ma) - 90) < 0.5 && Number(no.R)===20)
+          errors.push('Week di luar periode performance TIDAK boleh menempel MA performance');
+      } finally {
+        mapaData = bak;
+        if(bakHm !== null && typeof hmRecords !== 'undefined') hmRecords = bakHm;
+      }
+    } else {
+      errors.push('resolveMaPaForWeek tidak tersedia');
+    }
+
+    window.__KPI_PERF_SYNC_LOCK_ERRORS__ = errors;
+    if(errors.length){
+      console.error('[KPI-PERF SYNC LOCK] Aturan sync web↔performance rusak:\n- ' + errors.join('\n- '));
+      const showBanner = ()=>{
+        try{
+          if(document.getElementById('kpi-perf-lock-warning-banner')) return;
+          const el = document.createElement('div');
+          el.id = 'kpi-perf-lock-warning-banner';
+          el.style.cssText = 'position:fixed;left:12px;bottom:70px;z-index:99999;max-width:440px;'
+            + 'background:#3a1216;border:1px solid #E5484D;border-radius:8px;color:#ffd7d7;'
+            + 'font:12px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;padding:10px 12px;'
+            + 'box-shadow:0 10px 30px rgba(0,0,0,.5)';
+          el.innerHTML = '<b style="color:#ff8a8f">⚠ KPI × PERFORMANCE SYNC LOCK GAGAL</b><br>'
+            + 'Alur MA/PA web ↔ sheet performance menyimpang. Lihat console (F12). '
+            + 'Jangan laporkan KPI sampai diperbaiki.';
+          document.body.appendChild(el);
+        }catch(_e){}
+      };
+      if(document.body) showBanner();
+      else document.addEventListener('DOMContentLoaded', showBanner);
+    } else {
+      console.info('[KPI-PERF SYNC LOCK] OK — rumus MA/PA & gate periode terverifikasi.');
+    }
+  }catch(e){
+    console.error('[KPI-PERF SYNC LOCK] Self-test gagal dijalankan:', e);
+  }
+})();
 
 /** Fallback pembagian minggu Agustus-style bila getMaintenancePeriods gagal. */
 function fallbackMaintenancePeriodsForMonth(year, monthNum){
@@ -17773,16 +18193,38 @@ async function syncMaintenanceKPIToSheet(opts){
         periods = fallbackMaintenancePeriodsForMonth(now.getFullYear(), now.getMonth()+1);
       }
 
-      // LOCK periode: HANYA minggu yang sudah selesai (end < hari ini).
-      // Contoh: W1 1–10 Sept → baru boleh sync mulai 11 Sept.
+      // Periode web (Performance filter): jika user set start+end → sync HANYA kolom minggu
+      // sheet Maintenance yang overlap dengan filter tersebut. Kosong = All Periods → semua
+      // minggu yang sudah jatuh tempo (end < hari ini).
+      const webStartEl = document.getElementById('unit-period-start');
+      const webEndEl = document.getElementById('unit-period-end');
+      const webStart = (webStartEl && webStartEl.value) ? String(webStartEl.value).slice(0,10) : '';
+      const webEnd = (webEndEl && webEndEl.value) ? String(webEndEl.value).slice(0,10) : '';
+      const hasWebPeriod = !!(webStart && webEnd);
+
       const today = toDateStr(new Date());
-      const toSync = periods.filter(p => p.end && String(p.end) < String(today));
-      if(!toSync.length){
+      let toSync = periods.filter(p => p.end && String(p.end) < String(today));
+      if(hasWebPeriod){
+        // Hanya minggu yang overlap filter web (start/end sheet Maintenance)
+        toSync = periods.filter(p=>{
+          if(!p.start || !p.end) return false;
+          const ps = String(p.start).slice(0,10);
+          const pe = String(p.end).slice(0,10);
+          // overlap: ps <= webEnd && pe >= webStart
+          return ps <= webEnd && pe >= webStart;
+        });
+        if(!toSync.length){
+          alert('ℹ Tidak ada kolom minggu di sheet Maintenance yang cocok dengan filter web.\n' +
+            'Filter: ' + webStart + ' s/d ' + webEnd + '\n' +
+            'Pilih rentang yang overlap W1–W4 di sheet Maintenance, atau klik ✕ All Periods.');
+          return { ok:true, synced:0, detail:[], noOverlap:true };
+        }
+      } else if(!toSync.length){
         const openOnes = periods.filter(p => p.start && (!p.end || String(p.end) >= String(today)))
           .map(p => (p.week||'') + ' ' + (p.month||'') + ' (sampai ' + (p.end||'?') + ')').join(', ');
         alert('ℹ Tidak ada periode yang sudah jatuh tempo.\n' +
-          'Kolom Acv./Score hanya diisi setelah tanggal akhir minggu lewat.\n' +
-          (openOnes ? ('Masih berjalan: ' + openOnes) : 'Tidak ada periode terbuka di cache.'));
+          'Tanpa filter web (All Periods), kolom Acv./Score hanya diisi setelah akhir minggu lewat.\n' +
+          (openOnes ? ('Masih berjalan: ' + openOnes) : 'Tidak ada periode di cache.'));
         return { ok:true, synced:0, detail:[], lockedOpenPeriods:true };
       }
 
@@ -18656,7 +19098,7 @@ document.getElementById('mapa-sync-kpi-btn')?.addEventListener('click', async fu
     try{ await ensurePerformanceSynced({ force:true }); }catch(_e){}
     await syncMaintenanceKPIToSheet({ force:true, manual:true });
   }finally{
-    if(btn){ btn.disabled = false; btn.textContent = '☁ Sync KPI → Sheet Maintenance'; }
+    if(btn){ btn.disabled = false; btn.textContent = btn.getAttribute('data-label') || '☁ Auto Sync KPI → Maintenance'; }
   }
 });
 
@@ -19625,135 +20067,135 @@ function initCBMFilters(){
 /** Safety Critical / Defined Life Parts — sumber manual OM per model unit. */
 const CBM_SAFETY_PARTS = {
   'WA500-6R': [
-    { no:1,  name:'Fuel hose (fuel tank - water separator)', qty:1, interval:'Every 2 years or every 4000 hours, whichever comes first', targetHm:4000, targetYears:2 },
-    { no:2,  name:'Fuel hose (water separator - fuel pre-filter)', qty:1, interval:'Every 2 years or every 4000 hours, whichever comes first', targetHm:4000, targetYears:2 },
-    { no:3,  name:'Fuel hose (fuel pre-filter - electric priming pump)', qty:1, interval:'Every 2 years or every 4000 hours, whichever comes first', targetHm:4000, targetYears:2 },
-    { no:4,  name:'Fuel hose (feed pump - controller cooling)', qty:1, interval:'Every 2 years or every 4000 hours, whichever comes first', targetHm:4000, targetYears:2 },
-    { no:5,  name:'Fuel hose (controller cooling - fuel filter)', qty:1, interval:'Every 2 years or every 4000 hours, whichever comes first', targetHm:4000, targetYears:2 },
-    { no:6,  name:'Fuel hose (fuel injection pump return)', qty:1, interval:'Every 2 years or every 4000 hours, whichever comes first', targetHm:4000, targetYears:2 },
-    { no:7,  name:'Fuel hose (fuel spill return)', qty:1, interval:'Every 2 years or every 4000 hours, whichever comes first', targetHm:4000, targetYears:2 },
-    { no:8,  name:'Steering hose (pump - steering valve)', qty:1, interval:'Every 2 years or every 4000 hours, whichever comes first', targetHm:4000, targetYears:2 },
-    { no:9,  name:'Steering hose (steering valve - joint)', qty:2, interval:'Every 2 years or every 4000 hours, whichever comes first', targetHm:4000, targetYears:2 },
-    { no:10, name:'Steering hose (joint - steering cylinder)', qty:4, interval:'Every 2 years or every 4000 hours, whichever comes first', targetHm:4000, targetYears:2 },
-    { no:11, name:'Steering hose (steering valve - stop valve)', qty:2, interval:'Every 2 years or every 4000 hours, whichever comes first', targetHm:4000, targetYears:2 },
-    { no:12, name:'Steering hose (orbital valve - stop valve)', qty:2, interval:'Every 2 years or every 4000 hours, whichever comes first', targetHm:4000, targetYears:2 },
-    { no:13, name:'Steering hose (orbital valve - charge valve)', qty:1, interval:'Every 2 years or every 4000 hours, whichever comes first', targetHm:4000, targetYears:2 },
-    { no:14, name:'Steering hose (orbital valve - joint to tank)', qty:1, interval:'Every 2 years or every 4000 hours, whichever comes first', targetHm:4000, targetYears:2 },
-    { no:15, name:'Brake hose (pump - accumulator charge valve)', qty:2, interval:'Every 2 years or every 4000 hours, whichever comes first', targetHm:4000, targetYears:2 },
-    { no:16, name:'Brake hose (accumulator charge valve - accumulator)', qty:2, interval:'Every 2 years or every 4000 hours, whichever comes first', targetHm:4000, targetYears:2 },
-    { no:17, name:'Brake hose (accumulator - brake valve)', qty:4, interval:'Every 2 years or every 4000 hours, whichever comes first', targetHm:4000, targetYears:2 },
-    { no:18, name:'Brake hose (brake valve - front brake)', qty:3, interval:'Every 2 years or every 4000 hours, whichever comes first', targetHm:4000, targetYears:2 },
-    { no:19, name:'Brake hose (brake valve - rear brake)', qty:4, interval:'Every 2 years or every 4000 hours, whichever comes first', targetHm:4000, targetYears:2 },
-    { no:20, name:'Brake hose (brake valve - hydraulic tank)', qty:1, interval:'Every 2 years or every 4000 hours, whichever comes first', targetHm:4000, targetYears:2 },
-    { no:21, name:'Brake hose (brake accumulator - reduction valve for emergency parking brake cancel)', qty:1, interval:'Every 2 years or every 4000 hours, whichever comes first', targetHm:4000, targetYears:2 },
-    { no:22, name:'Brake hose (transmission valve - reduction valve)', qty:1, interval:'Every 2 years or every 4000 hours, whichever comes first', targetHm:4000, targetYears:2 },
-    { no:23, name:'Brake hose (reduction valve - parking brake chamber)', qty:1, interval:'Every 2 years or every 4000 hours, whichever comes first', targetHm:4000, targetYears:2 },
-    { no:24, name:'Brake hose (reduction valve - charge valve drain)', qty:1, interval:'Every 2 years or every 4000 hours, whichever comes first', targetHm:4000, targetYears:2 },
-    { no:25, name:'Accumulator (for PPC)', qty:2, interval:'Every 2 years or every 4000 hours, whichever comes first', targetHm:4000, targetYears:2 },
-    { no:26, name:'Alarm', qty:2, interval:'Every 2 years or every 4000 hours, whichever comes first', targetHm:4000, targetYears:2 },
-    { no:27, name:'High-pressure piping clamp', qty:15, interval:'Every 8000 hours', targetHm:8000, targetYears:null },
-    { no:28, name:'Fuel spray prevention cap', qty:16, interval:'Every 8000 hours', targetHm:8000, targetYears:null },
+    { no:1,  name:'Fuel hose (fuel tank - water separator)', qty:1, interval:'Every 2 years or every 8000 hours, whichever comes first', targetHm:8000, targetYears:2 },
+    { no:2,  name:'Fuel hose (water separator - fuel pre-filter)', qty:1, interval:'Every 2 years or every 8000 hours, whichever comes first', targetHm:8000, targetYears:2 },
+    { no:3,  name:'Fuel hose (fuel pre-filter - electric priming pump)', qty:1, interval:'Every 2 years or every 8000 hours, whichever comes first', targetHm:8000, targetYears:2 },
+    { no:4,  name:'Fuel hose (feed pump - controller cooling)', qty:1, interval:'Every 2 years or every 8000 hours, whichever comes first', targetHm:8000, targetYears:2 },
+    { no:5,  name:'Fuel hose (controller cooling - fuel filter)', qty:1, interval:'Every 2 years or every 8000 hours, whichever comes first', targetHm:8000, targetYears:2 },
+    { no:6,  name:'Fuel hose (fuel injection pump return)', qty:1, interval:'Every 2 years or every 8000 hours, whichever comes first', targetHm:8000, targetYears:2 },
+    { no:7,  name:'Fuel hose (fuel spill return)', qty:1, interval:'Every 2 years or every 8000 hours, whichever comes first', targetHm:8000, targetYears:2 },
+    { no:8,  name:'Steering hose (pump - steering valve)', qty:1, interval:'Every 2 years or every 8000 hours, whichever comes first', targetHm:8000, targetYears:2 },
+    { no:9,  name:'Steering hose (steering valve - joint)', qty:2, interval:'Every 2 years or every 8000 hours, whichever comes first', targetHm:8000, targetYears:2 },
+    { no:10, name:'Steering hose (joint - steering cylinder)', qty:4, interval:'Every 2 years or every 8000 hours, whichever comes first', targetHm:8000, targetYears:2 },
+    { no:11, name:'Steering hose (steering valve - stop valve)', qty:2, interval:'Every 2 years or every 8000 hours, whichever comes first', targetHm:8000, targetYears:2 },
+    { no:12, name:'Steering hose (orbital valve - stop valve)', qty:2, interval:'Every 2 years or every 8000 hours, whichever comes first', targetHm:8000, targetYears:2 },
+    { no:13, name:'Steering hose (orbital valve - charge valve)', qty:1, interval:'Every 2 years or every 8000 hours, whichever comes first', targetHm:8000, targetYears:2 },
+    { no:14, name:'Steering hose (orbital valve - joint to tank)', qty:1, interval:'Every 2 years or every 8000 hours, whichever comes first', targetHm:8000, targetYears:2 },
+    { no:15, name:'Brake hose (pump - accumulator charge valve)', qty:2, interval:'Every 2 years or every 8000 hours, whichever comes first', targetHm:8000, targetYears:2 },
+    { no:16, name:'Brake hose (accumulator charge valve - accumulator)', qty:2, interval:'Every 2 years or every 8000 hours, whichever comes first', targetHm:8000, targetYears:2 },
+    { no:17, name:'Brake hose (accumulator - brake valve)', qty:4, interval:'Every 2 years or every 8000 hours, whichever comes first', targetHm:8000, targetYears:2 },
+    { no:18, name:'Brake hose (brake valve - front brake)', qty:3, interval:'Every 2 years or every 8000 hours, whichever comes first', targetHm:8000, targetYears:2 },
+    { no:19, name:'Brake hose (brake valve - rear brake)', qty:4, interval:'Every 2 years or every 8000 hours, whichever comes first', targetHm:8000, targetYears:2 },
+    { no:20, name:'Brake hose (brake valve - hydraulic tank)', qty:1, interval:'Every 2 years or every 8000 hours, whichever comes first', targetHm:8000, targetYears:2 },
+    { no:21, name:'Brake hose (brake accumulator - reduction valve for emergency parking brake cancel)', qty:1, interval:'Every 2 years or every 8000 hours, whichever comes first', targetHm:8000, targetYears:2 },
+    { no:22, name:'Brake hose (transmission valve - reduction valve)', qty:1, interval:'Every 2 years or every 8000 hours, whichever comes first', targetHm:8000, targetYears:2 },
+    { no:23, name:'Brake hose (reduction valve - parking brake chamber)', qty:1, interval:'Every 2 years or every 8000 hours, whichever comes first', targetHm:8000, targetYears:2 },
+    { no:24, name:'Brake hose (reduction valve - charge valve drain)', qty:1, interval:'Every 2 years or every 8000 hours, whichever comes first', targetHm:8000, targetYears:2 },
+    { no:25, name:'Accumulator (for PPC)', qty:2, interval:'Every 2 years or every 8000 hours, whichever comes first', targetHm:8000, targetYears:2 },
+    { no:26, name:'Alarm', qty:2, interval:'Every 2 years or every 8000 hours, whichever comes first', targetHm:8000, targetYears:2 },
+    { no:27, name:'High-pressure piping clamp', qty:15, interval:'every 12,000 hours', targetHm:12000, targetYears:null },
+    { no:28, name:'Fuel spray prevention cap', qty:16, interval:'every 12,000 hours', targetHm:12000, targetYears:null },
     { no:29, name:'Seat belt', qty:1, interval:'Every 3 years', targetHm:null, targetYears:3 },
     /* —— Critical Hydraulic Hose List (recommended lifetime) —— */
-    { no:30, name:'Main Pump Delivery Hose', location:'Hydraulic pump → main control valve', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:31, name:'Main Pump Suction Hose', location:'Hydraulic tank → main pump', qty:1, interval:'Recommended lifetime 10,000 HM', targetHm:10000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:32, name:'Main Pump Return Hose', location:'System → hydraulic tank', qty:1, interval:'Recommended lifetime 10,000 HM', targetHm:10000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:33, name:'Lift Cylinder Head Hose', location:'Control valve → lift cylinder', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:34, name:'Lift Cylinder Rod Hose', location:'Control valve → lift cylinder', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:35, name:'Tilt Cylinder Head Hose', location:'Control valve → tilt cylinder', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:36, name:'Tilt Cylinder Rod Hose', location:'Control valve → tilt cylinder', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:37, name:'Steering Cylinder Hose LH', location:'Steering system → LH cylinder', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:38, name:'Steering Cylinder Hose RH', location:'Steering system → RH cylinder', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:39, name:'Steering Pump Pressure Hose', location:'Steering pump → steering valve', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:40, name:'Steering Return Hose', location:'Steering valve → tank', qty:1, interval:'Recommended lifetime 10,000 HM', targetHm:10000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:41, name:'Pilot Pressure Hose', location:'Pilot pump → pilot/control system', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:42, name:'Pilot Return Hose', location:'Pilot system → tank', qty:1, interval:'Recommended lifetime 10,000 HM', targetHm:10000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:43, name:'Hydraulic Cooler Inlet Hose', location:'Hydraulic system → oil cooler', qty:1, interval:'Recommended lifetime 10,000 HM', targetHm:10000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:44, name:'Hydraulic Cooler Outlet Hose', location:'Oil cooler → hydraulic tank/system', qty:1, interval:'Recommended lifetime 10,000 HM', targetHm:10000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:45, name:'Quick Coupler / Attachment Hose', location:'Auxiliary hydraulic line', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' }
+    { no:30, name:'Main Pump Delivery Hose', location:'Hydraulic pump → main control valve', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:31, name:'Main Pump Suction Hose', location:'Hydraulic tank → main pump', qty:1, interval:'Recommended lifetime 15,000 HM', targetHm:15000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:32, name:'Main Pump Return Hose', location:'System → hydraulic tank', qty:1, interval:'Recommended lifetime 15,000 HM', targetHm:15000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:33, name:'Lift Cylinder Head Hose', location:'Control valve → lift cylinder', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:34, name:'Lift Cylinder Rod Hose', location:'Control valve → lift cylinder', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:35, name:'Tilt Cylinder Head Hose', location:'Control valve → tilt cylinder', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:36, name:'Tilt Cylinder Rod Hose', location:'Control valve → tilt cylinder', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:37, name:'Steering Cylinder Hose LH', location:'Steering system → LH cylinder', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:38, name:'Steering Cylinder Hose RH', location:'Steering system → RH cylinder', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:39, name:'Steering Pump Pressure Hose', location:'Steering pump → steering valve', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:40, name:'Steering Return Hose', location:'Steering valve → tank', qty:1, interval:'Recommended lifetime 15,000 HM', targetHm:15000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:41, name:'Pilot Pressure Hose', location:'Pilot pump → pilot/control system', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:42, name:'Pilot Return Hose', location:'Pilot system → tank', qty:1, interval:'Recommended lifetime 15,000 HM', targetHm:15000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:43, name:'Hydraulic Cooler Inlet Hose', location:'Hydraulic system → oil cooler', qty:1, interval:'Recommended lifetime 15,000 HM', targetHm:15000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:44, name:'Hydraulic Cooler Outlet Hose', location:'Oil cooler → hydraulic tank/system', qty:1, interval:'Recommended lifetime 15,000 HM', targetHm:15000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:45, name:'Quick Coupler / Attachment Hose', location:'Auxiliary hydraulic line', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' }
   ],
   'D85ESS-2A': [
-    { no:1,  name:'Fuel hose (fuel tank - injection pump)', qty:1, interval:'Every 2 years or 4000 hours, whichever comes sooner', targetHm:4000, targetYears:2 },
-    { no:2,  name:'Fuel hose (injection pump - fuel filter)', qty:2, interval:'Every 2 years or 4000 hours, whichever comes sooner', targetHm:4000, targetYears:2 },
-    { no:3,  name:'Fuel return hose (injection pump - fuel tank)', qty:1, interval:'Every 2 years or 4000 hours, whichever comes sooner', targetHm:4000, targetYears:2 },
-    { no:4,  name:'Fuel return hose (injection nozzle - fuel tank)', qty:1, interval:'Every 2 years or 4000 hours, whichever comes sooner', targetHm:4000, targetYears:2 },
-    { no:5,  name:'Hose (power train strainer - power train pump)', qty:1, interval:'Every 2 years or 4000 hours, whichever comes sooner', targetHm:4000, targetYears:2 },
-    { no:6,  name:'Hose (power train pump - power train filter)', qty:1, interval:'Every 2 years or 4000 hours, whichever comes sooner', targetHm:4000, targetYears:2 },
-    { no:7,  name:'Hose (power train filter - transmission case)', qty:1, interval:'Every 2 years or 4000 hours, whichever comes sooner', targetHm:4000, targetYears:2 },
-    { no:8,  name:'Hose (transmission case - steering case)', qty:1, interval:'Every 2 years or 4000 hours, whichever comes sooner', targetHm:4000, targetYears:2 },
-    { no:9,  name:'Hose (power train lubrication pump - steering case)', qty:1, interval:'Every 2 years or 4000 hours, whichever comes sooner', targetHm:4000, targetYears:2 },
-    { no:10, name:'Hose (Scavenging pump - Steering case)', qty:1, interval:'Every 2 years or 4000 hours, whichever comes sooner', targetHm:4000, targetYears:2 },
-    { no:11, name:'Hose (torque converter case - transmission oil cooler)', qty:1, interval:'Every 2 years or 4000 hours, whichever comes sooner', targetHm:4000, targetYears:2 },
-    { no:12, name:'Hose (transmission oil cooler - transmission case)', qty:1, interval:'Every 2 years or 4000 hours, whichever comes sooner', targetHm:4000, targetYears:2 },
-    { no:13, name:'Brake pressure detection hose', qty:2, interval:'Every 2 years or 4000 hours, whichever comes sooner', targetHm:4000, targetYears:2 },
-    { no:14, name:'Steering clutch pressure detection hose', qty:2, interval:'Every 2 years or 4000 hours, whichever comes sooner', targetHm:4000, targetYears:2 },
-    { no:15, name:'Torque converter inlet post pressure detection hose', qty:1, interval:'Every 2 years or 4000 hours, whichever comes sooner', targetHm:4000, targetYears:2 },
-    { no:16, name:'Torque converter outlet post pressure detection hose', qty:1, interval:'Every 2 years or 4000 hours, whichever comes sooner', targetHm:4000, targetYears:2 },
-    { no:17, name:'Transmission modulation pressure detection hose', qty:1, interval:'Every 2 years or 4000 hours, whichever comes sooner', targetHm:4000, targetYears:2 },
+    { no:1,  name:'Fuel hose (fuel tank - injection pump)', qty:1, interval:'Every 2 years or 8000 hours, whichever comes sooner', targetHm:8000, targetYears:2 },
+    { no:2,  name:'Fuel hose (injection pump - fuel filter)', qty:2, interval:'Every 2 years or 8000 hours, whichever comes sooner', targetHm:8000, targetYears:2 },
+    { no:3,  name:'Fuel return hose (injection pump - fuel tank)', qty:1, interval:'Every 2 years or 8000 hours, whichever comes sooner', targetHm:8000, targetYears:2 },
+    { no:4,  name:'Fuel return hose (injection nozzle - fuel tank)', qty:1, interval:'Every 2 years or 8000 hours, whichever comes sooner', targetHm:8000, targetYears:2 },
+    { no:5,  name:'Hose (power train strainer - power train pump)', qty:1, interval:'Every 2 years or 8000 hours, whichever comes sooner', targetHm:8000, targetYears:2 },
+    { no:6,  name:'Hose (power train pump - power train filter)', qty:1, interval:'Every 2 years or 8000 hours, whichever comes sooner', targetHm:8000, targetYears:2 },
+    { no:7,  name:'Hose (power train filter - transmission case)', qty:1, interval:'Every 2 years or 8000 hours, whichever comes sooner', targetHm:8000, targetYears:2 },
+    { no:8,  name:'Hose (transmission case - steering case)', qty:1, interval:'Every 2 years or 8000 hours, whichever comes sooner', targetHm:8000, targetYears:2 },
+    { no:9,  name:'Hose (power train lubrication pump - steering case)', qty:1, interval:'Every 2 years or 8000 hours, whichever comes sooner', targetHm:8000, targetYears:2 },
+    { no:10, name:'Hose (Scavenging pump - Steering case)', qty:1, interval:'Every 2 years or 8000 hours, whichever comes sooner', targetHm:8000, targetYears:2 },
+    { no:11, name:'Hose (torque converter case - transmission oil cooler)', qty:1, interval:'Every 2 years or 8000 hours, whichever comes sooner', targetHm:8000, targetYears:2 },
+    { no:12, name:'Hose (transmission oil cooler - transmission case)', qty:1, interval:'Every 2 years or 8000 hours, whichever comes sooner', targetHm:8000, targetYears:2 },
+    { no:13, name:'Brake pressure detection hose', qty:2, interval:'Every 2 years or 8000 hours, whichever comes sooner', targetHm:8000, targetYears:2 },
+    { no:14, name:'Steering clutch pressure detection hose', qty:2, interval:'Every 2 years or 8000 hours, whichever comes sooner', targetHm:8000, targetYears:2 },
+    { no:15, name:'Torque converter inlet post pressure detection hose', qty:1, interval:'Every 2 years or 8000 hours, whichever comes sooner', targetHm:8000, targetYears:2 },
+    { no:16, name:'Torque converter outlet post pressure detection hose', qty:1, interval:'Every 2 years or 8000 hours, whichever comes sooner', targetHm:8000, targetYears:2 },
+    { no:17, name:'Transmission modulation pressure detection hose', qty:1, interval:'Every 2 years or 8000 hours, whichever comes sooner', targetHm:8000, targetYears:2 },
     { no:18, name:'Seat belt', qty:1, interval:'Replace 3 years', targetHm:null, targetYears:3 },
     /* —— Critical Hydraulic Hose List (recommended lifetime) —— */
-    { no:19, name:'Hydraulic Pump Delivery Hose', location:'Main pump → control valve', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:20, name:'Hydraulic Pump Suction Hose', location:'Tank → hydraulic pump', qty:1, interval:'Recommended lifetime 10,000 HM', targetHm:10000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:21, name:'Hydraulic Pump Return Hose', location:'Hydraulic system → tank', qty:1, interval:'Recommended lifetime 10,000 HM', targetHm:10000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:22, name:'Blade Lift Cylinder Hose LH Head', location:'Control valve → LH lift cylinder', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:23, name:'Blade Lift Cylinder Hose LH Rod', location:'Control valve → LH lift cylinder', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:24, name:'Blade Lift Cylinder Hose RH Head', location:'Control valve → RH lift cylinder', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:25, name:'Blade Lift Cylinder Hose RH Rod', location:'Control valve → RH lift cylinder', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:26, name:'Blade Tilt Cylinder Head Hose', location:'Control valve → tilt cylinder', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:27, name:'Blade Tilt Cylinder Rod Hose', location:'Control valve → tilt cylinder', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:28, name:'Steering Pressure Hose', location:'Steering pump → steering control', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:29, name:'Steering Return Hose', location:'Steering system → tank', qty:1, interval:'Recommended lifetime 10,000 HM', targetHm:10000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:30, name:'Pilot Pressure Hose', location:'Pilot pump → pilot valve', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:31, name:'Pilot Return Hose', location:'Pilot system → tank', qty:1, interval:'Recommended lifetime 10,000 HM', targetHm:10000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:32, name:'Hydraulic Cooler Inlet Hose', location:'System → cooler', qty:1, interval:'Recommended lifetime 10,000 HM', targetHm:10000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:33, name:'Hydraulic Cooler Outlet Hose', location:'Cooler → tank', qty:1, interval:'Recommended lifetime 10,000 HM', targetHm:10000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:34, name:'Ripper Hydraulic Pressure Hose', location:'Control valve → ripper cylinder (if equipped)', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:35, name:'Ripper Hydraulic Return Hose', location:'Ripper cylinder → control valve (if equipped)', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' }
+    { no:19, name:'Hydraulic Pump Delivery Hose', location:'Main pump → control valve', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:20, name:'Hydraulic Pump Suction Hose', location:'Tank → hydraulic pump', qty:1, interval:'Recommended lifetime 15,000 HM', targetHm:15000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:21, name:'Hydraulic Pump Return Hose', location:'Hydraulic system → tank', qty:1, interval:'Recommended lifetime 15,000 HM', targetHm:15000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:22, name:'Blade Lift Cylinder Hose LH Head', location:'Control valve → LH lift cylinder', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:23, name:'Blade Lift Cylinder Hose LH Rod', location:'Control valve → LH lift cylinder', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:24, name:'Blade Lift Cylinder Hose RH Head', location:'Control valve → RH lift cylinder', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:25, name:'Blade Lift Cylinder Hose RH Rod', location:'Control valve → RH lift cylinder', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:26, name:'Blade Tilt Cylinder Head Hose', location:'Control valve → tilt cylinder', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:27, name:'Blade Tilt Cylinder Rod Hose', location:'Control valve → tilt cylinder', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:28, name:'Steering Pressure Hose', location:'Steering pump → steering control', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:29, name:'Steering Return Hose', location:'Steering system → tank', qty:1, interval:'Recommended lifetime 15,000 HM', targetHm:15000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:30, name:'Pilot Pressure Hose', location:'Pilot pump → pilot valve', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:31, name:'Pilot Return Hose', location:'Pilot system → tank', qty:1, interval:'Recommended lifetime 15,000 HM', targetHm:15000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:32, name:'Hydraulic Cooler Inlet Hose', location:'System → cooler', qty:1, interval:'Recommended lifetime 15,000 HM', targetHm:15000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:33, name:'Hydraulic Cooler Outlet Hose', location:'Cooler → tank', qty:1, interval:'Recommended lifetime 15,000 HM', targetHm:15000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:34, name:'Ripper Hydraulic Pressure Hose', location:'Control valve → ripper cylinder (if equipped)', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:35, name:'Ripper Hydraulic Return Hose', location:'Ripper cylinder → control valve (if equipped)', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' }
   ],
   'PC210-10MO': [
-    { no:1,  name:'Fuel system — Fuel hose', qty:1, interval:'Every 2 years or 4000 hours, whichever comes sooner', targetHm:4000, targetYears:2, group:'Fuel system' },
-    { no:2,  name:'Fuel system — Spill hose', qty:1, interval:'Every 2 years or 4000 hours, whichever comes sooner', targetHm:4000, targetYears:2, group:'Fuel system' },
-    { no:3,  name:'Engine lubrication system — Turbocharger lubrication hose', qty:1, interval:'Every 2 years or 4000 hours, whichever comes sooner', targetHm:4000, targetYears:2, group:'Engine lubrication system' },
-    { no:4,  name:'Engine lubrication system — Engine oil filter hose', qty:1, interval:'Every 2 years or 4000 hours, whichever comes sooner', targetHm:4000, targetYears:2, group:'Engine lubrication system' },
-    { no:5,  name:'Work equipment hydraulic — Main pump delivery hose', qty:1, interval:'Every 2 years or 4000 hours, whichever comes sooner', targetHm:4000, targetYears:2, group:'Work equipment hydraulic system' },
-    { no:6,  name:'Work equipment hydraulic — Pump delivery hose', qty:1, interval:'Every 2 years or 4000 hours, whichever comes sooner', targetHm:4000, targetYears:2, group:'Work equipment hydraulic system' },
-    { no:7,  name:'Work equipment hydraulic — Pump branch hose', qty:1, interval:'Every 2 years or 4000 hours, whichever comes sooner', targetHm:4000, targetYears:2, group:'Work equipment hydraulic system' },
-    { no:8,  name:'Work equipment hydraulic — Main pump LS hose', qty:1, interval:'Every 2 years or 4000 hours, whichever comes sooner', targetHm:4000, targetYears:2, group:'Work equipment hydraulic system' },
-    { no:9,  name:'Work equipment hydraulic — Boom foot connection hose', qty:1, interval:'Every 2 years or 4000 hours, whichever comes sooner', targetHm:4000, targetYears:2, group:'Work equipment hydraulic system' },
-    { no:10, name:'Work equipment hydraulic — Boom cylinder hose', qty:1, interval:'Every 2 years or 4000 hours, whichever comes sooner', targetHm:4000, targetYears:2, group:'Work equipment hydraulic system' },
-    { no:11, name:'Work equipment hydraulic — Arm connection hose', qty:1, interval:'Every 2 years or 4000 hours, whichever comes sooner', targetHm:4000, targetYears:2, group:'Work equipment hydraulic system' },
-    { no:12, name:'Work equipment hydraulic — Arm cylinder hose', qty:1, interval:'Every 2 years or 4000 hours, whichever comes sooner', targetHm:4000, targetYears:2, group:'Work equipment hydraulic system' },
-    { no:13, name:'Work equipment hydraulic — Attachment additional line hose', qty:1, interval:'Every 2 years or 4000 hours, whichever comes sooner', targetHm:4000, targetYears:2, group:'Work equipment hydraulic system' },
-    { no:14, name:'Others — PPC accumulator', qty:1, interval:'Every 2 years or 4000 hours, whichever comes sooner', targetHm:4000, targetYears:2, group:'Others' },
-    { no:15, name:'Others — Attachment additional accumulator', qty:1, interval:'Every 2 years or 4000 hours, whichever comes sooner', targetHm:4000, targetYears:2, group:'Others' },
+    { no:1,  name:'Fuel system — Fuel hose', qty:1, interval:'Every 2 years or 8000 hours, whichever comes sooner', targetHm:8000, targetYears:2, group:'Fuel system' },
+    { no:2,  name:'Fuel system — Spill hose', qty:1, interval:'Every 2 years or 8000 hours, whichever comes sooner', targetHm:8000, targetYears:2, group:'Fuel system' },
+    { no:3,  name:'Engine lubrication system — Turbocharger lubrication hose', qty:1, interval:'Every 2 years or 8000 hours, whichever comes sooner', targetHm:8000, targetYears:2, group:'Engine lubrication system' },
+    { no:4,  name:'Engine lubrication system — Engine oil filter hose', qty:1, interval:'Every 2 years or 8000 hours, whichever comes sooner', targetHm:8000, targetYears:2, group:'Engine lubrication system' },
+    { no:5,  name:'Work equipment hydraulic — Main pump delivery hose', qty:1, interval:'Every 2 years or 8000 hours, whichever comes sooner', targetHm:8000, targetYears:2, group:'Work equipment hydraulic system' },
+    { no:6,  name:'Work equipment hydraulic — Pump delivery hose', qty:1, interval:'Every 2 years or 8000 hours, whichever comes sooner', targetHm:8000, targetYears:2, group:'Work equipment hydraulic system' },
+    { no:7,  name:'Work equipment hydraulic — Pump branch hose', qty:1, interval:'Every 2 years or 8000 hours, whichever comes sooner', targetHm:8000, targetYears:2, group:'Work equipment hydraulic system' },
+    { no:8,  name:'Work equipment hydraulic — Main pump LS hose', qty:1, interval:'Every 2 years or 8000 hours, whichever comes sooner', targetHm:8000, targetYears:2, group:'Work equipment hydraulic system' },
+    { no:9,  name:'Work equipment hydraulic — Boom foot connection hose', qty:1, interval:'Every 2 years or 8000 hours, whichever comes sooner', targetHm:8000, targetYears:2, group:'Work equipment hydraulic system' },
+    { no:10, name:'Work equipment hydraulic — Boom cylinder hose', qty:1, interval:'Every 2 years or 8000 hours, whichever comes sooner', targetHm:8000, targetYears:2, group:'Work equipment hydraulic system' },
+    { no:11, name:'Work equipment hydraulic — Arm connection hose', qty:1, interval:'Every 2 years or 8000 hours, whichever comes sooner', targetHm:8000, targetYears:2, group:'Work equipment hydraulic system' },
+    { no:12, name:'Work equipment hydraulic — Arm cylinder hose', qty:1, interval:'Every 2 years or 8000 hours, whichever comes sooner', targetHm:8000, targetYears:2, group:'Work equipment hydraulic system' },
+    { no:13, name:'Work equipment hydraulic — Attachment additional line hose', qty:1, interval:'Every 2 years or 8000 hours, whichever comes sooner', targetHm:8000, targetYears:2, group:'Work equipment hydraulic system' },
+    { no:14, name:'Others — PPC accumulator', qty:1, interval:'Every 2 years or 8000 hours, whichever comes sooner', targetHm:8000, targetYears:2, group:'Others' },
+    { no:15, name:'Others — Attachment additional accumulator', qty:1, interval:'Every 2 years or 8000 hours, whichever comes sooner', targetHm:8000, targetYears:2, group:'Others' },
     { no:16, name:'Others — Seat belt', qty:1, interval:'Every 3 years from start of usage or 5 years after manufacturing of seat belt, whichever comes sooner', targetHm:null, targetYears:3, group:'Others' },
     /* —— Critical Hydraulic Hose List (recommended lifetime) —— */
-    { no:17, name:'Main Pump Delivery Hose #1', location:'Main pump → main control valve', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:18, name:'Main Pump Delivery Hose #2', location:'Main pump → main control valve', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:19, name:'Main Pump Suction Hose #1', location:'Tank → pump', qty:1, interval:'Recommended lifetime 10,000 HM', targetHm:10000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:20, name:'Main Pump Suction Hose #2', location:'Tank → pump', qty:1, interval:'Recommended lifetime 10,000 HM', targetHm:10000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:21, name:'Main Pump Return Hose', location:'Hydraulic system → tank', qty:1, interval:'Recommended lifetime 10,000 HM', targetHm:10000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:22, name:'Boom Cylinder Head Hose LH', location:'Control valve → boom cylinder', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:23, name:'Boom Cylinder Rod Hose LH', location:'Control valve → boom cylinder', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:24, name:'Boom Cylinder Head Hose RH', location:'Control valve → boom cylinder', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:25, name:'Boom Cylinder Rod Hose RH', location:'Control valve → boom cylinder', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:26, name:'Arm Cylinder Head Hose', location:'Control valve → arm cylinder', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:27, name:'Arm Cylinder Rod Hose', location:'Control valve → arm cylinder', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:28, name:'Bucket Cylinder Head Hose', location:'Control valve → bucket cylinder', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:29, name:'Bucket Cylinder Rod Hose', location:'Control valve → bucket cylinder', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:30, name:'Swing Motor Pressure Hose', location:'Control valve → swing motor', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:31, name:'Swing Motor Return Hose', location:'Swing motor → hydraulic return', qty:1, interval:'Recommended lifetime 10,000 HM', targetHm:10000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:32, name:'Travel Motor LH Pressure Hose', location:'Control valve → LH travel motor', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:33, name:'Travel Motor LH Return Hose', location:'LH travel motor → return', qty:1, interval:'Recommended lifetime 10,000 HM', targetHm:10000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:34, name:'Travel Motor RH Pressure Hose', location:'Control valve → RH travel motor', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:35, name:'Travel Motor RH Return Hose', location:'RH travel motor → return', qty:1, interval:'Recommended lifetime 10,000 HM', targetHm:10000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:36, name:'Pilot Pump Pressure Hose', location:'Pilot pump → pilot system', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:37, name:'Pilot Control Hose', location:'Pilot valve → control system', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:38, name:'Pilot Return Hose', location:'Pilot system → tank', qty:1, interval:'Recommended lifetime 10,000 HM', targetHm:10000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:39, name:'Hydraulic Cooler Inlet Hose', location:'System → oil cooler', qty:1, interval:'Recommended lifetime 10,000 HM', targetHm:10000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:40, name:'Hydraulic Cooler Outlet Hose', location:'Oil cooler → tank/system', qty:1, interval:'Recommended lifetime 10,000 HM', targetHm:10000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:41, name:'Attachment / Breaker Pressure Hose', location:'Auxiliary circuit (if equipped)', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' },
-    { no:42, name:'Attachment / Breaker Return Hose', location:'Auxiliary circuit (if equipped)', qty:1, interval:'Recommended lifetime 8,000 HM', targetHm:8000, targetYears:null, group:'Critical Hydraulic Hose' }
+    { no:17, name:'Main Pump Delivery Hose #1', location:'Main pump → main control valve', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:18, name:'Main Pump Delivery Hose #2', location:'Main pump → main control valve', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:19, name:'Main Pump Suction Hose #1', location:'Tank → pump', qty:1, interval:'Recommended lifetime 15,000 HM', targetHm:15000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:20, name:'Main Pump Suction Hose #2', location:'Tank → pump', qty:1, interval:'Recommended lifetime 15,000 HM', targetHm:15000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:21, name:'Main Pump Return Hose', location:'Hydraulic system → tank', qty:1, interval:'Recommended lifetime 15,000 HM', targetHm:15000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:22, name:'Boom Cylinder Head Hose LH', location:'Control valve → boom cylinder', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:23, name:'Boom Cylinder Rod Hose LH', location:'Control valve → boom cylinder', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:24, name:'Boom Cylinder Head Hose RH', location:'Control valve → boom cylinder', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:25, name:'Boom Cylinder Rod Hose RH', location:'Control valve → boom cylinder', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:26, name:'Arm Cylinder Head Hose', location:'Control valve → arm cylinder', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:27, name:'Arm Cylinder Rod Hose', location:'Control valve → arm cylinder', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:28, name:'Bucket Cylinder Head Hose', location:'Control valve → bucket cylinder', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:29, name:'Bucket Cylinder Rod Hose', location:'Control valve → bucket cylinder', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:30, name:'Swing Motor Pressure Hose', location:'Control valve → swing motor', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:31, name:'Swing Motor Return Hose', location:'Swing motor → hydraulic return', qty:1, interval:'Recommended lifetime 15,000 HM', targetHm:15000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:32, name:'Travel Motor LH Pressure Hose', location:'Control valve → LH travel motor', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:33, name:'Travel Motor LH Return Hose', location:'LH travel motor → return', qty:1, interval:'Recommended lifetime 15,000 HM', targetHm:15000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:34, name:'Travel Motor RH Pressure Hose', location:'Control valve → RH travel motor', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:35, name:'Travel Motor RH Return Hose', location:'RH travel motor → return', qty:1, interval:'Recommended lifetime 15,000 HM', targetHm:15000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:36, name:'Pilot Pump Pressure Hose', location:'Pilot pump → pilot system', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:37, name:'Pilot Control Hose', location:'Pilot valve → control system', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:38, name:'Pilot Return Hose', location:'Pilot system → tank', qty:1, interval:'Recommended lifetime 15,000 HM', targetHm:15000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:39, name:'Hydraulic Cooler Inlet Hose', location:'System → oil cooler', qty:1, interval:'Recommended lifetime 15,000 HM', targetHm:15000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:40, name:'Hydraulic Cooler Outlet Hose', location:'Oil cooler → tank/system', qty:1, interval:'Recommended lifetime 15,000 HM', targetHm:15000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:41, name:'Attachment / Breaker Pressure Hose', location:'Auxiliary circuit (if equipped)', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' },
+    { no:42, name:'Attachment / Breaker Return Hose', location:'Auxiliary circuit (if equipped)', qty:1, interval:'Recommended lifetime 12,000 HM', targetHm:12000, targetYears:null, group:'Critical Hydraulic Hose' }
   ]
 };
 
