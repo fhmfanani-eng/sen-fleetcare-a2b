@@ -17687,7 +17687,8 @@ function buildMaintenanceKpiItems(startStr, endStr){
     ? computeKPIsForRange(startStr, endStr)
     : { ma:0, pa:0, mtbs:0, mttr:0, pmr:0, sa:0 };
 
-  // MA/PA: SELALU dari performance (periode kolom = sheet Maintenance, bukan performance).
+  // MA/PA: dari performance HANYA bila periodenya cocok, kalau tidak dihitung
+  // ulang per-minggu dari HM (lihat resolveMaPaForWeek) — bukan snapshot statis.
   try{
     const mp = (typeof resolveMaPaForWeek==='function')
       ? resolveMaPaForWeek(startStr, endStr)
@@ -17734,15 +17735,22 @@ function buildMaintenanceKpiItems(startStr, endStr){
 function resolveMaPaForWeek(startStr, endStr){
   /* MA/PA untuk sync sheet Maintenance:
    * Periode kolom (W1–W4) HANYA dari header sheet Maintenance.
-   * Nilai MA/PA SELALU dari sheet performance bila ada (tidak digate periode performance).
+   * PERBAIKAN (bug: MA/PA sama di semua bulan/minggu): sheet performance
+   * hanya menyimpan SATU snapshot periode (mapaData.periodStart/periodEnd).
+   * Sebelumnya snapshot ini dipakai untuk SEMUA minggu tanpa cek periode →
+   * setiap minggu yang disinkron menulis angka performance yang sama persis.
+   * Sekarang snapshot performance HANYA dipakai jika periode minggu (startStr–
+   * endStr) benar-benar cocok/masuk ke periode snapshot tsb (performancePeriodMatches).
+   * Di luar itu, jatuh ke HM per-minggu (step 2) atau upload manual (step 3),
+   * yang keduanya memang dihitung ulang per rentang tanggal.
    */
-  // 1) PRIORITAS: sheet performance — abaikan cocok/tidaknya periode performance
+  // 1) Sheet performance — HANYA jika periode minggu ini cocok dgn periode snapshot performance
   try{
-    if(mapaData && mapaData.fromPerformance && mapaData.rows && mapaData.rows.length){
-      if(typeof maPaFromRows === 'function'){
-        const mp = maPaFromRows(mapaData.rows);
-        if(mp && ((Number(mp.ma)||0) > 0 || (Number(mp.pa)||0) > 0)) return mp;
-      }
+    if(performancePeriodMatches(startStr||null, endStr||null)
+        && mapaData && mapaData.rows && mapaData.rows.length
+        && typeof maPaFromRows === 'function'){
+      const mp = maPaFromRows(mapaData.rows);
+      if(mp && ((Number(mp.ma)||0) > 0 || (Number(mp.pa)||0) > 0)) return mp;
     }
   }catch(_e){}
 
@@ -17841,6 +17849,49 @@ async function syncMaintenanceKPIToSheet(opts){
 
       const detail = [];
       let okCount = 0, failCount = 0;
+      // Kirim satu request KPI dgn retry (backoff) — mengatasi 404/5xx transien
+      // dari Google Apps Script (cold-start / rate-limit) yang sebelumnya
+      // langsung ditandai gagal tanpa dicoba ulang.
+      const MAX_ATTEMPTS = 4;
+      async function postMaintenanceKpiWithRetry(payload){
+        let lastErr = null;
+        for(let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++){
+          try{
+            const res = await fetch(BACKEND_CONFIG.sheetsWebAppUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              body: JSON.stringify(payload),
+              redirect: 'follow',
+              cache: 'no-store'
+            });
+            let data = null;
+            let rawText = '';
+            try{ rawText = await res.text(); data = JSON.parse(rawText); }catch(_e){ data = null; }
+            if(data && data.ok){
+              return { ok:true, data };
+            }
+            let errMsg = (data && (data.error || data.message)) || ('HTTP '+res.status);
+            if(/unsupported action|tidak dikenal|unknown action/i.test(String(errMsg))){
+              errMsg = 'Apps Script BELUM di-deploy ulang (action syncMaintenanceKPI belum ada). '+
+                'Buka Extensions → Apps Script → tempel PATCH → Deploy → Manage deployments → New version.';
+              return { ok:false, error:errMsg }; // tidak perlu retry, penyebabnya pasti
+            }
+            // HTTP transien (404/429/5xx) atau JSON tidak terbaca → retry
+            const transient = !res.ok || !data;
+            lastErr = errMsg;
+            if(!transient || attempt === MAX_ATTEMPTS){
+              return { ok:false, error: errMsg };
+            }
+          }catch(e){
+            lastErr = String(e.message||e);
+            if(attempt === MAX_ATTEMPTS) return { ok:false, error:lastErr };
+          }
+          // backoff sebelum retry: 500ms, 1000ms, 1500ms...
+          await new Promise(r=>setTimeout(r, 500*attempt));
+        }
+        return { ok:false, error: lastErr || 'gagal setelah beberapa percobaan' };
+      }
+
       for(const p of toSync){
         const items = buildMaintenanceKpiItems(p.start, p.end);
         // Skip minggu tanpa data
@@ -17857,32 +17908,17 @@ async function syncMaintenanceKPIToSheet(opts){
           week: p.week,
           kpis: items
         };
-        try{
-          const res = await fetch(BACKEND_CONFIG.sheetsWebAppUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify(payload),
-            cache: 'no-store'
-          });
-          let data = null;
-          try{ data = await res.json(); }catch(_e){ data = null; }
-          if(data && data.ok){
-            okCount++;
-            detail.push({ month:p.month, week:p.week, ok:true, updated:(data.updated||[]).length, skipped:(data.skipped||[]).length });
-          } else {
-            failCount++;
-            let errMsg = (data && (data.error || data.message)) || ('HTTP '+res.status);
-            // Deteksi deployment lama yang belum punya action syncMaintenanceKPI
-            if(/unsupported action|tidak dikenal|unknown action/i.test(String(errMsg))){
-              errMsg = 'Apps Script BELUM di-deploy ulang (action syncMaintenanceKPI belum ada). '+
-                'Buka Extensions → Apps Script → tempel PATCH → Deploy → Manage deployments → New version.';
-            }
-            detail.push({ month:p.month, week:p.week, ok:false, error: errMsg });
-          }
-        }catch(e){
+        const result = await postMaintenanceKpiWithRetry(payload);
+        if(result.ok){
+          okCount++;
+          const data = result.data || {};
+          detail.push({ month:p.month, week:p.week, ok:true, updated:(data.updated||[]).length, skipped:(data.skipped||[]).length });
+        } else {
           failCount++;
-          detail.push({ month:p.month, week:p.week, ok:false, error:String(e.message||e) });
+          detail.push({ month:p.month, week:p.week, ok:false, error: result.error });
         }
+        // Jeda kecil antar-request agar tidak membanjiri Apps Script (penyebab umum 404 transien)
+        await new Promise(r=>setTimeout(r, 250));
       }
       _maintKpiLastSyncAt = Date.now();
       if(opts.manual){
