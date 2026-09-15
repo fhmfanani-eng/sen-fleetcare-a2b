@@ -228,10 +228,14 @@ body:not(.role-wa-sync-allowed) .sync-only-fahmi{
 .cbm-comp-detail-type{font-family:Oswald,sans-serif;font-size:11.5px;letter-spacing:.5px;color:var(--yellow);text-transform:uppercase;margin:12px 0 6px;}
 .cbm-comp-detail-type:first-of-type{margin-top:0;}
 .cbm-comp-detail-empty{color:var(--text-dim);font-size:12.5px;padding:8px 0;}
-.cbm-group-header-row td{background:rgba(64,196,140,0.08);border-top:1px solid rgba(64,196,140,0.25);border-bottom:1px solid rgba(64,196,140,0.25);padding:7px 10px;font-family:Oswald,sans-serif;font-size:11.5px;letter-spacing:.5px;text-transform:uppercase;color:#6fe0b0;display:flex;align-items:center;gap:6px;}
+.cbm-group-header-row td{background:rgba(64,196,140,0.08);border-top:1px solid rgba(64,196,140,0.25);border-bottom:1px solid rgba(64,196,140,0.25);padding:7px 10px;}
+.cbm-group-header-row .cbm-group-header-label{font-family:Oswald,sans-serif;font-size:11.5px;letter-spacing:.5px;text-transform:uppercase;color:#6fe0b0;display:inline-flex;align-items:center;gap:6px;}
 .cbm-group-header-row .cbm-comp-icon{width:22px;height:22px;padding:1px;}
 .cbm-group-header-row .cbm-comp-icon svg{width:20px;height:20px;}
+.cbm-cell-name{display:inline-flex;align-items:center;gap:6px;}
 .cbm-group-spacer td{padding:0;border:0;height:10px;}
+.cbm-target-input{width:88px;background:#10141a;border:1px solid rgba(255,199,44,0.4);color:var(--yellow);border-radius:6px;padding:4px 6px;font-family:JetBrains Mono,monospace;font-size:12px;}
+.cbm-target-input:focus{outline:none;border-color:var(--yellow);box-shadow:0 0 0 2px rgba(255,199,44,0.2);}
 .pdm-insight{background:rgba(64,196,140,0.08);border:1px solid rgba(64,196,140,0.2);border-radius:8px;padding:12px 14px;font-size:12.5px;line-height:1.55;}
 .pdm-insight b{color:#6fe0b0;}
 .pill.ai-crit{background:rgba(229,72,77,0.18);color:var(--red);}
@@ -6755,6 +6759,27 @@ const PANEL_DEFS = [
 ];
 let userPanelAccess = {}; // username -> { panelKey: level }
 let accessModalUsername = null;
+/* Override Target Life (HM) per sub-komponen CBM (hasil edit manual Fahmi Fanani).
+   Struktur: { [unitType]: { [subComponentKey]: targetLifeHM } }. Disimpan di appStorage
+   (shared) supaya konsisten untuk semua user; hanya Fahmi Fanani yang boleh mengedit. */
+let cbmTargetLifeOverrides = {};
+async function loadCBMTargetLifeOverrides(){
+  try{
+    const raw = await appStorage.get('cbm-target-life-overrides');
+    cbmTargetLifeOverrides = raw ? JSON.parse(raw.value) : {};
+    if(!cbmTargetLifeOverrides || typeof cbmTargetLifeOverrides !== 'object') cbmTargetLifeOverrides = {};
+  }catch(e){ cbmTargetLifeOverrides = {}; }
+}
+async function saveCBMTargetLifeOverrides(){
+  try{ await appStorage.set('cbm-target-life-overrides', JSON.stringify(cbmTargetLifeOverrides)); }catch(e){}
+}
+/** Ambil Target Life efektif (override Fahmi Fanani bila ada, jika tidak pakai nilai master Excel). */
+function cbmEffectiveTargetLife(unitType, compKey, fallback){
+  const t = String(unitType||'');
+  const ov = cbmTargetLifeOverrides && cbmTargetLifeOverrides[t] ? cbmTargetLifeOverrides[t][compKey] : null;
+  const n = Number(ov);
+  return (ov!=null && !isNaN(n) && n>0) ? n : fallback;
+}
 
 function isFahmiFanani(){
   return !!(loggedInUser && (
@@ -19769,6 +19794,8 @@ function cbmMasterForUnit(unit){
     ...c,
     // key untuk tampilan tabel = nama sub-komponen Excel
     // cbmKey = high-level untuk icon/filter
+    // targetLife: pakai override Fahmi Fanani (Target Life edit manual) bila ada
+    targetLife: cbmEffectiveTargetLife(type, c.key, c.targetLife),
     cbmKey: CBM_GROUP_TO_KEY[c.group] || c.group,
     color: (CBM_COMPONENTS.find(x => x.key === (CBM_GROUP_TO_KEY[c.group]||c.group))||{}).color || '#9AA0A8'
   }));
@@ -20759,13 +20786,15 @@ function renderCBMAssetDetail(){
   // header + jarak pemisah antar kategori agar tidak menyatu jadi satu list panjang.
   const tbody = document.getElementById('cbm-asset-lt-tbody');
   if(tbody){
+    const uType = String(u.type||'').trim();
+    const canEditTarget = (typeof isFahmiFanani==='function') && isFahmiFanani();
     let lastGroup = null;
     const out = [];
     model.healths.forEach(h=>{
       const groupLabel = h.group || h.cbmKey || h.key;
       if(groupLabel !== lastGroup){
         if(lastGroup !== null) out.push(`<tr class="cbm-group-spacer"><td colspan="9"></td></tr>`);
-        out.push(`<tr class="cbm-group-header-row"><td colspan="9">${cbmComponentIcon(h.cbmKey||groupLabel)}${escUH(groupLabel)}</td></tr>`);
+        out.push(`<tr class="cbm-group-header-row"><td colspan="9"><span class="cbm-group-header-label">${cbmComponentIcon(h.cbmKey||groupLabel)}${escUH(groupLabel)}</span></td></tr>`);
         lastGroup = groupLabel;
       }
       const used = model.unitHm!=null ? model.unitHm : null;
@@ -20787,10 +20816,15 @@ function renderCBMAssetDetail(){
       const pctLabel = remainPct!=null
         ? `<b style="color:${sisaColor}">${remainPct.toLocaleString('id-ID',{maximumFractionDigits:1})}%</b>`
         : '—';
+      const targetCell = canEditTarget
+        ? `<input type="number" class="cbm-target-input" min="1" step="1" value="${target}"
+             title="Edit Target Life (khusus Fahmi Fanani)"
+             onchange="cbmEditTargetLife('${uType.replace(/'/g,"\\'")}','${String(h.key).replace(/'/g,"\\'")}', this.value)">`
+        : `<b style="color:var(--yellow)">${target.toLocaleString('id-ID')}</b>`;
       out.push(`<tr>
-        <td style="display:flex;align-items:center;gap:6px;"><b>${cbmComponentIcon(h.key)}${h.key}</b></td>
+        <td><span class="cbm-cell-name"><b>${cbmComponentIcon(h.key)}${h.key}</b></span></td>
         <td><span style="color:${cbmHealthColor(h.health)};font-weight:700">${h.health}%</span></td>
-        <td><b style="color:var(--yellow)">${target.toLocaleString('id-ID')}</b></td>
+        <td>${targetCell}</td>
         <td>${used!=null?Number(used).toLocaleString('id-ID'):'—'}</td>
         <td style="color:${sisaColor}">${sisaHm!=null?Number(sisaHm).toLocaleString('id-ID'):'—'}</td>
         <td>${pctLabel}</td>
@@ -20833,6 +20867,27 @@ function renderCBMAssetDetail(){
     }).join('');
   }
 }
+
+/** Edit Target Life (HM) sub-komponen CBM — HANYA Fahmi Fanani yang boleh mengedit.
+ *  Setelah tersimpan, Health / Lifetime (HM) / Lifetime % otomatis ikut berubah karena
+ *  semuanya dihitung ulang dari cbmEffectiveTargetLife() saat render. */
+window.cbmEditTargetLife = async function(unitType, compKey, rawValue){
+  if(!(typeof isFahmiFanani==='function' && isFahmiFanani())){
+    alert('Hanya user Fahmi Fanani yang dapat mengedit Target Life (HM).');
+    renderCBMActiveTab();
+    return;
+  }
+  const val = Math.round(Number(rawValue));
+  if(!val || isNaN(val) || val<=0){
+    alert('Target Life (HM) harus berupa angka lebih dari 0.');
+    renderCBMActiveTab();
+    return;
+  }
+  if(!cbmTargetLifeOverrides[unitType]) cbmTargetLifeOverrides[unitType] = {};
+  cbmTargetLifeOverrides[unitType][compKey] = val;
+  await saveCBMTargetLifeOverrides();
+  renderCBMActiveTab();
+};
 
 /** Hitung metrik breakdown untuk satu definisi komponen (sub/high-level) dari baris filtered. */
 function cbmStatsForCompDef(compDef, rows, unitTypeHint){
@@ -20957,7 +21012,7 @@ function renderCBMOverview(rows, stats){
   if(tbody){
     tbody.innerHTML = compStats.map(({c, st, remainPct})=>{
       return `<tr>
-        <td style="display:flex;align-items:center;gap:6px;"><b>${cbmComponentIcon(c.cbmKey||c.key)}${c.key}</b></td>
+        <td><span class="cbm-cell-name"><b>${cbmComponentIcon(c.cbmKey||c.key)}${c.key}</b></span></td>
         <td><b style="color:var(--yellow)">${(c.targetLife||0).toLocaleString('id-ID')}</b></td>
         <td>${cbmRemainingPctCell(remainPct)}</td>
         <td>${st.total||0}</td>
@@ -20981,7 +21036,9 @@ function cbmSubComponentsForCategory(catKey, unitTypeOnly){
   const types = unitTypeOnly ? [unitTypeOnly] : Object.keys(CBM_MASTER_BY_TYPE||{});
   const out = [];
   types.forEach(t=>{
-    const list = (CBM_MASTER_BY_TYPE[t]||[]).filter(c=>(CBM_GROUP_TO_KEY[c.group]||c.group)===catKey);
+    const list = (CBM_MASTER_BY_TYPE[t]||[])
+      .filter(c=>(CBM_GROUP_TO_KEY[c.group]||c.group)===catKey)
+      .map(c=>({ ...c, targetLife: cbmEffectiveTargetLife(t, c.key, c.targetLife) }));
     if(list.length) out.push({ type:t, items:list });
   });
   return out;
@@ -22877,6 +22934,7 @@ function subscribeDailyRealtime(){
   await loadRegisteredUsers();
   await loadPasswordOverrides();
   await loadUserPanelAccess();
+  await loadCBMTargetLifeOverrides();
   await loadActiveUser();
   if(loggedInUser){
     hideLoginScreen();
