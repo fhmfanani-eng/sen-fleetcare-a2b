@@ -17119,6 +17119,15 @@ function renderKPIChartDashboard(k, globalStats){
       ${monthlyChartSelectHtml}
     </div>
     <div class="kpi-dash-grid">${gaugeCardsHtml}</div>
+    <div class="dash-panel" style="position:relative;margin-bottom:14px">
+        <div class="dash-panel-title">KPI MAINTENANCE SUMMARY</div>
+        <div style="overflow-x:auto">
+          <table class="dash-sum-table">
+            <thead><tr><th>KPI</th><th>Target</th><th>Value</th><th>Status</th><th>Trend</th></tr></thead>
+            <tbody>${sumRows}</tbody>
+          </table>
+        </div>
+      </div>
     ${(() => { const _trend = multiTrendSVG(); return `
     <div class="dash-quad-grid">
       <div class="dash-panel">
@@ -17138,15 +17147,6 @@ function renderKPIChartDashboard(k, globalStats){
         <div class="dash-panel-chart-fill">${mttrTrendSVG()}</div>
       </div>
     </div>
-    <div class="dash-panel" style="position:relative">
-        <div class="dash-panel-title">KPI MAINTENANCE SUMMARY</div>
-        <div style="overflow-x:auto">
-          <table class="dash-sum-table">
-            <thead><tr><th>KPI</th><th>Target</th><th>Value</th><th>Status</th><th>Trend</th></tr></thead>
-            <tbody>${sumRows}</tbody>
-          </table>
-        </div>
-      </div>
     <div class="dash-mid-grid">
       <div class="dash-panel">
         <div class="dash-panel-title">Contribution to Reliability</div>
