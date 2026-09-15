@@ -219,6 +219,19 @@ body:not(.role-wa-sync-allowed) .sync-only-fahmi{
 .cbm-comp-card .cc-stat b.warn{color:var(--yellow);}
 .cbm-comp-card .cc-stat b.bad{color:var(--red);}
 .cbm-comp-card .cc-stat b.ok{color:var(--green);}
+.cbm-comp-detail-panel{background:linear-gradient(165deg,#161b22 0%,#10141a 100%);border:1px solid rgba(64,196,140,0.35);border-radius:10px;padding:16px 18px;margin:-4px 0 18px;animation:cbmDetailIn .15s ease;}
+@keyframes cbmDetailIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
+.cbm-comp-detail-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}
+.cbm-comp-detail-title{font-family:Oswald,sans-serif;font-size:15px;letter-spacing:.4px;color:#6fe0b0;display:flex;align-items:center;gap:8px;}
+.cbm-comp-detail-close{background:transparent;border:1px solid var(--line);color:var(--text-dim);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;}
+.cbm-comp-detail-close:hover{border-color:var(--red);color:var(--red);}
+.cbm-comp-detail-type{font-family:Oswald,sans-serif;font-size:11.5px;letter-spacing:.5px;color:var(--yellow);text-transform:uppercase;margin:12px 0 6px;}
+.cbm-comp-detail-type:first-of-type{margin-top:0;}
+.cbm-comp-detail-empty{color:var(--text-dim);font-size:12.5px;padding:8px 0;}
+.cbm-group-header-row td{background:rgba(64,196,140,0.08);border-top:1px solid rgba(64,196,140,0.25);border-bottom:1px solid rgba(64,196,140,0.25);padding:7px 10px;font-family:Oswald,sans-serif;font-size:11.5px;letter-spacing:.5px;text-transform:uppercase;color:#6fe0b0;display:flex;align-items:center;gap:6px;}
+.cbm-group-header-row .cbm-comp-icon{width:22px;height:22px;padding:1px;}
+.cbm-group-header-row .cbm-comp-icon svg{width:20px;height:20px;}
+.cbm-group-spacer td{padding:0;border:0;height:10px;}
 .pdm-insight{background:rgba(64,196,140,0.08);border:1px solid rgba(64,196,140,0.2);border-radius:8px;padding:12px 14px;font-size:12.5px;line-height:1.55;}
 .pdm-insight b{color:#6fe0b0;}
 .pill.ai-crit{background:rgba(229,72,77,0.18);color:var(--red);}
@@ -3232,6 +3245,7 @@ body.role-mechanic #history-filters{ display:none !important; }
 
           <div class="section-title">Performance per Component Group (Fleet)</div>
           <div class="cbm-comp-grid" id="cbm-comp-cards"></div>
+          <div class="cbm-comp-detail-panel" id="cbm-comp-detail-panel" style="display:none;"></div>
           <div class="panel">
             <div class="panel-head"><h2>Summary per Component</h2></div>
             <div class="table-wrap">
@@ -19147,112 +19161,592 @@ const CBM_COMPONENTS = [
   { key:'Tyre',                match:['tyre','tire','ban','wheel','rim'], targetLife:8000, color:'#B44CFF', loaderOnly:true },
 ];
 
-/** Master Component Lifetime — sumber: MASTER LIFETIME COMPONENT A2B.xlsx
- *  Semua sub-komponen + Lifetime HM / Warning / Critical per tipe unit.
+/** Master Component Lifetime — sumber: Master_Engine_Assy_Lifetime_SEN_FleetCare.xlsx
+ *  (grup "Engine") + Master_Lifetime_All_Component_SEN_FleetCare_Electrical_Sensor_Detail.xlsx
+ *  (grup Power Train/Transmission Assy, Hydraulic, Work Equipment/Attachment,
+ *  Electrical, Undercarriage — hanya D85ESS-2A & PC210-10MO).
+ *  Semua sub-komponen + Lifetime Min/Max HM per tipe unit, dikelompokkan per
+ *  Component Group sesuai data Excel di atas (bukan data buatan).
  *  Ditampilkan di tabel CBM (Overview / Lifetime / Asset detail) sesuai unit. */
 const CBM_MASTER_BY_TYPE = {
   'WA500-6R': [
-    { group:'Engine', key:'Engine Assy', targetLife:15000, warning:12000, critical:13500, match:['engine assy','complete engine','engine'] },
-    { group:'Engine', key:'Turbocharger', targetLife:15000, warning:12000, critical:13500, match:['turbocharger','turbo'] },
-    { group:'Engine', key:'Cylinder Head', targetLife:15000, warning:12000, critical:13500, match:['cylinder head'] },
-    { group:'Engine', key:'Injector', targetLife:12000, warning:9600, critical:10800, match:['injector'] },
-    { group:'Engine', key:'Water Pump', targetLife:10000, warning:8000, critical:9000, match:['water pump'] },
-    { group:'Engine', key:'Alternator', targetLife:12000, warning:9600, critical:10800, match:['alternator','altenator'] },
-    { group:'Engine', key:'Starting Motor', targetLife:12000, warning:9600, critical:10800, match:['starting motor','starter'] },
-    { group:'Power Train', key:'Transmission', targetLife:18000, warning:14400, critical:16200, match:['transmission','transmisi'] },
-    { group:'Power Train', key:'Torque Converter', targetLife:18000, warning:14400, critical:16200, match:['torque converter'] },
-    { group:'Power Train', key:'Front Differential', targetLife:20000, warning:16000, critical:18000, match:['front differential','front diff'] },
-    { group:'Power Train', key:'Rear Differential', targetLife:20000, warning:16000, critical:18000, match:['rear differential','rear diff'] },
-    { group:'Power Train', key:'Front Axle', targetLife:20000, warning:16000, critical:18000, match:['front axle'] },
-    { group:'Power Train', key:'Rear Axle', targetLife:20000, warning:16000, critical:18000, match:['rear axle'] },
-    { group:'Power Train', key:'Front Final Drive', targetLife:20000, warning:16000, critical:18000, match:['front final drive'] },
-    { group:'Power Train', key:'Rear Final Drive', targetLife:20000, warning:16000, critical:18000, match:['rear final drive'] },
-    { group:'Hydraulic', key:'Main Hydraulic Pump', targetLife:15000, warning:12000, critical:13500, match:['main hydraulic pump','main pump','hydraulic pump'] },
-    { group:'Hydraulic', key:'Main Control Valve', targetLife:20000, warning:16000, critical:18000, match:['main control valve','control valve'] },
-    { group:'Hydraulic', key:'Steering Pump', targetLife:15000, warning:12000, critical:13500, match:['steering pump'] },
-    { group:'Hydraulic', key:'Steering Cylinder', targetLife:15000, warning:12000, critical:13500, match:['steering cylinder'] },
-    { group:'Work Equipment', key:'Lift Cylinder', targetLife:15000, warning:12000, critical:13500, match:['lift cylinder'] },
-    { group:'Work Equipment', key:'Tilt Cylinder', targetLife:15000, warning:12000, critical:13500, match:['tilt cylinder'] },
-    { group:'Work Equipment', key:'Bucket Pin & Bushing', targetLife:10000, warning:8000, critical:9000, match:['bucket pin','bucket bushing','bucket pin & bushing'] },
-    { group:'Work Equipment', key:'Center Hinge Pin', targetLife:15000, warning:12000, critical:13500, match:['center hinge','centre hinge','hinge pin'] },
-    { group:'Electrical', key:'Battery System', targetLife:8000, warning:6400, critical:7200, match:['battery','baterai'] },
-    { group:'AC System', key:'AC Compressor', targetLife:12000, warning:9600, critical:10800, match:['ac compressor','compressor'] },
-    { group:'AC System', key:'Condenser', targetLife:15000, warning:12000, critical:13500, match:['condenser'] },
-    { group:'AC System', key:'Blower Motor', targetLife:10000, warning:8000, critical:9000, match:['blower motor','blower'] },
-    { group:'Tyre & Rim', key:'Front Left Tyre', targetLife:8000, warning:6400, critical:7200, match:['front left tyre','front left tire','ban kiri depan'] },
-    { group:'Tyre & Rim', key:'Front Right Tyre', targetLife:8000, warning:6400, critical:7200, match:['front right tyre','front right tire','ban kanan depan'] },
-    { group:'Tyre & Rim', key:'Rear Left Tyre', targetLife:8000, warning:6400, critical:7200, match:['rear left tyre','rear left tire','ban kiri belakang'] },
-    { group:'Tyre & Rim', key:'Rear Right Tyre', targetLife:8000, warning:6400, critical:7200, match:['rear right tyre','rear right tire','ban kanan belakang'] },
-    { group:'Tyre & Rim', key:'Front Left Rim', targetLife:20000, warning:16000, critical:18000, match:['front left rim'] },
-    { group:'Tyre & Rim', key:'Front Right Rim', targetLife:20000, warning:16000, critical:18000, match:['front right rim'] },
-    { group:'Tyre & Rim', key:'Rear Left Rim', targetLife:20000, warning:16000, critical:18000, match:['rear left rim'] },
-    { group:'Tyre & Rim', key:'Rear Right Rim', targetLife:20000, warning:16000, critical:18000, match:['rear right rim'] }
+    { group:'Engine', key:'Complete Engine Assy', targetLife:20000, warning:15000, critical:17500, match:['complete engine','complete engine assy'] },
+    { group:'Engine', key:'Cylinder Block', targetLife:20000, warning:15000, critical:17500, match:['cylinder block'] },
+    { group:'Engine', key:'Cylinder Head Assy', targetLife:12000, warning:8000, critical:10000, match:['cylinder head','cylinder head assy'] },
+    { group:'Engine', key:'Cylinder Head Gasket', targetLife:12000, warning:8000, critical:10000, match:['cylinder head gasket'] },
+    { group:'Engine', key:'Cylinder Head Cover', targetLife:15000, warning:10000, critical:12500, match:['cylinder head cover'] },
+    { group:'Engine', key:'Rocker Arm Assy', targetLife:12000, warning:8000, critical:10000, match:['rocker arm','rocker arm assy'] },
+    { group:'Engine', key:'Rocker Shaft', targetLife:15000, warning:10000, critical:12500, match:['rocker shaft'] },
+    { group:'Engine', key:'Intake Valve', targetLife:12000, warning:8000, critical:10000, match:['intake valve'] },
+    { group:'Engine', key:'Exhaust Valve', targetLife:12000, warning:8000, critical:10000, match:['exhaust valve'] },
+    { group:'Engine', key:'Valve Guide', targetLife:12000, warning:8000, critical:10000, match:['valve guide'] },
+    { group:'Engine', key:'Valve Seat', targetLife:12000, warning:8000, critical:10000, match:['valve seat'] },
+    { group:'Engine', key:'Valve Spring', targetLife:12000, warning:8000, critical:10000, match:['valve spring'] },
+    { group:'Engine', key:'Valve Stem Seal', targetLife:12000, warning:8000, critical:10000, match:['valve stem seal'] },
+    { group:'Engine', key:'Tappet / Valve Lifter', targetLife:12000, warning:8000, critical:10000, match:['tappet','tappet / valve lifter','valve lifter'] },
+    { group:'Engine', key:'Push Rod', targetLife:15000, warning:10000, critical:12500, match:['push rod'] },
+    { group:'Engine', key:'Camshaft', targetLife:15000, warning:12000, critical:13500, match:['camshaft'] },
+    { group:'Engine', key:'Camshaft Bearing/Bush', targetLife:15000, warning:10000, critical:12500, match:['bush','camshaft bearing','camshaft bearing/bush'] },
+    { group:'Engine', key:'Crankshaft', targetLife:20000, warning:15000, critical:17500, match:['crankshaft'] },
+    { group:'Engine', key:'Main Bearing Set', targetLife:12000, warning:8000, critical:10000, match:['main bearing set'] },
+    { group:'Engine', key:'Thrust Bearing', targetLife:12000, warning:8000, critical:10000, match:['thrust bearing'] },
+    { group:'Engine', key:'Connecting Rod Assy', targetLife:15000, warning:12000, critical:13500, match:['connecting rod','connecting rod assy'] },
+    { group:'Engine', key:'Connecting Rod Bearing', targetLife:12000, warning:8000, critical:10000, match:['connecting rod bearing'] },
+    { group:'Engine', key:'Piston Assy', targetLife:15000, warning:10000, critical:12500, match:['piston','piston assy'] },
+    { group:'Engine', key:'Piston Ring Set', targetLife:12000, warning:8000, critical:10000, match:['piston ring set'] },
+    { group:'Engine', key:'Piston Pin', targetLife:15000, warning:10000, critical:12500, match:['piston pin'] },
+    { group:'Engine', key:'Piston Pin Bush', targetLife:15000, warning:10000, critical:12500, match:['piston pin bush'] },
+    { group:'Engine', key:'Crankshaft Front Seal', targetLife:12000, warning:8000, critical:10000, match:['crankshaft front seal'] },
+    { group:'Engine', key:'Crankshaft Rear Seal', targetLife:12000, warning:8000, critical:10000, match:['crankshaft rear seal'] },
+    { group:'Engine', key:'Vibration Damper', targetLife:10000, warning:8000, critical:9000, match:['vibration damper'] },
+    { group:'Engine', key:'Timing Gear Assy', targetLife:15000, warning:12000, critical:13500, match:['timing gear','timing gear assy'] },
+    { group:'Engine', key:'Idler Gear', targetLife:15000, warning:12000, critical:13500, match:['idler gear'] },
+    { group:'Engine', key:'Oil Pump Assy', targetLife:12000, warning:8000, critical:10000, match:['oil pump','oil pump assy'] },
+    { group:'Engine', key:'Oil Pump Gear/Drive', targetLife:15000, warning:10000, critical:12500, match:['drive','oil pump gear','oil pump gear/drive'] },
+    { group:'Engine', key:'Oil Cooler Assy', targetLife:12000, warning:8000, critical:10000, match:['oil cooler','oil cooler assy'] },
+    { group:'Engine', key:'Oil Pressure Relief Valve', targetLife:12000, warning:8000, critical:10000, match:['oil pressure relief valve'] },
+    { group:'Engine', key:'Oil Strainer', targetLife:12000, warning:8000, critical:10000, match:['oil strainer'] },
+    { group:'Engine', key:'Oil Pan / Sump', targetLife:20000, warning:15000, critical:17500, match:['oil pan','oil pan / sump','sump'] },
+    { group:'Engine', key:'Water Pump Assy', targetLife:10000, warning:8000, critical:9000, match:['water pump','water pump assy'] },
+    { group:'Engine', key:'Water Pump Bearing/Seal', targetLife:10000, warning:8000, critical:9000, match:['seal','water pump bearing','water pump bearing/seal'] },
+    { group:'Engine', key:'Thermostat', targetLife:6000, warning:4000, critical:5000, match:['thermostat'] },
+    { group:'Engine', key:'Fan', targetLife:15000, warning:10000, critical:12500, match:['fan'] },
+    { group:'Engine', key:'Fan Hub / Fan Drive', targetLife:12000, warning:8000, critical:10000, match:['fan drive','fan hub','fan hub / fan drive'] },
+    { group:'Engine', key:'Fan Bearing', targetLife:12000, warning:8000, critical:10000, match:['fan bearing'] },
+    { group:'Engine', key:'Fan Belt / V-Belt', targetLife:4000, warning:2000, critical:3000, match:['belt','fan belt','fan belt / v-belt'] },
+    { group:'Engine', key:'Turbocharger Assy', targetLife:10000, warning:8000, critical:9000, match:['turbocharger','turbocharger assy'] },
+    { group:'Engine', key:'Turbo Bearing/Seal', targetLife:10000, warning:8000, critical:9000, match:['seal','turbo bearing','turbo bearing/seal'] },
+    { group:'Engine', key:'Intake Manifold', targetLife:15000, warning:12000, critical:13500, match:['intake manifold'] },
+    { group:'Engine', key:'Exhaust Manifold', targetLife:15000, warning:10000, critical:12500, match:['exhaust manifold'] },
+    { group:'Engine', key:'Exhaust Manifold Gasket', targetLife:8000, warning:6000, critical:7000, match:['exhaust manifold gasket'] },
+    { group:'Engine', key:'Air Intake Hose', targetLife:6000, warning:4000, critical:5000, match:['air intake hose'] },
+    { group:'Engine', key:'Intercooler/Aftercooler', targetLife:15000, warning:10000, critical:12500, match:['aftercooler','intercooler','intercooler/aftercooler'] },
+    { group:'Engine', key:'Fuel Supply Pump', targetLife:12000, warning:8000, critical:10000, match:['fuel supply pump'] },
+    { group:'Engine', key:'Fuel Injection/HP Pump', targetLife:12000, warning:8000, critical:10000, match:['fuel injection','fuel injection/hp pump','hp pump'] },
+    { group:'Engine', key:'Common Rail*', targetLife:12000, warning:8000, critical:10000, match:['common rail'] },
+    { group:'Engine', key:'Fuel Injector', targetLife:8000, warning:6000, critical:7000, match:['fuel injector'] },
+    { group:'Engine', key:'Injector Nozzle', targetLife:8000, warning:6000, critical:7000, match:['injector nozzle'] },
+    { group:'Engine', key:'High Pressure Fuel Pipe', targetLife:10000, warning:8000, critical:9000, match:['high pressure fuel pipe'] },
+    { group:'Engine', key:'Fuel Rail Pressure Sensor*', targetLife:8000, warning:5000, critical:6500, match:['fuel rail pressure sensor'] },
+    { group:'Engine', key:'Fuel Primer/Supply Pump', targetLife:8000, warning:6000, critical:7000, match:['fuel primer','fuel primer/supply pump','supply pump'] },
+    { group:'Engine', key:'Fuel Filter Housing', targetLife:15000, warning:10000, critical:12500, match:['fuel filter housing'] },
+    { group:'Engine', key:'Engine ECU/Controller*', targetLife:15000, warning:10000, critical:12500, match:['controller','engine ecu','engine ecu/controller'] },
+    { group:'Engine', key:'Oil Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['oil pressure sensor'] },
+    { group:'Engine', key:'Coolant Temperature Sensor', targetLife:8000, warning:5000, critical:6500, match:['coolant temperature sensor'] },
+    { group:'Engine', key:'Boost Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['boost pressure sensor'] },
+    { group:'Engine', key:'Starter Solenoid', targetLife:8000, warning:6000, critical:7000, match:['starter solenoid'] },
+    { group:'Engine', key:'Flywheel', targetLife:20000, warning:15000, critical:17500, match:['flywheel'] },
+    { group:'Engine', key:'Flywheel Ring Gear', targetLife:15000, warning:12000, critical:13500, match:['flywheel ring gear'] },
+    { group:'Engine', key:'Flywheel Housing', targetLife:20000, warning:15000, critical:17500, match:['flywheel housing'] },
+    { group:'Engine', key:'Engine Mounting', targetLife:12000, warning:8000, critical:10000, match:['engine mounting'] },
+    { group:'Engine', key:'Engine Mount Rubber', targetLife:8000, warning:6000, critical:7000, match:['engine mount rubber'] },
+    { group:'Engine', key:'Exhaust Pipe', targetLife:15000, warning:10000, critical:12500, match:['exhaust pipe'] },
+    { group:'Engine', key:'Muffler', targetLife:15000, warning:10000, critical:12500, match:['muffler'] },
+    { group:'Engine', key:'Exhaust Flexible Joint', targetLife:8000, warning:6000, critical:7000, match:['exhaust flexible joint'] },
+    { group:'Engine', key:'Breather Assy', targetLife:8000, warning:6000, critical:7000, match:['breather','breather assy'] },
+    { group:'Engine', key:'Breather Element', targetLife:6000, warning:4000, critical:5000, match:['breather element'] },
+    { group:'Power Train', key:'Complete Transmission Assy', targetLife:18000, warning:12000, critical:15000, match:['complete transmission','complete transmission assy'] },
+    { group:'Power Train', key:'Transmission Case', targetLife:20000, warning:15000, critical:17500, match:['transmission case'] },
+    { group:'Power Train', key:'Torque Converter Assy', targetLife:15000, warning:10000, critical:12500, match:['torque converter','torque converter assy'] },
+    { group:'Power Train', key:'Torque Converter Turbine/Stator', targetLife:15000, warning:10000, critical:12500, match:['stator','torque converter turbine','torque converter turbine/stator'] },
+    { group:'Power Train', key:'Transmission Pump', targetLife:12000, warning:8000, critical:10000, match:['transmission pump'] },
+    { group:'Power Train', key:'Transmission Control Valve', targetLife:12000, warning:8000, critical:10000, match:['transmission control valve'] },
+    { group:'Power Train', key:'Transmission Clutch Pack', targetLife:12000, warning:8000, critical:10000, match:['transmission clutch pack'] },
+    { group:'Power Train', key:'Clutch Disc', targetLife:10000, warning:6000, critical:8000, match:['clutch disc'] },
+    { group:'Power Train', key:'Clutch Plate', targetLife:12000, warning:8000, critical:10000, match:['clutch plate'] },
+    { group:'Power Train', key:'Clutch Piston/Seal', targetLife:10000, warning:6000, critical:8000, match:['clutch piston','clutch piston/seal','seal'] },
+    { group:'Power Train', key:'Transmission Gear Set', targetLife:18000, warning:12000, critical:15000, match:['transmission gear set'] },
+    { group:'Power Train', key:'Planetary Gear Set', targetLife:18000, warning:12000, critical:15000, match:['planetary gear set'] },
+    { group:'Power Train', key:'Sun Gear', targetLife:18000, warning:12000, critical:15000, match:['sun gear'] },
+    { group:'Power Train', key:'Ring Gear', targetLife:18000, warning:12000, critical:15000, match:['ring gear'] },
+    { group:'Power Train', key:'Planet Gear/Bearing', targetLife:15000, warning:10000, critical:12500, match:['bearing','planet gear','planet gear/bearing'] },
+    { group:'Power Train', key:'Transmission Bearing', targetLife:12000, warning:8000, critical:10000, match:['transmission bearing'] },
+    { group:'Power Train', key:'Transmission Shaft', targetLife:18000, warning:12000, critical:15000, match:['transmission shaft'] },
+    { group:'Power Train', key:'Output Shaft', targetLife:18000, warning:12000, critical:15000, match:['output shaft'] },
+    { group:'Power Train', key:'Transmission Oil Cooler', targetLife:12000, warning:8000, critical:10000, match:['transmission oil cooler'] },
+    { group:'Power Train', key:'Transmission Oil Filter Housing', targetLife:15000, warning:10000, critical:12500, match:['transmission oil filter housing'] },
+    { group:'Power Train', key:'Transmission Oil Filter', targetLife:1000, warning:500, critical:750, match:['transmission oil filter'] },
+    { group:'Power Train', key:'Speed Sensor', targetLife:8000, warning:5000, critical:6500, match:['speed sensor'] },
+    { group:'Power Train', key:'Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['pressure sensor'] },
+    { group:'Power Train', key:'Transmission Wiring Harness', targetLife:15000, warning:10000, critical:12500, match:['transmission wiring harness'] },
+    { group:'Power Train', key:'Transmission Seal Kit', targetLife:10000, warning:6000, critical:8000, match:['transmission seal kit'] },
+    { group:'Hydraulic', key:'Hydraulic Pump Assy', targetLife:12000, warning:8000, critical:10000, match:['hydraulic pump','hydraulic pump assy'] },
+    { group:'Hydraulic', key:'Main Pump', targetLife:12000, warning:8000, critical:10000, match:['main pump'] },
+    { group:'Hydraulic', key:'Pilot Pump', targetLife:10000, warning:6000, critical:8000, match:['pilot pump'] },
+    { group:'Hydraulic', key:'Hydraulic Control Valve / Main Control Valve', targetLife:15000, warning:10000, critical:12500, match:['hydraulic control valve','hydraulic control valve / main control valve','main control valve'] },
+    { group:'Hydraulic', key:'Relief Valve', targetLife:10000, warning:6000, critical:8000, match:['relief valve'] },
+    { group:'Hydraulic', key:'Check Valve', targetLife:12000, warning:8000, critical:10000, match:['check valve'] },
+    { group:'Hydraulic', key:'Hydraulic Cylinder Assy', targetLife:12000, warning:8000, critical:10000, match:['hydraulic cylinder','hydraulic cylinder assy'] },
+    { group:'Hydraulic', key:'Cylinder Rod', targetLife:12000, warning:8000, critical:10000, match:['cylinder rod'] },
+    { group:'Hydraulic', key:'Cylinder Barrel', targetLife:18000, warning:12000, critical:15000, match:['cylinder barrel'] },
+    { group:'Hydraulic', key:'Cylinder Seal Kit', targetLife:8000, warning:4000, critical:6000, match:['cylinder seal kit'] },
+    { group:'Hydraulic', key:'Hydraulic Hose Assembly – Main', targetLife:8000, warning:4000, critical:6000, match:['hydraulic hose assembly','hydraulic hose assembly – main','main'] },
+    { group:'Hydraulic', key:'Hydraulic Hose Assembly – Pilot', targetLife:6000, warning:3000, critical:4500, match:['hydraulic hose assembly','hydraulic hose assembly – pilot','pilot'] },
+    { group:'Hydraulic', key:'Hydraulic Hard Pipe', targetLife:15000, warning:10000, critical:12500, match:['hydraulic hard pipe'] },
+    { group:'Hydraulic', key:'Hydraulic Tank', targetLife:20000, warning:15000, critical:17500, match:['hydraulic tank'] },
+    { group:'Hydraulic', key:'Hydraulic Tank Breather', targetLife:4000, warning:2000, critical:3000, match:['hydraulic tank breather'] },
+    { group:'Hydraulic', key:'Hydraulic Return Filter', targetLife:1000, warning:500, critical:750, match:['hydraulic return filter'] },
+    { group:'Hydraulic', key:'Hydraulic Suction Strainer', targetLife:8000, warning:4000, critical:6000, match:['hydraulic suction strainer'] },
+    { group:'Hydraulic', key:'Hydraulic Oil Cooler', targetLife:12000, warning:8000, critical:10000, match:['hydraulic oil cooler'] },
+    { group:'Hydraulic', key:'Hydraulic Accumulator', targetLife:10000, warning:5000, critical:7500, match:['hydraulic accumulator'] },
+    { group:'Hydraulic', key:'Hydraulic Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['hydraulic pressure sensor'] },
+    { group:'Hydraulic', key:'Hydraulic Pilot Valve', targetLife:10000, warning:6000, critical:8000, match:['hydraulic pilot valve'] },
+    { group:'Hydraulic', key:'Hydraulic Joystick/Control Lever', targetLife:12000, warning:8000, critical:10000, match:['control lever','hydraulic joystick','hydraulic joystick/control lever'] },
+    { group:'Hydraulic', key:'Hydraulic O-ring/Seal Set', targetLife:8000, warning:4000, critical:6000, match:['hydraulic o','hydraulic o-ring/seal set','ring','seal set'] },
+    { group:'Work Equipment', key:'Loader Bucket Assy', targetLife:12000, warning:8000, critical:10000, match:['loader bucket','loader bucket assy'] },
+    { group:'Work Equipment', key:'Bucket Cutting Edge', targetLife:3000, warning:1500, critical:2250, match:['bucket cutting edge'] },
+    { group:'Work Equipment', key:'Bucket Corner Bit', targetLife:2500, warning:1000, critical:1750, match:['bucket corner bit'] },
+    { group:'Work Equipment', key:'Bucket Tooth', targetLife:1500, warning:500, critical:1000, match:['bucket tooth'] },
+    { group:'Work Equipment', key:'Tooth Adapter', targetLife:3000, warning:1500, critical:2250, match:['tooth adapter'] },
+    { group:'Work Equipment', key:'Bucket Side Cutter', targetLife:4000, warning:2000, critical:3000, match:['bucket side cutter'] },
+    { group:'Work Equipment', key:'Lift Arm', targetLife:20000, warning:12000, critical:16000, match:['lift arm'] },
+    { group:'Work Equipment', key:'Lift Arm Pin', targetLife:10000, warning:6000, critical:8000, match:['lift arm pin'] },
+    { group:'Work Equipment', key:'Lift Arm Bush', targetLife:8000, warning:4000, critical:6000, match:['lift arm bush'] },
+    { group:'Work Equipment', key:'Bucket Cylinder Assy', targetLife:12000, warning:8000, critical:10000, match:['bucket cylinder','bucket cylinder assy'] },
+    { group:'Work Equipment', key:'Bucket Cylinder Seal Kit', targetLife:8000, warning:4000, critical:6000, match:['bucket cylinder seal kit'] },
+    { group:'Work Equipment', key:'Lift Cylinder Assy', targetLife:12000, warning:8000, critical:10000, match:['lift cylinder','lift cylinder assy'] },
+    { group:'Work Equipment', key:'Lift Cylinder Seal Kit', targetLife:8000, warning:4000, critical:6000, match:['lift cylinder seal kit'] },
+    { group:'Electrical', key:'Alternator', targetLife:10000, warning:8000, critical:9000, match:['alternator'] },
+    { group:'Electrical', key:'Starting Motor', targetLife:8000, warning:6000, critical:7000, match:['starting motor'] },
+    { group:'Electrical', key:'Battery', targetLife:4000, warning:2000, critical:3000, match:['battery'] },
+    { group:'Electrical', key:'Battery Cable', targetLife:10000, warning:6000, critical:8000, match:['battery cable'] },
+    { group:'Electrical', key:'Battery Disconnect Switch', targetLife:12000, warning:8000, critical:10000, match:['battery disconnect switch'] },
+    { group:'Electrical', key:'Main Fuse', targetLife:8000, warning:4000, critical:6000, match:['main fuse'] },
+    { group:'Electrical', key:'Main Relay', targetLife:8000, warning:5000, critical:6500, match:['main relay'] },
+    { group:'Electrical', key:'Starter Relay', targetLife:8000, warning:5000, critical:6500, match:['starter relay'] },
+    { group:'Electrical', key:'Work Lamp', targetLife:8000, warning:4000, critical:6000, match:['work lamp'] },
+    { group:'Electrical', key:'Head Lamp', targetLife:8000, warning:4000, critical:6000, match:['head lamp'] },
+    { group:'Electrical', key:'Rear Lamp', targetLife:8000, warning:4000, critical:6000, match:['rear lamp'] },
+    { group:'Electrical', key:'Warning Lamp', targetLife:8000, warning:4000, critical:6000, match:['warning lamp'] },
+    { group:'Electrical', key:'Horn', targetLife:8000, warning:5000, critical:6500, match:['horn'] },
+    { group:'Electrical', key:'Monitor Panel', targetLife:15000, warning:10000, critical:12500, match:['monitor panel'] },
+    { group:'Electrical', key:'Machine Controller / ECM', targetLife:15000, warning:10000, critical:12500, match:['ecm','machine controller','machine controller / ecm'] },
+    { group:'Electrical', key:'Engine Controller', targetLife:15000, warning:10000, critical:12500, match:['engine controller'] },
+    { group:'Electrical', key:'Transmission Controller*', targetLife:15000, warning:10000, critical:12500, match:['transmission controller'] },
+    { group:'Electrical', key:'Hydraulic Controller*', targetLife:15000, warning:10000, critical:12500, match:['hydraulic controller'] },
+    { group:'Electrical', key:'Machine Wiring Harness', targetLife:15000, warning:10000, critical:12500, match:['machine wiring harness'] },
+    { group:'Electrical', key:'Engine Wiring Harness', targetLife:15000, warning:10000, critical:12500, match:['engine wiring harness'] },
+    { group:'Electrical', key:'Ground Cable', targetLife:10000, warning:6000, critical:8000, match:['ground cable'] },
+    { group:'Electrical', key:'Engine Oil Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['engine oil pressure sensor'] },
+    { group:'Electrical', key:'Engine Coolant Temperature Sensor', targetLife:8000, warning:5000, critical:6500, match:['engine coolant temperature sensor'] },
+    { group:'Electrical', key:'Engine Oil Temperature Sensor', targetLife:8000, warning:5000, critical:6500, match:['engine oil temperature sensor'] },
+    { group:'Electrical', key:'Intake Manifold Pressure / Boost Sensor', targetLife:8000, warning:5000, critical:6500, match:['boost sensor','intake manifold pressure','intake manifold pressure / boost sensor'] },
+    { group:'Electrical', key:'Intake Air Temperature Sensor', targetLife:8000, warning:5000, critical:6500, match:['intake air temperature sensor'] },
+    { group:'Electrical', key:'Fuel Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['fuel pressure sensor'] },
+    { group:'Electrical', key:'Fuel Temperature Sensor', targetLife:8000, warning:5000, critical:6500, match:['fuel temperature sensor'] },
+    { group:'Electrical', key:'Crankshaft Position Sensor', targetLife:10000, warning:6000, critical:8000, match:['crankshaft position sensor'] },
+    { group:'Electrical', key:'Camshaft Position Sensor', targetLife:10000, warning:6000, critical:8000, match:['camshaft position sensor'] },
+    { group:'Electrical', key:'Engine Speed Sensor', targetLife:8000, warning:5000, critical:6500, match:['engine speed sensor'] },
+    { group:'Electrical', key:'Hydraulic Oil Temperature Sensor', targetLife:8000, warning:5000, critical:6500, match:['hydraulic oil temperature sensor'] },
+    { group:'Electrical', key:'Main Hydraulic Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['main hydraulic pressure sensor'] },
+    { group:'Electrical', key:'Pilot Hydraulic Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['pilot hydraulic pressure sensor'] },
+    { group:'Electrical', key:'Hydraulic Pump Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['hydraulic pump pressure sensor'] },
+    { group:'Electrical', key:'Transmission Oil Temperature Sensor', targetLife:8000, warning:5000, critical:6500, match:['transmission oil temperature sensor'] },
+    { group:'Electrical', key:'Transmission Oil Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['transmission oil pressure sensor'] },
+    { group:'Electrical', key:'Torque Converter Temperature Sensor', targetLife:8000, warning:5000, critical:6500, match:['torque converter temperature sensor'] },
+    { group:'Electrical', key:'Torque Converter Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['torque converter pressure sensor'] },
+    { group:'Electrical', key:'Axle / Final Drive Oil Temperature Sensor', targetLife:8000, warning:5000, critical:6500, match:['axle','axle / final drive oil temperature sensor','final drive oil temperature sensor'] },
+    { group:'Electrical', key:'Brake Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['brake pressure sensor'] },
+    { group:'Electrical', key:'Work Equipment Position Sensor', targetLife:8000, warning:5000, critical:6500, match:['work equipment position sensor'] },
+    { group:'Electrical', key:'Accelerator / Throttle Position Sensor', targetLife:8000, warning:5000, critical:6500, match:['accelerator','accelerator / throttle position sensor','throttle position sensor'] },
+    { group:'Electrical', key:'Steering Angle / Position Sensor', targetLife:8000, warning:5000, critical:6500, match:['position sensor','steering angle','steering angle / position sensor'] },
+    { group:'Electrical', key:'Travel Speed Sensor', targetLife:8000, warning:5000, critical:6500, match:['travel speed sensor'] },
+    { group:'Electrical', key:'Fan Speed Sensor', targetLife:8000, warning:5000, critical:6500, match:['fan speed sensor'] },
+    { group:'Electrical', key:'Exhaust Gas Temperature Sensor', targetLife:8000, warning:5000, critical:6500, match:['exhaust gas temperature sensor'] }
   ],
   'D85ESS-2A': [
-    { group:'Engine', key:'Complete Engine', targetLife:15000, warning:12000, critical:13500, match:['complete engine','engine assy','engine'] },
-    { group:'Engine', key:'Turbocharger', targetLife:15000, warning:12000, critical:13500, match:['turbocharger','turbo'] },
-    { group:'Engine', key:'Cylinder Head', targetLife:15000, warning:12000, critical:13500, match:['cylinder head'] },
-    { group:'Engine', key:'Injector', targetLife:12000, warning:9600, critical:10800, match:['injector'] },
-    { group:'Engine', key:'Water Pump', targetLife:10000, warning:8000, critical:9000, match:['water pump'] },
-    { group:'Engine', key:'Alternator', targetLife:12000, warning:9600, critical:10800, match:['alternator','altenator'] },
-    { group:'Engine', key:'Starting Motor', targetLife:12000, warning:9600, critical:10800, match:['starting motor','starter'] },
-    { group:'Power Train', key:'Torque Converter', targetLife:15000, warning:12000, critical:13500, match:['torque converter'] },
-    { group:'Power Train', key:'Transmission', targetLife:15000, warning:12000, critical:13500, match:['transmission','transmisi'] },
-    { group:'Power Train', key:'Steering Clutch', targetLife:15000, warning:12000, critical:13500, match:['steering clutch'] },
-    { group:'Power Train', key:'Steering Brake', targetLife:15000, warning:12000, critical:13500, match:['steering brake'] },
-    { group:'Power Train', key:'Final Drive LH', targetLife:18000, warning:14400, critical:16200, match:['final drive lh','final drive left'] },
-    { group:'Power Train', key:'Final Drive RH', targetLife:18000, warning:14400, critical:16200, match:['final drive rh','final drive right'] },
-    { group:'Hydraulic', key:'Hydraulic Pump', targetLife:15000, warning:12000, critical:13500, match:['hydraulic pump','main pump'] },
-    { group:'Hydraulic', key:'Control Valve', targetLife:18000, warning:14400, critical:16200, match:['control valve'] },
-    { group:'Hydraulic', key:'Lift Cylinder', targetLife:15000, warning:12000, critical:13500, match:['lift cylinder'] },
-    { group:'Hydraulic', key:'Tilt Cylinder', targetLife:15000, warning:12000, critical:13500, match:['tilt cylinder'] },
-    { group:'Work Equipment', key:'Blade Pin & Bushing', targetLife:10000, warning:8000, critical:9000, match:['blade pin','blade bushing','blade pin & bushing'] },
-    { group:'Undercarriage', key:'Track Chain LH', targetLife:15000, warning:12000, critical:13500, match:['track chain lh','track chain left'] },
-    { group:'Undercarriage', key:'Track Chain RH', targetLife:15000, warning:12000, critical:13500, match:['track chain rh','track chain right'] },
-    { group:'Undercarriage', key:'Track Roller', targetLife:12000, warning:9600, critical:10800, match:['track roller'] },
-    { group:'Undercarriage', key:'Carrier Roller', targetLife:12000, warning:9600, critical:10800, match:['carrier roller'] },
-    { group:'Undercarriage', key:'Front Idler', targetLife:15000, warning:12000, critical:13500, match:['front idler','idler'] },
-    { group:'Undercarriage', key:'Sprocket Segment', targetLife:12000, warning:9600, critical:10800, match:['sprocket segment','sprocket'] },
-    { group:'Undercarriage', key:'Track Shoe', targetLife:15000, warning:12000, critical:13500, match:['track shoe'] },
-    { group:'Undercarriage', key:'Equalizer Bar', targetLife:20000, warning:16000, critical:18000, match:['equalizer bar','equalizer'] },
-    { group:'AC System', key:'AC Compressor', targetLife:12000, warning:9600, critical:10800, match:['ac compressor','compressor'] },
-    { group:'AC System', key:'Condenser', targetLife:15000, warning:12000, critical:13500, match:['condenser'] },
-    { group:'AC System', key:'Blower Motor', targetLife:10000, warning:8000, critical:9000, match:['blower motor','blower'] }
+    { group:'Engine', key:'Complete Engine Assy', targetLife:20000, warning:15000, critical:17500, match:['complete engine','complete engine assy'] },
+    { group:'Engine', key:'Cylinder Block', targetLife:20000, warning:15000, critical:17500, match:['cylinder block'] },
+    { group:'Engine', key:'Cylinder Head Assy', targetLife:12000, warning:8000, critical:10000, match:['cylinder head','cylinder head assy'] },
+    { group:'Engine', key:'Cylinder Head Gasket', targetLife:12000, warning:8000, critical:10000, match:['cylinder head gasket'] },
+    { group:'Engine', key:'Cylinder Head Cover', targetLife:15000, warning:10000, critical:12500, match:['cylinder head cover'] },
+    { group:'Engine', key:'Rocker Arm Assy', targetLife:12000, warning:8000, critical:10000, match:['rocker arm','rocker arm assy'] },
+    { group:'Engine', key:'Rocker Shaft', targetLife:15000, warning:10000, critical:12500, match:['rocker shaft'] },
+    { group:'Engine', key:'Intake Valve', targetLife:12000, warning:8000, critical:10000, match:['intake valve'] },
+    { group:'Engine', key:'Exhaust Valve', targetLife:12000, warning:8000, critical:10000, match:['exhaust valve'] },
+    { group:'Engine', key:'Valve Guide', targetLife:12000, warning:8000, critical:10000, match:['valve guide'] },
+    { group:'Engine', key:'Valve Seat', targetLife:12000, warning:8000, critical:10000, match:['valve seat'] },
+    { group:'Engine', key:'Valve Spring', targetLife:12000, warning:8000, critical:10000, match:['valve spring'] },
+    { group:'Engine', key:'Valve Stem Seal', targetLife:12000, warning:8000, critical:10000, match:['valve stem seal'] },
+    { group:'Engine', key:'Tappet / Valve Lifter', targetLife:12000, warning:8000, critical:10000, match:['tappet','tappet / valve lifter','valve lifter'] },
+    { group:'Engine', key:'Push Rod', targetLife:15000, warning:10000, critical:12500, match:['push rod'] },
+    { group:'Engine', key:'Camshaft', targetLife:15000, warning:12000, critical:13500, match:['camshaft'] },
+    { group:'Engine', key:'Camshaft Bearing/Bush', targetLife:15000, warning:10000, critical:12500, match:['bush','camshaft bearing','camshaft bearing/bush'] },
+    { group:'Engine', key:'Crankshaft', targetLife:20000, warning:15000, critical:17500, match:['crankshaft'] },
+    { group:'Engine', key:'Main Bearing Set', targetLife:12000, warning:8000, critical:10000, match:['main bearing set'] },
+    { group:'Engine', key:'Thrust Bearing', targetLife:12000, warning:8000, critical:10000, match:['thrust bearing'] },
+    { group:'Engine', key:'Connecting Rod Assy', targetLife:15000, warning:12000, critical:13500, match:['connecting rod','connecting rod assy'] },
+    { group:'Engine', key:'Connecting Rod Bearing', targetLife:12000, warning:8000, critical:10000, match:['connecting rod bearing'] },
+    { group:'Engine', key:'Piston Assy', targetLife:15000, warning:10000, critical:12500, match:['piston','piston assy'] },
+    { group:'Engine', key:'Piston Ring Set', targetLife:12000, warning:8000, critical:10000, match:['piston ring set'] },
+    { group:'Engine', key:'Piston Pin', targetLife:15000, warning:10000, critical:12500, match:['piston pin'] },
+    { group:'Engine', key:'Piston Pin Bush', targetLife:15000, warning:10000, critical:12500, match:['piston pin bush'] },
+    { group:'Engine', key:'Crankshaft Front Seal', targetLife:12000, warning:8000, critical:10000, match:['crankshaft front seal'] },
+    { group:'Engine', key:'Crankshaft Rear Seal', targetLife:12000, warning:8000, critical:10000, match:['crankshaft rear seal'] },
+    { group:'Engine', key:'Vibration Damper', targetLife:10000, warning:8000, critical:9000, match:['vibration damper'] },
+    { group:'Engine', key:'Timing Gear Assy', targetLife:15000, warning:12000, critical:13500, match:['timing gear','timing gear assy'] },
+    { group:'Engine', key:'Idler Gear', targetLife:15000, warning:12000, critical:13500, match:['idler gear'] },
+    { group:'Engine', key:'Oil Pump Assy', targetLife:12000, warning:8000, critical:10000, match:['oil pump','oil pump assy'] },
+    { group:'Engine', key:'Oil Pump Gear/Drive', targetLife:15000, warning:10000, critical:12500, match:['drive','oil pump gear','oil pump gear/drive'] },
+    { group:'Engine', key:'Oil Cooler Assy', targetLife:12000, warning:8000, critical:10000, match:['oil cooler','oil cooler assy'] },
+    { group:'Engine', key:'Oil Pressure Relief Valve', targetLife:12000, warning:8000, critical:10000, match:['oil pressure relief valve'] },
+    { group:'Engine', key:'Oil Strainer', targetLife:12000, warning:8000, critical:10000, match:['oil strainer'] },
+    { group:'Engine', key:'Oil Pan / Sump', targetLife:20000, warning:15000, critical:17500, match:['oil pan','oil pan / sump','sump'] },
+    { group:'Engine', key:'Water Pump Assy', targetLife:10000, warning:8000, critical:9000, match:['water pump','water pump assy'] },
+    { group:'Engine', key:'Water Pump Bearing/Seal', targetLife:10000, warning:8000, critical:9000, match:['seal','water pump bearing','water pump bearing/seal'] },
+    { group:'Engine', key:'Thermostat', targetLife:6000, warning:4000, critical:5000, match:['thermostat'] },
+    { group:'Engine', key:'Fan', targetLife:15000, warning:10000, critical:12500, match:['fan'] },
+    { group:'Engine', key:'Fan Hub / Fan Drive', targetLife:12000, warning:8000, critical:10000, match:['fan drive','fan hub','fan hub / fan drive'] },
+    { group:'Engine', key:'Fan Bearing', targetLife:12000, warning:8000, critical:10000, match:['fan bearing'] },
+    { group:'Engine', key:'Fan Belt / V-Belt', targetLife:4000, warning:2000, critical:3000, match:['belt','fan belt','fan belt / v-belt'] },
+    { group:'Engine', key:'Turbocharger Assy', targetLife:10000, warning:8000, critical:9000, match:['turbocharger','turbocharger assy'] },
+    { group:'Engine', key:'Turbo Bearing/Seal', targetLife:10000, warning:8000, critical:9000, match:['seal','turbo bearing','turbo bearing/seal'] },
+    { group:'Engine', key:'Intake Manifold', targetLife:15000, warning:12000, critical:13500, match:['intake manifold'] },
+    { group:'Engine', key:'Exhaust Manifold', targetLife:15000, warning:10000, critical:12500, match:['exhaust manifold'] },
+    { group:'Engine', key:'Exhaust Manifold Gasket', targetLife:8000, warning:6000, critical:7000, match:['exhaust manifold gasket'] },
+    { group:'Engine', key:'Air Intake Hose', targetLife:6000, warning:4000, critical:5000, match:['air intake hose'] },
+    { group:'Engine', key:'Intercooler/Aftercooler', targetLife:15000, warning:10000, critical:12500, match:['aftercooler','intercooler','intercooler/aftercooler'] },
+    { group:'Engine', key:'Fuel Supply Pump', targetLife:12000, warning:8000, critical:10000, match:['fuel supply pump'] },
+    { group:'Engine', key:'Fuel Injection/HP Pump', targetLife:12000, warning:8000, critical:10000, match:['fuel injection','fuel injection/hp pump','hp pump'] },
+    { group:'Engine', key:'Common Rail*', targetLife:12000, warning:8000, critical:10000, match:['common rail'] },
+    { group:'Engine', key:'Fuel Injector', targetLife:8000, warning:6000, critical:7000, match:['fuel injector'] },
+    { group:'Engine', key:'Injector Nozzle', targetLife:8000, warning:6000, critical:7000, match:['injector nozzle'] },
+    { group:'Engine', key:'High Pressure Fuel Pipe', targetLife:10000, warning:8000, critical:9000, match:['high pressure fuel pipe'] },
+    { group:'Engine', key:'Fuel Rail Pressure Sensor*', targetLife:8000, warning:5000, critical:6500, match:['fuel rail pressure sensor'] },
+    { group:'Engine', key:'Fuel Primer/Supply Pump', targetLife:8000, warning:6000, critical:7000, match:['fuel primer','fuel primer/supply pump','supply pump'] },
+    { group:'Engine', key:'Fuel Filter Housing', targetLife:15000, warning:10000, critical:12500, match:['fuel filter housing'] },
+    { group:'Engine', key:'Engine ECU/Controller*', targetLife:15000, warning:10000, critical:12500, match:['controller','engine ecu','engine ecu/controller'] },
+    { group:'Engine', key:'Oil Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['oil pressure sensor'] },
+    { group:'Engine', key:'Coolant Temperature Sensor', targetLife:8000, warning:5000, critical:6500, match:['coolant temperature sensor'] },
+    { group:'Engine', key:'Boost Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['boost pressure sensor'] },
+    { group:'Engine', key:'Starter Solenoid', targetLife:8000, warning:6000, critical:7000, match:['starter solenoid'] },
+    { group:'Engine', key:'Flywheel', targetLife:20000, warning:15000, critical:17500, match:['flywheel'] },
+    { group:'Engine', key:'Flywheel Ring Gear', targetLife:15000, warning:12000, critical:13500, match:['flywheel ring gear'] },
+    { group:'Engine', key:'Flywheel Housing', targetLife:20000, warning:15000, critical:17500, match:['flywheel housing'] },
+    { group:'Engine', key:'Engine Mounting', targetLife:12000, warning:8000, critical:10000, match:['engine mounting'] },
+    { group:'Engine', key:'Engine Mount Rubber', targetLife:8000, warning:6000, critical:7000, match:['engine mount rubber'] },
+    { group:'Engine', key:'Exhaust Pipe', targetLife:15000, warning:10000, critical:12500, match:['exhaust pipe'] },
+    { group:'Engine', key:'Muffler', targetLife:15000, warning:10000, critical:12500, match:['muffler'] },
+    { group:'Engine', key:'Exhaust Flexible Joint', targetLife:8000, warning:6000, critical:7000, match:['exhaust flexible joint'] },
+    { group:'Engine', key:'Breather Assy', targetLife:8000, warning:6000, critical:7000, match:['breather','breather assy'] },
+    { group:'Engine', key:'Breather Element', targetLife:6000, warning:4000, critical:5000, match:['breather element'] },
+    { group:'Power Train', key:'Complete Transmission Assy', targetLife:18000, warning:12000, critical:15000, match:['complete transmission','complete transmission assy'] },
+    { group:'Power Train', key:'Transmission Case', targetLife:20000, warning:15000, critical:17500, match:['transmission case'] },
+    { group:'Power Train', key:'Transmission Pump', targetLife:12000, warning:8000, critical:10000, match:['transmission pump'] },
+    { group:'Power Train', key:'Transmission Control Valve', targetLife:12000, warning:8000, critical:10000, match:['transmission control valve'] },
+    { group:'Power Train', key:'Transmission Clutch Pack', targetLife:12000, warning:8000, critical:10000, match:['transmission clutch pack'] },
+    { group:'Power Train', key:'Clutch Disc', targetLife:10000, warning:6000, critical:8000, match:['clutch disc'] },
+    { group:'Power Train', key:'Clutch Plate', targetLife:12000, warning:8000, critical:10000, match:['clutch plate'] },
+    { group:'Power Train', key:'Clutch Piston/Seal', targetLife:10000, warning:6000, critical:8000, match:['clutch piston','clutch piston/seal','seal'] },
+    { group:'Power Train', key:'Transmission Gear Set', targetLife:18000, warning:12000, critical:15000, match:['transmission gear set'] },
+    { group:'Power Train', key:'Planetary Gear Set', targetLife:18000, warning:12000, critical:15000, match:['planetary gear set'] },
+    { group:'Power Train', key:'Sun Gear', targetLife:18000, warning:12000, critical:15000, match:['sun gear'] },
+    { group:'Power Train', key:'Ring Gear', targetLife:18000, warning:12000, critical:15000, match:['ring gear'] },
+    { group:'Power Train', key:'Planet Gear/Bearing', targetLife:15000, warning:10000, critical:12500, match:['bearing','planet gear','planet gear/bearing'] },
+    { group:'Power Train', key:'Transmission Bearing', targetLife:12000, warning:8000, critical:10000, match:['transmission bearing'] },
+    { group:'Power Train', key:'Transmission Shaft', targetLife:18000, warning:12000, critical:15000, match:['transmission shaft'] },
+    { group:'Power Train', key:'Output Shaft', targetLife:18000, warning:12000, critical:15000, match:['output shaft'] },
+    { group:'Power Train', key:'Transmission Oil Cooler', targetLife:12000, warning:8000, critical:10000, match:['transmission oil cooler'] },
+    { group:'Power Train', key:'Transmission Oil Filter Housing', targetLife:15000, warning:10000, critical:12500, match:['transmission oil filter housing'] },
+    { group:'Power Train', key:'Transmission Oil Filter', targetLife:1000, warning:500, critical:750, match:['transmission oil filter'] },
+    { group:'Power Train', key:'Speed Sensor', targetLife:8000, warning:5000, critical:6500, match:['speed sensor'] },
+    { group:'Power Train', key:'Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['pressure sensor'] },
+    { group:'Power Train', key:'Transmission Wiring Harness', targetLife:15000, warning:10000, critical:12500, match:['transmission wiring harness'] },
+    { group:'Power Train', key:'Transmission Seal Kit', targetLife:10000, warning:6000, critical:8000, match:['transmission seal kit'] },
+    { group:'Hydraulic', key:'Hydraulic Pump Assy', targetLife:12000, warning:8000, critical:10000, match:['hydraulic pump','hydraulic pump assy'] },
+    { group:'Hydraulic', key:'Main Pump', targetLife:12000, warning:8000, critical:10000, match:['main pump'] },
+    { group:'Hydraulic', key:'Pilot Pump', targetLife:10000, warning:6000, critical:8000, match:['pilot pump'] },
+    { group:'Hydraulic', key:'Hydraulic Control Valve / Main Control Valve', targetLife:15000, warning:10000, critical:12500, match:['hydraulic control valve','hydraulic control valve / main control valve','main control valve'] },
+    { group:'Hydraulic', key:'Relief Valve', targetLife:10000, warning:6000, critical:8000, match:['relief valve'] },
+    { group:'Hydraulic', key:'Check Valve', targetLife:12000, warning:8000, critical:10000, match:['check valve'] },
+    { group:'Hydraulic', key:'Hydraulic Cylinder Assy', targetLife:12000, warning:8000, critical:10000, match:['hydraulic cylinder','hydraulic cylinder assy'] },
+    { group:'Hydraulic', key:'Cylinder Rod', targetLife:12000, warning:8000, critical:10000, match:['cylinder rod'] },
+    { group:'Hydraulic', key:'Cylinder Barrel', targetLife:18000, warning:12000, critical:15000, match:['cylinder barrel'] },
+    { group:'Hydraulic', key:'Cylinder Seal Kit', targetLife:8000, warning:4000, critical:6000, match:['cylinder seal kit'] },
+    { group:'Hydraulic', key:'Hydraulic Hose Assembly – Main', targetLife:8000, warning:4000, critical:6000, match:['hydraulic hose assembly','hydraulic hose assembly – main','main'] },
+    { group:'Hydraulic', key:'Hydraulic Hose Assembly – Pilot', targetLife:6000, warning:3000, critical:4500, match:['hydraulic hose assembly','hydraulic hose assembly – pilot','pilot'] },
+    { group:'Hydraulic', key:'Hydraulic Hard Pipe', targetLife:15000, warning:10000, critical:12500, match:['hydraulic hard pipe'] },
+    { group:'Hydraulic', key:'Hydraulic Tank', targetLife:20000, warning:15000, critical:17500, match:['hydraulic tank'] },
+    { group:'Hydraulic', key:'Hydraulic Tank Breather', targetLife:4000, warning:2000, critical:3000, match:['hydraulic tank breather'] },
+    { group:'Hydraulic', key:'Hydraulic Return Filter', targetLife:1000, warning:500, critical:750, match:['hydraulic return filter'] },
+    { group:'Hydraulic', key:'Hydraulic Suction Strainer', targetLife:8000, warning:4000, critical:6000, match:['hydraulic suction strainer'] },
+    { group:'Hydraulic', key:'Hydraulic Oil Cooler', targetLife:12000, warning:8000, critical:10000, match:['hydraulic oil cooler'] },
+    { group:'Hydraulic', key:'Hydraulic Accumulator', targetLife:10000, warning:5000, critical:7500, match:['hydraulic accumulator'] },
+    { group:'Hydraulic', key:'Hydraulic Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['hydraulic pressure sensor'] },
+    { group:'Hydraulic', key:'Hydraulic Pilot Valve', targetLife:10000, warning:6000, critical:8000, match:['hydraulic pilot valve'] },
+    { group:'Hydraulic', key:'Hydraulic Joystick/Control Lever', targetLife:12000, warning:8000, critical:10000, match:['control lever','hydraulic joystick','hydraulic joystick/control lever'] },
+    { group:'Hydraulic', key:'Hydraulic O-ring/Seal Set', targetLife:8000, warning:4000, critical:6000, match:['hydraulic o','hydraulic o-ring/seal set','ring','seal set'] },
+    { group:'Work Equipment', key:'Dozer Blade Assy', targetLife:12000, warning:8000, critical:10000, match:['dozer blade','dozer blade assy'] },
+    { group:'Work Equipment', key:'Blade Cutting Edge', targetLife:3000, warning:1500, critical:2250, match:['blade cutting edge'] },
+    { group:'Work Equipment', key:'Blade End Bit', targetLife:3000, warning:1500, critical:2250, match:['blade end bit'] },
+    { group:'Work Equipment', key:'Blade Push Arm', targetLife:15000, warning:10000, critical:12500, match:['blade push arm'] },
+    { group:'Work Equipment', key:'Blade Tilt Cylinder', targetLife:10000, warning:6000, critical:8000, match:['blade tilt cylinder'] },
+    { group:'Work Equipment', key:'Blade Lift Cylinder', targetLife:10000, warning:6000, critical:8000, match:['blade lift cylinder'] },
+    { group:'Work Equipment', key:'Blade Cylinder Seal Kit', targetLife:8000, warning:4000, critical:6000, match:['blade cylinder seal kit'] },
+    { group:'Electrical', key:'Alternator', targetLife:10000, warning:8000, critical:9000, match:['alternator'] },
+    { group:'Electrical', key:'Starting Motor', targetLife:8000, warning:6000, critical:7000, match:['starting motor'] },
+    { group:'Electrical', key:'Battery', targetLife:4000, warning:2000, critical:3000, match:['battery'] },
+    { group:'Electrical', key:'Battery Cable', targetLife:10000, warning:6000, critical:8000, match:['battery cable'] },
+    { group:'Electrical', key:'Battery Disconnect Switch', targetLife:12000, warning:8000, critical:10000, match:['battery disconnect switch'] },
+    { group:'Electrical', key:'Main Fuse', targetLife:8000, warning:4000, critical:6000, match:['main fuse'] },
+    { group:'Electrical', key:'Main Relay', targetLife:8000, warning:5000, critical:6500, match:['main relay'] },
+    { group:'Electrical', key:'Starter Relay', targetLife:8000, warning:5000, critical:6500, match:['starter relay'] },
+    { group:'Electrical', key:'Work Lamp', targetLife:8000, warning:4000, critical:6000, match:['work lamp'] },
+    { group:'Electrical', key:'Head Lamp', targetLife:8000, warning:4000, critical:6000, match:['head lamp'] },
+    { group:'Electrical', key:'Rear Lamp', targetLife:8000, warning:4000, critical:6000, match:['rear lamp'] },
+    { group:'Electrical', key:'Warning Lamp', targetLife:8000, warning:4000, critical:6000, match:['warning lamp'] },
+    { group:'Electrical', key:'Horn', targetLife:8000, warning:5000, critical:6500, match:['horn'] },
+    { group:'Electrical', key:'Monitor Panel', targetLife:15000, warning:10000, critical:12500, match:['monitor panel'] },
+    { group:'Electrical', key:'Machine Controller / ECM', targetLife:15000, warning:10000, critical:12500, match:['ecm','machine controller','machine controller / ecm'] },
+    { group:'Electrical', key:'Engine Controller', targetLife:15000, warning:10000, critical:12500, match:['engine controller'] },
+    { group:'Electrical', key:'Transmission Controller*', targetLife:15000, warning:10000, critical:12500, match:['transmission controller'] },
+    { group:'Electrical', key:'Hydraulic Controller*', targetLife:15000, warning:10000, critical:12500, match:['hydraulic controller'] },
+    { group:'Electrical', key:'Machine Wiring Harness', targetLife:15000, warning:10000, critical:12500, match:['machine wiring harness'] },
+    { group:'Electrical', key:'Engine Wiring Harness', targetLife:15000, warning:10000, critical:12500, match:['engine wiring harness'] },
+    { group:'Electrical', key:'Ground Cable', targetLife:10000, warning:6000, critical:8000, match:['ground cable'] },
+    { group:'Electrical', key:'Engine Oil Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['engine oil pressure sensor'] },
+    { group:'Electrical', key:'Engine Coolant Temperature Sensor', targetLife:8000, warning:5000, critical:6500, match:['engine coolant temperature sensor'] },
+    { group:'Electrical', key:'Engine Oil Temperature Sensor', targetLife:8000, warning:5000, critical:6500, match:['engine oil temperature sensor'] },
+    { group:'Electrical', key:'Intake Manifold Pressure / Boost Sensor', targetLife:8000, warning:5000, critical:6500, match:['boost sensor','intake manifold pressure','intake manifold pressure / boost sensor'] },
+    { group:'Electrical', key:'Intake Air Temperature Sensor', targetLife:8000, warning:5000, critical:6500, match:['intake air temperature sensor'] },
+    { group:'Electrical', key:'Fuel Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['fuel pressure sensor'] },
+    { group:'Electrical', key:'Fuel Temperature Sensor', targetLife:8000, warning:5000, critical:6500, match:['fuel temperature sensor'] },
+    { group:'Electrical', key:'Crankshaft Position Sensor', targetLife:10000, warning:6000, critical:8000, match:['crankshaft position sensor'] },
+    { group:'Electrical', key:'Camshaft Position Sensor', targetLife:10000, warning:6000, critical:8000, match:['camshaft position sensor'] },
+    { group:'Electrical', key:'Engine Speed Sensor', targetLife:8000, warning:5000, critical:6500, match:['engine speed sensor'] },
+    { group:'Electrical', key:'Hydraulic Oil Temperature Sensor', targetLife:8000, warning:5000, critical:6500, match:['hydraulic oil temperature sensor'] },
+    { group:'Electrical', key:'Main Hydraulic Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['main hydraulic pressure sensor'] },
+    { group:'Electrical', key:'Pilot Hydraulic Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['pilot hydraulic pressure sensor'] },
+    { group:'Electrical', key:'Hydraulic Pump Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['hydraulic pump pressure sensor'] },
+    { group:'Electrical', key:'Transmission Oil Temperature Sensor', targetLife:8000, warning:5000, critical:6500, match:['transmission oil temperature sensor'] },
+    { group:'Electrical', key:'Transmission Oil Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['transmission oil pressure sensor'] },
+    { group:'Electrical', key:'Torque Converter Temperature Sensor', targetLife:8000, warning:5000, critical:6500, match:['torque converter temperature sensor'] },
+    { group:'Electrical', key:'Torque Converter Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['torque converter pressure sensor'] },
+    { group:'Electrical', key:'Axle / Final Drive Oil Temperature Sensor', targetLife:8000, warning:5000, critical:6500, match:['axle','axle / final drive oil temperature sensor','final drive oil temperature sensor'] },
+    { group:'Electrical', key:'Brake Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['brake pressure sensor'] },
+    { group:'Electrical', key:'Work Equipment Position Sensor', targetLife:8000, warning:5000, critical:6500, match:['work equipment position sensor'] },
+    { group:'Electrical', key:'Accelerator / Throttle Position Sensor', targetLife:8000, warning:5000, critical:6500, match:['accelerator','accelerator / throttle position sensor','throttle position sensor'] },
+    { group:'Electrical', key:'Steering Angle / Position Sensor', targetLife:8000, warning:5000, critical:6500, match:['position sensor','steering angle','steering angle / position sensor'] },
+    { group:'Electrical', key:'Travel Speed Sensor', targetLife:8000, warning:5000, critical:6500, match:['travel speed sensor'] },
+    { group:'Electrical', key:'Fan Speed Sensor', targetLife:8000, warning:5000, critical:6500, match:['fan speed sensor'] },
+    { group:'Electrical', key:'Exhaust Gas Temperature Sensor', targetLife:8000, warning:5000, critical:6500, match:['exhaust gas temperature sensor'] },
+    { group:'Undercarriage', key:'Track Chain Assembly', targetLife:8000, warning:4000, critical:6000, match:['track chain assembly'] },
+    { group:'Undercarriage', key:'Track Link', targetLife:8000, warning:4000, critical:6000, match:['track link'] },
+    { group:'Undercarriage', key:'Track Shoe', targetLife:6000, warning:3000, critical:4500, match:['track shoe'] },
+    { group:'Undercarriage', key:'Track Shoe Bolt/Nut', targetLife:4000, warning:2000, critical:3000, match:['nut','track shoe bolt','track shoe bolt/nut'] },
+    { group:'Undercarriage', key:'Track Roller', targetLife:6000, warning:3000, critical:4500, match:['track roller'] },
+    { group:'Undercarriage', key:'Carrier Roller', targetLife:8000, warning:4000, critical:6000, match:['carrier roller'] },
+    { group:'Undercarriage', key:'Front Idler', targetLife:9000, warning:5000, critical:7000, match:['front idler'] },
+    { group:'Undercarriage', key:'Idler Recoil Spring', targetLife:12000, warning:8000, critical:10000, match:['idler recoil spring'] },
+    { group:'Undercarriage', key:'Track Adjuster Cylinder', targetLife:10000, warning:6000, critical:8000, match:['track adjuster cylinder'] },
+    { group:'Undercarriage', key:'Track Sprocket', targetLife:9000, warning:5000, critical:7000, match:['track sprocket'] },
+    { group:'Undercarriage', key:'Final Drive Assy', targetLife:12000, warning:8000, critical:10000, match:['final drive','final drive assy'] },
+    { group:'Undercarriage', key:'Final Drive Planetary Gear', targetLife:12000, warning:8000, critical:10000, match:['final drive planetary gear'] },
+    { group:'Undercarriage', key:'Final Drive Bearing', targetLife:10000, warning:6000, critical:8000, match:['final drive bearing'] },
+    { group:'Undercarriage', key:'Final Drive Seal Kit', targetLife:8000, warning:4000, critical:6000, match:['final drive seal kit'] },
+    { group:'Undercarriage', key:'Track Frame', targetLife:20000, warning:12000, critical:16000, match:['track frame'] },
+    { group:'Undercarriage', key:'Track Guard', targetLife:12000, warning:8000, critical:10000, match:['track guard'] }
   ],
   'PC210-10MO': [
-    { group:'Engine', key:'Complete Engine', targetLife:15000, warning:12000, critical:13500, match:['complete engine','engine assy','engine'] },
-    { group:'Engine', key:'Turbocharger', targetLife:15000, warning:12000, critical:13500, match:['turbocharger','turbo'] },
-    { group:'Engine', key:'Cylinder Head', targetLife:15000, warning:12000, critical:13500, match:['cylinder head'] },
-    { group:'Engine', key:'Injector', targetLife:12000, warning:9600, critical:10800, match:['injector'] },
-    { group:'Engine', key:'Water Pump', targetLife:10000, warning:8000, critical:9000, match:['water pump'] },
-    { group:'Engine', key:'Alternator', targetLife:12000, warning:9600, critical:10800, match:['alternator','altenator'] },
-    { group:'Engine', key:'Starting Motor', targetLife:12000, warning:9600, critical:10800, match:['starting motor','starter'] },
-    { group:'Hydraulic', key:'Main Pump', targetLife:15000, warning:12000, critical:13500, match:['main pump','hydraulic pump'] },
-    { group:'Hydraulic', key:'Main Control Valve', targetLife:20000, warning:16000, critical:18000, match:['main control valve','control valve'] },
-    { group:'Hydraulic', key:'Pilot Pump', targetLife:15000, warning:12000, critical:13500, match:['pilot pump'] },
-    { group:'Hydraulic', key:'Swing Motor', targetLife:15000, warning:12000, critical:13500, match:['swing motor'] },
-    { group:'Hydraulic', key:'Swing Reduction', targetLife:18000, warning:14400, critical:16200, match:['swing reduction'] },
-    { group:'Hydraulic', key:'Travel Motor LH', targetLife:15000, warning:12000, critical:13500, match:['travel motor lh','travel motor left'] },
-    { group:'Hydraulic', key:'Travel Motor RH', targetLife:15000, warning:12000, critical:13500, match:['travel motor rh','travel motor right'] },
-    { group:'Hydraulic', key:'Final Drive LH', targetLife:18000, warning:14400, critical:16200, match:['final drive lh','final drive left'] },
-    { group:'Hydraulic', key:'Final Drive RH', targetLife:18000, warning:14400, critical:16200, match:['final drive rh','final drive right'] },
-    { group:'Hydraulic', key:'Center Joint', targetLife:20000, warning:16000, critical:18000, match:['center joint','centre joint','swivel joint'] },
-    { group:'Work Equipment', key:'Boom Cylinder', targetLife:15000, warning:12000, critical:13500, match:['boom cylinder'] },
-    { group:'Work Equipment', key:'Arm Cylinder', targetLife:15000, warning:12000, critical:13500, match:['arm cylinder'] },
-    { group:'Work Equipment', key:'Bucket Cylinder', targetLife:15000, warning:12000, critical:13500, match:['bucket cylinder'] },
-    { group:'Work Equipment', key:'Boom Pin & Bushing', targetLife:15000, warning:12000, critical:13500, match:['boom pin','boom bushing','boom pin & bushing'] },
-    { group:'Work Equipment', key:'Arm Pin & Bushing', targetLife:12000, warning:9600, critical:10800, match:['arm pin','arm bushing','arm pin & bushing'] },
-    { group:'Work Equipment', key:'Bucket Pin & Bushing', targetLife:10000, warning:8000, critical:9000, match:['bucket pin','bucket bushing','bucket pin & bushing'] },
-    { group:'Undercarriage', key:'Track Chain LH', targetLife:15000, warning:12000, critical:13500, match:['track chain lh','track chain left'] },
-    { group:'Undercarriage', key:'Track Chain RH', targetLife:15000, warning:12000, critical:13500, match:['track chain rh','track chain right'] },
-    { group:'Undercarriage', key:'Track Roller', targetLife:12000, warning:9600, critical:10800, match:['track roller'] },
-    { group:'Undercarriage', key:'Carrier Roller', targetLife:12000, warning:9600, critical:10800, match:['carrier roller'] },
-    { group:'Undercarriage', key:'Front Idler', targetLife:15000, warning:12000, critical:13500, match:['front idler','idler'] },
-    { group:'Undercarriage', key:'Sprocket', targetLife:15000, warning:12000, critical:13500, match:['sprocket'] },
-    { group:'Electrical', key:'Battery System', targetLife:8000, warning:6400, critical:7200, match:['battery','baterai'] },
-    { group:'AC System', key:'AC Compressor', targetLife:12000, warning:9600, critical:10800, match:['ac compressor','compressor'] },
-    { group:'AC System', key:'Condenser', targetLife:15000, warning:12000, critical:13500, match:['condenser'] },
-    { group:'AC System', key:'Blower Motor', targetLife:10000, warning:8000, critical:9000, match:['blower motor','blower'] }
+    { group:'Engine', key:'Complete Engine Assy', targetLife:20000, warning:15000, critical:17500, match:['complete engine','complete engine assy'] },
+    { group:'Engine', key:'Cylinder Block', targetLife:20000, warning:15000, critical:17500, match:['cylinder block'] },
+    { group:'Engine', key:'Cylinder Head Assy', targetLife:12000, warning:8000, critical:10000, match:['cylinder head','cylinder head assy'] },
+    { group:'Engine', key:'Cylinder Head Gasket', targetLife:12000, warning:8000, critical:10000, match:['cylinder head gasket'] },
+    { group:'Engine', key:'Cylinder Head Cover', targetLife:15000, warning:10000, critical:12500, match:['cylinder head cover'] },
+    { group:'Engine', key:'Rocker Arm Assy', targetLife:12000, warning:8000, critical:10000, match:['rocker arm','rocker arm assy'] },
+    { group:'Engine', key:'Rocker Shaft', targetLife:15000, warning:10000, critical:12500, match:['rocker shaft'] },
+    { group:'Engine', key:'Intake Valve', targetLife:12000, warning:8000, critical:10000, match:['intake valve'] },
+    { group:'Engine', key:'Exhaust Valve', targetLife:12000, warning:8000, critical:10000, match:['exhaust valve'] },
+    { group:'Engine', key:'Valve Guide', targetLife:12000, warning:8000, critical:10000, match:['valve guide'] },
+    { group:'Engine', key:'Valve Seat', targetLife:12000, warning:8000, critical:10000, match:['valve seat'] },
+    { group:'Engine', key:'Valve Spring', targetLife:12000, warning:8000, critical:10000, match:['valve spring'] },
+    { group:'Engine', key:'Valve Stem Seal', targetLife:12000, warning:8000, critical:10000, match:['valve stem seal'] },
+    { group:'Engine', key:'Tappet / Valve Lifter', targetLife:12000, warning:8000, critical:10000, match:['tappet','tappet / valve lifter','valve lifter'] },
+    { group:'Engine', key:'Push Rod', targetLife:15000, warning:10000, critical:12500, match:['push rod'] },
+    { group:'Engine', key:'Camshaft', targetLife:15000, warning:12000, critical:13500, match:['camshaft'] },
+    { group:'Engine', key:'Camshaft Bearing/Bush', targetLife:15000, warning:10000, critical:12500, match:['bush','camshaft bearing','camshaft bearing/bush'] },
+    { group:'Engine', key:'Crankshaft', targetLife:20000, warning:15000, critical:17500, match:['crankshaft'] },
+    { group:'Engine', key:'Main Bearing Set', targetLife:12000, warning:8000, critical:10000, match:['main bearing set'] },
+    { group:'Engine', key:'Thrust Bearing', targetLife:12000, warning:8000, critical:10000, match:['thrust bearing'] },
+    { group:'Engine', key:'Connecting Rod Assy', targetLife:15000, warning:12000, critical:13500, match:['connecting rod','connecting rod assy'] },
+    { group:'Engine', key:'Connecting Rod Bearing', targetLife:12000, warning:8000, critical:10000, match:['connecting rod bearing'] },
+    { group:'Engine', key:'Piston Assy', targetLife:15000, warning:10000, critical:12500, match:['piston','piston assy'] },
+    { group:'Engine', key:'Piston Ring Set', targetLife:12000, warning:8000, critical:10000, match:['piston ring set'] },
+    { group:'Engine', key:'Piston Pin', targetLife:15000, warning:10000, critical:12500, match:['piston pin'] },
+    { group:'Engine', key:'Piston Pin Bush', targetLife:15000, warning:10000, critical:12500, match:['piston pin bush'] },
+    { group:'Engine', key:'Crankshaft Front Seal', targetLife:12000, warning:8000, critical:10000, match:['crankshaft front seal'] },
+    { group:'Engine', key:'Crankshaft Rear Seal', targetLife:12000, warning:8000, critical:10000, match:['crankshaft rear seal'] },
+    { group:'Engine', key:'Vibration Damper', targetLife:10000, warning:8000, critical:9000, match:['vibration damper'] },
+    { group:'Engine', key:'Timing Gear Assy', targetLife:15000, warning:12000, critical:13500, match:['timing gear','timing gear assy'] },
+    { group:'Engine', key:'Idler Gear', targetLife:15000, warning:12000, critical:13500, match:['idler gear'] },
+    { group:'Engine', key:'Oil Pump Assy', targetLife:12000, warning:8000, critical:10000, match:['oil pump','oil pump assy'] },
+    { group:'Engine', key:'Oil Pump Gear/Drive', targetLife:15000, warning:10000, critical:12500, match:['drive','oil pump gear','oil pump gear/drive'] },
+    { group:'Engine', key:'Oil Cooler Assy', targetLife:12000, warning:8000, critical:10000, match:['oil cooler','oil cooler assy'] },
+    { group:'Engine', key:'Oil Pressure Relief Valve', targetLife:12000, warning:8000, critical:10000, match:['oil pressure relief valve'] },
+    { group:'Engine', key:'Oil Strainer', targetLife:12000, warning:8000, critical:10000, match:['oil strainer'] },
+    { group:'Engine', key:'Oil Pan / Sump', targetLife:20000, warning:15000, critical:17500, match:['oil pan','oil pan / sump','sump'] },
+    { group:'Engine', key:'Water Pump Assy', targetLife:10000, warning:8000, critical:9000, match:['water pump','water pump assy'] },
+    { group:'Engine', key:'Water Pump Bearing/Seal', targetLife:10000, warning:8000, critical:9000, match:['seal','water pump bearing','water pump bearing/seal'] },
+    { group:'Engine', key:'Thermostat', targetLife:6000, warning:4000, critical:5000, match:['thermostat'] },
+    { group:'Engine', key:'Fan', targetLife:15000, warning:10000, critical:12500, match:['fan'] },
+    { group:'Engine', key:'Fan Hub / Fan Drive', targetLife:12000, warning:8000, critical:10000, match:['fan drive','fan hub','fan hub / fan drive'] },
+    { group:'Engine', key:'Fan Bearing', targetLife:12000, warning:8000, critical:10000, match:['fan bearing'] },
+    { group:'Engine', key:'Fan Belt / V-Belt', targetLife:4000, warning:2000, critical:3000, match:['belt','fan belt','fan belt / v-belt'] },
+    { group:'Engine', key:'Turbocharger Assy', targetLife:10000, warning:8000, critical:9000, match:['turbocharger','turbocharger assy'] },
+    { group:'Engine', key:'Turbo Bearing/Seal', targetLife:10000, warning:8000, critical:9000, match:['seal','turbo bearing','turbo bearing/seal'] },
+    { group:'Engine', key:'Intake Manifold', targetLife:15000, warning:12000, critical:13500, match:['intake manifold'] },
+    { group:'Engine', key:'Exhaust Manifold', targetLife:15000, warning:10000, critical:12500, match:['exhaust manifold'] },
+    { group:'Engine', key:'Exhaust Manifold Gasket', targetLife:8000, warning:6000, critical:7000, match:['exhaust manifold gasket'] },
+    { group:'Engine', key:'Air Intake Hose', targetLife:6000, warning:4000, critical:5000, match:['air intake hose'] },
+    { group:'Engine', key:'Intercooler/Aftercooler', targetLife:15000, warning:10000, critical:12500, match:['aftercooler','intercooler','intercooler/aftercooler'] },
+    { group:'Engine', key:'Fuel Supply Pump', targetLife:12000, warning:8000, critical:10000, match:['fuel supply pump'] },
+    { group:'Engine', key:'Fuel Injection/HP Pump', targetLife:12000, warning:8000, critical:10000, match:['fuel injection','fuel injection/hp pump','hp pump'] },
+    { group:'Engine', key:'Common Rail*', targetLife:12000, warning:8000, critical:10000, match:['common rail'] },
+    { group:'Engine', key:'Fuel Injector', targetLife:8000, warning:6000, critical:7000, match:['fuel injector'] },
+    { group:'Engine', key:'Injector Nozzle', targetLife:8000, warning:6000, critical:7000, match:['injector nozzle'] },
+    { group:'Engine', key:'High Pressure Fuel Pipe', targetLife:10000, warning:8000, critical:9000, match:['high pressure fuel pipe'] },
+    { group:'Engine', key:'Fuel Rail Pressure Sensor*', targetLife:8000, warning:5000, critical:6500, match:['fuel rail pressure sensor'] },
+    { group:'Engine', key:'Fuel Primer/Supply Pump', targetLife:8000, warning:6000, critical:7000, match:['fuel primer','fuel primer/supply pump','supply pump'] },
+    { group:'Engine', key:'Fuel Filter Housing', targetLife:15000, warning:10000, critical:12500, match:['fuel filter housing'] },
+    { group:'Engine', key:'Engine ECU/Controller*', targetLife:15000, warning:10000, critical:12500, match:['controller','engine ecu','engine ecu/controller'] },
+    { group:'Engine', key:'Oil Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['oil pressure sensor'] },
+    { group:'Engine', key:'Coolant Temperature Sensor', targetLife:8000, warning:5000, critical:6500, match:['coolant temperature sensor'] },
+    { group:'Engine', key:'Boost Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['boost pressure sensor'] },
+    { group:'Engine', key:'Starter Solenoid', targetLife:8000, warning:6000, critical:7000, match:['starter solenoid'] },
+    { group:'Engine', key:'Flywheel', targetLife:20000, warning:15000, critical:17500, match:['flywheel'] },
+    { group:'Engine', key:'Flywheel Ring Gear', targetLife:15000, warning:12000, critical:13500, match:['flywheel ring gear'] },
+    { group:'Engine', key:'Flywheel Housing', targetLife:20000, warning:15000, critical:17500, match:['flywheel housing'] },
+    { group:'Engine', key:'Engine Mounting', targetLife:12000, warning:8000, critical:10000, match:['engine mounting'] },
+    { group:'Engine', key:'Engine Mount Rubber', targetLife:8000, warning:6000, critical:7000, match:['engine mount rubber'] },
+    { group:'Engine', key:'Exhaust Pipe', targetLife:15000, warning:10000, critical:12500, match:['exhaust pipe'] },
+    { group:'Engine', key:'Muffler', targetLife:15000, warning:10000, critical:12500, match:['muffler'] },
+    { group:'Engine', key:'Exhaust Flexible Joint', targetLife:8000, warning:6000, critical:7000, match:['exhaust flexible joint'] },
+    { group:'Engine', key:'Breather Assy', targetLife:8000, warning:6000, critical:7000, match:['breather','breather assy'] },
+    { group:'Engine', key:'Breather Element', targetLife:6000, warning:4000, critical:5000, match:['breather element'] },
+    { group:'Power Train', key:'Complete Transmission Assy', targetLife:18000, warning:12000, critical:15000, match:['complete transmission','complete transmission assy'] },
+    { group:'Power Train', key:'Transmission Case', targetLife:20000, warning:15000, critical:17500, match:['transmission case'] },
+    { group:'Power Train', key:'Transmission Pump', targetLife:12000, warning:8000, critical:10000, match:['transmission pump'] },
+    { group:'Power Train', key:'Transmission Control Valve', targetLife:12000, warning:8000, critical:10000, match:['transmission control valve'] },
+    { group:'Power Train', key:'Transmission Clutch Pack', targetLife:12000, warning:8000, critical:10000, match:['transmission clutch pack'] },
+    { group:'Power Train', key:'Clutch Disc', targetLife:10000, warning:6000, critical:8000, match:['clutch disc'] },
+    { group:'Power Train', key:'Clutch Plate', targetLife:12000, warning:8000, critical:10000, match:['clutch plate'] },
+    { group:'Power Train', key:'Clutch Piston/Seal', targetLife:10000, warning:6000, critical:8000, match:['clutch piston','clutch piston/seal','seal'] },
+    { group:'Power Train', key:'Transmission Gear Set', targetLife:18000, warning:12000, critical:15000, match:['transmission gear set'] },
+    { group:'Power Train', key:'Planetary Gear Set', targetLife:18000, warning:12000, critical:15000, match:['planetary gear set'] },
+    { group:'Power Train', key:'Sun Gear', targetLife:18000, warning:12000, critical:15000, match:['sun gear'] },
+    { group:'Power Train', key:'Ring Gear', targetLife:18000, warning:12000, critical:15000, match:['ring gear'] },
+    { group:'Power Train', key:'Planet Gear/Bearing', targetLife:15000, warning:10000, critical:12500, match:['bearing','planet gear','planet gear/bearing'] },
+    { group:'Power Train', key:'Transmission Bearing', targetLife:12000, warning:8000, critical:10000, match:['transmission bearing'] },
+    { group:'Power Train', key:'Transmission Shaft', targetLife:18000, warning:12000, critical:15000, match:['transmission shaft'] },
+    { group:'Power Train', key:'Output Shaft', targetLife:18000, warning:12000, critical:15000, match:['output shaft'] },
+    { group:'Power Train', key:'Transmission Oil Cooler', targetLife:12000, warning:8000, critical:10000, match:['transmission oil cooler'] },
+    { group:'Power Train', key:'Transmission Oil Filter Housing', targetLife:15000, warning:10000, critical:12500, match:['transmission oil filter housing'] },
+    { group:'Power Train', key:'Transmission Oil Filter', targetLife:1000, warning:500, critical:750, match:['transmission oil filter'] },
+    { group:'Power Train', key:'Speed Sensor', targetLife:8000, warning:5000, critical:6500, match:['speed sensor'] },
+    { group:'Power Train', key:'Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['pressure sensor'] },
+    { group:'Power Train', key:'Transmission Wiring Harness', targetLife:15000, warning:10000, critical:12500, match:['transmission wiring harness'] },
+    { group:'Power Train', key:'Transmission Seal Kit', targetLife:10000, warning:6000, critical:8000, match:['transmission seal kit'] },
+    { group:'Hydraulic', key:'Hydraulic Pump Assy', targetLife:12000, warning:8000, critical:10000, match:['hydraulic pump','hydraulic pump assy'] },
+    { group:'Hydraulic', key:'Main Pump', targetLife:12000, warning:8000, critical:10000, match:['main pump'] },
+    { group:'Hydraulic', key:'Pilot Pump', targetLife:10000, warning:6000, critical:8000, match:['pilot pump'] },
+    { group:'Hydraulic', key:'Hydraulic Control Valve / Main Control Valve', targetLife:15000, warning:10000, critical:12500, match:['hydraulic control valve','hydraulic control valve / main control valve','main control valve'] },
+    { group:'Hydraulic', key:'Relief Valve', targetLife:10000, warning:6000, critical:8000, match:['relief valve'] },
+    { group:'Hydraulic', key:'Check Valve', targetLife:12000, warning:8000, critical:10000, match:['check valve'] },
+    { group:'Hydraulic', key:'Hydraulic Cylinder Assy', targetLife:12000, warning:8000, critical:10000, match:['hydraulic cylinder','hydraulic cylinder assy'] },
+    { group:'Hydraulic', key:'Cylinder Rod', targetLife:12000, warning:8000, critical:10000, match:['cylinder rod'] },
+    { group:'Hydraulic', key:'Cylinder Barrel', targetLife:18000, warning:12000, critical:15000, match:['cylinder barrel'] },
+    { group:'Hydraulic', key:'Cylinder Seal Kit', targetLife:8000, warning:4000, critical:6000, match:['cylinder seal kit'] },
+    { group:'Hydraulic', key:'Hydraulic Hose Assembly – Main', targetLife:8000, warning:4000, critical:6000, match:['hydraulic hose assembly','hydraulic hose assembly – main','main'] },
+    { group:'Hydraulic', key:'Hydraulic Hose Assembly – Pilot', targetLife:6000, warning:3000, critical:4500, match:['hydraulic hose assembly','hydraulic hose assembly – pilot','pilot'] },
+    { group:'Hydraulic', key:'Hydraulic Hard Pipe', targetLife:15000, warning:10000, critical:12500, match:['hydraulic hard pipe'] },
+    { group:'Hydraulic', key:'Hydraulic Tank', targetLife:20000, warning:15000, critical:17500, match:['hydraulic tank'] },
+    { group:'Hydraulic', key:'Hydraulic Tank Breather', targetLife:4000, warning:2000, critical:3000, match:['hydraulic tank breather'] },
+    { group:'Hydraulic', key:'Hydraulic Return Filter', targetLife:1000, warning:500, critical:750, match:['hydraulic return filter'] },
+    { group:'Hydraulic', key:'Hydraulic Suction Strainer', targetLife:8000, warning:4000, critical:6000, match:['hydraulic suction strainer'] },
+    { group:'Hydraulic', key:'Hydraulic Oil Cooler', targetLife:12000, warning:8000, critical:10000, match:['hydraulic oil cooler'] },
+    { group:'Hydraulic', key:'Hydraulic Accumulator', targetLife:10000, warning:5000, critical:7500, match:['hydraulic accumulator'] },
+    { group:'Hydraulic', key:'Hydraulic Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['hydraulic pressure sensor'] },
+    { group:'Hydraulic', key:'Hydraulic Pilot Valve', targetLife:10000, warning:6000, critical:8000, match:['hydraulic pilot valve'] },
+    { group:'Hydraulic', key:'Hydraulic Joystick/Control Lever', targetLife:12000, warning:8000, critical:10000, match:['control lever','hydraulic joystick','hydraulic joystick/control lever'] },
+    { group:'Hydraulic', key:'Hydraulic O-ring/Seal Set', targetLife:8000, warning:4000, critical:6000, match:['hydraulic o','hydraulic o-ring/seal set','ring','seal set'] },
+    { group:'Work Equipment', key:'Excavator Boom Assy', targetLife:20000, warning:12000, critical:16000, match:['excavator boom','excavator boom assy'] },
+    { group:'Work Equipment', key:'Excavator Arm Assy', targetLife:18000, warning:10000, critical:14000, match:['excavator arm','excavator arm assy'] },
+    { group:'Work Equipment', key:'Excavator Bucket Assy', targetLife:10000, warning:6000, critical:8000, match:['excavator bucket','excavator bucket assy'] },
+    { group:'Work Equipment', key:'Bucket Tooth', targetLife:1500, warning:500, critical:1000, match:['bucket tooth'] },
+    { group:'Work Equipment', key:'Tooth Adapter', targetLife:3000, warning:1500, critical:2250, match:['tooth adapter'] },
+    { group:'Work Equipment', key:'Bucket Side Cutter', targetLife:4000, warning:2000, critical:3000, match:['bucket side cutter'] },
+    { group:'Work Equipment', key:'Boom Cylinder Assy', targetLife:12000, warning:8000, critical:10000, match:['boom cylinder','boom cylinder assy'] },
+    { group:'Work Equipment', key:'Arm Cylinder Assy', targetLife:12000, warning:8000, critical:10000, match:['arm cylinder','arm cylinder assy'] },
+    { group:'Work Equipment', key:'Bucket Cylinder Assy', targetLife:12000, warning:8000, critical:10000, match:['bucket cylinder','bucket cylinder assy'] },
+    { group:'Work Equipment', key:'Boom/Arm/Bucket Cylinder Seal Kit', targetLife:8000, warning:4000, critical:6000, match:['arm','boom','boom/arm/bucket cylinder seal kit','bucket cylinder seal kit'] },
+    { group:'Work Equipment', key:'Boom Foot Pin & Bush', targetLife:9000, warning:5000, critical:7000, match:['boom foot pin & bush'] },
+    { group:'Work Equipment', key:'Arm Pin & Bush', targetLife:9000, warning:5000, critical:7000, match:['arm pin & bush'] },
+    { group:'Work Equipment', key:'Bucket Pin & Bush', targetLife:8000, warning:4000, critical:6000, match:['bucket pin & bush'] },
+    { group:'Electrical', key:'Alternator', targetLife:10000, warning:8000, critical:9000, match:['alternator'] },
+    { group:'Electrical', key:'Starting Motor', targetLife:8000, warning:6000, critical:7000, match:['starting motor'] },
+    { group:'Electrical', key:'Battery', targetLife:4000, warning:2000, critical:3000, match:['battery'] },
+    { group:'Electrical', key:'Battery Cable', targetLife:10000, warning:6000, critical:8000, match:['battery cable'] },
+    { group:'Electrical', key:'Battery Disconnect Switch', targetLife:12000, warning:8000, critical:10000, match:['battery disconnect switch'] },
+    { group:'Electrical', key:'Main Fuse', targetLife:8000, warning:4000, critical:6000, match:['main fuse'] },
+    { group:'Electrical', key:'Main Relay', targetLife:8000, warning:5000, critical:6500, match:['main relay'] },
+    { group:'Electrical', key:'Starter Relay', targetLife:8000, warning:5000, critical:6500, match:['starter relay'] },
+    { group:'Electrical', key:'Work Lamp', targetLife:8000, warning:4000, critical:6000, match:['work lamp'] },
+    { group:'Electrical', key:'Head Lamp', targetLife:8000, warning:4000, critical:6000, match:['head lamp'] },
+    { group:'Electrical', key:'Rear Lamp', targetLife:8000, warning:4000, critical:6000, match:['rear lamp'] },
+    { group:'Electrical', key:'Warning Lamp', targetLife:8000, warning:4000, critical:6000, match:['warning lamp'] },
+    { group:'Electrical', key:'Horn', targetLife:8000, warning:5000, critical:6500, match:['horn'] },
+    { group:'Electrical', key:'Monitor Panel', targetLife:15000, warning:10000, critical:12500, match:['monitor panel'] },
+    { group:'Electrical', key:'Machine Controller / ECM', targetLife:15000, warning:10000, critical:12500, match:['ecm','machine controller','machine controller / ecm'] },
+    { group:'Electrical', key:'Engine Controller', targetLife:15000, warning:10000, critical:12500, match:['engine controller'] },
+    { group:'Electrical', key:'Transmission Controller*', targetLife:15000, warning:10000, critical:12500, match:['transmission controller'] },
+    { group:'Electrical', key:'Hydraulic Controller*', targetLife:15000, warning:10000, critical:12500, match:['hydraulic controller'] },
+    { group:'Electrical', key:'Machine Wiring Harness', targetLife:15000, warning:10000, critical:12500, match:['machine wiring harness'] },
+    { group:'Electrical', key:'Engine Wiring Harness', targetLife:15000, warning:10000, critical:12500, match:['engine wiring harness'] },
+    { group:'Electrical', key:'Ground Cable', targetLife:10000, warning:6000, critical:8000, match:['ground cable'] },
+    { group:'Electrical', key:'Engine Oil Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['engine oil pressure sensor'] },
+    { group:'Electrical', key:'Engine Coolant Temperature Sensor', targetLife:8000, warning:5000, critical:6500, match:['engine coolant temperature sensor'] },
+    { group:'Electrical', key:'Engine Oil Temperature Sensor', targetLife:8000, warning:5000, critical:6500, match:['engine oil temperature sensor'] },
+    { group:'Electrical', key:'Intake Manifold Pressure / Boost Sensor', targetLife:8000, warning:5000, critical:6500, match:['boost sensor','intake manifold pressure','intake manifold pressure / boost sensor'] },
+    { group:'Electrical', key:'Intake Air Temperature Sensor', targetLife:8000, warning:5000, critical:6500, match:['intake air temperature sensor'] },
+    { group:'Electrical', key:'Fuel Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['fuel pressure sensor'] },
+    { group:'Electrical', key:'Fuel Temperature Sensor', targetLife:8000, warning:5000, critical:6500, match:['fuel temperature sensor'] },
+    { group:'Electrical', key:'Crankshaft Position Sensor', targetLife:10000, warning:6000, critical:8000, match:['crankshaft position sensor'] },
+    { group:'Electrical', key:'Camshaft Position Sensor', targetLife:10000, warning:6000, critical:8000, match:['camshaft position sensor'] },
+    { group:'Electrical', key:'Engine Speed Sensor', targetLife:8000, warning:5000, critical:6500, match:['engine speed sensor'] },
+    { group:'Electrical', key:'Hydraulic Oil Temperature Sensor', targetLife:8000, warning:5000, critical:6500, match:['hydraulic oil temperature sensor'] },
+    { group:'Electrical', key:'Main Hydraulic Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['main hydraulic pressure sensor'] },
+    { group:'Electrical', key:'Pilot Hydraulic Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['pilot hydraulic pressure sensor'] },
+    { group:'Electrical', key:'Hydraulic Pump Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['hydraulic pump pressure sensor'] },
+    { group:'Electrical', key:'Transmission Oil Temperature Sensor', targetLife:8000, warning:5000, critical:6500, match:['transmission oil temperature sensor'] },
+    { group:'Electrical', key:'Transmission Oil Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['transmission oil pressure sensor'] },
+    { group:'Electrical', key:'Torque Converter Temperature Sensor', targetLife:8000, warning:5000, critical:6500, match:['torque converter temperature sensor'] },
+    { group:'Electrical', key:'Torque Converter Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['torque converter pressure sensor'] },
+    { group:'Electrical', key:'Axle / Final Drive Oil Temperature Sensor', targetLife:8000, warning:5000, critical:6500, match:['axle','axle / final drive oil temperature sensor','final drive oil temperature sensor'] },
+    { group:'Electrical', key:'Brake Pressure Sensor', targetLife:8000, warning:5000, critical:6500, match:['brake pressure sensor'] },
+    { group:'Electrical', key:'Work Equipment Position Sensor', targetLife:8000, warning:5000, critical:6500, match:['work equipment position sensor'] },
+    { group:'Electrical', key:'Accelerator / Throttle Position Sensor', targetLife:8000, warning:5000, critical:6500, match:['accelerator','accelerator / throttle position sensor','throttle position sensor'] },
+    { group:'Electrical', key:'Steering Angle / Position Sensor', targetLife:8000, warning:5000, critical:6500, match:['position sensor','steering angle','steering angle / position sensor'] },
+    { group:'Electrical', key:'Travel Speed Sensor', targetLife:8000, warning:5000, critical:6500, match:['travel speed sensor'] },
+    { group:'Electrical', key:'Fan Speed Sensor', targetLife:8000, warning:5000, critical:6500, match:['fan speed sensor'] },
+    { group:'Electrical', key:'Exhaust Gas Temperature Sensor', targetLife:8000, warning:5000, critical:6500, match:['exhaust gas temperature sensor'] },
+    { group:'Undercarriage', key:'Track Chain Assembly', targetLife:8000, warning:4000, critical:6000, match:['track chain assembly'] },
+    { group:'Undercarriage', key:'Track Link', targetLife:8000, warning:4000, critical:6000, match:['track link'] },
+    { group:'Undercarriage', key:'Track Shoe', targetLife:6000, warning:3000, critical:4500, match:['track shoe'] },
+    { group:'Undercarriage', key:'Track Shoe Bolt/Nut', targetLife:4000, warning:2000, critical:3000, match:['nut','track shoe bolt','track shoe bolt/nut'] },
+    { group:'Undercarriage', key:'Track Roller', targetLife:6000, warning:3000, critical:4500, match:['track roller'] },
+    { group:'Undercarriage', key:'Carrier Roller', targetLife:8000, warning:4000, critical:6000, match:['carrier roller'] },
+    { group:'Undercarriage', key:'Front Idler', targetLife:9000, warning:5000, critical:7000, match:['front idler'] },
+    { group:'Undercarriage', key:'Idler Recoil Spring', targetLife:12000, warning:8000, critical:10000, match:['idler recoil spring'] },
+    { group:'Undercarriage', key:'Track Adjuster Cylinder', targetLife:10000, warning:6000, critical:8000, match:['track adjuster cylinder'] },
+    { group:'Undercarriage', key:'Track Sprocket', targetLife:9000, warning:5000, critical:7000, match:['track sprocket'] },
+    { group:'Undercarriage', key:'Final Drive Assy', targetLife:12000, warning:8000, critical:10000, match:['final drive','final drive assy'] },
+    { group:'Undercarriage', key:'Final Drive Planetary Gear', targetLife:12000, warning:8000, critical:10000, match:['final drive planetary gear'] },
+    { group:'Undercarriage', key:'Final Drive Bearing', targetLife:10000, warning:6000, critical:8000, match:['final drive bearing'] },
+    { group:'Undercarriage', key:'Final Drive Seal Kit', targetLife:8000, warning:4000, critical:6000, match:['final drive seal kit'] },
+    { group:'Undercarriage', key:'Travel Motor Assy', targetLife:12000, warning:8000, critical:10000, match:['travel motor','travel motor assy'] },
+    { group:'Undercarriage', key:'Travel Motor Main Valve', targetLife:10000, warning:6000, critical:8000, match:['travel motor main valve'] },
+    { group:'Undercarriage', key:'Track Frame', targetLife:20000, warning:12000, critical:16000, match:['track frame'] },
+    { group:'Undercarriage', key:'Track Guard', targetLife:12000, warning:8000, critical:10000, match:['track guard'] }
   ]
 };
 
@@ -19327,16 +19821,21 @@ function cbmComponentsForUnit(unit){
 function cbmUnitByCode(code){
   return (UNITS||[]).find(u=>u.code===code) || null;
 }
-/** Komponen yang tampil mengikuti jenis unit (master Excel):
- *  WA500-6R / D85ESS-2A / PC210-10MO → daftar sub-komponen lengkap.
- *  Tanpa unit terpilih → high-level CBM_COMPONENTS.
+/** Komponen yang tampil di CBM Overview (cards + tabel) SELALU di-ringkas per
+ *  kategori tingkat tinggi (Engine, Transmission, Hydraulic, Electrical, dst) —
+ *  tidak menampilkan seluruh sub-komponen master Excel satu per satu.
+ *  Daftar sub-komponen lengkap per unit tetap tersedia di "Asset Analysis"
+ *  (renderCBMAssetDetail → cbmComponentsForUnit) sebagai detail per unit.
+ *  Dengan unit terpilih → kategori difilter sesuai jenis unit tsb (mis. Loader
+ *  tidak menampilkan Undercarriage, Dozer/Exca tidak menampilkan Tyre).
+ *  Tanpa unit terpilih → semua kategori high-level CBM_COMPONENTS.
  */
 function cbmVisibleComponents(){
   const f = (typeof cbmGetFilters==='function') ? cbmGetFilters() : {};
   const code = (f && f.unit) || (typeof cbmSelectedUnit!=='undefined' ? cbmSelectedUnit : '') || '';
   if(code){
     const u = cbmUnitByCode(code);
-    if(u) return cbmComponentsForUnit(u);
+    if(u) return CBM_COMPONENTS.filter(c=>cbmComponentAllowedForUnit(c, u));
   }
   return CBM_COMPONENTS.slice();
 }
@@ -20256,9 +20755,19 @@ function renderCBMAssetDetail(){
   // full lifetime target table
   // Lifetime % murni dari HM Sekarang vs Target Life (tidak dipengaruhi breakdown).
   // Rumus: (HM Sekarang / Target Life) × 100 — continuous (boleh > 100%)
+  // Baris dikelompokkan per kategori utama (Engine/Power Train/Hydraulic/dst) dengan
+  // header + jarak pemisah antar kategori agar tidak menyatu jadi satu list panjang.
   const tbody = document.getElementById('cbm-asset-lt-tbody');
   if(tbody){
-    tbody.innerHTML = model.healths.map(h=>{
+    let lastGroup = null;
+    const out = [];
+    model.healths.forEach(h=>{
+      const groupLabel = h.group || h.cbmKey || h.key;
+      if(groupLabel !== lastGroup){
+        if(lastGroup !== null) out.push(`<tr class="cbm-group-spacer"><td colspan="9"></td></tr>`);
+        out.push(`<tr class="cbm-group-header-row"><td colspan="9">${cbmComponentIcon(h.cbmKey||groupLabel)}${escUH(groupLabel)}</td></tr>`);
+        lastGroup = groupLabel;
+      }
       const used = model.unitHm!=null ? model.unitHm : null;
       const target = Number(h.targetLife)||0;
       const sisaHm = (used!=null && target>0) ? (target - used) : null;
@@ -20278,7 +20787,7 @@ function renderCBMAssetDetail(){
       const pctLabel = remainPct!=null
         ? `<b style="color:${sisaColor}">${remainPct.toLocaleString('id-ID',{maximumFractionDigits:1})}%</b>`
         : '—';
-      return `<tr>
+      out.push(`<tr>
         <td style="display:flex;align-items:center;gap:6px;"><b>${cbmComponentIcon(h.key)}${h.key}</b></td>
         <td><span style="color:${cbmHealthColor(h.health)};font-weight:700">${h.health}%</span></td>
         <td><b style="color:var(--yellow)">${target.toLocaleString('id-ID')}</b></td>
@@ -20288,8 +20797,9 @@ function renderCBMAssetDetail(){
         <td>${h.count}</td>
         <td style="color:${h.unplan?'var(--orange)':'inherit'}">${h.unplan}</td>
         <td>${h.avgGap!=null?Math.round(h.avgGap):'—'}</td>
-      </tr>`;
-    }).join('');
+      </tr>`);
+    });
+    tbody.innerHTML = out.join('');
   }
 
   // recommendations
@@ -20460,7 +20970,69 @@ function renderCBMOverview(rows, stats){
       </tr>`;
     }).join('');
   }
+
+  renderCBMCompDetailPanel(unitTypeHint);
 }
+
+/** Kumpulkan sub-komponen master Excel (CBM_MASTER_BY_TYPE) untuk satu kategori
+ *  high-level (mis. "Engine"), dikelompokkan per tipe unit yang memiliki kategori
+ *  tsb. Bila unitTypeOnly diisi, hanya tipe tsb yang dikembalikan. */
+function cbmSubComponentsForCategory(catKey, unitTypeOnly){
+  const types = unitTypeOnly ? [unitTypeOnly] : Object.keys(CBM_MASTER_BY_TYPE||{});
+  const out = [];
+  types.forEach(t=>{
+    const list = (CBM_MASTER_BY_TYPE[t]||[]).filter(c=>(CBM_GROUP_TO_KEY[c.group]||c.group)===catKey);
+    if(list.length) out.push({ type:t, items:list });
+  });
+  return out;
+}
+
+/** Panel detail sub-komponen (Excel Master Lifetime) untuk kategori komponen
+ *  yang sedang dipilih (klik kartu). Tersembunyi bila tidak ada kategori terpilih. */
+function renderCBMCompDetailPanel(unitTypeHint){
+  const panel = document.getElementById('cbm-comp-detail-panel');
+  if(!panel) return;
+  if(!cbmSelectedComp){
+    panel.style.display = 'none';
+    panel.innerHTML = '';
+    return;
+  }
+  const cDef = CBM_COMPONENTS.find(c=>c.key===cbmSelectedComp);
+  const catKey = cDef ? cDef.key : cbmSelectedComp;
+  const groups = cbmSubComponentsForCategory(catKey, unitTypeHint || '');
+  panel.style.display = '';
+  const head = `<div class="cbm-comp-detail-head">
+      <div class="cbm-comp-detail-title">${cbmComponentIcon(catKey)}Detail Sub-Komponen — ${escUH(catKey)}</div>
+      <button type="button" class="cbm-comp-detail-close" onclick="cbmCloseCompDetail()">Tutup ✕</button>
+    </div>`;
+  if(!groups.length){
+    panel.innerHTML = head + `<div class="cbm-comp-detail-empty">Belum ada data sub-komponen dari Excel Master Lifetime untuk kategori ini${unitTypeHint?` pada tipe unit <b>${escUH(unitTypeHint)}</b>`:''}.</div>`;
+    return;
+  }
+  const body = groups.map(g=>`
+    <div class="cbm-comp-detail-type">${escUH(g.type)}</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Sub Component</th><th>Target Life (HM)</th><th>Warning (HM)</th><th>Critical (HM)</th></tr></thead>
+        <tbody>
+          ${g.items.map(it=>`<tr>
+            <td>${escUH(it.key)}</td>
+            <td><b style="color:var(--yellow)">${Number(it.targetLife||0).toLocaleString('id-ID')}</b></td>
+            <td>${Number(it.warning||0).toLocaleString('id-ID')}</td>
+            <td>${Number(it.critical||0).toLocaleString('id-ID')}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`).join('');
+  panel.innerHTML = head + body;
+}
+
+window.cbmCloseCompDetail = function(){
+  cbmSelectedComp = '';
+  const cEl = document.getElementById('cbm-filter-comp');
+  if(cEl) cEl.value = '';
+  renderCBMActiveTab();
+};
 
 window.cbmSelectComp = function(key){
   cbmSelectedComp = (cbmSelectedComp===key) ? '' : key;
