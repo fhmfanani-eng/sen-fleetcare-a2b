@@ -454,6 +454,22 @@ body:not(.role-wa-sync-allowed) .sync-only-fahmi{
 #view-summary #summary-bar-chart > div{
   width:100%;
 }
+#view-summary .summary-chart-panel--trend{
+  margin-bottom:20px;
+}
+#view-summary .summary-chart-body--trend{
+  min-height:260px;
+  padding:4px 2px 0;
+}
+#view-summary .summary-chart-body--trend svg{
+  width:100%;
+  height:auto;
+  display:block;
+}
+#view-summary .trend-empty{
+  padding:30px 10px; text-align:center; color:var(--text-faint); font-size:12px;
+  font-family:'JetBrains Mono',monospace;
+}
 
 
 /* MAIN */
@@ -1196,6 +1212,16 @@ select.exec-close{ background:rgba(76,175,109,0.15); color:var(--green); }
 .dash-panel-title span{ color:var(--text-faint); font-weight:500; text-transform:none; letter-spacing:0; font-size:10px; margin-left:6px; }
 .kpi-dash-spark{ margin-top:8px; height:22px; opacity:0.9; }
 .kpi-dash-spark svg{ width:100%; height:22px; display:block; }
+
+/* Monthly KPI Achievement — Executive Layout (Layout 1 + heatmap) */
+.mkpi-exec{ }
+@media(max-width:900px){
+  .mkpi-exec > div[style*="grid-template-columns:1fr 180px"]{
+    display:flex !important;
+    flex-direction:column !important;
+  }
+}
+
 .dash-legend{ display:flex; flex-wrap:wrap; gap:8px 12px; margin-top:8px; font-size:10px; color:var(--text-dim); }
 .dash-legend i{ display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px; vertical-align:middle; }
 .dash-contrib-wrap{
@@ -3084,6 +3110,11 @@ body.role-mechanic #history-filters{ display:none !important; }
           </div>
         </div>
 
+        <div class="panel summary-chart-panel summary-chart-panel--trend">
+          <div class="panel-head"><h2>Mechanic Activity Trend — Monthly</h2></div>
+          <div id="summary-monthly-trend-chart" class="summary-chart-body summary-chart-body--trend"></div>
+        </div>
+
         <div class="panel">
           <div class="panel-head">
             <h2>Summary Mechanic Activity</h2>
@@ -3562,8 +3593,8 @@ const KPI_INFO = {
   },
   pmr: {
     full: 'Planned Maintenance Ratio (PMR)',
-    formula: '(Non-Breakdown repair hours ÷ Total Approved repair hours) × 100%',
-    desc: 'Planned Maintenance Hours / Total Maintenance Hours. Achievement % of weight: >90% = 100%, 85–90% = 80%, <85% = 60%. Higher is better (target >90%). Reflects how dominant planned work HOURS are versus breakdown work hours (calculated from duration, not job count).',
+    formula: 'PMR = Planned Maintenance Hours / Total Maintenance Hours × 100%',
+    desc: 'Planned Maintenance Hours ÷ Total Maintenance Hours × 100%. Achievement % of weight: >90% = 100%, 85–90% = 80%, <85% = 60%. Higher is better (target >90%). Calculated from duration hours of Approved Daily Maintenance records in the selected period.',
     unit: '%', higherBetter: true
   },
   sa: {
@@ -7883,6 +7914,47 @@ function maPaFromWSR(wsr){
    - Service Accuracy (SA): dari record Plan Service milik unit tsb.
    - MA & PA: otomatis dari data Monitoring HM milik unit tsb (fallback ke file jam operasional manual
      kalau unit tsb belum ada data HM). */
+/** PMR = Planned Maintenance Hours / Total Maintenance Hours × 100%
+ *  Formula resmi (LOCKED) — samakan di UI & perhitungan:
+ *    Planned Maintenance Hours = Σ jam record Approved kategori planned
+ *      (Periodical / Daily / Preventive; bukan Breakdown)
+ *    Total Maintenance Hours   = Σ jam SEMUA record Approved
+ *      (termasuk Breakdown)
+ *  Sumber jam: duration (fallback: totalJam, manHours, jamKerja).
+ */
+function recordMaintHours(r){
+  if(!r) return 0;
+  const candidates = [r.duration, r.totalJam, r.manHours, r.jamKerja, r.hours, r.hmTotal];
+  for(const c of candidates){
+    if(c !== null && c !== undefined && c !== '' && !isNaN(Number(c))){
+      const n = Number(c);
+      if(n >= 0) return n;
+    }
+  }
+  return 0;
+}
+function isPlannedMaintCategory(r){
+  const cat = String(r && r.category || '').trim().toLowerCase();
+  // Breakdown / unplanned repair TIDAK termasuk planned
+  if(!cat) return false;
+  if(cat === 'breakdown' || cat === 'bd' || /unplan|corrective|emergency/.test(cat)) return false;
+  // Periodical, Daily, Preventive, Schedule Service, dll. = planned
+  return true;
+}
+function calcPMRFromRecords(records){
+  const list = Array.isArray(records) ? records : [];
+  let plannedHours = 0;
+  let totalMaintHours = 0;
+  for(const r of list){
+    const h = recordMaintHours(r);
+    if(h <= 0) continue;
+    totalMaintHours += h;
+    if(isPlannedMaintCategory(r)) plannedHours += h;
+  }
+  const pmr = totalMaintHours > 0 ? (plannedHours / totalMaintHours * 100) : 0;
+  return { pmr, plannedHours, totalMaintHours };
+}
+
 function computeUnitKPIs(unitCode){
   const approvedRecords = dailyRecords.filter(r=>r.unitCode===unitCode && r.approvalStatus==='Approved');
   const bdCount = approvedRecords.filter(r=>r.category==='Breakdown').length;
@@ -7900,11 +7972,8 @@ function computeUnitKPIs(unitCode){
   const mttrEligible = approvedRecords.filter(r=>r.category==='Breakdown' && r.duration!==null && r.duration!==undefined);
   const mttr = mttrEligible.length ? (mttrEligible.reduce((s,r)=>s+(Number(r.duration)||0),0)/mttrEligible.length) : 0;
 
-  // PMR = Planned Maintenance HOURS / Total Maintenance HOURS — sesuai kalimat formula resmi di sheet
-  // KPI (sebelumnya dihitung dari jumlah record/job, bukan jumlah jam, sudah diperbaiki di sini).
-  const plannedHours = approvedRecords.filter(r=>r.category!=='Breakdown').reduce((s,r)=>s+(Number(r.duration)||0),0);
-  const totalMaintHours = approvedRecords.reduce((s,r)=>s+(Number(r.duration)||0),0);
-  const pmr = totalMaintHours>0 ? (plannedHours/totalMaintHours*100) : 0;
+  // PMR = Planned Maintenance Hours / Total Maintenance Hours × 100 (formula resmi)
+  const { pmr } = calcPMRFromRecords(approvedRecords);
 
   // Service Accuracy (SA): dihitung dari data Daily Maintenance (kategori Periodical, sudah Approved),
   // berdasarkan flag Plan/Unplan tiap record — bukan lagi dari data Plan Service (Plan Service hanya
@@ -7938,11 +8007,8 @@ function computeUnitKPIsForRange(unitCode, startStr, endStr){
   const mttrEligible = approvedRecords.filter(r=>r.category==='Breakdown' && r.duration!==null && r.duration!==undefined);
   const mttr = mttrEligible.length ? (mttrEligible.reduce((s,r)=>s+(Number(r.duration)||0),0)/mttrEligible.length) : 0;
 
-  // PMR = Planned Maintenance HOURS / Total Maintenance HOURS — sesuai kalimat formula resmi di sheet
-  // KPI (sebelumnya dihitung dari jumlah record/job, bukan jumlah jam, sudah diperbaiki di sini).
-  const plannedHours = approvedRecords.filter(r=>r.category!=='Breakdown').reduce((s,r)=>s+(Number(r.duration)||0),0);
-  const totalMaintHours = approvedRecords.reduce((s,r)=>s+(Number(r.duration)||0),0);
-  const pmr = totalMaintHours>0 ? (plannedHours/totalMaintHours*100) : 0;
+  // PMR = Planned Maintenance Hours / Total Maintenance Hours × 100 (formula resmi)
+  const { pmr } = calcPMRFromRecords(approvedRecords);
 
   // Service Accuracy (SA): dihitung dari data Daily Maintenance (kategori Periodical, sudah Approved)
   // pada rentang tanggal tsb saja, berdasarkan flag Plan/Unplan tiap record — bukan lagi dari data Plan
@@ -15225,6 +15291,90 @@ function summaryMonthLabel(ym){
   const m = SUMMARY_MONTH_LABELS[parts[1]] || parts[1];
   return m + ' ' + parts[0];
 }
+/* Chart tren elegan (area + smooth line, bukan bar/kotak) untuk Total Job Mekanik per Bulan.
+   Ditempatkan di atas tabel "Summary Mechanic Activity". months: array 'YYYY-MM' terurut,
+   monthTotals: { 'YYYY-MM': jumlahJob }. */
+function mechanicMonthlyTrendChartHTML(months, monthTotals){
+  const n = months.length;
+  if(!n){
+    return '<div class="trend-empty">Belum ada data Daily Maintenance untuk ditampilkan.</div>';
+  }
+  const values = months.map(m => monthTotals[m] || 0);
+  const maxVal = Math.max(1, ...values);
+  const niceMax = Math.ceil(maxVal * 1.2 / 5) * 5 || 5;
+
+  const W = 900, H = 300, padL = 44, padR = 40, padT = 28, padB = 40;
+  const chartW = W - padL - padR, chartH = H - padT - padB;
+  const xAt = i => padL + (n <= 1 ? chartW/2 : (i/(n-1)) * chartW);
+  const yAt = v => padT + chartH * (1 - (v / niceMax));
+  const uid = 'mtr' + Math.floor(Math.random()*1e6);
+  const color = '#FFC72C';
+
+  const pts = values.map((v,i)=>({ x:xAt(i), y:yAt(v), v }));
+
+  const yTicks = 4;
+  const gridLines = Array.from({length:yTicks+1}, (_,k)=>{
+    const val = Math.round((niceMax/yTicks)*k);
+    const y = yAt(val);
+    return `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${padL+chartW}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+      <text x="${padL-8}" y="${(y+3.5).toFixed(1)}" text-anchor="end" font-size="10" fill="#5C636B" font-family="JetBrains Mono, monospace">${val}</text>`;
+  }).join('');
+
+  // Smooth curve via Catmull-Rom → bezier
+  function smoothPath(points){
+    if(points.length < 2) return `M ${points[0].x} ${points[0].y}`;
+    let d = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+    for(let i=0;i<points.length-1;i++){
+      const p0 = points[i===0?0:i-1], p1 = points[i], p2 = points[i+1], p3 = points[i+2===points.length+1?i+1:(i+2<points.length?i+2:i+1)];
+      const p3pt = points[Math.min(i+2, points.length-1)];
+      const cp1x = p1.x + (p2.x - p0.x)/6;
+      const cp1y = p1.y + (p2.y - p0.y)/6;
+      const cp2x = p2.x - (p3pt.x - p1.x)/6;
+      const cp2y = p2.y - (p3pt.y - p1.y)/6;
+      d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+    }
+    return d;
+  }
+  const linePath = smoothPath(pts);
+  const areaPath = `${linePath} L ${pts[pts.length-1].x.toFixed(1)} ${(padT+chartH).toFixed(1)} L ${pts[0].x.toFixed(1)} ${(padT+chartH).toFixed(1)} Z`;
+
+  const dots = pts.map((p,i)=>`
+    <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4.5" fill="#1a1d22" stroke="${color}" stroke-width="2.4"/>
+    <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="1.9" fill="${color}"/>
+    <text x="${p.x.toFixed(1)}" y="${(p.y-12).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="#F0F3F7" font-family="JetBrains Mono, monospace">${p.v}</text>`).join('');
+
+  const xLabels = months.map((m,i)=>{
+    const x = xAt(i);
+    const isLast = i === n-1;
+    return `<text x="${x.toFixed(1)}" y="${H-14}" text-anchor="middle" font-size="11" font-weight="${isLast?'700':'600'}" fill="${isLast?'#F0F3F7':'#8B929A'}" font-family="JetBrains Mono, monospace">${summaryMonthLabel(m)}</text>`;
+  }).join('');
+
+  const baseline = `<line x1="${padL}" y1="${padT+chartH}" x2="${padL+chartW}" y2="${padT+chartH}" stroke="rgba(255,255,255,0.12)" stroke-width="1.2"/>`;
+  const yHint = `<text x="12" y="${padT-10}" font-size="9" fill="#5C636B" font-family="JetBrains Mono, monospace" letter-spacing="0.5">TOTAL JOB</text>`;
+
+  const svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
+    <defs>
+      <linearGradient id="${uid}-area" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${color}" stop-opacity="0.32"/>
+        <stop offset="60%" stop-color="${color}" stop-opacity="0.08"/>
+        <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+      </linearGradient>
+      <filter id="${uid}-glow" x="-40%" y="-40%" width="180%" height="180%">
+        <feGaussianBlur stdDeviation="2.4" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    ${gridLines}
+    ${baseline}
+    <path d="${areaPath}" fill="url(#${uid}-area)" stroke="none"/>
+    <path d="${linePath}" fill="none" stroke="${color}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" filter="url(#${uid}-glow)"/>
+    ${dots}
+    ${xLabels}
+    ${yHint}
+  </svg>`;
+  return svg;
+}
+
 function renderSummaryAllMonths(){
   const thead = document.getElementById('summary-all-thead');
   const tbody = document.getElementById('summary-all-tbody');
@@ -15272,6 +15422,20 @@ function renderSummaryAllMonths(){
   const monthTotals = {};
   months.forEach(m=> monthTotals[m] = 0);
   let grand = 0;
+
+  // Chart tren "Total Job per Bulan" — ditempatkan di atas tabel Summary Mechanic Activity
+  try{
+    const trendEl = document.getElementById('summary-monthly-trend-chart');
+    if(trendEl){
+      const totalsForChart = {};
+      months.forEach(m=>{
+        let sum = 0;
+        names.forEach(nm=>{ sum += (byMechMonth[nm][m] || 0); });
+        totalsForChart[m] = sum;
+      });
+      trendEl.innerHTML = mechanicMonthlyTrendChartHTML(months, totalsForChart);
+    }
+  }catch(_e){ console.error('renderSummaryMonthlyTrendChart', _e); }
 
   const escName = (typeof escUH==='function') ? escUH : (s)=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   tbody.innerHTML = names.map(name=>{
@@ -16080,14 +16244,14 @@ function renderKPIChartDashboard(k, globalStats){
   // Target mengikuti tabel KEY PERFORMANCE INDICATOR resmi:
   // MA 90% | PA 90% | MTBS 80 hr | MTTR 90% | PMR 90% | SA 90%
   const monthlyKpiDefs = [
-    { key:'ma',   label:'MA',   full:'MECHANICAL AVAILABILITY', unit:'%',   target:KPI_TARGET.ma,   value:kMonthly.ma||0,   color:'#22C55E', targetHint:'90%', icon:'gear' },
-    { key:'pa',   label:'PA',   full:'PHYSICAL AVAILABILITY',   unit:'%',   target:KPI_TARGET.pa,   value:kMonthly.pa||0,   color:'#3B82F6', targetHint:'90%', icon:'shield' },
-    { key:'mtbs', label:'MTBS', full:'MEAN TIME BETWEEN STOPPAGES', unit:' hrs', target:KPI_TARGET.mtbs, value:kMonthly.mtbs||0, color:'#A78BFA', targetHint:'80 jam', icon:'hourglass' },
+    { key:'ma',   label:'MA',   full:'MECHANICAL AVAILABILITY', unit:'%',   target:KPI_TARGET.ma,   value:kMonthly.ma||0,   color:'#22C55E', targetHint:'≥90%', icon:'gear' },
+    { key:'pa',   label:'PA',   full:'PHYSICAL AVAILABILITY',   unit:'%',   target:KPI_TARGET.pa,   value:kMonthly.pa||0,   color:'#3B82F6', targetHint:'≥90%', icon:'shield' },
+    { key:'mtbs', label:'MTBS', full:'MEAN TIME BETWEEN STOPPAGES', unit:' hrs', target:KPI_TARGET.mtbs, value:kMonthly.mtbs||0, color:'#A78BFA', targetHint:'>80 jam', icon:'hourglass' },
     /* MTTR: tampilkan jam repair rata-rata sesungguhnya (konsisten dgn MTBS); target resmi 36 jam
        (<36 jam = 100% of weight). Skor tier 60/80/100 tetap dipakai terpisah di kpiWeightedScore(). */
-    { key:'mttr', label:'MTTR', full:'MEAN TIME TO REPAIR',     unit:' hrs', target:KPI_TARGET.mttr, value:kMonthly.mttr||0, color:'#F97316', targetHint:'36 jam', icon:'wrench' },
-    { key:'pmr',  label:'PMR',  full:'PLANNED MAINTENANCE RATIO', unit:'%', target:KPI_TARGET.pmr, value:kMonthly.pmr||0, color:'#A3E635', targetHint:'90%', icon:'clipboard' },
-    { key:'sa',   label:'SA',   full:'SERVICE ACCURACY',        unit:'%',   target:KPI_TARGET.sa,   value:kMonthly.sa||0,   color:'#38BDF8', targetHint:'90%', icon:'headset' },
+    { key:'mttr', label:'MTTR', full:'MEAN TIME TO REPAIR',     unit:' hrs', target:KPI_TARGET.mttr, value:kMonthly.mttr||0, color:'#F97316', targetHint:'<36 jam', icon:'wrench' },
+    { key:'pmr',  label:'PMR',  full:'PLANNED MAINTENANCE RATIO', unit:'%', target:KPI_TARGET.pmr, value:kMonthly.pmr||0, color:'#A3E635', targetHint:'>90%', icon:'clipboard' },
+    { key:'sa',   label:'SA',   full:'SERVICE ACCURACY',        unit:'%',   target:KPI_TARGET.sa,   value:kMonthly.sa||0,   color:'#38BDF8', targetHint:'>90%', icon:'headset' },
   ];
 
   // --- Rekap Quarter (donut 4D + KPI summary quarter, ikut filter periode triwulan, live sync dari
@@ -16369,14 +16533,22 @@ function renderKPIChartDashboard(k, globalStats){
       ${panelBg}${vGuides}${grid}${baseline}${lines}${endLabelSvg}${xLabels}${yHint}
     </svg>`;
 
-    // Legend chips
+    // Legend chips — skor tier + target formula resmi
+    function legendFg(pct){
+      const p = Math.max(0, Number(pct)||0);
+      if(p >= 100) return '#4CAF6D';
+      if(p >= 80)  return '#FFC72C';
+      if(p >= 60)  return '#E5484D';
+      return 'var(--text-dim)';
+    }
     const legend = monthlyKpiDefs.map(d=>{
       const last = trendMonths[trendMonths.length-1];
       const pct = last && last.pct ? (last.pct[d.key]||0) : 0;
       return `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);font-family:JetBrains Mono,monospace;font-size:11px">
         <i style="width:8px;height:8px;border-radius:50%;background:${d.color};display:inline-block;box-shadow:0 0 8px ${d.color}88"></i>
         <span style="color:${d.color};font-weight:700">${d.label}</span>
-        <span style="color:var(--text-dim)">${Math.round(pct)}%</span>
+        <span style="color:${legendFg(pct)};font-weight:700">${Math.round(pct)}%</span>
+        <span style="color:var(--text-faint);font-size:9px">tgt ${d.targetHint||''}</span>
       </span>`;
     }).join('');
 
@@ -16406,93 +16578,259 @@ function renderKPIChartDashboard(k, globalStats){
       return `<td style="text-align:center;font-family:JetBrains Mono,monospace;font-weight:700;color:${cellColor(avg)}">${Math.round(avg)}%</td>`;
     }).join('');
 
-    // --- Grafik 4D (gaya extrude sama seperti service4DChartSVG / comparisonBarsSVG) untuk
-    //     rata-rata % Achievement per bulan — ringkasan visual dari tabel Monthly KPI Achievement
-    //     di bawahnya (baris "Average"). Warna bar mengikuti threshold cellColor (>=100 hijau,
-    //     >=80 kuning, selain itu merah), konsisten dgn warna sel di tabel.
+    // --- Chart Monthly KPI Achievement — versi premium: kurva halus Catmull-Rom dengan garis
+    //     gradient emas (shimmer), area fill multi-stop yang lebih kaya, aura/halo lembut di tiap
+    //     titik, dan value-label dalam pill kaca (glass pill) supaya tetap terbaca di atas kurva.
+    //     Kartu pembungkus pakai radial glow tipis + border halus untuk kesan elevated/premium,
+    //     bukan kotak solid biasa. Tidak ada lagi garis/nilai target — murni menampilkan tren hasil
+    //     rata-rata % Achievement per bulan. Titik & label tetap mengikuti warna threshold cellColor
+    //     (>=100 hijau, >=80 kuning, selain itu merah) agar konsisten dgn warna sel di tabel.
     function monthlyAchievement4DSVG(){
       const n = trendMonths.length;
-      if(!n) return '';
-      const padL=34, padR=18, padT=34, padB=34, cap=120;
-      const gap=12;
-      const barW = Math.min(36, Math.max(16, (760-padL-padR-gap*(n-1))/n));
-      const depthX=8, depthY=7;
-      const total = barW*n + gap*(n-1) + depthX;
-      const W = Math.max(400, padL+padR+total+24);
-      const H = 230;
-      const baseY = H-padB;
-      const chartH = H-padT-padB-depthY;
+      if(!n) return '<div class="trend-empty">Belum ada data Monthly KPI Achievement untuk ditampilkan.</div>';
 
-      function shade(hex, f){
-        const c=hex.replace('#','');
-        const r=Math.min(255,Math.max(0,parseInt(c.slice(0,2),16)*f));
-        const g=Math.min(255,Math.max(0,parseInt(c.slice(2,4),16)*f));
-        const b=Math.min(255,Math.max(0,parseInt(c.slice(4,6),16)*f));
-        return `rgb(${r|0},${g|0},${b|0})`;
-      }
-
-      const bars = trendMonths.map((m,i)=>{
+      const points = trendMonths.map(m=>{
         const vals = monthlyKpiDefs.map(d => (m.pct && m.pct[d.key] != null) ? m.pct[d.key] : 0);
         const avg = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0;
-        const color = cellColor(avg);
-        const h = Math.max(6, chartH*Math.min(avg,cap)/cap);
-        const x = padL + i*(barW+gap);
-        const y = baseY - h;
-        const front = shade(color,1);
-        const side = shade(color,0.55);
-        const top = shade(color,1.25);
-        const topPts = `${x},${y} ${x+depthX},${y-depthY} ${x+barW+depthX},${y-depthY} ${x+barW},${y}`;
-        const sidePts = `${x+barW},${y} ${x+barW+depthX},${y-depthY} ${x+barW+depthX},${baseY-depthY} ${x+barW},${baseY}`;
+        return { label: m.short, avg, color: cellColor(avg) };
+      });
+
+      const uid = 'mka'+Math.floor(Math.random()*1e6);
+      const W = 900, H = 300, padL = 46, padR = 40, padT = 40, padB = 42;
+      const chartW = W-padL-padR, chartH = H-padT-padB;
+      const niceMax = 110; // skala tetap 0–110% agar nilai >100% tetap punya headroom
+      const xAt = i => padL + (n<=1 ? chartW/2 : (i/(n-1))*chartW);
+      const yAt = v => padT + chartH*(1-Math.min(v,niceMax)/niceMax);
+
+      const pts = points.map((p,i)=>({ x:xAt(i), y:yAt(p.avg), v:p.avg, color:p.color, label:p.label }));
+
+      // Gridline horizontal super tipis + label sumbu Y (0/25/50/75/100%) — hanya sebagai
+      // kedalaman visual, tanpa garis target apa pun.
+      const gridLines = [0,25,50,75,100].map(t=>{
+        const y = yAt(t);
+        return `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${(padL+chartW).toFixed(1)}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,0.045)" stroke-width="1"/>
+          <text x="${padL-10}" y="${(y+3.5).toFixed(1)}" text-anchor="end" font-size="9.5" fill="#5C636B" font-family="JetBrains Mono, monospace" letter-spacing="0.3">${t}%</text>`;
+      }).join('');
+
+      // Kurva halus via Catmull-Rom → bezier
+      function smoothPath(p){
+        if(p.length < 2) return `M ${p[0].x} ${p[0].y}`;
+        let d = `M ${p[0].x.toFixed(1)} ${p[0].y.toFixed(1)}`;
+        for(let i=0;i<p.length-1;i++){
+          const p0 = p[i===0?0:i-1], p1 = p[i], p2 = p[i+1], p3 = p[Math.min(i+2, p.length-1)];
+          const cp1x = p1.x + (p2.x - p0.x)/6, cp1y = p1.y + (p2.y - p0.y)/6;
+          const cp2x = p2.x - (p3.x - p1.x)/6, cp2y = p2.y - (p3.y - p1.y)/6;
+          d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+        }
+        return d;
+      }
+      const linePath = smoothPath(pts);
+      const areaPath = `${linePath} L ${pts[pts.length-1].x.toFixed(1)} ${(padT+chartH).toFixed(1)} L ${pts[0].x.toFixed(1)} ${(padT+chartH).toFixed(1)} Z`;
+
+      // Aura lembut di tiap titik (halo blur besar + cincin tipis) sebelum dot solid, memberi
+      // kesan "glow" premium tanpa mengganggu keterbacaan angka.
+      const auras = pts.map(p=>`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="9" fill="${p.color}" opacity="0.16" filter="url(#${uid}-soft)"/>`).join('');
+
+      const dots = pts.map(p=>`
+        <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="5" fill="#14161a" stroke="${p.color}" stroke-width="2.2"/>
+        <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="2" fill="${p.color}"/>`).join('');
+
+      // Value label dibungkus "glass pill" tipis supaya kontras & premium, lebar menyesuaikan
+      // jumlah digit (2 vs 3 angka + simbol %).
+      const valueLabels = pts.map(p=>{
+        const txt = `${Math.round(p.v)}%`;
+        const pillW = txt.length*7.4 + 14;
+        const pillH = 18;
+        const px = p.x - pillW/2, py = p.y - 34;
         return `<g>
-          <polygon points="${sidePts}" fill="${side}"/>
-          <polygon points="${topPts}" fill="${top}" opacity="0.95"/>
-          <rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" fill="url(#ma4d${i})"/>
-          <defs><linearGradient id="ma4d${i}" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#fff" stop-opacity="0.28"/>
-            <stop offset="15%" stop-color="${front}" stop-opacity="1"/>
-            <stop offset="100%" stop-color="${front}" stop-opacity="0.7"/>
-          </linearGradient></defs>
-          <text x="${(x+barW/2+depthX*0.35).toFixed(1)}" y="${(y-depthY-6).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="700" fill="${color}" font-family="JetBrains Mono, monospace">${Math.round(avg)}%</text>
-          <text x="${(x+barW/2).toFixed(1)}" y="${H-10}" text-anchor="middle" font-size="9" font-weight="600" fill="#a8aeb6" font-family="JetBrains Mono, monospace">${m.short}</text>
+          <rect x="${px.toFixed(1)}" y="${py.toFixed(1)}" width="${pillW.toFixed(1)}" height="${pillH}" rx="9"
+            fill="rgba(18,20,24,0.62)" stroke="${p.color}" stroke-opacity="0.38" stroke-width="0.8"/>
+          <text x="${p.x.toFixed(1)}" y="${(py+pillH/2+3.8).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700"
+            fill="${p.color}" font-family="JetBrains Mono, monospace" style="text-shadow:0 0 6px ${p.color}55">${txt}</text>
         </g>`;
       }).join('');
 
+      const xLabels = points.map((p,i)=>{
+        const x = xAt(i);
+        const isLast = i === n-1;
+        return `<text x="${x.toFixed(1)}" y="${H-14}" text-anchor="middle" font-size="10.5" font-weight="${isLast?'700':'600'}"
+          letter-spacing="0.6" fill="${isLast?'#F0F3F7':'#8B929A'}" font-family="'Oswald',sans-serif">${p.label.toUpperCase()}</text>`;
+      }).join('');
+
+      const baseline = `<line x1="${padL}" y1="${(padT+chartH).toFixed(1)}" x2="${(padL+chartW).toFixed(1)}" y2="${(padT+chartH).toFixed(1)}"
+        stroke="rgba(255,255,255,0.12)" stroke-width="1.2"/>`;
+      const yHint = `<text x="12" y="${padT-18}" font-size="9" fill="#6B7178" font-family="JetBrains Mono, monospace" letter-spacing="1">AVG ACHIEVEMENT</text>`;
+
       return `
-        <div style="overflow-x:auto;border:1px solid var(--line);border-radius:6px;padding:6px 4px;margin-bottom:12px">
-          <svg viewBox="0 0 ${W} ${H}" style="min-width:${W}px;width:100%;height:215px">
-            <line x1="${padL}" y1="${baseY}" x2="${W-padR+depthX}" y2="${baseY}" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
-            ${bars}
+        <div style="position:relative;padding:20px 16px 12px;margin-bottom:12px;border-radius:14px;
+          background:radial-gradient(130% 160% at 12% -10%, rgba(255,199,44,0.08), rgba(255,255,255,0.012) 55%, transparent 100%), rgba(255,255,255,0.008);
+          border:1px solid rgba(255,255,255,0.07);
+          box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 12px 32px rgba(0,0,0,0.28);">
+          <svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;overflow:visible">
+            <defs>
+              <linearGradient id="${uid}-line" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#FFE08A"/>
+                <stop offset="45%" stop-color="#FFC72C"/>
+                <stop offset="100%" stop-color="#F5A623"/>
+              </linearGradient>
+              <linearGradient id="${uid}-area" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#FFC72C" stop-opacity="0.32"/>
+                <stop offset="35%" stop-color="#FFC72C" stop-opacity="0.14"/>
+                <stop offset="75%" stop-color="#FFC72C" stop-opacity="0.03"/>
+                <stop offset="100%" stop-color="#FFC72C" stop-opacity="0"/>
+              </linearGradient>
+              <filter id="${uid}-glow" x="-40%" y="-40%" width="180%" height="180%">
+                <feGaussianBlur stdDeviation="2.6" result="b"/>
+                <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+              <filter id="${uid}-soft" x="-150%" y="-150%" width="400%" height="400%">
+                <feGaussianBlur stdDeviation="5.5"/>
+              </filter>
+            </defs>
+            ${gridLines}
+            ${baseline}
+            <line x1="${padL}" y1="${yAt(90).toFixed(1)}" x2="${(padL+chartW).toFixed(1)}" y2="${yAt(90).toFixed(1)}"
+              stroke="rgba(255,199,44,0.55)" stroke-width="1.4" stroke-dasharray="6 5"/>
+            <text x="${(padL+chartW+4).toFixed(1)}" y="${(yAt(90)+3.5).toFixed(1)}" font-size="9" fill="#FFC72C"
+              font-family="JetBrains Mono, monospace" font-weight="600">Target 90%</text>
+            <path d="${areaPath}" fill="url(#${uid}-area)" stroke="none"/>
+            ${auras}
+            <path d="${linePath}" fill="none" stroke="url(#${uid}-line)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" filter="url(#${uid}-glow)"/>
+            ${dots}
+            ${valueLabels}
+            ${xLabels}
+            ${yHint}
           </svg>
         </div>`;
     }
 
+    /* ===== Layout 1 style: Executive Monthly KPI Achievement ===== */
+    // Hitung average achievement keseluruhan (rata-rata % capaian semua bulan × semua KPI)
+    const allAvgPts = trendMonths.map(m=>{
+      const vals = monthlyKpiDefs.map(d => (m.pct && m.pct[d.key] != null) ? m.pct[d.key] : 0);
+      return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0;
+    });
+    const overallAvg = allAvgPts.length ? allAvgPts.reduce((a,b)=>a+b,0)/allAvgPts.length : 0;
+    const overallDelta = overallAvg - 90;
+    const overallDeltaTxt = (overallDelta>=0?'+':'') + overallDelta.toFixed(1) + '%';
+    const overallDeltaColor = overallDelta>=0 ? '#4CAF6D' : '#E5484D';
+    // Ring progress SVG (0–100 mapped to circumference)
+    function avgAchievementRingSVG(pct){
+      const size=148, stroke=11, r=(size-stroke)/2, c=2*Math.PI*r;
+      const clamped=Math.max(0,Math.min(110,pct));
+      const dash = (Math.min(100,clamped)/100)*c;
+      const gap = c - dash;
+      const ringColor = pct>=90 ? '#4CAF6D' : (pct>=80 ? '#FFC72C' : '#E5484D');
+      return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="display:block;margin:0 auto">
+        <defs>
+          <linearGradient id="avgRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="${ringColor}"/>
+            <stop offset="100%" stop-color="#FFC72C"/>
+          </linearGradient>
+          <filter id="avgRingGlow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        </defs>
+        <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="${stroke}"/>
+        <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="url(#avgRingGrad)" stroke-width="${stroke}"
+          stroke-linecap="round" stroke-dasharray="${dash.toFixed(2)} ${gap.toFixed(2)}"
+          transform="rotate(-90 ${size/2} ${size/2})" filter="url(#avgRingGlow)"
+          style="transition:stroke-dasharray .4s ease"/>
+        <text x="50%" y="46%" text-anchor="middle" dominant-baseline="middle"
+          font-family="Oswald,sans-serif" font-size="28" font-weight="700" fill="#EDEEF0">${pct.toFixed(1)}%</text>
+        <text x="50%" y="62%" text-anchor="middle" dominant-baseline="middle"
+          font-family="JetBrains Mono,monospace" font-size="9" fill="#9AA0A8" letter-spacing="0.5">AVG ACHIEVEMENT</text>
+      </svg>`;
+    }
+    // Warna ANGKA saja (tanpa background sel) — selaras skor tier formula resmi 60/80/100
+    // MA/PA ≥90→100 | 70–89→80 | <70→60
+    // MTBS  >80→100 | 64–80→80 | <64→60
+    // MTTR  <36→100 | 36–45→80 | >45→60
+    // PMR/SA >90→100 | 85–90→80 | <85→60
+    function heatFg(pct){
+      const p = Math.max(0, Number(pct)||0);
+      if(p >= 100) return '#4CAF6D';   // tier 100 — hijau (target tercapai)
+      if(p >= 80)  return '#FFC72C';   // tier 80  — kuning
+      if(p >= 60)  return '#E5484D';   // tier 60  — merah
+      if(p > 0)    return '#E5484D';
+      return 'var(--text-faint)';
+    }
+    const heatHeadCols = trendMonths.map(m=>`<th style="text-align:center;min-width:48px;font-size:10px;background:transparent">${m.short}</th>`).join('') +
+      `<th style="text-align:center;min-width:56px;font-size:10px;color:var(--yellow);background:transparent">Average</th>`;
+    const heatBodyRows = monthlyKpiDefs.map(d=>{
+      const cells = trendMonths.map(m=>{
+        const pct = (m.pct && m.pct[d.key] != null) ? m.pct[d.key] : 0;
+        return `<td style="text-align:center;font-family:JetBrains Mono,monospace;font-weight:700;font-size:12px;color:${heatFg(pct)};background:transparent;border:1px solid rgba(255,255,255,0.04)">${Math.round(pct)}</td>`;
+      }).join('');
+      const rowAvg = trendMonths.length ? trendMonths.reduce((s,m)=>s+((m.pct&&m.pct[d.key]!=null)?m.pct[d.key]:0),0)/trendMonths.length : 0;
+      return `<tr>
+        <td style="white-space:nowrap;padding:8px 10px;background:transparent"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${d.color};margin-right:8px"></span><b style="color:${d.color}">${d.label}</b> <span style="font-size:9px;color:var(--text-faint);font-weight:500;margin-left:4px">tgt ${d.targetHint||''}</span></td>
+        ${cells}
+        <td style="text-align:center;font-family:JetBrains Mono,monospace;font-weight:700;font-size:12px;color:${heatFg(rowAvg)};background:transparent;border:1px solid rgba(255,255,255,0.06)">${rowAvg.toFixed(1)}%</td>
+      </tr>`;
+    }).join('');
+    const heatAvgCells = trendMonths.map(m=>{
+      const vals = monthlyKpiDefs.map(d => (m.pct && m.pct[d.key] != null) ? m.pct[d.key] : 0);
+      const avg = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0;
+      return `<td style="text-align:center;font-family:JetBrains Mono,monospace;font-weight:700;font-size:12px;color:${heatFg(avg)};background:transparent;border:1px solid rgba(255,255,255,0.08);border-top:1px solid rgba(255,199,44,0.25)">${Math.round(avg)}</td>`;
+    }).join('');
+    const grandAvg = overallAvg;
+
     const tableHtml = `
-      <div style="margin-top:14px">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px">
-          <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;font-weight:600">Monthly KPI Achievement</div>
+      <div class="mkpi-exec" style="margin-top:4px">
+        <!-- Header -->
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid rgba(255,199,44,0.12)">
+          <div>
+            <div style="font-family:Oswald,sans-serif;font-size:15px;font-weight:600;letter-spacing:.6px;color:var(--text);display:flex;align-items:center;gap:8px">
+              <span style="width:3px;height:14px;border-radius:2px;background:linear-gradient(180deg,var(--yellow),#c99a10);box-shadow:0 0 8px rgba(255,199,44,.4)"></span>
+              Monthly KPI Achievement
+            </div>
+            <div style="font-size:11px;color:var(--text-dim);margin-top:3px;font-family:JetBrains Mono,monospace">Annual Trend · Target 90%</div>
+          </div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             <span id="mkpi-sync-status" style="font-size:9px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.5px;"></span>
             <button type="button" class="btn small sync-only-fahmi" onclick="if(typeof isFahmiFanani==='function' &amp;&amp; isFahmiFanani()){ syncMonthlyKpiAchievementToSheets(window.__trendMonthsForSync||[], window.__monthlyKpiDefsForSync||[], {manual:true}); } else { alert('Fitur Sync hanya tersedia untuk user Fahmi Fanani.'); }" title="Kirim chart &amp; tabel Monthly KPI Achievement ke sheet &quot;Dashboard&quot; di spreadsheet Maintenance">☁ Auto Sync</button>
-            <div style="display:flex;gap:6px;flex-wrap:wrap">${legend}</div>
           </div>
         </div>
-        ${monthlyAchievement4DSVG()}
-        <div style="overflow-x:auto;border:1px solid var(--line);border-radius:6px">
-          <table class="dash-sum-table" style="min-width:100%;margin:0">
+
+        <!-- Chart + Average Ring (Layout 1 hero) -->
+        <div style="display:grid;grid-template-columns:1fr 180px;gap:16px;align-items:center;margin-bottom:16px">
+          <div style="min-width:0">${monthlyAchievement4DSVG()}</div>
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 8px;background:radial-gradient(ellipse at 50% 30%,rgba(255,199,44,0.08),transparent 70%),linear-gradient(165deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.08);border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.04)">
+            ${avgAchievementRingSVG(overallAvg)}
+            <div style="margin-top:8px;font-family:JetBrains Mono,monospace;font-size:11px;font-weight:700;color:${overallDeltaColor}">
+              ${overallDelta>=0?'▲':'▼'} ${overallDeltaTxt} <span style="color:var(--text-dim);font-weight:500">vs Target</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Legend chips -->
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">${legend}</div>
+
+        <!-- Heatmap table (Layout 6 style) -->
+        <div style="overflow-x:auto;border:1px solid rgba(255,255,255,0.08);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.2)">
+          <table class="dash-sum-table" style="min-width:100%;margin:0;border-collapse:separate;border-spacing:0">
             <thead>
-              <tr>
-                <th style="text-align:left;min-width:120px">KPI</th>
-                ${headCols}
+              <tr style="background:rgba(255,255,255,0.04)">
+                <th style="text-align:left;min-width:100px;padding:10px 12px">KPI</th>
+                ${heatHeadCols}
               </tr>
             </thead>
             <tbody>
-              ${bodyRows}
-              <tr style="background:rgba(255,199,44,0.06)">
-                <td style="font-weight:700;color:var(--yellow)">Average</td>
-                ${avgCells}
+              ${heatBodyRows}
+              <tr>
+                <td style="font-weight:700;color:var(--yellow);padding:10px 12px;background:rgba(255,199,44,0.10);border-top:1px solid rgba(255,199,44,0.25)">Average</td>
+                ${heatAvgCells}
+                <td style="text-align:center;font-family:JetBrains Mono,monospace;font-weight:700;font-size:12px;color:${heatFg(grandAvg)};background:transparent;border-top:1px solid rgba(255,255,255,0.06)">${grandAvg.toFixed(1)}%</td>
               </tr>
             </tbody>
           </table>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:10px;color:var(--text-dim);align-items:center">
+          <span style="font-weight:600;letter-spacing:.4px;text-transform:uppercase">Performance Level</span>
+          <span style="display:inline-flex;align-items:center;gap:5px"><i style="width:10px;height:10px;border-radius:2px;background:rgba(46,204,113,0.55);display:inline-block"></i> 100% Excellent</span>
+          <span style="display:inline-flex;align-items:center;gap:5px"><i style="width:10px;height:10px;border-radius:2px;background:rgba(76,175,109,0.45);display:inline-block"></i> ≥ 90% Good</span>
+          <span style="display:inline-flex;align-items:center;gap:5px"><i style="width:10px;height:10px;border-radius:2px;background:rgba(255,199,44,0.5);display:inline-block"></i> 80 – 89% Caution</span>
+          <span style="display:inline-flex;align-items:center;gap:5px"><i style="width:10px;height:10px;border-radius:2px;background:rgba(255,107,53,0.5);display:inline-block"></i> 70 – 79% Warning</span>
+          <span style="display:inline-flex;align-items:center;gap:5px"><i style="width:10px;height:10px;border-radius:2px;background:rgba(229,72,77,0.55);display:inline-block"></i> &lt; 70% Needs Improvement</span>
         </div>
       </div>`;
 
@@ -17289,11 +17627,8 @@ function computeKPIs(){
   const mttrEligible = approvedRecords.filter(r=>r.category==='Breakdown' && r.duration!==null && r.duration!==undefined);
   const mttr = mttrEligible.length ? (mttrEligible.reduce((s,r)=>s+(Number(r.duration)||0),0)/mttrEligible.length) : 0;
 
-  // PMR = Planned Maintenance HOURS / Total Maintenance HOURS — sesuai kalimat formula resmi di sheet
-  // KPI (sebelumnya dihitung dari jumlah record/job, bukan jumlah jam, sudah diperbaiki di sini).
-  const plannedHours = approvedRecords.filter(r=>r.category!=='Breakdown').reduce((s,r)=>s+(Number(r.duration)||0),0);
-  const totalMaintHours = approvedRecords.reduce((s,r)=>s+(Number(r.duration)||0),0);
-  const pmr = totalMaintHours>0 ? (plannedHours/totalMaintHours*100) : 0;
+  // PMR = Planned Maintenance Hours / Total Maintenance Hours × 100 (formula resmi)
+  const { pmr } = calcPMRFromRecords(approvedRecords);
 
   // Service Accuracy (SA): dihitung dari data Daily Maintenance (kategori Periodical, sudah Approved),
   // berdasarkan flag Plan/Unplan tiap record — bukan lagi dari data Plan Service (Plan Service hanya
@@ -17353,11 +17688,8 @@ function computeKPIsForRange(startStr, endStr){
   const mttrEligible = approvedRecords.filter(r=>r.category==='Breakdown' && r.duration!==null && r.duration!==undefined);
   const mttr = mttrEligible.length ? (mttrEligible.reduce((s,r)=>s+(Number(r.duration)||0),0)/mttrEligible.length) : 0;
 
-  // PMR = Planned Maintenance HOURS / Total Maintenance HOURS — sesuai kalimat formula resmi di sheet
-  // KPI (sebelumnya dihitung dari jumlah record/job, bukan jumlah jam, sudah diperbaiki di sini).
-  const plannedHours = approvedRecords.filter(r=>r.category!=='Breakdown').reduce((s,r)=>s+(Number(r.duration)||0),0);
-  const totalMaintHours = approvedRecords.reduce((s,r)=>s+(Number(r.duration)||0),0);
-  const pmr = totalMaintHours>0 ? (plannedHours/totalMaintHours*100) : 0;
+  // PMR = Planned Maintenance Hours / Total Maintenance Hours × 100 (formula resmi)
+  const { pmr } = calcPMRFromRecords(approvedRecords);
 
   // Service Accuracy (SA): dihitung dari data Daily Maintenance (kategori Periodical, sudah Approved)
   // pada rentang tanggal tsb saja, berdasarkan flag Plan/Unplan tiap record — bukan lagi dari data Plan
