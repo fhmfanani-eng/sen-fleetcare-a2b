@@ -3665,6 +3665,28 @@ function kpiAchievePct(key, value){
   return kpiTierScore(key, value);
 }
 
+/** % capaian RIIL (bukan tier 60/80/100) — dipakai khusus di panel "Monthly KPI Achievement"
+ *  supaya angka yang tampil adalah hasil aktual (mis. 92%, 78%), bukan selalu dibulatkan ke 100
+ *  begitu melewati ambang target. MA/PA/PMR/SA memang sudah berupa persentase, jadi dipakai apa
+ *  adanya. MTBS/MTTR dalam satuan jam, dikonversi jadi "% terhadap target" (higher-better utk MTBS,
+ *  lower-better utk MTTR) supaya tetap sebanding & bisa dirata-rata dengan KPI persentase lain. */
+function kpiRawAchievePct(key, value){
+  const v = Number(value)||0;
+  if(key==='ma' || key==='pa' || key==='pmr' || key==='sa'){
+    return Math.max(0, v);
+  }
+  if(key==='mtbs'){
+    const t = KPI_TARGET.mtbs||80;
+    return t>0 ? Math.max(0, Math.min(150, (v/t)*100)) : 0;
+  }
+  if(key==='mttr'){
+    const t = KPI_TARGET.mttr||36;
+    if(v<=0) return 100;
+    return Math.max(0, Math.min(150, (t/v)*100));
+  }
+  return Math.max(0, v);
+}
+
 /** Bobot skor (Score di spreadsheet) = tier/100 * weight. */
 function kpiWeightedScore(key, value){
   const tier = kpiTierScore(key, value);
@@ -15123,10 +15145,14 @@ let _mkpiLastPayloadHash = '';
 
 function buildMonthlyKpiAchievementSyncRecords(trendMonths, monthlyKpiDefs){
   const monthCols = trendMonths.map(m => summaryMonthLabel(m.key));
+  // MA/PA: persis nilai % capaian aktual (rawPct). KPI lain (MTBS/MTTR/PMR/SA) & baris Average:
+  // tetap skor tier 60/80/100 (pct) — sinkron dengan tabel "Monthly KPI Achievement" di panel Dashboard web.
   const records = monthlyKpiDefs.map(d=>{
     const row = { 'KPI': d.label };
+    const useRaw = (d.key==='ma' || d.key==='pa');
     trendMonths.forEach((m,i)=>{
-      const pct = (m.pct && m.pct[d.key] != null) ? m.pct[d.key] : 0;
+      const src = useRaw ? m.rawPct : m.pct;
+      const pct = (src && src[d.key] != null) ? src[d.key] : 0;
       row[monthCols[i]] = Math.round(pct);
     });
     return row;
@@ -16346,6 +16372,14 @@ function renderKPIChartDashboard(k, globalStats){
           sa: kpiAchievePct('sa', kk.sa||0),
           ma: kpiAchievePct('ma', kk.ma||0),
           pa: kpiAchievePct('pa', kk.pa||0),
+        },
+        rawPct: {
+          mtbs: kpiRawAchievePct('mtbs', kk.mtbs||0),
+          mttr: kpiRawAchievePct('mttr', kk.mttr||0),
+          pmr: kpiRawAchievePct('pmr', kk.pmr||0),
+          sa: kpiRawAchievePct('sa', kk.sa||0),
+          ma: kpiRawAchievePct('ma', kk.ma||0),
+          pa: kpiRawAchievePct('pa', kk.pa||0),
         }
       });
     });
@@ -16543,7 +16577,8 @@ function renderKPIChartDashboard(k, globalStats){
     }
     const legend = monthlyKpiDefs.map(d=>{
       const last = trendMonths[trendMonths.length-1];
-      const pct = last && last.pct ? (last.pct[d.key]||0) : 0;
+      const useRawLegend = (d.key==='ma' || d.key==='pa');
+      const pct = last ? ((useRawLegend ? last.rawPct : last.pct)||{})[d.key]||0 : 0;
       return `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);font-family:JetBrains Mono,monospace;font-size:11px">
         <i style="width:8px;height:8px;border-radius:50%;background:${d.color};display:inline-block;box-shadow:0 0 8px ${d.color}88"></i>
         <span style="color:${d.color};font-weight:700">${d.label}</span>
@@ -16755,9 +16790,15 @@ function renderKPIChartDashboard(k, globalStats){
     }
     const heatHeadCols = trendMonths.map(m=>`<th style="text-align:center;min-width:48px;font-size:10px;background:transparent">${m.short}</th>`).join('') +
       `<th style="text-align:center;min-width:56px;font-size:10px;color:var(--yellow);background:transparent">Average</th>`;
+    // MA/PA: tampilkan nilai % capaian AKTUAL (rawPct) apa adanya. KPI lain (MTBS/MTTR/PMR/SA)
+    // tetap pakai skor tier 60/80/100 (pct). Kolom & baris "Average" SELALU pakai skor tier
+    // (pct) untuk semua KPI termasuk MA/PA, supaya rata-rata tetap mencerminkan level capaian
+    // (tier), bukan tercampur dengan angka % aktual mentah.
     const heatBodyRows = monthlyKpiDefs.map(d=>{
+      const useRawCell = (d.key==='ma' || d.key==='pa');
       const cells = trendMonths.map(m=>{
-        const pct = (m.pct && m.pct[d.key] != null) ? m.pct[d.key] : 0;
+        const src = useRawCell ? m.rawPct : m.pct;
+        const pct = (src && src[d.key] != null) ? src[d.key] : 0;
         return `<td style="text-align:center;font-family:JetBrains Mono,monospace;font-weight:700;font-size:12px;color:${heatFg(pct)};background:transparent;border:1px solid rgba(255,255,255,0.04)">${Math.round(pct)}</td>`;
       }).join('');
       const rowAvg = trendMonths.length ? trendMonths.reduce((s,m)=>s+((m.pct&&m.pct[d.key]!=null)?m.pct[d.key]:0),0)/trendMonths.length : 0;
@@ -16773,6 +16814,10 @@ function renderKPIChartDashboard(k, globalStats){
       return `<td style="text-align:center;font-family:JetBrains Mono,monospace;font-weight:700;font-size:12px;color:${heatFg(avg)};background:transparent;border:1px solid rgba(255,255,255,0.08);border-top:1px solid rgba(255,199,44,0.25)">${Math.round(avg)}</td>`;
     }).join('');
     const grandAvg = overallAvg;
+    // Teks target di header tabel — diambil langsung dari targetHint tiap KPI (nilai formula
+    // KPI_TARGET yang sudah ada), bukan angka "90%" yang di-hardcode (karena target MTBS/MTTR
+    // memang bukan 90%).
+    const mkpiTargetText = monthlyKpiDefs.map(d => `${d.label} ${d.targetHint||''}`).join(' · ');
 
     const tableHtml = `
       <div class="mkpi-exec" style="margin-top:4px">
@@ -16783,7 +16828,7 @@ function renderKPIChartDashboard(k, globalStats){
               <span style="width:3px;height:14px;border-radius:2px;background:linear-gradient(180deg,var(--yellow),#c99a10);box-shadow:0 0 8px rgba(255,199,44,.4)"></span>
               Monthly KPI Achievement
             </div>
-            <div style="font-size:11px;color:var(--text-dim);margin-top:3px;font-family:JetBrains Mono,monospace">Annual Trend · Target 90%</div>
+            <div style="font-size:11px;color:var(--text-dim);margin-top:3px;font-family:JetBrains Mono,monospace">Annual Trend · Target ${mkpiTargetText}</div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             <span id="mkpi-sync-status" style="font-size:9px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.5px;"></span>
