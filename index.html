@@ -3611,8 +3611,8 @@ const KPI_INFO = {
   },
   pa: {
     full: 'Physical Availability (PA)',
-    formula: '((Working Hours + Standby) ÷ (Working Hours + Standby + Repair)) × 100%',
-    desc: 'Physical Availability against target. Achievement % of weight: ≥90% = 100%, 70–89% = 80%, <70% = 60%. Target ≥90%. Primary source: performance sheet (live sync) for the filter date range; fallback to HM Monitoring / manual data.',
+    formula: 'PA = (Waktu Operasi + Standby) / Total Jam Kerja × 100%',
+    desc: 'Physical Availability against target. Formula: (Waktu Operasi + Standby) ÷ Total Jam Kerja × 100%. Achievement % of weight: ≥90% = 100%, 70–89% = 80%, <70% = 60%. Target ≥90%. Live sync dari sheet performance (W, S, Total Jam Kerja) tanpa mensyaratkan filter periode sheet; fallback Monitoring HM.',
     unit: '%', higherBetter: true
   }
 };
@@ -5712,6 +5712,10 @@ let preInspectionPlans = []; // jadwal Pre Inspection (dibuat Supervisor, dituga
 let breakdownReports = [];
 let hmRecords = [];
 let mapaData = null; // { rows:[{unit,w,s,r}], totalW, totalS, totalR, fileName, updatedAt }
+/** Riwayat snapshot performance per bulan (YYYY-MM) — diisi saat live sync.
+ *  Memungkinkan kolom Monthly KPI (mis. JUL) tetap menampilkan AVERAGE sheet 84.5%
+ *  meski filter periode di sheet sudah diganti ke bulan lain. */
+let mapaHistory = {}; // { '2026-07': { rows, periodStart, periodEnd, totalW, totalS, totalR, fileName, updatedAt } }
 /** Jam kerja HARIAN per unit (bukan rata-rata periode performance).
  *  { id, tanggal, unitCode, workingHours, actualWorkingHours, idlingHours, source }
  *  Sumber: sheet "Jam Kerja Harian" (Apps Script action=getDailyWorkingHours) + telemetri/HM.
@@ -5725,10 +5729,10 @@ let _dailyWhMeta = { updatedAt:'', source:'', lastSyncOk:false };
    fromPerformance=true → prioritas lebih tinggi dari Monitoring HM. */
 const PERFORMANCE_SEED = {
   rows: [
-    { unit: 'SWA-101', w: 129, s: 33, r: 0 },
-    { unit: 'SWA-102', w: 140, s: 22, r: 0 },
-    { unit: 'SBD-103', w: 141, s: 11, r: 10.10 },
-    { unit: 'SPC-104', w: 109, s: 46, r: 7.15 },
+    { unit: 'SWA-101', w: 129, s: 33, r: 0, t: 162 },
+    { unit: 'SWA-102', w: 140, s: 22, r: 0, t: 162 },
+    { unit: 'SBD-103', w: 141, s: 11, r: 10.10, t: 162.10 },
+    { unit: 'SPC-104', w: 109, s: 46, r: 7.15, t: 162.15 },
   ],
   totalW: 519,
   totalS: 112,
@@ -5740,11 +5744,43 @@ const PERFORMANCE_SEED = {
   periodEnd: '2026-08-10'
 };
 
+/* Snapshot resmi Juli 2026 dari tab performance (AVERAGE MA 84.5% / PA 84.5%).
+   Disimpan ke mapaHistory['2026-07'] saat init supaya kolom JUL di Monthly KPI
+ *  selalu menampilkan angka sheet, tidak bergantung HM (~90/92). */
+const PERFORMANCE_JULY_2026 = {
+  rows: [
+    { unit: 'SWA-101', w: 388, s: 152, r: 0,    t: 540 },
+    { unit: 'SWA-102', w: 393, s: 147, r: 0,    t: 540 },
+    { unit: 'SBD-103', w: 221, s: 0,   r: 357.5, t: 578 },
+    { unit: 'SPC-104', w: 255, s: 284, r: 0.58, t: 540 },
+  ],
+  totalW: 1257,
+  totalS: 583,
+  totalR: 358.08,
+  totalT: 2198,
+  fileName: 'performance-sheet (1-7-2026 s/d 31-7-2026)',
+  updatedAt: '2026-07-31T00:00:00.000Z',
+  fromPerformance: true,
+  periodStart: '2026-07-01',
+  periodEnd: '2026-07-31'
+};
+
 /**
  * Apakah rentang filter (startStr–endStr) cocok dengan periode sheet performance?
  * Sheet performance hanya menyimpan SATU periode (D2–G2).
  *
- * Aturan KETAT (koreksi W4 / minggu belum berjalan):
+ * CATATAN (update): fungsi ini SUDAH TIDAK dipakai lagi oleh resolveMaPa()/
+ * getUnitWorkingHours() untuk KPI web — kedua fungsi itu sekarang punya aturan sendiri
+ * yang lebih sederhana: sheet performance (live) dipakai HANYA untuk status "current"
+ * tanpa filter periode spesifik (startStr & endStr sama-sama kosong); begitu ada periode
+ * spesifik (bulan/quarter/tanggal tertentu), selalu dihitung dari Monitoring HM supaya
+ * tidak lagi terjadi bug MA/PA sama persis (mis. selalu 100%) di semua bulan/periode.
+ * Fungsi ini masih dipertahankan HANYA untuk resolveMaPaForWeek() (sinkron ke
+ * sheet "Maintenance" per minggu W1–W4), supaya bug lama (MA/PA sama persis di
+ * semua minggu karena 1 snapshot performance dipakai ke semua minggu) tidak
+ * kembali muncul pada fitur sync mingguan tsb.
+ *
+ * Aturan KETAT (khusus sync mingguan di atas):
  * - Data MA/PA dari sheet performance HANYA dipakai jika filter berada DI DALAM
  *   (atau sama dengan) periode sheet [periodStart, periodEnd].
  * - Tidak boleh "melebar": data 1–10 Agts tidak boleh mengisi KPI bulan penuh
@@ -5753,66 +5789,133 @@ const PERFORMANCE_SEED = {
  *   [ps, pe]; kalau periode sheet sudah lewat / belum mulai → jangan pakai
  *   (biar fallback HM / 0, bukan angka usang yang seolah 100%).
  */
+function _normYmd(s){
+  /* Normalisasi berbagai format tanggal ke YYYY-MM-DD agar perbandingan periode aman.
+     Menerima: 2026-07-01 | 1-7-2026 | 01/07/2026 | 7/31/2026 | Date serial (sheet). */
+  if(s==null || s==='') return '';
+  if(typeof s==='number' && isFinite(s)){
+    // Excel/Sheets serial day
+    const epoch = new Date(Date.UTC(1899, 11, 30));
+    const d = new Date(epoch.getTime() + Math.round(s)*86400000);
+    return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');
+  }
+  const str = String(s).trim();
+  let m = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(m) return m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0');
+  m = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if(m){
+    // d-m-yyyy or m/d/yyyy — jika bagian tengah > 12 anggap d-m-yyyy, else prefer d-m-yyyy (ID)
+    let a=Number(m[1]), b=Number(m[2]), y=m[3];
+    if(a>12 && b<=12) return y+'-'+String(b).padStart(2,'0')+'-'+String(a).padStart(2,'0'); // d-m-yyyy
+    if(b>12 && a<=12) return y+'-'+String(a).padStart(2,'0')+'-'+String(b).padStart(2,'0'); // m-d-yyyy
+    // ambigu: anggap d-m-yyyy (format Indonesia di sheet)
+    return y+'-'+String(b).padStart(2,'0')+'-'+String(a).padStart(2,'0');
+  }
+  const d = new Date(str);
+  if(!isNaN(d.getTime())){
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  return str;
+}
 function performancePeriodMatches(startStr, endStr){
   if(!mapaData || !mapaData.fromPerformance) return false;
-  const ps = (mapaData.periodStart || '').trim();
-  const pe = (mapaData.periodEnd || '').trim();
+  const ps = _normYmd(mapaData.periodStart);
+  const pe = _normYmd(mapaData.periodEnd);
   // Tidak ada info periode di data performance → jangan pakai (hindari angka palsu)
   if(!ps || !pe) return false;
 
   const today = new Date();
   const todayStr = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
 
+  const fs = _normYmd(startStr);
+  const fe = _normYmd(endStr);
+
   // All Periods: hanya pakai jika hari ini masih di dalam periode sheet
-  if(!startStr && !endStr){
+  if(!fs && !fe){
     return todayStr >= ps && todayStr <= pe;
   }
   // Kedua sisi filter diisi → filter harus subset periode performance (bukan sekadar overlap)
-  if(startStr && endStr){
-    return startStr >= ps && endStr <= pe;
+  if(fs && fe){
+    return fs >= ps && fe <= pe;
   }
-  // Hanya start diisi: start harus di dalam [ps, pe]
-  if(startStr && !endStr){
-    return startStr >= ps && startStr <= pe;
+  if(fs && !fe){
+    return fs >= ps && fs <= pe;
   }
-  // Hanya end diisi: end harus di dalam [ps, pe]
-  if(!startStr && endStr){
-    return endStr >= ps && endStr <= pe;
+  if(!fs && fe){
+    return fe >= ps && fe <= pe;
   }
   return false;
 }
 
 function maPaFromRows(rows){
-  const W = rows.reduce((s,r)=>s+(Number(r.w)||0),0);
-  const S = rows.reduce((s,r)=>s+(Number(r.s)||0),0);
-  const R = rows.reduce((s,r)=>s+(Number(r.r)||0),0);
+  /* PA resmi: (Waktu Operasi + Standby) / Total Jam Kerja × 100
+     MA resmi: Waktu Operasi / (Waktu Operasi + Breakdown) × 100
+     Multi-unit: rata-rata SEDERHANA % per unit (= baris AVERAGE di sheet performance).
+     Total Jam Kerja (T) diambil dari kolom sheet bila ada; fallback W+S+R. */
+  if(!rows || !rows.length) return { ma:0, pa:0, W:0, S:0, R:0, T:0 };
+  let W=0, S=0, R=0, T=0, sumMa=0, sumPa=0, n=0;
+  rows.forEach(r=>{
+    const w = Number(r.w != null ? r.w : r.workingHours) || 0;
+    const s = Number(r.s) || 0;
+    const rr = Number(r.r) || 0;
+    let t = Number(r.t != null ? r.t : r.totalWorkingHours);
+    if(isNaN(t) || t <= 0) t = w + s + rr;
+    W += w; S += s; R += rr; T += t;
+    const maU = (w+rr)>0 ? (w/(w+rr)*100) : 0;
+    const paU = t>0 ? ((w+s)/t*100) : 0;
+    sumMa += maU; sumPa += paU; n++;
+  });
   return {
-    ma: (W+R)>0 ? (W/(W+R)*100) : 0,
-    pa: (W+S+R)>0 ? ((W+S)/(W+S+R)*100) : 0,
-    W, S, R
+    ma: n>0 ? sumMa/n : 0,
+    pa: n>0 ? sumPa/n : 0,
+    W, S, R, T
   };
 }
 
-/** Selesaikan MA & PA: performance sheet (periode cocok) → HM → upload manual. */
+/** Selesaikan MA & PA: performance sheet (live, hanya utk status current tanpa periode
+ *  spesifik) → HM (periode-aware, utk bulan/quarter tertentu) → upload manual. */
 function resolveMaPa(unitCode, startStr, endStr){
-  // 1) Sheet performance — HANYA jika periode filter cocok dengan periode di sheet
-  if(mapaData && mapaData.fromPerformance && mapaData.rows && mapaData.rows.length
-      && performancePeriodMatches(startStr||null, endStr||null)){
-    if(unitCode){
-      const rows = mapaData.rows.filter(r=>String(r.unit||'').trim().toUpperCase()===String(unitCode).toUpperCase());
-      if(rows.length) return maPaFromRows(rows);
-      // Unit tidak ada di sheet performance untuk periode ini → jangan paksa 0,
-      // biarkan fallback ke HM agar unit lain tetap bisa dihitung.
-    } else {
-      return maPaFromRows(mapaData.rows);
-    }
+  /* MA & PA di web SELALU dari Monitoring HM (aktual operasional).
+     Sheet performance (live sync) TIDAK dipakai untuk angka % MA/PA di kartu KPI,
+     tabel Monthly KPI Achievement, unit cards, maupun filter All Periods / bulan spesifik.
+     Alasan: sheet hanya menyimpan SATU periode; kalau dipakai, mengganti filter periode
+     di sheet membuat % MA/PA di web ikut berubah — bukan nilai aktual stabil.
+     Sheet performance tetap dipakai untuk WH/hari, proyeksi HM, dll. di modul lain. */
+  if(typeof resolveMaPaFromHmOnly === 'function'){
+    return resolveMaPaFromHmOnly(unitCode, startStr||null, endStr||null);
   }
-  // 2) Monitoring HM (periode-aware)
-  const hmwsr = unitCode
-    ? hmWSRForUnit(unitCode, startStr||null, endStr||null)
-    : hmWSRGlobal(startStr||null, endStr||null);
+  // Fallback inline (jika helper belum ter-load)
+  if(unitCode){
+    const hmwsr = hmWSRForUnit(unitCode, startStr||null, endStr||null);
+    if(hmwsr) return maPaFromWSR(hmwsr);
+    return { ma:0, pa:0 };
+  }
+  let unitList = [];
+  try{
+    let recs = (typeof hmRecords!=='undefined' && Array.isArray(hmRecords)) ? hmRecords.slice() : [];
+    if(startStr) recs = recs.filter(r=>r.tanggal && r.tanggal>=startStr);
+    if(endStr) recs = recs.filter(r=>r.tanggal && r.tanggal<=endStr);
+    unitList = Array.from(new Set(recs.map(r=>r.unitCode).filter(Boolean)));
+  }catch(e){}
+  if(!unitList.length && typeof UNITS!=='undefined' && Array.isArray(UNITS)){
+    unitList = UNITS.map(u=>u.code).filter(Boolean);
+  }
+  if(unitList.length){
+    let sumMa=0, sumPa=0, n=0;
+    unitList.forEach(uc=>{
+      const wsr = hmWSRForUnit(uc, startStr||null, endStr||null);
+      if(wsr){
+        const mp = maPaFromWSR(wsr);
+        sumMa += (mp.ma||0);
+        sumPa += (mp.pa||0);
+        n++;
+      }
+    });
+    if(n>0) return { ma: sumMa/n, pa: sumPa/n };
+  }
+  const hmwsr = hmWSRGlobal(startStr||null, endStr||null);
   if(hmwsr) return maPaFromWSR(hmwsr);
-  // 3) Fallback upload manual mapa (bukan fromPerformance, atau periode tidak cocok)
+  // Upload manual (bukan fromPerformance) masih boleh sebagai fallback terakhir
   if(mapaData && mapaData.rows && mapaData.rows.length && !mapaData.fromPerformance){
     if(unitCode){
       const rows = mapaData.rows.filter(r=>String(r.unit||'').trim().toUpperCase()===String(unitCode).toUpperCase());
@@ -5821,7 +5924,6 @@ function resolveMaPa(unitCode, startStr, endStr){
     }
     return maPaFromRows(mapaData.rows);
   }
-  // 4) Performance ada tapi periode tidak cocok & HM kosong → tetap 0 (jangan pakai data periode salah)
   return { ma:0, pa:0 };
 }
 
@@ -6288,6 +6390,64 @@ async function loadData(){
     const mapa = await appStorage.get('mapa-data');
     mapaData = mapa ? JSON.parse(mapa.value) : null;
   }catch(e){ mapaData = null; }
+  try{
+    const mh = await appStorage.get('mapa-history');
+    if(mh && mh.value){
+      const parsed = JSON.parse(mh.value);
+      if(parsed && typeof parsed==='object') mapaHistory = parsed;
+    }
+  }catch(_e){ /* keep mapaHistory */ }
+  // Pastikan Juli 2026 selalu ada di history (angka resmi AVERAGE sheet 84.5%)
+  try{
+    if(!mapaHistory['2026-07'] || !mapaHistory['2026-07'].rows || !mapaHistory['2026-07'].rows.length){
+      mapaHistory['2026-07'] = {
+        rows: PERFORMANCE_JULY_2026.rows.map(r=>({...r})),
+        periodStart: PERFORMANCE_JULY_2026.periodStart,
+        periodEnd: PERFORMANCE_JULY_2026.periodEnd,
+        totalW: PERFORMANCE_JULY_2026.totalW,
+        totalS: PERFORMANCE_JULY_2026.totalS,
+        totalR: PERFORMANCE_JULY_2026.totalR,
+        totalT: PERFORMANCE_JULY_2026.totalT,
+        fileName: PERFORMANCE_JULY_2026.fileName,
+        updatedAt: PERFORMANCE_JULY_2026.updatedAt,
+        fromPerformance: true
+      };
+      try{ await appStorage.set('mapa-history', JSON.stringify(mapaHistory)); }catch(_e){}
+    }
+  }catch(_e){}
+
+  // Seed history dari snapshot live yang sudah tersimpan (sekali, jika bulan tsb belum ada)
+  try{
+    if(mapaData && mapaData.fromPerformance && mapaData.rows && mapaData.rows.length){
+      const psN = (typeof _normYmd==='function' ? _normYmd(mapaData.periodStart) : (mapaData.periodStart||''));
+      const peN = (typeof _normYmd==='function' ? _normYmd(mapaData.periodEnd) : (mapaData.periodEnd||''));
+      if(psN && peN){
+        const startM = new Date(psN+'T00:00:00');
+        const endM = new Date(peN+'T00:00:00');
+        if(!isNaN(startM) && !isNaN(endM)){
+          let cur = new Date(startM.getFullYear(), startM.getMonth(), 1);
+          const last = new Date(endM.getFullYear(), endM.getMonth(), 1);
+          let changed = false;
+          while(cur <= last){
+            const key = cur.getFullYear()+'-'+String(cur.getMonth()+1).padStart(2,'0');
+            if(!mapaHistory[key]){
+              mapaHistory[key] = {
+                rows: mapaData.rows.map(r=>({...r})),
+                periodStart: psN, periodEnd: peN,
+                totalW: mapaData.totalW, totalS: mapaData.totalS, totalR: mapaData.totalR,
+                totalT: mapaData.totalT, fileName: mapaData.fileName,
+                updatedAt: mapaData.updatedAt, fromPerformance: true
+              };
+              changed = true;
+            }
+            cur.setMonth(cur.getMonth()+1);
+          }
+          if(changed){ try{ await appStorage.set('mapa-history', JSON.stringify(mapaHistory)); }catch(_e){} }
+        }
+      }
+    }
+  }catch(_e){}
+
 
   try{
     const dwh = await appStorage.get('daily-wh-records');
@@ -7923,10 +8083,17 @@ function hmWSRGlobal(startStr, endStr){
   return { W, S, R, T, units };
 }
 function maPaFromWSR(wsr){
-  const { W, S, R } = wsr;
+  /* PA = (Waktu Operasi + Standby) / Total Jam Kerja × 100
+     Total Jam Kerja = T dari kalender HM bila ada; fallback W+S+R. */
+  const W = Number(wsr.W)||0;
+  const S = Number(wsr.S)||0;
+  const R = Number(wsr.R)||0;
+  let T = Number(wsr.T);
+  if(isNaN(T) || T <= 0) T = W + S + R;
   return {
     ma: (W+R) > 0 ? (W/(W+R)*100) : 0,
-    pa: (W+S+R) > 0 ? ((W+S)/(W+S+R)*100) : 0
+    pa: T > 0 ? ((W+S)/T*100) : 0,
+    W, S, R, T
   };
 }
 
@@ -8202,7 +8369,7 @@ function populateUnitWeekPeriodSelect(){
       if(s || e){
         hintEl.innerHTML = `Manual period filter locked: <b>${formatPerformancePeriodLabel(s||'…', e||'…')}</b>. Independent from sheet period. W/S/R &amp; MA/PA use performance sheet only when ranges match; otherwise calculated from Monitoring HM. MTBS/MTTR/PMR/SA always follow this range.`;
       } else {
-        hintEl.innerHTML = 'Filter: <b>All Periods</b> (locked — independent from sheet). W/S/R &amp; MA/PA use performance sheet data if available.';
+        hintEl.innerHTML = 'Filter: <b>All Periods</b> (independent from sheet). W/S/R &amp; MA/PA dihitung dari Monitoring HM (agregat), tidak mengikuti filter periode sheet.';
       }
     } else if(perfKey){
       const [ps, pe] = perfKey.split('_');
@@ -8303,24 +8470,18 @@ function unitIconSVG(category){
 /**
  * Data operasional per unit dari sheet performance (format sama tabel spreadsheet):
  *   Waktu Operasi (W) | Standby (S) | Breakdown (R) | Total Jam Kerja (T)
- * Periode filter harus cocok dengan periodStart–periodEnd sheet. Fallback: Monitoring HM.
+ * Sheet performance (live) HANYA dipakai untuk status "current" tanpa filter periode
+ * spesifik (startStr & endStr kosong). Kalau ada filter periode spesifik (mis. rentang
+ * tanggal per unit yang dipilih user), selalu dihitung dari Monitoring HM (periode-aware)
+ * supaya angkanya benar-benar mengikuti periode yang difilter, bukan snapshot performance
+ * yang sama untuk semua periode.
  */
 function getUnitWorkingHours(unitCode, startStr, endStr){
-  if(mapaData && mapaData.fromPerformance && mapaData.rows && mapaData.rows.length
-      && performancePeriodMatches(startStr||null, endStr||null)){
-    const row = mapaData.rows.find(r=>String(r.unit||'').trim().toUpperCase()===String(unitCode||'').trim().toUpperCase());
-    if(row){
-      const w = Number(row.workingHours != null ? row.workingHours : row.w) || 0;
-      const s = Number(row.s) || 0;
-      const r = Number(row.r) || 0;
-      let t = Number(row.totalWorkingHours != null ? row.totalWorkingHours : row.t);
-      if(isNaN(t) || t <= 0) t = w + s + r;
-      return { w, s, r, t, source:'performance' };
-    }
-  }
+  // W/S/R/T untuk tampilan unit: dari Monitoring HM saja (tidak ikut filter periode sheet).
   const hmwsr = hmWSRForUnit(unitCode, startStr||null, endStr||null);
   if(hmwsr){
-    return { w: hmwsr.W, s: hmwsr.S, r: hmwsr.R, t: (hmwsr.W + hmwsr.S + hmwsr.R), source:'hm' };
+    const T = (hmwsr.T != null && hmwsr.T > 0) ? hmwsr.T : (hmwsr.W + hmwsr.S + hmwsr.R);
+    return { w: hmwsr.W, s: hmwsr.S, r: hmwsr.R, t: T, source:'hm' };
   }
   return { w:null, s:null, r:null, t:null, source:null };
 }
@@ -15145,11 +15306,11 @@ let _mkpiLastPayloadHash = '';
 
 function buildMonthlyKpiAchievementSyncRecords(trendMonths, monthlyKpiDefs){
   const monthCols = trendMonths.map(m => summaryMonthLabel(m.key));
-  // MA/PA: persis nilai % capaian aktual (rawPct). KPI lain (MTBS/MTTR/PMR/SA) & baris Average:
+  // MA/PA/PMR/SA: nilai % aktual (rawPct). MTBS/MTTR & baris Average lintas-KPI:
   // tetap skor tier 60/80/100 (pct) — sinkron dengan tabel "Monthly KPI Achievement" di panel Dashboard web.
   const records = monthlyKpiDefs.map(d=>{
     const row = { 'KPI': d.label };
-    const useRaw = (d.key==='ma' || d.key==='pa');
+    const useRaw = (d.key==='ma' || d.key==='pa' || d.key==='pmr' || d.key==='sa');
     trendMonths.forEach((m,i)=>{
       const src = useRaw ? m.rawPct : m.pct;
       const pct = (src && src[d.key] != null) ? src[d.key] : 0;
@@ -16569,15 +16730,17 @@ function renderKPIChartDashboard(k, globalStats){
 
     // Legend chips — skor tier + target formula resmi
     function legendFg(pct){
-      const p = Math.max(0, Number(pct)||0);
-      if(p >= 100) return '#4CAF6D';
+      const p = Math.round(Math.max(0, Number(pct)||0));
+      if(p >= 100) return '#5CFF8A';
+      if(p >= 90)  return '#00A896';
       if(p >= 80)  return '#FFC72C';
-      if(p >= 60)  return '#E5484D';
+      if(p >= 70)  return '#FF8A1F';
+      if(p > 0)    return '#E5484D';
       return 'var(--text-dim)';
     }
     const legend = monthlyKpiDefs.map(d=>{
       const last = trendMonths[trendMonths.length-1];
-      const useRawLegend = (d.key==='ma' || d.key==='pa');
+      const useRawLegend = (d.key==='ma' || d.key==='pa' || d.key==='pmr' || d.key==='sa');
       const pct = last ? ((useRawLegend ? last.rawPct : last.pct)||{})[d.key]||0 : 0;
       return `<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);font-family:JetBrains Mono,monospace;font-size:11px">
         <i style="width:8px;height:8px;border-radius:50%;background:${d.color};display:inline-block;box-shadow:0 0 8px ${d.color}88"></i>
@@ -16589,14 +16752,19 @@ function renderKPIChartDashboard(k, globalStats){
 
     // Detail table: monthly % achievement
     function cellColor(pct){
-      if(pct >= 100) return '#4CAF6D';
-      if(pct >= 80) return '#FFC72C';
+      const p = Math.round(Math.max(0, Number(pct)||0));
+      if(p >= 100) return '#5CFF8A';
+      if(p >= 90) return '#00A896';
+      if(p >= 80) return '#FFC72C';
+      if(p >= 70) return '#FF8A1F';
       return '#E5484D';
     }
     const headCols = trendMonths.map(m=>`<th style="text-align:center;min-width:52px">${m.short}</th>`).join('');
     const bodyRows = monthlyKpiDefs.map(d=>{
+      const useRaw = (d.key==='ma' || d.key==='pa' || d.key==='pmr' || d.key==='sa');
       const cells = trendMonths.map(m=>{
-        const pct = (m.pct && m.pct[d.key] != null) ? m.pct[d.key] : 0;
+        const src = useRaw ? m.rawPct : m.pct;
+        const pct = (src && src[d.key] != null) ? src[d.key] : 0;
         const col = cellColor(pct);
         return `<td style="text-align:center;font-family:JetBrains Mono,monospace;font-weight:700;color:${col}">${Math.round(pct)}%</td>`;
       }).join('');
@@ -16781,27 +16949,33 @@ function renderKPIChartDashboard(k, globalStats){
     // MTTR  <36→100 | 36–45→80 | >45→60
     // PMR/SA >90→100 | 85–90→80 | <85→60
     function heatFg(pct){
-      const p = Math.max(0, Number(pct)||0);
-      if(p >= 100) return '#4CAF6D';   // tier 100 — hijau (target tercapai)
-      if(p >= 80)  return '#FFC72C';   // tier 80  — kuning
-      if(p >= 60)  return '#E5484D';   // tier 60  — merah
+      /* 100% Excellent vs ≥90% Good — warna jelas berbeda. */
+      const p = Math.round(Math.max(0, Number(pct)||0));
+      if(p >= 100) return '#5CFF8A';   // 100% Excellent — mint terang
+      if(p >= 90)  return '#00A896';   // ≥90% Good — teal
+      if(p >= 80)  return '#FFC72C';   // 80–89% Caution
+      if(p >= 70)  return '#FF8A1F';   // 70–79% Warning
       if(p > 0)    return '#E5484D';
       return 'var(--text-faint)';
     }
     const heatHeadCols = trendMonths.map(m=>`<th style="text-align:center;min-width:48px;font-size:10px;background:transparent">${m.short}</th>`).join('') +
       `<th style="text-align:center;min-width:56px;font-size:10px;color:var(--yellow);background:transparent">Average</th>`;
-    // MA/PA: tampilkan nilai % capaian AKTUAL (rawPct) apa adanya. KPI lain (MTBS/MTTR/PMR/SA)
-    // tetap pakai skor tier 60/80/100 (pct). Kolom & baris "Average" SELALU pakai skor tier
-    // (pct) untuk semua KPI termasuk MA/PA, supaya rata-rata tetap mencerminkan level capaian
-    // (tier), bukan tercampur dengan angka % aktual mentah.
+    // MA/PA/PMR/SA: sel bulanan & kolom AVERAGE = nilai % AKTUAL (rawPct), sama seperti kartu KPI.
+    // MTBS/MTTR: skor tier 60/80/100 (pct) karena satuan jam.
+    // Baris "Average" (lintas KPI per bulan) tetap skor tier agar sebanding.
     const heatBodyRows = monthlyKpiDefs.map(d=>{
-      const useRawCell = (d.key==='ma' || d.key==='pa');
+      const useRaw = (d.key==='ma' || d.key==='pa' || d.key==='pmr' || d.key==='sa');
       const cells = trendMonths.map(m=>{
-        const src = useRawCell ? m.rawPct : m.pct;
+        const src = useRaw ? m.rawPct : m.pct;
         const pct = (src && src[d.key] != null) ? src[d.key] : 0;
         return `<td style="text-align:center;font-family:JetBrains Mono,monospace;font-weight:700;font-size:12px;color:${heatFg(pct)};background:transparent;border:1px solid rgba(255,255,255,0.04)">${Math.round(pct)}</td>`;
       }).join('');
-      const rowAvg = trendMonths.length ? trendMonths.reduce((s,m)=>s+((m.pct&&m.pct[d.key]!=null)?m.pct[d.key]:0),0)/trendMonths.length : 0;
+      const rowAvg = trendMonths.length
+        ? trendMonths.reduce((s,m)=>{
+            const src = useRaw ? m.rawPct : m.pct;
+            return s + ((src && src[d.key] != null) ? Number(src[d.key]) : 0);
+          }, 0) / trendMonths.length
+        : 0;
       return `<tr>
         <td style="white-space:nowrap;padding:8px 10px;background:transparent"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${d.color};margin-right:8px"></span><b style="color:${d.color}">${d.label}</b> <span style="font-size:9px;color:var(--text-faint);font-weight:500;margin-left:4px">tgt ${d.targetHint||''}</span></td>
         ${cells}
@@ -16828,7 +17002,7 @@ function renderKPIChartDashboard(k, globalStats){
               <span style="width:3px;height:14px;border-radius:2px;background:linear-gradient(180deg,var(--yellow),#c99a10);box-shadow:0 0 8px rgba(255,199,44,.4)"></span>
               Monthly KPI Achievement
             </div>
-            <div style="font-size:11px;color:var(--text-dim);margin-top:3px;font-family:JetBrains Mono,monospace">Annual Trend · Target ${mkpiTargetText}</div>
+            <div style="font-size:11px;color:var(--text-dim);margin-top:3px;font-family:JetBrains Mono,monospace">Annual Trend · Target 90%</div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             <span id="mkpi-sync-status" style="font-size:9px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.5px;"></span>
@@ -16871,8 +17045,8 @@ function renderKPIChartDashboard(k, globalStats){
         </div>
         <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:10px;color:var(--text-dim);align-items:center">
           <span style="font-weight:600;letter-spacing:.4px;text-transform:uppercase">Performance Level</span>
-          <span style="display:inline-flex;align-items:center;gap:5px"><i style="width:10px;height:10px;border-radius:2px;background:rgba(46,204,113,0.55);display:inline-block"></i> 100% Excellent</span>
-          <span style="display:inline-flex;align-items:center;gap:5px"><i style="width:10px;height:10px;border-radius:2px;background:rgba(76,175,109,0.45);display:inline-block"></i> ≥ 90% Good</span>
+          <span style="display:inline-flex;align-items:center;gap:5px"><i style="width:10px;height:10px;border-radius:2px;background:#5CFF8A;display:inline-block"></i> 100% Excellent</span>
+          <span style="display:inline-flex;align-items:center;gap:5px"><i style="width:10px;height:10px;border-radius:2px;background:#00A896;display:inline-block"></i> ≥ 90% Good</span>
           <span style="display:inline-flex;align-items:center;gap:5px"><i style="width:10px;height:10px;border-radius:2px;background:rgba(255,199,44,0.5);display:inline-block"></i> 80 – 89% Caution</span>
           <span style="display:inline-flex;align-items:center;gap:5px"><i style="width:10px;height:10px;border-radius:2px;background:rgba(255,107,53,0.5);display:inline-block"></i> 70 – 79% Warning</span>
           <span style="display:inline-flex;align-items:center;gap:5px"><i style="width:10px;height:10px;border-radius:2px;background:rgba(229,72,77,0.55);display:inline-block"></i> &lt; 70% Needs Improvement</span>
@@ -17717,6 +17891,43 @@ function renderKPICard(title, value, unit, target, achievedPct, isPercentTarget)
 function pad2(n){ return String(n).padStart(2,'0'); }
 function toDateStr(d){ return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
 
+/** MA/PA HANYA dari Monitoring HM (rata-rata sederhana per unit).
+ *  Dipakai oleh tabel Monthly KPI Achievement & Rekap Quarter agar angka tiap bulan
+ *  stabil dari data operasional HM — tidak ikut snapshot filter periode sheet. */
+function resolveMaPaFromHmOnly(unitCode, startStr, endStr){
+  if(unitCode){
+    const hmwsr = hmWSRForUnit(unitCode, startStr||null, endStr||null);
+    if(hmwsr) return maPaFromWSR(hmwsr);
+    return { ma:0, pa:0 };
+  }
+  let unitList = [];
+  try{
+    let recs = (typeof hmRecords!=='undefined' && Array.isArray(hmRecords)) ? hmRecords.slice() : [];
+    if(startStr) recs = recs.filter(r=>r.tanggal && r.tanggal>=startStr);
+    if(endStr) recs = recs.filter(r=>r.tanggal && r.tanggal<=endStr);
+    unitList = Array.from(new Set(recs.map(r=>r.unitCode).filter(Boolean)));
+  }catch(e){}
+  if(!unitList.length && typeof UNITS!=='undefined' && Array.isArray(UNITS)){
+    unitList = UNITS.map(u=>u.code).filter(Boolean);
+  }
+  if(unitList.length){
+    let sumMa=0, sumPa=0, n=0;
+    unitList.forEach(uc=>{
+      const wsr = hmWSRForUnit(uc, startStr||null, endStr||null);
+      if(wsr){
+        const mp = maPaFromWSR(wsr);
+        sumMa += (mp.ma||0);
+        sumPa += (mp.pa||0);
+        n++;
+      }
+    });
+    if(n>0) return { ma: sumMa/n, pa: sumPa/n };
+  }
+  const hmwsr = hmWSRGlobal(startStr||null, endStr||null);
+  if(hmwsr) return maPaFromWSR(hmwsr);
+  return { ma:0, pa:0 };
+}
+
 function computeKPIsForRange(startStr, endStr){
   const approvedRecords = dailyRecords.filter(r=>r.approvalStatus==='Approved' && r.tanggal && r.tanggal>=startStr && r.tanggal<=endStr);
   const bdCount = approvedRecords.filter(r=>r.category==='Breakdown').length;
@@ -17747,15 +17958,49 @@ function computeKPIsForRange(startStr, endStr){
   const plannedServiceCountRange = periodicalRecordsRange.filter(r=> (typeof cbmIsPlan==='function' ? cbmIsPlan(r.planUnplan||r.plan_unplan) : /^plan/i.test(String(r.planUnplan||r.plan_unplan||'')) && !/unplan/i.test(String(r.planUnplan||r.plan_unplan||''))) ).length;
   const sa = periodicalRecordsRange.length ? (plannedServiceCountRange/periodicalRecordsRange.length*100) : 0;
 
-  // MA & PA: dari sheet performance (W/S/R) HANYA jika filter subset periode sheet,
-  // else Monitoring HM / 0. (performancePeriodMatches: ketat, bukan overlap)
+  // MA & PA untuk rentang tanggal:
+  //  - Jika periode web sepenuhnya tercakup di periode sheet performance → pakai AVERAGE
+  //    sheet (rata-rata sederhana % unit), contoh Juli = 84.5% / 84.5%.
+  //  - Selain itu → Monitoring HM (agregat per unit) supaya bulan lain tidak ikut snapshot.
+  //  Kartu All Periods tetap HM (resolveMaPa), tidak lewat fungsi ini dengan start/end kosong
+  //  dari monthly trend (setiap bulan punya start/end sendiri).
   let ma = 0, pa = 0;
   try{
-    if(typeof resolveMaPa === 'function'){
-      const mp = resolveMaPa(null, startStr||null, endStr||null) || {};
-      ma = Number(mp.ma)||0;
-      pa = Number(mp.pa)||0;
+    let mp = null;
+    const monthKey = (startStr || '').slice(0, 7); // YYYY-MM
+    // 1) Snapshot history bulan tsb — prioritas tertinggi (JUL = 84.5% sheet)
+    if(monthKey && mapaHistory && mapaHistory[monthKey] && mapaHistory[monthKey].rows && mapaHistory[monthKey].rows.length){
+      mp = maPaFromRows(mapaHistory[monthKey].rows);
     }
+    // 1b) Fallback seed resmi Juli 2026 jika history kosong
+    else if(monthKey === '2026-07' && typeof PERFORMANCE_JULY_2026 !== 'undefined' && PERFORMANCE_JULY_2026.rows){
+      mp = maPaFromRows(PERFORMANCE_JULY_2026.rows);
+    }
+    // 2) Snapshot live saat ini jika periode sheet cocok penuh dengan bulan ini
+    else if(startStr && endStr
+      && mapaData && mapaData.fromPerformance && mapaData.rows && mapaData.rows.length
+      && typeof performancePeriodMatches==='function'
+      && performancePeriodMatches(startStr, endStr)){
+      mp = maPaFromRows(mapaData.rows);
+    }
+    // 2b) Cocok longgar: bulan filter = bulan start/end periode sheet
+    else if(monthKey && mapaData && mapaData.fromPerformance && mapaData.rows && mapaData.rows.length){
+      const psM = (_normYmd(mapaData.periodStart)||'').slice(0,7);
+      const peM = (_normYmd(mapaData.periodEnd)||'').slice(0,7);
+      if(psM && peM && monthKey >= psM && monthKey <= peM){
+        mp = maPaFromRows(mapaData.rows);
+      }
+    }
+    // 3) Fallback Monitoring HM
+    if(!mp){
+      if(typeof resolveMaPaFromHmOnly==='function'){
+        mp = resolveMaPaFromHmOnly(null, startStr||null, endStr||null);
+      } else if(typeof resolveMaPa==='function'){
+        mp = resolveMaPa(null, startStr||null, endStr||null);
+      }
+    }
+    ma = Number(mp && mp.ma)||0;
+    pa = Number(mp && mp.pa)||0;
   }catch(_e){ ma = 0; pa = 0; }
 
   return { ma, pa, mtbs, mttr, pmr, sa };
@@ -17773,9 +18018,9 @@ function computeKPIsFor(periodValue){
   const startStr = toDateStr(start), endStr = toDateStr(end);
   const base = computeKPIsForRange(startStr, endStr);
 
-  // MA & PA: prioritaskan seed sheet performance, lalu HM bulan terfilter, lalu mapa upload.
-  const { ma, pa } = resolveMaPa(null, startStr, endStr);
-  return { ...base, ma, pa };
+  // MA & PA per bulan: sheet performance jika periode bulan cocok penuh dengan sheet,
+  // selain itu Monitoring HM. (base dari computeKPIsForRange sudah menerapkan aturan sama.)
+  return base;
 }
 
 /* ---- Agregasi KPI untuk satu Triwulan/Quarter (dipakai panel "Rekap KPI Triwulan / Quarter") ---- */
@@ -17790,9 +18035,8 @@ function getQuarterRange(qVal){
 function computeKPIsForQuarter(qVal){
   if(!qVal) return computeKPIs();
   const { startStr, endStr } = getQuarterRange(qVal);
-  const base = computeKPIsForRange(startStr, endStr);
-  const { ma, pa } = resolveMaPa(null, startStr, endStr);
-  return { ...base, ma, pa };
+  // MA/PA ikut aturan computeKPIsForRange (sheet jika match, else HM)
+  return computeKPIsForRange(startStr, endStr);
 }
 
 function getKPIPeriodOptions(){
@@ -17826,9 +18070,11 @@ function shadeColor(hex, percent){
 // The Monthly table has its own local helper, but Quarter Summary is rendered
 // from renderDashboard(), so this helper must also be available in that scope.
 function cellColor(pct){
-  pct = Number(pct) || 0;
-  if(pct >= 100) return '#4CAF6D';
-  if(pct >= 80) return '#FFC72C';
+  const p = Math.round(Math.max(0, Number(pct)||0));
+  if(p >= 100) return '#5CFF8A';
+  if(p >= 90) return '#00A896';
+  if(p >= 80) return '#FFC72C';
+  if(p >= 70) return '#FF8A1F';
   return '#E5484D';
 }
 
@@ -17895,8 +18141,10 @@ function renderDashboard(){
 
   const maPaStatusEl = document.getElementById('ma-pa-source-status');
   if(maPaStatusEl){
-    // Periode filter dashboard (bulan KPI Report Monthly) untuk status
+    // Selaras resolveMaPa: sheet HANYA jika bulan spesifik cocok dengan periode sheet.
+    // All Periods → selalu Monitoring HM (tidak ikut filter periode sheet).
     let filterStart = null, filterEnd = null;
+    const hasSpecificPeriod = !!kpiMonthlyChartPeriodValue;
     if(kpiMonthlyChartPeriodValue){
       const [y,m] = kpiMonthlyChartPeriodValue.split('-').map(Number);
       if(y && m){
@@ -17904,26 +18152,15 @@ function renderDashboard(){
         filterEnd = toDateStr(new Date(y, m, 0));
       }
     }
-    const perfMatch = mapaData && mapaData.fromPerformance && mapaData.rows && mapaData.rows.length
-      && performancePeriodMatches(filterStart, filterEnd);
-
-    if(perfMatch){
-      const ps = mapaData.periodStart || '?';
-      const pe = mapaData.periodEnd || '?';
-      maPaStatusEl.innerHTML = `☁ MA &amp; PA dari sheet <b>performance</b> (<b>${mapaData.fileName|| (ps+' s/d '+pe)}</b>) — W: <b>${(mapaData.totalW||0).toFixed(1)}</b> · S: <b>${(mapaData.totalS||0).toFixed(1)}</b> · R: <b>${(mapaData.totalR||0).toFixed(1)}</b> jam (${mapaData.rows.length} unit). Filter periode cocok → angka sama dengan spreadsheet.`;
-    } else if(mapaData && mapaData.fromPerformance && mapaData.rows && mapaData.rows.length){
-      const ps = mapaData.periodStart || '?';
-      const pe = mapaData.periodEnd || '?';
-      maPaStatusEl.innerHTML = `⚠ Sheet performance tersimpan untuk periode <b>${ps} s/d ${pe}</b>, tetapi filter dashboard berbeda. MA &amp; PA periode ini dihitung dari Monitoring HM (bukan performance). Ubah periode di sheet lalu klik <b>☁ Sync dari Sheet Performance</b>, atau pilih filter yang cocok.`;
+    // MA/PA KPI selalu dari Monitoring HM — tidak pernah dari filter periode sheet.
+    const hmwsrStatus = hmWSRGlobal(filterStart, filterEnd);
+    if(hmwsrStatus){
+      const scope = hasSpecificPeriod ? 'periode terpilih di web' : 'All Periods (agregat HM)';
+      maPaStatusEl.innerHTML = `⛭ MA &amp; PA dari <b>Monitoring HM</b> — ${scope} (${hmwsrStatus.units.length} unit) · tidak mengikuti filter periode sheet · W: <b>${hmwsrStatus.W.toFixed(1)}</b> · S: <b>${hmwsrStatus.S.toFixed(1)}</b> · R: <b>${hmwsrStatus.R.toFixed(1)}</b> jam.`;
+    } else if(mapaData && mapaData.rows && mapaData.rows.length && !mapaData.fromPerformance){
+      maPaStatusEl.innerHTML = `⛭ Belum ada data Monitoring HM — MA &amp; PA memakai fallback file jam operasional manual (<b>${mapaData.fileName}</b>).`;
     } else {
-      const hmwsrStatus = hmWSRGlobal(filterStart, filterEnd);
-      if(hmwsrStatus){
-        maPaStatusEl.innerHTML = `⛭ MA &amp; PA dihitung dari <b>Monitoring HM</b> (${hmwsrStatus.units.length} unit) — W: <b>${hmwsrStatus.W.toFixed(1)}</b> · S: <b>${hmwsrStatus.S.toFixed(1)}</b> · R: <b>${hmwsrStatus.R.toFixed(1)}</b> jam.`;
-      } else if(mapaData && mapaData.rows && mapaData.rows.length){
-        maPaStatusEl.innerHTML = `⛭ Belum ada data Monitoring HM — MA &amp; PA memakai fallback file jam operasional manual (<b>${mapaData.fileName}</b>).`;
-      } else {
-        maPaStatusEl.innerHTML = `⛭ Belum ada data Monitoring HM maupun sheet performance — MA &amp; PA masih 0%. Klik <b>☁ Sync dari Sheet Performance</b>.`;
-      }
+      maPaStatusEl.innerHTML = `⛭ Belum ada data Monitoring HM — MA &amp; PA 0%. Pastikan data HM tersinkron (bukan filter periode sheet performance).`;
     }
   }
 
@@ -18015,6 +18252,8 @@ async function fetchPerformanceFromSheets(opts){
         ? ('performance-sheet (' + data.periodStart + ' s/d ' + data.periodEnd + ')')
         : 'performance-sheet');
 
+    const psN = (typeof _normYmd==='function' ? _normYmd(data.periodStart) : (data.periodStart || ''));
+    const peN = (typeof _normYmd==='function' ? _normYmd(data.periodEnd) : (data.periodEnd || ''));
     mapaData = {
       rows,
       totalW,
@@ -18024,9 +18263,37 @@ async function fetchPerformanceFromSheets(opts){
       fileName: label,
       updatedAt: data.syncedAt || new Date().toISOString(),
       fromPerformance: true,
-      periodStart: data.periodStart || '',
-      periodEnd: data.periodEnd || ''
+      periodStart: psN,
+      periodEnd: peN
     };
+    // Simpan snapshot per bulan yang tercakup periode sheet → history stabil untuk tabel Monthly KPI
+    try{
+      if(psN && peN && rows.length){
+        const startM = new Date(psN+'T00:00:00');
+        const endM = new Date(peN+'T00:00:00');
+        if(!isNaN(startM) && !isNaN(endM)){
+          let cur = new Date(startM.getFullYear(), startM.getMonth(), 1);
+          const last = new Date(endM.getFullYear(), endM.getMonth(), 1);
+          while(cur <= last){
+            const key = cur.getFullYear()+'-'+String(cur.getMonth()+1).padStart(2,'0');
+            // Hanya simpan jika periode sheet mencakup hampir penuh bulan tsb
+            // (hari 1 bulan >= ps-tolerance TIDAK; syarat: awal bulan >= ps? tidak —
+            //  syarat longgar: bulan key berada di antara bulan ps dan pe)
+            mapaHistory[key] = {
+              rows: rows.map(r=>({...r})),
+              periodStart: psN,
+              periodEnd: peN,
+              totalW, totalS, totalR, totalT,
+              fileName: label,
+              updatedAt: mapaData.updatedAt,
+              fromPerformance: true
+            };
+            cur.setMonth(cur.getMonth()+1);
+          }
+          try{ await appStorage.set('mapa-history', JSON.stringify(mapaHistory)); }catch(_e){}
+        }
+      }
+    }catch(_histErr){ console.warn('mapaHistory save', _histErr); }
     _perfLastFetchAt = Date.now();
     await saveMapaData();
     try{ await appStorage.set('mapa-performance-seeded-v2', JSON.stringify(true)); }catch(_e){}
