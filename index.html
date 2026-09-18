@@ -17744,6 +17744,7 @@ function renderKPIChartDashboard(k, globalStats){
             <stop offset="100%" stop-color="${front}" stop-opacity="0.72"/>
           </linearGradient>
         </defs>
+        <text x="${cx.toFixed(1)}" y="${(cy-14).toFixed(1)}" text-anchor="middle" font-size="14" font-weight="800" fill="${color}" font-family="JetBrains Mono, monospace">${pct.toFixed(0)}%</text>
         <text x="${(x+barW/2).toFixed(1)}" y="${H-42}" text-anchor="middle" font-size="13" font-weight="700" fill="${labelFill}" font-family="Oswald, sans-serif" letter-spacing="0.8">${b.label}</text>
         <text x="${(x+barW/2).toFixed(1)}" y="${H-27}" text-anchor="middle" font-size="9.5" font-weight="600" fill="#9AA0A8" font-family="JetBrains Mono, monospace">${quarterMonthRange(b)}</text>
         <text x="${(x+barW/2).toFixed(1)}" y="${H-12}" text-anchor="middle" font-size="9" fill="#6a7280" font-family="JetBrains Mono, monospace">${b.year||''}</text>
@@ -18018,15 +18019,9 @@ function renderKPIChartDashboard(k, globalStats){
       <div class="dash-panel">
         <div class="chart-panel-title-row">
           <div class="dash-panel-title" style="margin-bottom:0">GRAFIK QUARTER</div>
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-            <span style="font-size:9px;color:var(--green);text-transform:uppercase;letter-spacing:.5px;display:inline-flex;align-items:center;gap:4px"><span class="status-dot" style="margin-right:0"></span>Live Sync</span>
-            <span style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px">Period</span>
-            ${quarterSelectHtml}
-          </div>
         </div>
         <div class="quarter-chart-shell">
           ${quarterContinuousChartHtml}
-          <div class="quarter-chart-legend">${quarterDonutLegend}</div>
           <div class="quarter-chart-footer">
             <span><span style="width:12px;height:4px;border-radius:2px;background:#4CAF6D;display:inline-block"></span>≥100% Achieved</span>
             <span><span style="width:12px;height:4px;border-radius:2px;background:#FFC72C;display:inline-block"></span>80–99% On Track</span>
@@ -22119,29 +22114,58 @@ function cbmParetoChart(items){
 
   const barsSvg = bars.map(b=>{
     const unitList = (b.d.units||[]).join(', ') || '—';
+    /* Bar solid (Vital Few) yang puncaknya melewati garis putus-putus 80% butuh kontras
+       ekstra supaya angka di atasnya tidak tertimpa/tenggelam oleh garis 80% atau garis
+       kumulatif Pareto (merah) yang lewat di area yang sama. Solusinya: beri chip label
+       (latar gelap semi-opaque + border warna komponen) di belakang angka, bukan teks polos. */
+    const crossesLine = b.isVital && b.y < y80;
+    const labelY = b.y - 8;
+    const valText = cbmParetoMetric==='hours'? b.d.value.toFixed(1) : String(b.d.value);
+    const chipW = Math.max(22, valText.length*7.2 + 12);
+    const numberLabel = `
+      <g>
+        <rect x="${(b.cx-chipW/2).toFixed(1)}" y="${(labelY-13).toFixed(1)}" width="${chipW.toFixed(1)}" height="17" rx="5"
+          fill="#0c1016" opacity="0.88" stroke="${b.d.color||'#FFC72C'}" stroke-width="1" stroke-opacity="0.55"/>
+        <text x="${b.cx.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700" fill="#F5F6F7">${valText}</text>
+      </g>`;
     return `
     <g>
       <rect x="${b.x.toFixed(1)}" y="${b.y.toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(1,b.h).toFixed(1)}" rx="3"
         fill="${b.d.color||'#FFC72C'}" opacity="${b.isVital?1:0.4}">
         <title>${escUH(b.d.label)} — ${cbmParetoMetric==='hours'? b.d.value.toFixed(1)+' jam' : b.d.value+' kejadian'}\nCode Unit: ${escUH(unitList)}</title>
       </rect>
-      <text x="${b.cx.toFixed(1)}" y="${(b.y-8).toFixed(1)}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700" fill="#EDEEF0">${cbmParetoMetric==='hours'? b.d.value.toFixed(1) : b.d.value}</text>
+      ${crossesLine ? '' : numberLabel}
       <text x="${b.cx.toFixed(1)}" y="${(padT+chartH+20).toFixed(1)}" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" font-weight="600" fill="${b.isVital?'#EDEEF0':'#9AA0A8'}">${escUH(b.d.label)}</text>
+    </g>`;
+  }).join('');
+  /* Angka bar yang puncaknya melewati garis 80% digambar TERAKHIR (paling atas layer),
+     supaya tetap muncul di depan garis 80% & garis kumulatif Pareto, bukan tertimpa. */
+  const crossingLabels = bars.map(b=>{
+    if(!(b.isVital && b.y < y80)) return '';
+    const labelY = b.y - 8;
+    const valText = cbmParetoMetric==='hours'? b.d.value.toFixed(1) : String(b.d.value);
+    const chipW = Math.max(22, valText.length*7.2 + 12);
+    return `<g>
+      <rect x="${(b.cx-chipW/2).toFixed(1)}" y="${(labelY-13).toFixed(1)}" width="${chipW.toFixed(1)}" height="17" rx="5"
+        fill="#0c1016" opacity="0.92" stroke="${b.d.color||'#FFC72C'}" stroke-width="1.2" stroke-opacity="0.75"/>
+      <text x="${b.cx.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700" fill="#F5F6F7">${valText}</text>
     </g>`;
   }).join('');
 
   const lineDots = points.map((p,i)=>`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.5" fill="#E5484D" stroke="#15171b" stroke-width="1.5"/>
-    <text x="${p.x.toFixed(1)}" y="${(p.y-10).toFixed(1)}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9.5" font-weight="700" fill="#E5484D">${bars[i].cumPct.toFixed(0)}%</text>`).join('');
+    <rect x="${(p.x-16).toFixed(1)}" y="${(p.y-24).toFixed(1)}" width="32" height="14" rx="4" fill="#0c1016" opacity="0.85"/>
+    <text x="${p.x.toFixed(1)}" y="${(p.y-14).toFixed(1)}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9.5" font-weight="700" fill="#E5484D">${bars[i].cumPct.toFixed(0)}%</text>`).join('');
 
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" style="min-width:${Math.min(W,520)}px;overflow:visible;">
     ${gridLines}
     <line x1="${padL}" y1="${padT+chartH}" x2="${padL+chartW}" y2="${padT+chartH}" stroke="var(--line)" stroke-width="1.5"/>
     <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+chartH}" stroke="var(--line)" stroke-width="1.5"/>
     <line x1="${padL}" y1="${y80.toFixed(1)}" x2="${padL+chartW}" y2="${y80.toFixed(1)}" stroke="var(--red)" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.7"/>
-    <text x="${padL+4}" y="${(y80-6).toFixed(1)}" font-family="JetBrains Mono, monospace" font-size="10.5" font-weight="700" fill="var(--red)">80% — batas Vital Few</text>
+    <text x="${(padL+chartW-4).toFixed(1)}" y="${(y80-6).toFixed(1)}" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="10.5" font-weight="700" fill="var(--red)">80% — batas Vital Few</text>
     ${barsSvg}
     <path d="${linePath}" fill="none" stroke="#E5484D" stroke-width="2.25"/>
     ${lineDots}
+    ${crossingLabels}
   </svg>`;
 }
 
