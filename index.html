@@ -3426,8 +3426,14 @@ body.role-mechanic #history-filters{ display:none !important; }
                 <button type="button" class="chip" data-pareto-metric="hours">Jam Perbaikan</button>
               </div>
             </div>
-            <p class="hint" style="margin-bottom:14px;">Prinsip Pareto (80/20): komponen di sisi kiri grafik (bar solid, di atas garis putus-putus <span style="color:var(--red);font-weight:700;">80%</span>) adalah <b>Vital Few</b> — kontributor terbesar breakdown yang paling layak diprioritaskan untuk improvement / preventive action.</p>
-            <div id="cbm-pareto-chart" style="width:100%;overflow-x:auto;"></div>
+            <p class="hint" style="margin-bottom:12px;">Prinsip Pareto (80/20): komponen di sisi kiri grafik (bar solid, di atas garis putus-putus <span style="color:var(--red);font-weight:700;">80%</span>) adalah <b>Vital Few</b> — kontributor terbesar breakdown yang paling layak diprioritaskan untuk improvement / preventive action.</p>
+            <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin-bottom:16px;padding:10px 14px;background:rgba(255,255,255,0.02);border:1px solid var(--line);border-radius:8px;">
+              <span style="display:flex;align-items:center;gap:6px;font-family:Inter,sans-serif;font-size:11px;color:var(--text-dim);"><i style="width:12px;height:12px;border-radius:3px;background:#FFC72C;display:inline-block;box-shadow:0 0 6px rgba(255,199,44,0.5);"></i>Vital Few (bar solid)</span>
+              <span style="display:flex;align-items:center;gap:6px;font-family:Inter,sans-serif;font-size:11px;color:var(--text-dim);"><i style="width:12px;height:12px;border-radius:3px;background:#FFC72C;opacity:0.35;display:inline-block;"></i>Trivial Many (bar pudar)</span>
+              <span style="display:flex;align-items:center;gap:6px;font-family:Inter,sans-serif;font-size:11px;color:var(--text-dim);"><i style="width:16px;height:2px;background:#6366F1;display:inline-block;box-shadow:0 0 4px rgba(99,102,241,0.6);"></i>Garis Kumulatif %</span>
+              <span style="display:flex;align-items:center;gap:6px;font-family:Inter,sans-serif;font-size:11px;color:var(--text-dim);"><i style="width:16px;height:2px;background:repeating-linear-gradient(90deg,var(--red) 0 5px,transparent 5px 9px);display:inline-block;"></i>Batas Vital Few (80%)</span>
+            </div>
+            <div id="cbm-pareto-chart" style="width:100%;overflow-x:auto;background:linear-gradient(180deg,rgba(255,255,255,0.025),rgba(255,255,255,0));border:1px solid var(--line);border-radius:12px;padding:8px 4px;"></div>
             <div class="pdm-insight" id="cbm-pareto-insight" style="margin-top:14px;"></div>
             <div class="table-wrap" style="margin-top:16px;">
               <table>
@@ -22070,6 +22076,21 @@ function renderCBMLifetime(stats){
    sumber data & warna komponen tetap konsisten dengan CBM_COMPONENTS (Overview/Lifetime). */
 let cbmParetoMetric = 'count';
 
+/* Warna komponen "Axle / Differential" (#E5484D) sama dengan garis putus-putus 80%.
+   Kalau komponen itu masuk Vital Few (bar solid, tembus di atas garis 80%), bar & chip
+   angkanya jadi menyatu / sulit dibedakan dari garis tsb. Solusinya: khusus di dalam
+   chart Pareto ini, ganti warna komponen yang bentrok (dgn garis 80% ATAU garis
+   kumulatif) ke warna lain (putih) — daftar warna "bentrok" otomatis mengikuti
+   PARETO_LINE_COLOR & PARETO_THRESHOLD_COLOR di bawah. */
+const PARETO_LINE_COLOR = '#6366F1'; // warna garis kumulatif Pareto
+const PARETO_THRESHOLD_COLOR = '#E5484D'; // warna garis putus-putus 80%
+const PARETO_CLASH_COLORS = [PARETO_LINE_COLOR.toUpperCase(), PARETO_THRESHOLD_COLOR.toUpperCase()];
+const PARETO_CLASH_ALT = '#FFFFFF';
+function cbmParetoBarColor(color){
+  const c = (color || '#FFC72C');
+  return PARETO_CLASH_COLORS.includes(c.toUpperCase()) ? PARETO_CLASH_ALT : c;
+}
+
 function cbmParetoChart(items){
   // items sudah terurut desc by value, masing2: {label, value, color, units:[codes]}
   if(!items.length) return `<div class="hint" style="padding:24px 0;">Tidak ada data breakdown saat ini.</div>`;
@@ -22077,13 +22098,14 @@ function cbmParetoChart(items){
   if(!totalVal) return `<div class="hint" style="padding:24px 0;">Tidak ada data breakdown saat ini.</div>`;
 
   const n = items.length;
-  const W = Math.max(480, 84*n + 110), H = 380;
-  const padL = 54, padR = 58, padT = 28, padB = 78;
+  const W = Math.max(560, 92*n + 130), H = 420;
+  const padL = 58, padR = 66, padT = 40, padB = 86;
   const chartW = W - padL - padR;
   const chartH = H - padT - padB;
   const slot = chartW / n;
-  const barW = Math.max(22, Math.min(56, slot - 14));
+  const barW = Math.max(24, Math.min(58, slot - 16));
   const maxVal = Math.max(...items.map(d=>d.value));
+  const metricLabel = cbmParetoMetric==='hours' ? 'Jam Perbaikan' : 'Jumlah Kejadian';
 
   let cum = 0;
   const points = [];
@@ -22100,70 +22122,145 @@ function cbmParetoChart(items){
     const cx = slotX + slot/2;
     const isVital = beforePct < 80; // masuk Vital Few kalau kumulatif SEBELUM bar ini masih di bawah 80%
     points.push({x:cx, y:cy});
-    return {x, y, h, cx, cy, d, pct, cumPct, isVital};
+    return {x, y, h, cx, cy, d, pct, cumPct, isVital, slotX};
   });
 
   const y80 = padT + chartH - (80/100*chartH);
   const linePath = points.map((p,i)=> `${i===0?'M':'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
 
+  /* Zona "Vital Few" — pita halus di belakang bar2 vital, memperjelas area prioritas
+     tanpa perlu membaca angka satu per satu. */
+  const lastVitalIdx = bars.reduce((acc,b,i)=> b.isVital ? i : acc, -1);
+  const vitalZoneW = lastVitalIdx>=0 ? (bars[lastVitalIdx].slotX + slot - padL) : 0;
+  const vitalZone = lastVitalIdx>=0 ? `<rect x="${padL}" y="${padT}" width="${vitalZoneW.toFixed(1)}" height="${chartH}" fill="url(#paretoVitalZone)"/>` : '';
+
+  /* Pita zebra tipis per slot supaya kolom mudah diikuti mata pada dataset panjang. */
+  const zebra = bars.map((b,i)=> i%2===1 ? `<rect x="${b.slotX.toFixed(1)}" y="${padT}" width="${slot.toFixed(1)}" height="${chartH}" fill="#FFFFFF" opacity="0.012"/>` : '').join('');
+
   const gridLines = [0,25,50,75,100].map(g=>{
     const gy = padT + chartH - (g/100*chartH);
-    return `<line x1="${padL}" y1="${gy.toFixed(1)}" x2="${padL+chartW}" y2="${gy.toFixed(1)}" stroke="#33383f" stroke-width="1" opacity="0.35"/>
-      <text x="${padL+chartW+6}" y="${(gy+3.5).toFixed(1)}" font-family="JetBrains Mono, monospace" font-size="9.5" fill="#5C636B">${g}%</text>`;
+    return `<line x1="${padL}" y1="${gy.toFixed(1)}" x2="${padL+chartW}" y2="${gy.toFixed(1)}" stroke="#3A4048" stroke-width="1" stroke-dasharray="${g===0?'0':'3 4'}" opacity="0.4"/>
+      <text x="${padL+chartW+8}" y="${(gy+3.5).toFixed(1)}" font-family="JetBrains Mono, monospace" font-size="10" font-weight="600" fill="#6B7280">${g}%</text>`;
   }).join('');
+
+  const axisTitleRight = `<text x="${(W-14).toFixed(1)}" y="${(padT+chartH/2).toFixed(1)}" text-anchor="middle" font-family="Inter, sans-serif" font-size="10.5" font-weight="600" fill="#6B7280" letter-spacing="0.5" transform="rotate(90 ${(W-14).toFixed(1)} ${(padT+chartH/2).toFixed(1)})">KUMULATIF %</text>`;
+  const axisTitleLeft = `<text x="16" y="${(padT+chartH/2).toFixed(1)}" text-anchor="middle" font-family="Inter, sans-serif" font-size="10.5" font-weight="600" fill="#6B7280" letter-spacing="0.5" transform="rotate(-90 16 ${(padT+chartH/2).toFixed(1)})">${metricLabel.toUpperCase()}</text>`;
+
+  /* Gradient linear per warna bar unik, supaya bar terlihat lebih "premium"
+     (lebih terang di puncak, pekat di dasar) alih-alih flat solid color. */
+  const uniqueColors = Array.from(new Set(bars.map(b=>cbmParetoBarColor(b.d.color))));
+  const gradDefs = uniqueColors.map(c=>{
+    const id = 'paretoGrad'+c.replace('#','');
+    const light = shadeColor(c, c.toUpperCase()==='#FFFFFF' ? 0 : 32);
+    return `<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${light}"/>
+      <stop offset="100%" stop-color="${c}"/>
+    </linearGradient>`;
+  }).join('');
+
+  const defs = `<defs>
+    ${gradDefs}
+    <linearGradient id="paretoVitalZone" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#6366F1" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#6366F1" stop-opacity="0.02"/>
+    </linearGradient>
+    <filter id="paretoBarShadow" x="-40%" y="-20%" width="180%" height="160%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3.5" flood-color="#000000" flood-opacity="0.4"/>
+    </filter>
+    <filter id="paretoLineGlow" x="-30%" y="-60%" width="160%" height="220%">
+      <feDropShadow dx="0" dy="0" stdDeviation="2.5" flood-color="#6366F1" flood-opacity="0.55"/>
+    </filter>
+  </defs>`;
+
+  /* Bar dengan sudut membulat hanya di atas (bukan rx polos di 4 sisi) — kesan lebih rapi
+     seperti chart profesional (Power BI / Tableau style). */
+  function roundedTopBarPath(x,y,w,h,r){
+    const rr = Math.max(0, Math.min(r, w/2, h));
+    if(h<=0) return `M${x},${y} L${x+w},${y} Z`;
+    return `M${x},${y+h} L${x},${y+rr} Q${x},${y} ${x+rr},${y} L${x+w-rr},${y} Q${x+w},${y} ${x+w},${y+rr} L${x+w},${y+h} Z`;
+  }
+
+  /* Label komponen di sumbu-X dipecah 2 baris kalau lebih dari 1 kata & cukup panjang,
+     supaya tidak saling tumpang tindih pada dataset dengan banyak komponen. */
+  function wrapAxisLabel(label){
+    if(label.length<=11 || !label.includes(' ')) return [label];
+    const mid = Math.floor(label.length/2);
+    let splitAt = label.lastIndexOf(' ', mid);
+    if(splitAt<0) splitAt = label.indexOf(' ', mid);
+    if(splitAt<0) return [label];
+    return [label.slice(0,splitAt), label.slice(splitAt+1)];
+  }
 
   const barsSvg = bars.map(b=>{
     const unitList = (b.d.units||[]).join(', ') || '—';
-    /* Bar solid (Vital Few) yang puncaknya melewati garis putus-putus 80% butuh kontras
-       ekstra supaya angka di atasnya tidak tertimpa/tenggelam oleh garis 80% atau garis
-       kumulatif Pareto (merah) yang lewat di area yang sama. Solusinya: beri chip label
-       (latar gelap semi-opaque + border warna komponen) di belakang angka, bukan teks polos. */
     const crossesLine = b.isVital && b.y < y80;
-    const labelY = b.y - 8;
+    const labelY = b.y - 10;
     const valText = cbmParetoMetric==='hours'? b.d.value.toFixed(1) : String(b.d.value);
-    const chipW = Math.max(22, valText.length*7.2 + 12);
+    const chipW = Math.max(26, valText.length*7.6 + 16);
+    const barColor = cbmParetoBarColor(b.d.color);
+    const gradId = 'paretoGrad'+barColor.replace('#','');
+    const fillRef = b.isVital ? `url(#${gradId})` : barColor;
     const numberLabel = `
       <g>
-        <rect x="${(b.cx-chipW/2).toFixed(1)}" y="${(labelY-13).toFixed(1)}" width="${chipW.toFixed(1)}" height="17" rx="5"
-          fill="#0c1016" opacity="0.88" stroke="${b.d.color||'#FFC72C'}" stroke-width="1" stroke-opacity="0.55"/>
-        <text x="${b.cx.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700" fill="#F5F6F7">${valText}</text>
+        <rect x="${(b.cx-chipW/2).toFixed(1)}" y="${(labelY-14).toFixed(1)}" width="${chipW.toFixed(1)}" height="19" rx="6"
+          fill="#0A0D12" opacity="0.94" stroke="${barColor}" stroke-width="1.1" stroke-opacity="0.65"/>
+        <text x="${b.cx.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" font-weight="700" fill="#F5F6F7">${valText}</text>
       </g>`;
+    const nameLines = wrapAxisLabel(escUH(b.d.label));
+    const nameSvg = nameLines.map((ln,li)=> `<text x="${b.cx.toFixed(1)}" y="${(padT+chartH+20+li*13).toFixed(1)}" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" font-weight="${b.isVital?700:600}" fill="${b.isVital?'#F5F6F7':'#868D96'}">${ln}</text>`).join('');
+    const rankBadge = b.isVital ? `<circle cx="${b.cx.toFixed(1)}" cy="${(padT+chartH+ (nameLines.length>1?46:34)).toFixed(1)}" r="0" fill="none"/>` : '';
     return `
     <g>
-      <rect x="${b.x.toFixed(1)}" y="${b.y.toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(1,b.h).toFixed(1)}" rx="3"
-        fill="${b.d.color||'#FFC72C'}" opacity="${b.isVital?1:0.4}">
+      <path d="${roundedTopBarPath(b.x, b.y, barW, Math.max(1,b.h), 6)}"
+        fill="${fillRef}" opacity="${b.isVital?1:0.32}" filter="${b.isVital?'url(#paretoBarShadow)':'none'}"
+        stroke="${b.isVital? 'rgba(255,255,255,0.18)':'none'}" stroke-width="1">
         <title>${escUH(b.d.label)} — ${cbmParetoMetric==='hours'? b.d.value.toFixed(1)+' jam' : b.d.value+' kejadian'}\nCode Unit: ${escUH(unitList)}</title>
-      </rect>
+      </path>
       ${crossesLine ? '' : numberLabel}
-      <text x="${b.cx.toFixed(1)}" y="${(padT+chartH+20).toFixed(1)}" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" font-weight="600" fill="${b.isVital?'#EDEEF0':'#9AA0A8'}">${escUH(b.d.label)}</text>
+      ${nameSvg}
+      ${rankBadge}
     </g>`;
   }).join('');
+
   /* Angka bar yang puncaknya melewati garis 80% digambar TERAKHIR (paling atas layer),
      supaya tetap muncul di depan garis 80% & garis kumulatif Pareto, bukan tertimpa. */
   const crossingLabels = bars.map(b=>{
     if(!(b.isVital && b.y < y80)) return '';
-    const labelY = b.y - 8;
+    const labelY = b.y - 10;
     const valText = cbmParetoMetric==='hours'? b.d.value.toFixed(1) : String(b.d.value);
-    const chipW = Math.max(22, valText.length*7.2 + 12);
+    const chipW = Math.max(26, valText.length*7.6 + 16);
+    const barColor = cbmParetoBarColor(b.d.color);
     return `<g>
-      <rect x="${(b.cx-chipW/2).toFixed(1)}" y="${(labelY-13).toFixed(1)}" width="${chipW.toFixed(1)}" height="17" rx="5"
-        fill="#0c1016" opacity="0.92" stroke="${b.d.color||'#FFC72C'}" stroke-width="1.2" stroke-opacity="0.75"/>
-      <text x="${b.cx.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" font-weight="700" fill="#F5F6F7">${valText}</text>
+      <rect x="${(b.cx-chipW/2).toFixed(1)}" y="${(labelY-14).toFixed(1)}" width="${chipW.toFixed(1)}" height="19" rx="6"
+        fill="#0A0D12" opacity="0.96" stroke="${barColor}" stroke-width="1.3" stroke-opacity="0.85"/>
+      <text x="${b.cx.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11.5" font-weight="700" fill="#FFFFFF">${valText}</text>
     </g>`;
   }).join('');
 
-  const lineDots = points.map((p,i)=>`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.5" fill="#E5484D" stroke="#15171b" stroke-width="1.5"/>
-    <rect x="${(p.x-16).toFixed(1)}" y="${(p.y-24).toFixed(1)}" width="32" height="14" rx="4" fill="#0c1016" opacity="0.85"/>
-    <text x="${p.x.toFixed(1)}" y="${(p.y-14).toFixed(1)}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9.5" font-weight="700" fill="#E5484D">${bars[i].cumPct.toFixed(0)}%</text>`).join('');
+  const lineDots = points.map((p,i)=>`
+    <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="6" fill="#6366F1" opacity="0.16"/>
+    <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4" fill="#FFFFFF" stroke="#6366F1" stroke-width="2.25"/>
+    <rect x="${(p.x-18).toFixed(1)}" y="${(p.y-27).toFixed(1)}" width="36" height="15" rx="5" fill="#0A0D12" opacity="0.92" stroke="#6366F1" stroke-width="0.75" stroke-opacity="0.6"/>
+    <text x="${p.x.toFixed(1)}" y="${(p.y-16.5).toFixed(1)}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" font-weight="700" fill="#FFFFFF">${bars[i].cumPct.toFixed(0)}%</text>`).join('');
 
-  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" style="min-width:${Math.min(W,520)}px;overflow:visible;">
+  const thresholdBadgeW = 168;
+  const thresholdBadge = `
+    <rect x="${(padL+chartW-thresholdBadgeW).toFixed(1)}" y="${(y80-19).toFixed(1)}" width="${thresholdBadgeW}" height="16" rx="4" fill="var(--red)" opacity="0.16"/>
+    <text x="${(padL+chartW-6).toFixed(1)}" y="${(y80-7.5).toFixed(1)}" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="10.5" font-weight="700" fill="var(--red)">80% — BATAS VITAL FEW</text>`;
+
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" style="min-width:${Math.min(W,560)}px;overflow:visible;">
+    ${defs}
+    ${zebra}
+    ${vitalZone}
     ${gridLines}
+    ${axisTitleLeft}
+    ${axisTitleRight}
     <line x1="${padL}" y1="${padT+chartH}" x2="${padL+chartW}" y2="${padT+chartH}" stroke="var(--line)" stroke-width="1.5"/>
     <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+chartH}" stroke="var(--line)" stroke-width="1.5"/>
-    <line x1="${padL}" y1="${y80.toFixed(1)}" x2="${padL+chartW}" y2="${y80.toFixed(1)}" stroke="var(--red)" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.7"/>
-    <text x="${(padL+chartW-4).toFixed(1)}" y="${(y80-6).toFixed(1)}" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="10.5" font-weight="700" fill="var(--red)">80% — batas Vital Few</text>
+    <line x1="${padL}" y1="${y80.toFixed(1)}" x2="${padL+chartW}" y2="${y80.toFixed(1)}" stroke="var(--red)" stroke-width="1.5" stroke-dasharray="6 4" opacity="0.75"/>
+    ${thresholdBadge}
     ${barsSvg}
-    <path d="${linePath}" fill="none" stroke="#E5484D" stroke-width="2.25"/>
+    <path d="${linePath}" fill="none" stroke="#6366F1" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" filter="url(#paretoLineGlow)"/>
     ${lineDots}
     ${crossingLabels}
   </svg>`;
@@ -22181,8 +22278,9 @@ function cbmParetoSideList(items){
     cum += d.value;
     const cumPct = totalVal ? (cum/totalVal*100) : 0;
     const isVital = beforePct < 80;
+    const barColor = cbmParetoBarColor(d.color);
     const unitBadges = (d.units||[]).map(u=>`<span class="pill" style="margin:2px 4px 2px 0;font-size:10px;">${escUH(u)}</span>`).join('') || '<span class="hint" style="font-size:11px;">—</span>';
-    return `<div style="border:1px solid var(--line);border-left:3px solid ${d.color||'#FFC72C'};border-radius:6px;padding:9px 11px;margin-bottom:8px;background:${isVital?'rgba(255,255,255,0.02)':'transparent'};opacity:${isVital?1:0.75};">
+    return `<div style="border:1px solid var(--line);border-left:3px solid ${barColor};border-radius:6px;padding:9px 11px;margin-bottom:8px;background:${isVital?'rgba(255,255,255,0.02)':'transparent'};opacity:${isVital?1:0.75};">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px;">
         <span style="font-family:Oswald,sans-serif;font-weight:700;font-size:13px;color:var(--text);">${escUH(d.label)}</span>
         <span class="pill ${isVital?'open':'progress'}" style="flex-shrink:0;">${pct.toFixed(1)}%</span>
