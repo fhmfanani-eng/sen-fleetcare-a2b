@@ -2052,7 +2052,32 @@ body.role-mechanic #history-filters{ display:none !important; }
 }
 .site-qr-install .btn:disabled{ opacity:0.55; cursor:not-allowed; }
 
+
+/* Breakdown Category chart click overlay */
+.bcat-chart-overlay{
+  position:absolute; inset:0; z-index:20;
+  display:none; align-items:center; justify-content:center;
+  background:rgba(8,10,14,0.72); backdrop-filter:blur(4px);
+  border-radius:12px; padding:16px;
+}
+.bcat-chart-overlay-card{
+  position:relative; width:min(360px, 94%);
+  background:linear-gradient(165deg, #1c222c 0%, #12161e 100%);
+  border:1px solid rgba(255,199,44,0.28);
+  border-radius:12px; padding:18px 18px 16px;
+  box-shadow:0 16px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+  animation:bcatOverlayIn .16s ease;
+}
+@keyframes bcatOverlayIn{ from{ opacity:0; transform:translateY(6px) scale(0.98);} to{ opacity:1; transform:none;} }
+.bcat-overlay-close{
+  position:absolute; top:8px; right:10px;
+  background:transparent; border:1px solid var(--line); color:var(--text-dim);
+  width:28px; height:28px; border-radius:6px; cursor:pointer; font-size:16px; line-height:1;
+}
+.bcat-overlay-close:hover{ border-color:var(--red); color:var(--red); }
+.bcat-bar-hit:hover{ fill:rgba(255,255,255,0.06) !important; }
 </style>
+
 </head>
 <body>
 
@@ -15176,8 +15201,7 @@ const SUMMARY_CATEGORIES = [
   { key:'Periodical', label:'Periodical',          color:'#FFC72C' },
 ];
 function summaryCategoryBarChart(months, byCatMonth){
-  // Diagram kolom berkelompok — gaya premium: gradient fill, glow halus, gridline referensi,
-  // legend berbentuk pill, tipografi Oswald/JetBrains Mono konsisten dengan tema aplikasi.
+  // Diagram kolom berkelompok — gaya premium + klik bar → overlay keterangan.
   if(!months.length) return `<div class="hint" style="padding:24px 0; text-align:center;">No data to display.</div>`;
 
   let max = 1;
@@ -15186,16 +15210,16 @@ function summaryCategoryBarChart(months, byCatMonth){
       max = Math.max(max, (byCatMonth[c.key] && byCatMonth[c.key][m]) || 0);
     });
   });
-  // Bulatkan skala atas ke angka yang enak dibaca untuk gridline (mis. 5, 10, 15, 20…)
   const magnitude = Math.pow(10, Math.floor(Math.log10(Math.max(1, max))));
   const step = magnitude / 2 || 1;
   const niceMax = Math.max(step, Math.ceil(max / step) * step);
 
-  const legend = `<div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:20px;">` +
+  const legend = `<div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:14px;">` +
     SUMMARY_CATEGORIES.map(c=>`<span style="display:inline-flex; align-items:center; gap:7px; padding:6px 14px; border-radius:20px; background:rgba(255,255,255,0.03); border:1px solid ${c.color}3d; font-size:10px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; color:#D2D8E0;">
       <i style="width:8px; height:8px; border-radius:50%; background:${c.color}; box-shadow:0 0 8px ${c.color}aa; display:inline-block; flex-shrink:0;"></i>${c.label}
     </span>`).join('') +
-    `</div>`;
+    `</div>` +
+    `<div style="text-align:center; font-size:10px; color:var(--text-faint); margin-bottom:12px; letter-spacing:0.3px;">Klik kolom grafik untuk melihat keterangan detail</div>`;
 
   const W = Math.max(440, months.length*116), H = 258, padL = 34, padR = 18, padT = 26, padB = 40;
   const baseY = H - padB, chartH = baseY - padT;
@@ -15203,7 +15227,6 @@ function summaryCategoryBarChart(months, byCatMonth){
   const barGap = 7;
   const barW = Math.max(11, (groupW - barGap*(SUMMARY_CATEGORIES.length+1)) / SUMMARY_CATEGORIES.length);
 
-  // Gridline horizontal referensi (samar, putus-putus) + label skala
   const gridSteps = 4;
   let grid = '';
   for(let i=0; i<=gridSteps; i++){
@@ -15232,15 +15255,23 @@ function summaryCategoryBarChart(months, byCatMonth){
       const h = v ? Math.max(4, chartH * (v/niceMax)) : 0;
       const x = groupX + barGap + ci*(barW+barGap);
       const y = baseY - h;
-      bars += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" rx="4" ry="4"
-        fill="url(#catGrad${ci})" stroke="${c.color}" stroke-opacity="0.55" stroke-width="0.7"
-        style="filter:drop-shadow(0 0 5px ${c.color}55);"/>`;
-      if(v>0) bars += `<text x="${(x+barW/2).toFixed(1)}" y="${(y-6).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="700" fill="${c.color}" font-family="JetBrains Mono, monospace">${v}</text>`;
+      const hitY = padT;
+      const hitH = chartH;
+      bars += `<rect class="bcat-bar-hit" x="${x.toFixed(1)}" y="${hitY.toFixed(1)}" width="${barW.toFixed(1)}" height="${hitH.toFixed(1)}"
+        fill="transparent" style="cursor:pointer;"
+        data-month="${m}" data-cat="${c.key}" data-val="${v}"
+        onclick="showBcatChartOverlay(event,'${m}','${c.key}',${v})"/>`;
+      if(h > 0){
+        bars += `<rect class="bcat-bar" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" rx="4" ry="4"
+          fill="url(#catGrad${ci})" stroke="${c.color}" stroke-opacity="0.55" stroke-width="0.7"
+          style="filter:drop-shadow(0 0 5px ${c.color}55); pointer-events:none;"/>`;
+        bars += `<text x="${(x+barW/2).toFixed(1)}" y="${(y-6).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="700" fill="${c.color}" font-family="JetBrains Mono, monospace" style="pointer-events:none;">${v}</text>`;
+      }
     });
     labels += `<text x="${(groupX+groupW/2).toFixed(1)}" y="${(H-14).toFixed(1)}" text-anchor="middle" font-size="10.5" font-weight="600" letter-spacing="0.5" fill="#B9C0C9" font-family="Oswald, sans-serif" style="text-transform:uppercase;">${summaryMonthLabel(m)}</text>`;
   });
 
-  return `<div style="background:linear-gradient(165deg,#161b22 0%,#10141a 100%); border:1px solid var(--line); border-radius:12px; padding:22px 18px 14px;">
+  return `<div id="bcat-chart-wrap" style="position:relative; background:linear-gradient(165deg,#161b22 0%,#10141a 100%); border:1px solid var(--line); border-radius:12px; padding:22px 18px 14px;">
     ${legend}
     <svg viewBox="0 0 ${W} ${H}" style="width:100%; height:auto; display:block; overflow:visible;">
       ${defs}
@@ -15248,8 +15279,164 @@ function summaryCategoryBarChart(months, byCatMonth){
       ${bars}
       ${labels}
     </svg>
+    <div id="bcat-chart-overlay" class="bcat-chart-overlay" style="display:none;" role="dialog" aria-modal="true" onclick="if(event.target===this) closeBcatChartOverlay();">
+      <div class="bcat-chart-overlay-card" onclick="event.stopPropagation();">
+        <button type="button" class="bcat-overlay-close" onclick="closeBcatChartOverlay()" aria-label="Tutup">&times;</button>
+        <div id="bcat-overlay-body"></div>
+      </div>
+    </div>
   </div>`;
 }
+
+/** Overlay keterangan saat bar "Breakdown Category per Month" diklik.
+ *  Semua kategori: daftar record + tanggal + deskripsi (jobDesc). */
+function showBcatChartOverlay(ev, monthKey, catKey, val){
+  try{
+    const esc = (typeof escUH==='function') ? escUH : (s)=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const cat = SUMMARY_CATEGORIES.find(c=>c.key===catKey) || { key:catKey, label:catKey, color:'#9AA0A8' };
+    const monthLabel = (typeof summaryMonthLabel==='function') ? summaryMonthLabel(monthKey) : monthKey;
+    const isBreakdown = catKey === 'Breakdown';
+
+    const matched = [];
+    const unitSet = new Set();
+    (typeof dailyRecords!=='undefined' ? dailyRecords : []).forEach(r=>{
+      if(!r || !r.unitCode || !r.tanggal || r.tanggal.length < 7) return;
+      if(String(r.tanggal).slice(0,7) !== monthKey) return;
+      if(r.category !== catKey) return;
+      unitSet.add(String(r.unitCode).trim().toUpperCase());
+      matched.push(r);
+    });
+    matched.sort((a,b)=> String(b.tanggal||'').localeCompare(String(a.tanggal||'')) || String(a.unitCode||'').localeCompare(String(b.unitCode||'')));
+
+    const detailRows = matched.map(r=>{
+      const tgl = String(r.tanggal||'').slice(0,10);
+      const tglBd = r.breakdownDate ? String(r.breakdownDate).slice(0,10) : '';
+      const jamBd = r.breakdownTime ? String(r.breakdownTime).slice(0,5) : '';
+      const unit = String(r.unitCode||'').trim().toUpperCase();
+      const desc = String(r.jobDesc || '—').trim() || '—';
+      let tglMain = tgl;
+      try{
+        const p = tgl.split('-');
+        if(p.length===3) tglMain = p[2]+'/'+p[1]+'/'+p[0];
+      }catch(_e){}
+      let tglSub = '';
+      if(isBreakdown && jamBd) tglSub = jamBd;
+      if(isBreakdown && tglBd && tglBd !== tgl){
+        let bdShort = tglBd;
+        try{ const q=tglBd.split('-'); if(q.length===3) bdShort=q[2]+'/'+q[1]+'/'+q[0]; }catch(_e){}
+        tglSub = 'BD '+bdShort+(jamBd?' '+jamBd:'');
+      }
+      const tglDisplay = tglSub
+        ? `${tglMain}<div style="font-size:8px;color:var(--text-faint);margin-top:2px;line-height:1.15;">${tglSub}</div>`
+        : tglMain;
+      return `<tr>
+        <td class="bcat-td-tgl">${tglDisplay}</td>
+        <td class="bcat-td-unit" title="${esc(unit)}">${esc(unit)}</td>
+        <td class="bcat-td-desc">${esc(desc)}</td>
+      </tr>`;
+    }).join('');
+
+    const body = document.getElementById('bcat-overlay-body');
+    const overlay = document.getElementById('bcat-chart-overlay');
+    if(!body || !overlay) return;
+
+    const card = overlay.querySelector('.bcat-chart-overlay-card');
+    if(card){
+      card.style.width = 'min(680px, 96vw)';
+      card.style.maxWidth = '96vw';
+      card.style.overflow = 'hidden';
+    }
+
+    const descHeader = isBreakdown ? 'Breakdown Deskripsi' : 'Keterangan / Job Desc';
+
+    body.innerHTML = `
+      <style>
+        .bcat-detail-wrap{overflow-x:hidden;overflow-y:auto;max-height:300px;border:1px solid var(--line);border-radius:8px;}
+        .bcat-detail-tbl{width:100%;border-collapse:collapse;table-layout:fixed;font-size:12px;}
+        .bcat-detail-tbl col.c-tgl{width:96px;}
+        .bcat-detail-tbl col.c-unit{width:108px;}
+        .bcat-detail-tbl col.c-desc{width:auto;}
+        .bcat-detail-tbl th{
+          text-align:left;padding:7px 6px;background:#2a2f38;font-size:10px;
+          letter-spacing:0.4px;color:#b8c0cc;position:sticky;top:0;z-index:1;
+          box-sizing:border-box;
+        }
+        .bcat-detail-tbl th:last-child{padding-left:10px;}
+        .bcat-td-tgl{
+          padding:8px 6px;vertical-align:top;font-family:JetBrains Mono,monospace;
+          font-size:11px;color:#D5DBE3;line-height:1.25;
+          box-sizing:border-box;overflow:hidden;
+        }
+        .bcat-td-unit{
+          padding:8px 6px;vertical-align:top;font-weight:700;color:var(--yellow);
+          font-size:11px;line-height:1.3;box-sizing:border-box;
+          overflow:hidden;word-break:break-all;overflow-wrap:anywhere;white-space:normal;
+        }
+        .bcat-td-desc{
+          padding:8px 10px;vertical-align:top;text-align:left;
+          white-space:normal;word-break:break-word;overflow-wrap:anywhere;
+          line-height:1.45;color:#E8ECF1;font-size:12.5px;
+          box-sizing:border-box;overflow:hidden;
+        }
+      </style>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-right:28px;">
+        <i style="width:12px;height:12px;border-radius:3px;background:${cat.color};box-shadow:0 0 10px ${cat.color}88;display:inline-block;flex-shrink:0;"></i>
+        <div>
+          <div style="font-family:Oswald,sans-serif;font-size:15px;font-weight:700;letter-spacing:0.4px;color:var(--text);">${cat.label}</div>
+          <div style="font-size:11px;color:var(--text-dim);margin-top:2px;">${monthLabel}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+        <div style="background:rgba(255,255,255,0.04);border:1px solid var(--line);border-radius:8px;padding:10px 12px;">
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-faint);margin-bottom:4px;">Jumlah Record</div>
+          <div style="font-family:Oswald,sans-serif;font-size:22px;font-weight:700;color:${cat.color};">${val||0}</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border:1px solid var(--line);border-radius:8px;padding:10px 12px;">
+          <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-faint);margin-bottom:4px;">Unit Terlibat</div>
+          <div style="font-family:Oswald,sans-serif;font-size:22px;font-weight:700;color:var(--yellow);">${unitSet.size}</div>
+        </div>
+      </div>
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-dim);margin-bottom:6px;">
+        ${isBreakdown ? 'Keterangan Breakdown &amp; Tanggal' : 'Keterangan &amp; Tanggal'}
+      </div>
+      ${matched.length
+        ? `<div class="bcat-detail-wrap">
+            <table class="bcat-detail-tbl">
+              <colgroup>
+                <col class="c-tgl">
+                <col class="c-unit">
+                <col class="c-desc">
+              </colgroup>
+              <thead><tr>
+                <th>Tanggal</th>
+                <th>Unit</th>
+                <th>${descHeader}</th>
+              </tr></thead>
+              <tbody>${detailRows}</tbody>
+            </table>
+          </div>`
+        : `<div style="padding:14px;text-align:center;color:var(--text-faint);font-size:12px;border:1px dashed var(--line);border-radius:8px;">Tidak ada record untuk kombinasi ini.</div>`
+      }`;
+
+    overlay.style.display = 'flex';
+    document.querySelectorAll('.bcat-bar-hit').forEach(el=>{ el.style.fill = 'transparent'; });
+    if(ev && ev.currentTarget){
+      ev.currentTarget.style.fill = (cat.color || '#FFC72C') + '22';
+    }
+  }catch(e){ console.error('showBcatChartOverlay', e); }
+}
+
+
+function closeBcatChartOverlay(){
+  const overlay = document.getElementById('bcat-chart-overlay');
+  if(overlay) overlay.style.display = 'none';
+  document.querySelectorAll('.bcat-bar-hit').forEach(el=>{ el.style.fill = 'transparent'; });
+}
+
+document.addEventListener('keydown', (e)=>{
+  if(e.key==='Escape') closeBcatChartOverlay();
+});
+
 /** Bangun HTML section "Breakdown Category per Month" (chart + tabel summary) untuk disisipkan
  *  langsung di dalam KPI Chart Dashboard (di atas Grafik Quarter). Data dihitung ulang dari
  *  dailyRecords setiap kali dipanggil, sehingga otomatis ter-update saat ada input/perubahan
