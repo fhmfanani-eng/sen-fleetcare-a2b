@@ -1595,10 +1595,9 @@ select.exec-close{ background:rgba(76,175,109,0.15); color:var(--green); }
   display:flex; flex-direction:column; align-items:center; justify-content:flex-end;
   overflow-x:hidden; overflow-y:auto;
   padding:16px 16px max(18px, calc(env(safe-area-inset-bottom, 0px) + 12px));
-  /* HP portrait: foto unit di atas, kartu + teks di bawah */
+  /* HP portrait: foto unit memenuhi layar (unit di atas), kartu + teks di bawah */
   background:
-    linear-gradient(180deg, rgba(8,9,12,0) 0%, #08090c 100%) left 0 top 34vh / 100% 16vh no-repeat,
-    url("login-photo.jpg") 0% 0 / auto 50vh no-repeat,
+    url("login-photo-portrait.jpg") 15% top / cover no-repeat,
     #08090c;
 }
 #login-stack{
@@ -24438,7 +24437,7 @@ function subscribeDailyRealtime(){
     stack.style.zoom=1;
     var h=stack.offsetHeight, ih=window.innerHeight;
     var land=window.innerWidth>ih;
-    var avail=ih*(land?0.94:0.64);
+    var avail=ih*(land?0.94:0.60);
     var z=h? Math.min(1, avail/h):1;
     stack.style.zoom=z;
     requestAnimationFrame(function(){ busy=false; });
