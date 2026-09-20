@@ -583,6 +583,41 @@ select option{ background-color:#1b1e23; color:var(--text); }
 .period-input-group select option,
 .trend-quarter-select option{ background-color:#1b1e23; color:var(--yellow); }
 
+/* Dropdown multi-pilih — Breakdown Category (Komponen/Spartpart) */
+.ms-dd{ position:relative; }
+.ms-btn{
+  width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px; text-align:left;
+  background:var(--panel-2); border:1px solid rgba(255,255,255,0.1); color:var(--text);
+  padding:10px 12px; border-radius:8px; font-family:'Inter',sans-serif; font-size:13px;
+  cursor:pointer; outline:none; transition:border-color .15s, box-shadow .15s;
+}
+.ms-btn:focus, .ms-dd.open .ms-btn{ border-color:var(--yellow); box-shadow:0 0 0 3px rgba(255,199,44,0.12); }
+.ms-btn.invalid{ border-color:var(--red); box-shadow:0 0 0 3px rgba(229,72,77,0.15); }
+.ms-btn .ms-text{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ms-btn .ms-text.placeholder{ color:var(--text-faint); }
+.ms-btn .ms-caret{ color:var(--text-dim); font-size:11px; transition:transform .15s; }
+.ms-dd.open .ms-caret{ transform:rotate(180deg); }
+.ms-panel{
+  display:none; position:absolute; left:0; right:0; top:calc(100% + 4px); z-index:60; min-width:220px;
+  background:#1b1e23; border:1px solid rgba(255,255,255,0.14); border-radius:8px; padding:6px;
+  box-shadow:0 12px 32px rgba(0,0,0,0.5); max-height:340px; overflow-y:auto;
+}
+.ms-dd.open .ms-panel{ display:block; }
+.ms-panel label.ms-opt{
+  display:flex; align-items:center; gap:9px; margin:0; padding:8px 10px; border-radius:6px;
+  font-size:13px; color:var(--text); text-transform:none; letter-spacing:0; font-weight:400; cursor:pointer;
+}
+.ms-panel label.ms-opt:hover{ background:rgba(255,255,255,0.06); }
+.ms-panel label.ms-opt.disabled{ opacity:.4; cursor:not-allowed; }
+.ms-panel label.ms-opt input[type=checkbox]{
+  width:16px; height:16px; padding:0; margin:0; flex:0 0 auto; box-shadow:none; accent-color:var(--yellow);
+}
+.ms-foot{
+  display:flex; justify-content:space-between; align-items:center; padding:6px 10px 2px; margin-top:4px;
+  border-top:1px solid rgba(255,255,255,0.08); font-size:11px; color:var(--text-dim);
+}
+.ms-foot button{ background:transparent; border:0; color:var(--yellow); cursor:pointer; font-size:11px; padding:2px 4px; }
+
 /* Kalender (date picker) & Jam (time picker) — ikon berwarna kuning emas senada */
 input[type="date"],
 input[type="time"]{ color-scheme:dark; }
@@ -2787,18 +2822,26 @@ body.role-mechanic #history-filters{ display:none !important; }
             </div>
             <div class="grid grid-4">
               <div class="field"><label>Breakdown Category (Komponen/Spartpart)</label>
-                <select id="d-bdcategory" required>
-                  <option value="Engine">Engine</option>
-                  <option value="Powertrain">Power train</option>
-                  <option value="Hydraulic">Hydraulic</option>
-                  <option value="Differential/Exel">Differential/Exel</option>
-                  <option value="Electrical">Electrical</option>
-                  <option value="Cabin">Cabin</option>
-                  <option value="AC System">AC System</option>
-                  <option value="Undercarriage">Undercarriage</option>
-                  <option value="Attachment (Bucket, Blade)">Attachment (Bucket, Blade)</option>
-                  <option value="Support & Consumable">Support &amp; Consumable (Umum)</option>
-                </select>
+                <div class="ms-dd" id="d-bdcategory-dd">
+                  <button type="button" class="ms-btn" id="d-bdcategory-btn" aria-haspopup="listbox" aria-expanded="false">
+                    <span class="ms-text" id="d-bdcategory-text">Pilih komponen…</span><span class="ms-caret">▾</span>
+                  </button>
+                  <div class="ms-panel" id="d-bdcategory-panel" role="listbox" aria-multiselectable="true">
+                    <label class="ms-opt"><input type="checkbox" value="Engine" checked><span>Engine</span></label>
+                    <label class="ms-opt"><input type="checkbox" value="Powertrain"><span>Power train</span></label>
+                    <label class="ms-opt"><input type="checkbox" value="Hydraulic"><span>Hydraulic</span></label>
+                    <label class="ms-opt"><input type="checkbox" value="Differential/Exel"><span>Differential/Exel</span></label>
+                    <label class="ms-opt"><input type="checkbox" value="Electrical"><span>Electrical</span></label>
+                    <label class="ms-opt"><input type="checkbox" value="Cabin"><span>Cabin</span></label>
+                    <label class="ms-opt"><input type="checkbox" value="AC System"><span>AC System</span></label>
+                    <label class="ms-opt"><input type="checkbox" value="Undercarriage"><span>Undercarriage</span></label>
+                    <label class="ms-opt"><input type="checkbox" value="Attachment (Bucket, Blade)"><span>Attachment (Bucket, Blade)</span></label>
+                    <label class="ms-opt"><input type="checkbox" value="Support &amp; Consumable"><span>Support &amp; Consumable (Umum)</span></label>
+                    <div class="ms-foot"><span id="d-bdcategory-count">0 dipilih</span><button type="button" id="d-bdcategory-clear">Kosongkan</button></div>
+                  </div>
+                  <input type="hidden" id="d-bdcategory" value="Engine">
+                </div>
+                <div class="hint">Boleh pilih lebih dari satu komponen.</div>
               </div>
               <div class="field"><label>Man Power</label>
                 <select id="d-mechanic" required>
@@ -6070,6 +6113,24 @@ function resolveSubmittedByName(r){
   }
   return raw;
 }
+/* ---- Breakdown Category (Komponen/Spartpart) — boleh lebih dari satu ----
+   Disimpan di field TUNGGAL bdCategory / kolom Supabase bd_category sebagai teks
+   "Engine | Hydraulic" (tanpa perlu menambah kolom database). Saat sync ke sheet "data",
+   teks ini dikirim apa adanya; Apps Script (recordToRow_) yang memecahnya ke kolom
+   Powertrain / Hydraulic & Structural / Support & Consumable. */
+var BD_CATEGORY_SEP = ' | ';
+function bdCatList(v){
+  const src = (v && typeof v==='object' && !Array.isArray(v)) ? (v.bdCategory || v.bd_category) : v;
+  const arr = Array.isArray(src) ? src : String(src==null ? '' : src).split('|');
+  const out = [];
+  arr.forEach(x=>{ const t = String(x||'').trim(); if(t && !out.includes(t)) out.push(t); });
+  return out;
+}
+/** Komponen pertama — dipakai CBM / Pareto / RCA yang butuh satu komponen per record. */
+function bdCatPrimary(r){ return bdCatList(r)[0] || ''; }
+/** Teks tampilan di tabel / detail, mis. "Engine + Hydraulic". */
+function bdCatDisplay(r){ return bdCatList(r).join(' + '); }
+
 function dailyRecToRow(r){
   return {
     id: r.id,
@@ -6080,7 +6141,7 @@ function dailyRecToRow(r){
     type_unit: r.typeUnit || null,
     hm: r.hm ? Number(r.hm) : null,
     category: r.category || null,
-    bd_category: r.bdCategory || null,
+    bd_category: bdCatList(r.bdCategory).join(BD_CATEGORY_SEP) || null,
     plan_unplan: r.planUnplan || null,
     job_desc: r.jobDesc || null,
     repair_action: r.repairAction || null,
@@ -9002,6 +9063,57 @@ function updateCodeBDPreview(){
 document.getElementById('d-category').addEventListener('change', updateCodeBDPreview);
 updateCodeBDPreview();
 
+/* ---- Breakdown Category (Komponen/Spartpart): dropdown multi-pilih ----
+   Nilai gabungan disimpan di <input hidden #d-bdcategory> ("Engine | Hydraulic"). */
+(function initBdCategoryMultiSelect(){
+  const dd = document.getElementById('d-bdcategory-dd');
+  if(!dd) return;
+  const btn = document.getElementById('d-bdcategory-btn');
+  const panel = document.getElementById('d-bdcategory-panel');
+  const textEl = document.getElementById('d-bdcategory-text');
+  const hidden = document.getElementById('d-bdcategory');
+  const cntEl = document.getElementById('d-bdcategory-count');
+  const clearBtn = document.getElementById('d-bdcategory-clear');
+  const boxes = ()=> Array.from(panel.querySelectorAll('input[type=checkbox]'));
+  const labelOf = cb => (cb.parentElement.querySelector('span')||{}).textContent || cb.value;
+
+  function refresh(){
+    const sel = boxes().filter(c=>c.checked);
+    hidden.value = sel.map(c=>c.value).join(BD_CATEGORY_SEP);
+    textEl.textContent = sel.length ? sel.map(labelOf).join(', ') : 'Pilih komponen…';
+    textEl.classList.toggle('placeholder', !sel.length);
+    cntEl.textContent = sel.length + ' dipilih';
+    if(sel.length) btn.classList.remove('invalid');
+  }
+  function open(){ dd.classList.add('open'); btn.setAttribute('aria-expanded','true'); }
+  function close(){ dd.classList.remove('open'); btn.setAttribute('aria-expanded','false'); }
+
+  btn.addEventListener('click', ()=>{ dd.classList.contains('open') ? close() : open(); });
+  panel.addEventListener('change', refresh);
+  clearBtn.addEventListener('click', ()=>{ boxes().forEach(c=>{ c.checked = false; }); refresh(); });
+  document.addEventListener('click', e=>{ if(!dd.contains(e.target)) close(); });
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape') close(); });
+
+  window.refreshBdCategoryMs = refresh;
+  window.openBdCategoryMs = ()=>{ btn.classList.add('invalid'); open(); };
+  window.getBdCategoryValue = ()=> hidden.value;
+  window.setBdCategoryValue = function(v){
+    const list = bdCatList(v);
+    // Nilai lama yang tidak ada di daftar (mis. hasil import) tetap ditampilkan sebagai opsi tambahan.
+    list.forEach(val=>{
+      if(boxes().some(c=>c.value===val)) return;
+      const lab = document.createElement('label'); lab.className = 'ms-opt';
+      const cb = document.createElement('input'); cb.type = 'checkbox'; cb.value = val;
+      const sp = document.createElement('span'); sp.textContent = val;
+      lab.appendChild(cb); lab.appendChild(sp);
+      panel.insertBefore(lab, panel.querySelector('.ms-foot'));
+    });
+    boxes().forEach(c=>{ c.checked = list.includes(c.value); });
+    refresh();
+  };
+  refresh();
+})();
+
 /* ---- Migrasi Code BD lama (format DM-xxxx / PM-xxxx dari versi lama panel) ----
    Beberapa record lama masih tersimpan di database dengan Code BD format DM-/PM-
    (dibuat sebelum genRecordCode() diseragamkan ke format brk-NNN). Fungsi ini
@@ -9236,7 +9348,7 @@ window.editDaily = function(id){
   document.getElementById('d-hm').value = r.hm || '';
   document.getElementById('d-category').value = r.category || 'Breakdown';
   document.getElementById('d-planunplan').value = r.planUnplan || 'Plan';
-  document.getElementById('d-bdcategory').value = r.bdCategory || 'Powertrain';
+  setBdCategoryValue(r.bdCategory || 'Powertrain');
   const dMechField = document.getElementById('d-mechanic');
   if(dMechField && !dMechField.disabled){ dMechField.value = r.mechanic || ''; }
   document.getElementById('d-mechanic2').value = r.mechanic2 || '';
@@ -9285,6 +9397,7 @@ document.getElementById('form-daily').addEventListener('reset', ()=>{
       if(mechanicField){ mechanicField.value = loggedInUser.name; mechanicField.disabled = true; }
     }
     updateCodeBDPreview();
+    if(typeof refreshBdCategoryMs==='function') refreshBdCategoryMs();
   }, 0);
 });
 
@@ -9297,6 +9410,11 @@ document.getElementById('form-daily').addEventListener('submit', async (e)=>{
   const breakdownDate = document.getElementById('d-breakdowndate').value;
   const breakdownTime = document.getElementById('d-breakdowntime').value;
   const category = document.getElementById('d-category').value;
+  if(!bdCatList(getBdCategoryValue()).length){
+    alert('Pilih minimal satu Breakdown Category (Komponen/Spartpart).');
+    if(typeof openBdCategoryMs==='function') openBdCategoryMs();
+    return;
+  }
   const mechanic = document.getElementById('d-mechanic').value;
   const mechanic2 = document.getElementById('d-mechanic2').value;
   const mechanic3 = document.getElementById('d-mechanic3').value.trim();
@@ -9325,7 +9443,7 @@ document.getElementById('form-daily').addEventListener('submit', async (e)=>{
     typeUnit,
     hm: document.getElementById('d-hm').value,
     category,
-    bdCategory: document.getElementById('d-bdcategory').value,
+    bdCategory: getBdCategoryValue(),
     planUnplan: document.getElementById('d-planunplan').value,
     jobDesc: String(document.getElementById('d-jobdesc').value||'').replace(/[\r\n\u2028\u2029]+/g,' ').replace(/[ \t]{2,}/g,' ').trim(),
     repairAction: String(document.getElementById('d-repairaction').value||'').replace(/[\r\n\u2028\u2029]+/g,' ').replace(/[ \t]{2,}/g,' ').trim(),
@@ -9666,8 +9784,8 @@ async function syncBreakdownHistoryToSheets(opts){
           type_unit: r.typeUnit || r.type_unit || '',
           typeUnit: r.typeUnit || r.type_unit || '',
           hm: r.hm != null ? r.hm : '',
-          bd_category: r.bdCategory || r.bd_category || '',
-          bdCategory: r.bdCategory || r.bd_category || '',
+          bd_category: bdCatDisplay(r),
+          bdCategory: bdCatDisplay(r),
           plan_unplan: r.planUnplan || r.plan_unplan || '',
           planUnplan: r.planUnplan || r.plan_unplan || '',
           job_desc: r.jobDesc || r.job_desc || '',
@@ -9886,7 +10004,7 @@ function renderDailyTable(){
       <td>${[r.mechanic, r.mechanic2, r.mechanic3].filter(Boolean).join(', ') || '—'}</td>
       <td>${r.area}</td>
       <td><span class="pill ${pillClass(r.status)}">${r.status==='Progress'?'On Progress':r.status}</span></td>
-      <td style="white-space:normal; min-width:140px;">${r.bdCategory ? `<b>${r.bdCategory}</b>${r.keterangan?' — '+r.keterangan:''}` : (r.keterangan||'—')}</td>
+      <td style="white-space:normal; min-width:140px;">${r.bdCategory ? `<b>${bdCatDisplay(r)}</b>${r.keterangan?' — '+r.keterangan:''}` : (r.keterangan||'—')}</td>
       <td>${approvalPillHTML(r)}</td>
       <td>${actionCell}${(isSupervisor && canEditPanel('daily')) ? `<button class="btn danger" style="margin-top:6px;" onclick="deleteDaily('${r.id}')">Hapus</button>` : ''}</td>
     </tr>`;
@@ -9975,7 +10093,7 @@ window.openDailyDetail = function(id, ev){
   const fullItems = [
     ['Breakdown Deskripsi', r.jobDesc],
     ['Repair Action', r.repairAction],
-    ['Keterangan Part Consumable', r.bdCategory ? `${r.bdCategory}${r.keterangan ? ' — '+r.keterangan : ''}` : (r.keterangan||'—')],
+    ['Keterangan Part Consumable', r.bdCategory ? `${bdCatDisplay(r)}${r.keterangan ? ' — '+r.keterangan : ''}` : (r.keterangan||'—')],
     ['Approval', approvalInfo],
   ];
   const grid = document.getElementById('daily-detail-grid');
@@ -21245,7 +21363,7 @@ function cbmBreakdownRecords(){
     if(f.unit && r.unitCode !== f.unit) return false;
     if(f.start && r.tanggal && r.tanggal < f.start) return false;
     if(f.end && r.tanggal && r.tanggal > f.end) return false;
-    const comp = normalizeCBMComponent(r.bdCategory || r.bdcategory, r.jobDesc);
+    const comp = normalizeCBMComponent(bdCatPrimary(r) || r.bdcategory, r.jobDesc);
     if(!comp) return false; // skip Other / plan-daily / unmapped
     // Terapkan aturan komponen sesuai jenis unit:
     // Transmission = Loader + Dozer; Axle/Differential + Tyre = Loader only
@@ -21805,7 +21923,7 @@ function renderCBMUnitCards(rows, stats){
       if(f.unit && r.unitCode!==f.unit) return false;
       if(f.start && r.tanggal && r.tanggal < f.start) return false;
       if(f.end && r.tanggal && r.tanggal > f.end) return false;
-      const comp = normalizeCBMComponent(r.bdCategory||r.bdcategory, r.jobDesc);
+      const comp = normalizeCBMComponent(bdCatPrimary(r)||r.bdcategory, r.jobDesc);
       if(!comp) return false;
        const unit = cbmUnitByCode(r.unitCode);
        if(!cbmIsCompKeyAllowedForUnit(comp, unit)) return false;
@@ -21877,7 +21995,7 @@ function renderCBMAssetDetail(){
     if(r.category!=='Breakdown' || r.unitCode!==u.code) return false;
     if(f.start && r.tanggal && r.tanggal < f.start) return false;
     if(f.end && r.tanggal && r.tanggal > f.end) return false;
-    const comp = normalizeCBMComponent(r.bdCategory||r.bdcategory, r.jobDesc);
+    const comp = normalizeCBMComponent(bdCatPrimary(r)||r.bdcategory, r.jobDesc);
     if(!comp) return false;
      if(!cbmIsCompKeyAllowedForUnit(comp, u)) return false;
      r._cbmComp = comp;
@@ -22987,8 +23105,8 @@ function rcaCollectMechanicsFromDaily(unitCode, component){
       const ru = String(r.unitCode||r.unit_code||'').trim().toUpperCase();
       if(u && ru && ru!==u) return;
       const rc = (typeof cbmGroupKeyOfComp==='function')
-        ? cbmGroupKeyOfComp(r._cbmComp || r.bdCategory || r.bd_category || r.component)
-        : String(r.bdCategory||r.bd_category||r.component||'').trim();
+        ? cbmGroupKeyOfComp(r._cbmComp || bdCatPrimary(r) || r.component)
+        : String(bdCatPrimary(r)||r.component||'').trim();
       if(comp && rc && String(rc)!==comp) return;
       [r.mechanic, r.mechanic2, r.mechanic3, r.mechanic_2, r.mechanic_3, r.picName, r.manPower, r.man_power].forEach(pushMechNames);
     });
