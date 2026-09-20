@@ -1591,33 +1591,45 @@ select.exec-close{ background:rgba(76,175,109,0.15); color:var(--green); }
 /* LOGIN SCREEN */
 #login-overlay{
   position:fixed; inset:0; top:0; right:0; bottom:0; left:0; z-index:200;
-  display:flex; align-items:center; justify-content:center;
-  overflow:hidden;
-  /* Background foto SEN-FleetCare (wheel loader di workshop) */
+  display:flex; align-items:flex-start; justify-content:center;
+  overflow-x:hidden; overflow-y:auto;
+  /* Background foto unit (tanpa teks). Teks SEN-FleetCare dipasang terpisah di kanan bawah (::before) */
   background:
-    radial-gradient(ellipse 130% 110% at 50% 45%, rgba(0,0,0,0.05) 40%, rgba(3,4,6,0.60) 100%),
-    linear-gradient(180deg, rgba(8,9,12,0.10) 0%, rgba(8,9,12,0.35) 100%),
-    url("login-bg.jpg") 28% center / cover no-repeat,
+    radial-gradient(ellipse 130% 110% at 50% 45%, rgba(0,0,0,0.04) 40%, rgba(3,4,6,0.55) 100%),
+    url("login-bg.jpg") 24% bottom / auto 66% no-repeat,
     #08090c;
   padding:20px;
+  padding-top:max(20px, calc(env(safe-area-inset-top, 0px) + 14px));
 }
-/* Landscape / desktop: wheel loader di kiri, kartu login di kanan */
-@media (min-aspect-ratio: 1/1){
+/* Teks SEN-FleetCare: kanan bawah, di bawah kartu login */
+#login-overlay::before{
+  content:''; position:fixed; z-index:0; pointer-events:none;
+  right:4vw; bottom:max(3.5vh, calc(env(safe-area-inset-bottom, 0px) + 18px));
+  width:min(74vw, 520px); aspect-ratio:1202 / 284;
+  background:url("login-brand.png") center / contain no-repeat;
+  filter:drop-shadow(0 4px 14px rgba(0,0,0,0.6));
+}
+/* HP portrait: foto unit di bagian bawah, kartu di atas, teks di kanan bawah */
+@media (max-aspect-ratio: 1/1){
   #login-overlay{
-    background-position:center;
-    /* kartu berada tepat di atas tulisan SEN-FleetCare (sisi kanan foto) */
-    justify-content:center;
-    padding-left:46vw;
+    background:
+      linear-gradient(180deg, #08090c 0%, rgba(8,9,12,0) 100%) left 0 bottom 34vh / 100% 12vh no-repeat,
+      url("login-bg.jpg") 0% bottom / auto 46vh no-repeat,
+      #08090c;
   }
 }
-#login-overlay::before{
-  content:''; position:absolute; inset:0; z-index:0; pointer-events:none; display:none;
-  background-image:
-    linear-gradient(rgba(255,255,255,0.028) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.028) 1px, transparent 1px);
-  background-size:46px 46px;
-  -webkit-mask-image:radial-gradient(ellipse 78% 68% at 50% 40%, #000 0%, transparent 78%);
-  mask-image:radial-gradient(ellipse 78% 68% at 50% 40%, #000 0%, transparent 78%);
+/* Layar lebar / desktop: foto penuh, kartu di kanan atas, teks di kanan bawah */
+@media (min-aspect-ratio: 1/1){
+  #login-overlay{
+    justify-content:flex-end;
+    padding-right:8vw;
+    padding-top:3vh;
+    background:
+      radial-gradient(ellipse 130% 110% at 40% 50%, rgba(0,0,0,0.04) 40%, rgba(3,4,6,0.55) 100%),
+      url("login-bg.jpg") center / cover no-repeat,
+      #08090c;
+  }
+  #login-overlay::before{ right:6vw; width:min(34vw, 560px); }
 }
 #login-overlay::after{
   content:''; position:absolute; inset:0; z-index:0; pointer-events:none;
