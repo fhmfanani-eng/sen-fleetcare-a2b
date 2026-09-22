@@ -1,8 +1,8 @@
 /* SEN-FleetCare service worker — cache app shell saja.
    Request ke Supabase / API / domain lain TIDAK disentuh (langsung ke network). */
-const CACHE = 'sen-fleetcare-v1';
+const CACHE = 'sen-fleetcare-v6';
 const SHELL = [
-  '/', '/index.html', '/manifest.json', '/login-bg.jpg',
+  '/', '/index.html', '/manifest.json', '/bg-login.jpg', '/bg-login-portrait.jpg', '/login-brand.png', '/brand-tagline.png',
   '/icon-192.png', '/icon-512.png', '/icon-maskable-512.png'
 ];
 
