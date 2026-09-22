@@ -7903,7 +7903,7 @@ function setupPwaInstallSupport(){
     // tidak bisa didaftarkan dari blob: URL di browser manapun (selalu gagal & memicu
     // warning di console). Di preview sandbox (protokol blob-request:/blob:) registrasi
     // SW otomatis dilewati; fitur PWA tetap aktif normal saat web sudah di-host di http/https.
-    navigator.serviceWorker.register('sw.js', { scope:'./' }).catch(err=> console.warn('SW register failed', err));
+    navigator.serviceWorker.register('sw.js?v=20260922-1457', { scope:'./' }).catch(err=> console.warn('SW register failed', err));
   }
 }
 function bindSiteQrUI(){

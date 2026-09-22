@@ -473,6 +473,61 @@ body:not(.role-wa-sync-allowed) .sync-only-fahmi{
 }
 
 
+/* ===== CBM BACKLOG — ACTION CONTROL ===== */
+.cbm-backlog-tab{position:relative;display:inline-flex!important;align-items:center;gap:7px;}
+.cbm-backlog-count{
+  display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:18px;
+  padding:0 6px;border-radius:10px;background:rgba(255,107,53,.16);border:1px solid rgba(255,107,53,.32);
+  color:#ff9a76;font:700 10px/1 'JetBrains Mono',monospace;
+}
+.cbm-backlog-tab.active .cbm-backlog-count{background:#ff6b35;color:#fff;border-color:#ff6b35;box-shadow:0 0 12px rgba(255,107,53,.28);}
+.cbm-backlog-hero{
+  display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:16px;padding:18px 20px;
+  border:1px solid rgba(255,107,53,.22);border-radius:12px;
+  background:
+    radial-gradient(ellipse 60% 100% at 0% 0%,rgba(255,107,53,.12),transparent 60%),
+    linear-gradient(145deg,rgba(255,255,255,.035),rgba(255,255,255,.012)),#11161c;
+  box-shadow:0 10px 30px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.04);
+}
+.cbm-backlog-kicker{font:700 9px/1 'JetBrains Mono',monospace;letter-spacing:1.4px;color:var(--orange);margin-bottom:6px;}
+.cbm-backlog-title{font:600 25px/1.05 'Oswald',sans-serif;letter-spacing:.6px;color:#f2f4f7;}
+.cbm-backlog-sub{max-width:760px;margin-top:7px;font-size:11.5px;line-height:1.5;color:var(--text-dim);}
+.cbm-backlog-summary{
+  min-width:160px;text-align:center;padding:12px 14px;border-radius:10px;
+  background:rgba(255,107,53,.07);border:1px solid rgba(255,107,53,.18);
+  color:#ffb08f;font:700 11px/1.35 'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.5px;
+}
+.cbm-backlog-kpis{margin-bottom:16px;}
+.cbm-backlog-kpi{padding:14px 16px;position:relative;overflow:hidden;}
+.cbm-backlog-kpi::after{content:'';position:absolute;right:-18px;bottom:-26px;width:80px;height:80px;border-radius:50%;background:rgba(255,107,53,.05);}
+.cbm-bl-filter{min-width:120px!important;width:auto!important;padding:7px 9px!important;font-size:11px!important;}
+#cbm-backlog-table th{background:#262c35;color:#eef1f4;}
+#cbm-backlog-table td{vertical-align:middle;}
+.cbm-bl-priority{display:inline-flex;align-items:center;gap:5px;min-width:72px;justify-content:center;padding:4px 8px;border-radius:6px;font:700 9px/1 'JetBrains Mono',monospace;letter-spacing:.35px;}
+.cbm-bl-priority.critical{color:#ff8589;background:rgba(229,72,77,.13);border:1px solid rgba(229,72,77,.25);}
+.cbm-bl-priority.high{color:#ff9a76;background:rgba(255,107,53,.13);border:1px solid rgba(255,107,53,.25);}
+.cbm-bl-priority.medium{color:#ffd86a;background:rgba(255,199,44,.10);border:1px solid rgba(255,199,44,.22);}
+.cbm-bl-source{font:600 9px/1.2 'JetBrains Mono',monospace;color:var(--text-dim);white-space:nowrap;}
+.cbm-bl-aging{font:700 10px 'JetBrains Mono',monospace;color:var(--text-dim);}
+.cbm-bl-aging.overdue{color:var(--red);}
+.cbm-bl-desc{min-width:250px;white-space:normal;text-align:left;line-height:1.4;font-size:11px;}
+.cbm-bl-component{font-family:'Oswald',sans-serif;color:#6fe0b0;font-size:12px;letter-spacing:.35px;}
+.cbm-backlog-guide{margin-top:16px;}
+.cbm-backlog-flow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.cbm-backlog-flow>div{display:flex;gap:9px;align-items:flex-start;padding:11px;border:1px solid rgba(255,255,255,.07);border-radius:8px;background:rgba(255,255,255,.02);}
+.cbm-backlog-flow .flow-no{display:inline-flex;align-items:center;justify-content:center;flex:0 0 26px;height:26px;border-radius:7px;background:rgba(255,199,44,.12);color:var(--yellow);font:700 10px 'JetBrains Mono',monospace;}
+.cbm-backlog-flow b{display:block;font:600 12px 'Oswald',sans-serif;color:#eef1f4;margin-bottom:2px;}
+.cbm-backlog-flow small{display:block;color:var(--text-dim);font-size:10px;line-height:1.35;}
+@media(max-width:900px){
+  .cbm-backlog-hero{align-items:flex-start;flex-direction:column;}
+  .cbm-backlog-summary{width:100%;}
+  .cbm-backlog-flow{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:640px){
+  .cbm-backlog-flow{grid-template-columns:1fr;}
+  .cbm-bl-filter{min-width:105px!important;}
+}
+
 /* MAIN */
 .main{
   flex:1; min-width:0; position:relative;
@@ -1347,6 +1402,51 @@ select.exec-close{ background:rgba(76,175,109,0.15); color:var(--green); }
   text-transform:uppercase; color:#EDEEF0; margin-bottom:10px;
 }
 .dash-panel-title span{ color:var(--text-faint); font-weight:500; text-transform:none; letter-spacing:0; font-size:10px; margin-left:6px; }
+/* Top bar filter — satu baris pilihan periode di bagian ATAS setiap grafik/tabel KPI Dashboard,
+   supaya masing-masing chart/tabel punya kontrol filternya sendiri yang jelas terlihat. */
+.dash-panel-topbar{
+  display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;
+  margin-bottom:10px; padding-bottom:9px; border-bottom:1px dashed rgba(255,255,255,0.08);
+}
+.dash-panel-topbar-label{
+  font-size:9px; text-transform:uppercase; letter-spacing:.6px; color:var(--text-faint);
+  font-family:'JetBrains Mono',monospace; display:flex; align-items:center; gap:5px;
+}
+.dash-panel-topbar-label .status-dot{ margin-right:0; }
+.dash-topbar-select{
+  background:#1b1e23; color:var(--text); border:1px solid var(--line); border-radius:7px;
+  font-size:11px; font-family:'JetBrains Mono',monospace; padding:5px 9px; cursor:pointer;
+  outline:none; max-width:100%;
+}
+.dash-topbar-select:focus{ border-color:var(--yellow); box-shadow:0 0 0 3px rgba(255,199,44,0.12); }
+.dash-topbar-select option{ background-color:#1b1e23; color:var(--yellow); }
+/* Top bar MENU DASHBOARD — mengelompokkan grafik & tabel per topik (mis. "Breakdown Category per
+   Month" + "Summary Breakdown Category per Month" jadi satu group), sehingga area konten dashboard
+   hanya menampilkan grup yang sedang dipilih di topbar ini. */
+.dash-menu-topbar{
+  display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; padding:8px;
+  background:linear-gradient(165deg, #161b28 0%, #10141c 100%);
+  border:1px solid rgba(255,255,255,0.08); border-radius:14px;
+  box-shadow:0 6px 22px rgba(0,0,0,0.35); position:sticky; top:0; z-index:20;
+}
+.dash-menu-tab{
+  appearance:none; -webkit-appearance:none; cursor:pointer; user-select:none;
+  background:#1b1e23; color:var(--text-dim); border:1px solid var(--line); border-radius:9px;
+  font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:700;
+  letter-spacing:0.4px; text-transform:uppercase; padding:9px 14px;
+  transition:background .15s ease, color .15s ease, border-color .15s ease, transform .12s ease;
+  white-space:nowrap;
+}
+.dash-menu-tab:hover{ color:var(--text); border-color:rgba(255,199,44,0.35); transform:translateY(-1px); }
+.dash-menu-tab.active{
+  background:linear-gradient(165deg, rgba(255,199,44,0.22), rgba(255,199,44,0.08));
+  color:var(--yellow); border-color:var(--yellow);
+  box-shadow:0 0 0 1px rgba(255,199,44,0.25) inset, 0 4px 14px rgba(255,199,44,0.15);
+}
+@media(max-width:640px){
+  .dash-menu-topbar{ gap:6px; padding:6px; }
+  .dash-menu-tab{ font-size:9.5px; padding:8px 10px; flex:1 1 calc(50% - 6px); text-align:center; }
+}
 .kpi-dash-spark{ margin-top:8px; height:22px; opacity:0.9; }
 .kpi-dash-spark svg{ width:100%; height:22px; display:block; }
 
@@ -1791,6 +1891,14 @@ select.exec-close{ background:rgba(76,175,109,0.15); color:var(--green); }
 #ps-close-overlay.show{ display:flex; }
 #rca-edit-overlay{ display:none; position:fixed; inset:0; z-index:230; align-items:flex-start; justify-content:center; background:rgba(0,0,0,0.6); padding:26px 16px; overflow-y:auto; }
 #rca-edit-overlay.show{ display:flex; }
+/* Modal Edit/Hapus data Backlog (Part Number/Qty/PR/Part Location) — hanya dapat dibuka
+   lewat double-click pada baris tabel Backlog, dan hanya untuk user Fahmi Fanani
+   (dijaga oleh isFahmiFanani() di JS; tidak ada tombol/menu apapun yang ditampilkan
+   di tabel untuk user lain). */
+#cbm-backlog-edit-overlay{ display:none; position:fixed; inset:0; z-index:230; align-items:flex-start; justify-content:center; background:rgba(0,0,0,0.6); padding:26px 16px; overflow-y:auto; }
+#cbm-backlog-edit-overlay.show{ display:flex; }
+body.role-wa-sync-allowed #cbm-backlog-tbody tr{ cursor:pointer; }
+body.role-wa-sync-allowed #cbm-backlog-tbody tr:hover{ background:rgba(255,199,44,0.055); }
 .view.access-readonly form button[type="submit"],
 .view.access-readonly .btn:not(.secondary):not(.small),
 .view.access-readonly .btn.danger,
@@ -2347,6 +2455,30 @@ body.role-mechanic #history-filters{ display:none !important; }
   </div>
 </div>
 
+<div id="cbm-backlog-edit-overlay">
+  <div class="detail-modal" style="max-width:480px;">
+    <div class="detail-modal-head">
+      <h3>Edit Backlog</h3>
+      <button type="button" class="detail-modal-close" id="cbm-bl-edit-modal-close" title="Tutup">✕</button>
+    </div>
+    <div class="detail-modal-body">
+      <div class="hint" style="margin-bottom:14px;" id="cbm-bl-edit-info">—</div>
+      <div class="field"><label>Part Number</label><input type="text" id="cbm-bl-edit-partnumber" placeholder="Contoh: 6754-61-1030"></div>
+      <div class="field"><label>Qty</label><input type="text" id="cbm-bl-edit-qty" placeholder="Contoh: 2 pcs"></div>
+      <div class="field"><label>PR</label><input type="text" id="cbm-bl-edit-pr" placeholder="Nomor Purchase Request…"></div>
+      <div class="field"><label>Part Location</label><input type="text" id="cbm-bl-edit-location" placeholder="Contoh: Gudang Site A / WH Central"></div>
+      <div class="hint" style="margin-top:4px;">Menu edit &amp; hapus baris Backlog ini hanya dapat diakses oleh <b>Fahmi Fanani</b>.</div>
+    </div>
+    <div class="detail-modal-foot" style="justify-content:space-between;">
+      <button type="button" class="btn danger" id="cbm-bl-edit-delete">🗑 Hapus dari Backlog</button>
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="btn secondary" id="cbm-bl-edit-cancel">Batal</button>
+        <button type="button" class="btn" id="cbm-bl-edit-save">💾 Simpan Perubahan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="login-overlay">
 <div id="login-stack">
   <div class="login-card diamond-plate">
@@ -2571,9 +2703,23 @@ body.role-mechanic #history-filters{ display:none !important; }
         <div class="banner">⛭ Data tersimpan otomatis dan dibagikan ke seluruh pengguna panel ini (shared workshop database).</div>
 
         <div class="section-title" style="display:none">Dashboard KPI</div>
+
+        <!-- TOP BAR MENU DASHBOARD: mengelompokkan grafik + tabel per topik. Klik satu tombol topbar
+             untuk hanya menampilkan grup terkait (mis. "Breakdown Category" -> chart "Breakdown
+             Category per Month" + tabel "Summary Breakdown Category per Month" saja yang tampil). -->
+        <div class="dash-menu-topbar" id="dash-menu-topbar">
+          <button type="button" class="dash-menu-tab active" data-dashtab="breakdown" onclick="setDashboardTab('breakdown')">📦 Breakdown Category</button>
+          <button type="button" class="dash-menu-tab" data-dashtab="service" onclick="setDashboardTab('service')">🛠 Dashboard Service</button>
+          <button type="button" class="dash-menu-tab" data-dashtab="kpi" onclick="setDashboardTab('kpi')">📊 KPI Maintenance</button>
+          <button type="button" class="dash-menu-tab" data-dashtab="monthlykpi" onclick="setDashboardTab('monthlykpi')">🧮 Monthly KPI Achievement</button>
+          <button type="button" class="dash-menu-tab" data-dashtab="trend" onclick="setDashboardTab('trend')">📈 Trend &amp; Comparison</button>
+          <button type="button" class="dash-menu-tab" data-dashtab="quarter" onclick="setDashboardTab('quarter')">🗓 Quarter Summary</button>
+          <span id="dash-menu-topbar-sync-slot" style="margin-left:auto;display:flex;align-items:center;"></span>
+        </div>
+
         <div id="kpi-chart-dashboard" style="margin-bottom:20px;"></div>
 
-<!-- MA & PA Data Source: di-render di bawah tabel SERVICE ACHIEVEMENT lewat placeMapaSourceBelowServiceAchievement() -->
+<!-- MA & PA Data Source: di-render di atas kartu KPI (grup topbar "KPI Maintenance") lewat placeMapaSourceAboveKpiCards() -->
         <div id="mapa-source-block" style="margin-bottom:20px;">
           <div class="section-title">MA &amp; PA Data Source</div>
           <div class="panel" style="margin-bottom:0;">
@@ -3518,6 +3664,7 @@ body.role-mechanic #history-filters{ display:none !important; }
             <button type="button" class="chip" data-cbm-tab="safety">Critical Parts</button>
             <button type="button" class="chip" data-cbm-tab="pareto">Pareto Analysis</button>
             <button type="button" class="chip" data-cbm-tab="insight">Insight AI</button>
+            <button type="button" class="chip cbm-backlog-tab" data-cbm-tab="backlog"><span>Backlog</span><span class="cbm-backlog-count" id="cbm-backlog-count">0</span></button>
           </div>
           <button type="button" class="btn small secondary" id="cbm-refresh" title="Tarik ulang data HM/Performance/Daily Maintenance terbaru">⟲ Refresh Data</button>
         </div>
@@ -3735,6 +3882,69 @@ body.role-mechanic #history-filters{ display:none !important; }
                 </tr></thead>
                 <tbody id="cbm-insight-tbody"></tbody>
               </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- BACKLOG -->
+        <div class="cbm-tab-panel" id="cbm-tab-backlog" style="display:none;">
+          <div class="cbm-backlog-hero">
+            <div class="cbm-backlog-hero-copy">
+              <div class="cbm-backlog-kicker">CBM · ACTION CONTROL</div>
+              <div class="cbm-backlog-title">Maintenance Backlog</div>
+              <div class="cbm-backlog-sub">Daftar pekerjaan yang masih Open dari Pre Inspection, Planning System, dan RCA. Gunakan sebagai action list tindak lanjut hasil monitoring CBM.</div>
+            </div>
+            <div class="cbm-backlog-summary" id="cbm-backlog-summary">—</div>
+          </div>
+
+          <div class="grid grid-4 cbm-backlog-kpis">
+            <div class="unit-card cbm-backlog-kpi"><div class="cat-label">Open Backlog</div><div class="type" id="cbm-bl-total">0</div><div class="hint">Semua sumber</div></div>
+            <div class="unit-card cbm-backlog-kpi"><div class="cat-label">High / Critical</div><div class="type" style="color:var(--red)" id="cbm-bl-critical">0</div><div class="hint">Prioritas tindak lanjut</div></div>
+            <div class="unit-card cbm-backlog-kpi"><div class="cat-label">Waiting Part</div><div class="type" style="color:var(--orange)" id="cbm-bl-waiting">0</div><div class="hint">Terindikasi sparepart</div></div>
+            <div class="unit-card cbm-backlog-kpi"><div class="cat-label">Aging &gt; 7 Hari</div><div class="type" style="color:var(--yellow)" id="cbm-bl-aging">0</div><div class="hint">Belum ditutup</div></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <h2><span class="tag" style="background:rgba(255,107,53,0.18);color:var(--orange);">ACTION</span> Backlog Register</h2>
+              <div class="toolbar" style="gap:6px;">
+                <select id="cbm-bl-filter-unit" class="cbm-bl-filter"><option value="">Semua Unit</option></select>
+                <select id="cbm-bl-filter-source" class="cbm-bl-filter">
+                  <option value="">Semua Source</option>
+                  <option value="Pre Inspection">Pre Inspection</option>
+                  <option value="Planning System">Planning System</option>
+                  <option value="RCA">RCA</option>
+                </select>
+                <select id="cbm-bl-filter-priority" class="cbm-bl-filter">
+                  <option value="">Semua Priority</option>
+                  <option value="Critical">Critical</option>
+                  <option value="High">High</option>
+                  <option value="Medium">Medium</option>
+                </select>
+                <button type="button" class="btn small secondary" id="cbm-bl-clear">Clear</button>
+                <button type="button" class="btn small secondary" id="cbm-bl-refresh">⟲ Refresh</button>
+              </div>
+            </div>
+            <div class="table-wrap" id="cbm-backlog-table-wrap">
+              <table id="cbm-backlog-table">
+                <thead><tr>
+                  <th>Priority</th><th>Unit</th><th>Component / Item</th>
+                  <th>Part Number</th><th>Qty</th><th>PR</th><th>Part Location</th>
+                  <th>Backlog Description</th>
+                  <th>Source</th><th>Plan / Due Date</th><th>HM</th><th>Aging</th><th>Status</th>
+                </tr></thead>
+                <tbody id="cbm-backlog-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel cbm-backlog-guide">
+            <div class="panel-head"><h2><span class="tag">FLOW</span> Backlog Control</h2></div>
+            <div class="cbm-backlog-flow">
+              <div><span class="flow-no">01</span><div><b>Identify</b><small>Temuan Pre Inspection / Plan / RCA masuk register.</small></div></div>
+              <div><span class="flow-no">02</span><div><b>Prioritize</b><small>Critical → High → Medium berdasarkan urgensi source.</small></div></div>
+              <div><span class="flow-no">03</span><div><b>Execute</b><small>Follow-up pekerjaan melalui menu sumber masing-masing.</small></div></div>
+              <div><span class="flow-no">04</span><div><b>Close</b><small>Backlog hilang dari daftar saat status sumber sudah Close.</small></div></div>
             </div>
           </div>
         </div>
@@ -6500,6 +6710,7 @@ async function loadData(){
     const pip = await appStorage.get('pre-inspection-plans');
     preInspectionPlans = pip ? JSON.parse(pip.value) : [];
   }catch(e){ preInspectionPlans = []; }
+  try{ await loadCbmBacklogExtraData(); }catch(e){ console.warn('load cbm backlog extra gagal', e); }
   try{
     const hm = await appStorage.get('hm-records');
     hmRecords = hm ? JSON.parse(hm.value) : [];
@@ -7692,7 +7903,7 @@ function setupPwaInstallSupport(){
     // tidak bisa didaftarkan dari blob: URL di browser manapun (selalu gagal & memicu
     // warning di console). Di preview sandbox (protokol blob-request:/blob:) registrasi
     // SW otomatis dilewati; fitur PWA tetap aktif normal saat web sudah di-host di http/https.
-    navigator.serviceWorker.register('sw.js', { scope:'./' }).catch(err=> console.warn('SW register failed', err));
+    navigator.serviceWorker.register('sw.js?v=20260922-1457', { scope:'./' }).catch(err=> console.warn('SW register failed', err));
   }
 }
 function bindSiteQrUI(){
@@ -16739,6 +16950,14 @@ function onKpiInspectionMonthChange(selectEl){
   kpiInspectionMonthValue = selectEl.value;
   renderDashboard();
 }
+/* ---- Top bar "Rentang Trend" — filter tampilan panel TREND KPI MAINTENANCE, MTBS Trend,
+   MTTR Trend & tabel Monthly KPI Achievement (chart + tabel semuanya turunan dari trendMonths
+   yang sama). Tidak memotong data yang disinkron ke sheet (selalu pakai trendMonthsAll penuh). */
+let cbmDashTrendRangeValue = ''; // '' = Semua Bulan (default)
+function onCbmDashTrendRangeChange(selectEl){
+  cbmDashTrendRangeValue = selectEl.value;
+  renderDashboard();
+}
 /** Target Pre Inspection: 4× per bulan per unit (tetap). */
 function weeksInMonth(year, month){
   // residual helper — target fixed 4×/bulan
@@ -16949,6 +17168,105 @@ function buildServiceAchievementTableHTML(stats){
   return { monthHeaders, body, months };
 }
 
+/** Top bar filter kecil di ATAS satu grafik/tabel KPI Dashboard: label + <select> pilihan periode. */
+function dashTopbar(label, selectHtml){
+  return `<div class="dash-panel-topbar"><span class="dash-panel-topbar-label"><span class="status-dot"></span>${label}</span>${selectHtml}</div>`;
+}
+
+/* ================= TOP BAR MENU DASHBOARD (pengelompokan tampilan) =================
+   #kpi-chart-dashboard di-render ulang setiap kali renderKPIChartDashboard() dipanggil (wrap.innerHTML
+   diganti total), sehingga pengelompokan dibuat lewat "tagging" DOM SETELAH render (bukan mengubah
+   template string yang sudah ada), supaya aman & tidak menyentuh logika chart/tabel yang sudah ada.
+   Setiap child langsung dari #kpi-chart-dashboard dicocokkan ke satu grup berdasarkan judul panel
+   (.dash-panel-title) yang ada di dalamnya, lalu disembunyikan/ditampilkan sesuai topbar aktif. */
+let activeDashboardTab = 'breakdown';
+const DASH_TAB_GROUPS = {
+  breakdown:   ['breakdown category per month', 'summary breakdown category per month'],
+  service:     ['dashboard service', 'service achievement'],
+  kpi:         ['kpi maintenance summary'],
+  monthlykpi:  ['monthly kpi achievement'],
+  trend:       ['trend kpi maintenance', 'comparison vs target', 'mtbs', 'mttr', 'contribution to reliability'],
+  quarter:     ['grafik quarter', 'kpi summary quarter']
+};
+function setDashboardTab(tab){
+  if(!DASH_TAB_GROUPS[tab]) return;
+  activeDashboardTab = tab;
+  document.querySelectorAll('#dash-menu-topbar .dash-menu-tab').forEach(function(b){
+    b.classList.toggle('active', b.dataset.dashtab === tab);
+  });
+  applyDashboardTabFilter();
+}
+/* Perintah "☁ Auto Sync" per grup topbar — dikembalikan di sini sebagai akses cepat di topbar itu
+   sendiri (selain tombol Auto Sync asli yang tetap ada di masing-masing panel/chart seperti semula):
+   - breakdown   -> sync "Breakdown Category per Month" (fungsi asli syncBreakdownCategoryToSheets)
+   - kpi         -> klik tombol asli "☁ Auto Sync KPI → Maintenance" (panel MA & PA Data Source)
+   - monthlykpi  -> sync "Monthly KPI Achievement" (fungsi asli syncMonthlyKpiAchievementToSheets)
+   Tab lain (service/trend/quarter) tidak punya perintah Auto Sync manual di dashboard awal, jadi
+   slotnya dikosongkan. Tombol ini tetap dibatasi khusus user Fahmi Fanani (class sync-only-fahmi),
+   sama seperti tombol Auto Sync aslinya. */
+const DASH_TAB_SYNC = {
+  breakdown: {
+    label: '☁ Auto Sync', title: 'Kirim chart & tabel summary Breakdown Category ke sheet "Dashboard" di spreadsheet Maintenance',
+    action: "syncBreakdownCategoryToSheets({manual:true})"
+  },
+  kpi: {
+    label: '☁ Auto Sync KPI → Maintenance', title: 'Fills Acv./Score on Maintenance tab (SEN KPI Performance). Only weeks that have ended.',
+    action: "document.getElementById('mapa-sync-kpi-btn')?.click()"
+  },
+  monthlykpi: {
+    label: '☁ Auto Sync', title: 'Kirim chart & tabel Monthly KPI Achievement ke sheet "Dashboard" di spreadsheet Maintenance',
+    action: "syncMonthlyKpiAchievementToSheets(window.__trendMonthsForSync||[], window.__monthlyKpiDefsForSync||[], {manual:true})"
+  }
+};
+function renderDashboardTopbarSync(){
+  const slot = document.getElementById('dash-menu-topbar-sync-slot');
+  if(!slot) return;
+  const cfg = DASH_TAB_SYNC[activeDashboardTab];
+  if(!cfg){ slot.innerHTML = ''; return; }
+  slot.innerHTML = `<button type="button" class="btn small sync-only-fahmi" style="white-space:nowrap" title="${cfg.title}" onclick="if(typeof isFahmiFanani==='function' && isFahmiFanani()){ ${cfg.action}; } else { alert('Fitur Sync hanya tersedia untuk user Fahmi Fanani.'); }">${cfg.label}</button>`;
+}
+function applyDashboardTabFilter(){
+  try{
+    const chart = document.getElementById('kpi-chart-dashboard');
+    if(!chart) return;
+    const tab = activeDashboardTab;
+    Array.prototype.forEach.call(chart.children, function(el){
+      // Header judul dashboard & overlay detail: selalu tampil, tidak ikut difilter topbar.
+      if(el.classList && (el.classList.contains('dash-hero-row') || el.classList.contains('kpi-detail-overlay'))){
+        el.style.display = '';
+        return;
+      }
+      // Panel "MA & PA Data Source" dipindah ke sini oleh placeMapaSourceAboveKpiCards(), tepat
+      // sebelum kartu KPI — jadi ikut masuk grup topbar "KPI Maintenance".
+      if(el.id === 'mapa-source-block'){
+        el.style.display = (tab === 'kpi') ? '' : 'none';
+        return;
+      }
+      // Panel kartu gauge KPI (MA/PA/MTBS/dst) tidak punya .dash-panel-title, dikenali lewat .kpi-dash-grid.
+      if(el.querySelector && el.querySelector('.kpi-dash-grid')){
+        el.style.display = (tab === 'kpi') ? '' : 'none';
+        return;
+      }
+      // Panel "Monthly KPI Achievement" (chart + tabel heatmap) memakai heading custom (bukan
+      // .dash-panel-title), dikenali lewat wrapper .mkpi-exec.
+      if(el.querySelector && el.querySelector('.mkpi-exec')){
+        el.style.display = (tab === 'monthlykpi') ? '' : 'none';
+        return;
+      }
+      const titleNodes = el.querySelectorAll ? el.querySelectorAll('.dash-panel-title') : [];
+      const combined = Array.prototype.map.call(titleNodes, function(t){ return (t.textContent||'').toLowerCase(); }).join(' | ');
+      let group = null;
+      for(const g in DASH_TAB_GROUPS){
+        if(DASH_TAB_GROUPS[g].some(function(k){ return combined.indexOf(k) !== -1; })){ group = g; break; }
+      }
+      // Blok tanpa judul yang dikenali (mis. konten lain di masa depan) dibiarkan tampil,
+      // supaya penambahan panel baru tidak otomatis hilang / perlu update mapping dulu.
+      el.style.display = group ? (group === tab ? '' : 'none') : '';
+    });
+    renderDashboardTopbarSync();
+  }catch(e){ console.warn('applyDashboardTabFilter', e); }
+}
+window.setDashboardTab = setDashboardTab;
 function renderKPIChartDashboard(k, globalStats){
   const wrap = document.getElementById('kpi-chart-dashboard');
   if(!wrap) return;
@@ -16985,7 +17303,7 @@ function renderKPIChartDashboard(k, globalStats){
   const quarterOptions = getQuarterOptions();
   const activeQuarterVal = (kpiTrendQuarterValue && quarterOptions.includes(kpiTrendQuarterValue)) ? kpiTrendQuarterValue : (quarterOptions[0]||'');
   const kQuarter = computeKPIsForQuarter(activeQuarterVal);
-  const quarterSelectHtml = `<select class="trend-quarter-select" onchange="onKpiTrendQuarterChange(this)">
+  const quarterSelectHtml = `<select class="trend-quarter-select dash-quarter-select dash-topbar-select" onchange="onKpiTrendQuarterChange(this)">
     ${quarterOptions.map(q=>`<option value="${q}" ${q===activeQuarterVal?'selected':''}>${quarterOptionLabel(q)}</option>`).join('')}
   </select>`;
   const quarterKpiDefs = monthlyKpiDefs.map(d=>{
@@ -17032,7 +17350,7 @@ function renderKPIChartDashboard(k, globalStats){
   }
 
   // --- All months trend: auto from Daily Maintenance + performance sheet periods ---
-  const trendMonths = [];
+  const trendMonthsAll = [];
   {
     const periodSet = new Set(getKPIPeriodOptions());
     // Include months covered by live performance sheet (periodStart–periodEnd)
@@ -17060,7 +17378,7 @@ function renderKPIChartDashboard(k, globalStats){
       const [y,m] = key.split('-').map(Number);
       const d = new Date(y, m-1, 1);
       const kk = computeKPIsFor(key); // MA/PA from performance sheet when period matches; MTBS/MTTR/PMR/SA from Daily Maintenance Approved
-      trendMonths.push({
+      trendMonthsAll.push({
         key, label: d.toLocaleDateString('en-US',{month:'short', year:'2-digit'}),
         short: d.toLocaleDateString('en-US',{month:'short'}),
         mtbs: kk.mtbs||0, mttr: kk.mttr||0, pmr: kk.pmr||0, sa: kk.sa||0, ma: kk.ma||0, pa: kk.pa||0,
@@ -17086,11 +17404,26 @@ function renderKPIChartDashboard(k, globalStats){
 
   // Auto sync diam-diam "Monthly KPI Achievement" (chart + tabel) ke sheet "Dashboard",
   // blok terpisah dari Breakdown Category (dibatasi TTL, tidak memblokir render UI).
-  autoSyncMonthlyKpiAchievementDashboard(trendMonths, monthlyKpiDefs);
+  // Sync selalu memakai data BULAN PENUH (trendMonthsAll), tidak ikut terpotong oleh filter
+  // "top bar" tampilan (trendMonths di bawah), supaya sheet tetap lengkap apa pun filter UI-nya.
+  autoSyncMonthlyKpiAchievementDashboard(trendMonthsAll, monthlyKpiDefs);
   // Disimpan di window supaya tombol "☁ Auto Sync" manual (onclick inline, scope global)
   // selalu bisa mengambil data trend/KPI TERBARU tanpa perlu re-render ulang.
-  window.__trendMonthsForSync = trendMonths;
+  window.__trendMonthsForSync = trendMonthsAll;
   window.__monthlyKpiDefsForSync = monthlyKpiDefs;
+
+  // --- Top bar "Rentang Trend" — filter tampilan (chart + tabel) untuk panel TREND KPI
+  //     MAINTENANCE, MTBS Trend, MTTR Trend & tabel Monthly KPI Achievement. Data sinkronisasi
+  //     ke sheet (di atas) tetap memakai trendMonthsAll (lengkap), hanya tampilan yang difilter. */
+  const trendRangeOptions = [
+    { value:'',   label:'Semua Bulan' },
+    { value:'3',  label:'3 Bulan Terakhir' },
+    { value:'6',  label:'6 Bulan Terakhir' },
+    { value:'12', label:'12 Bulan Terakhir' }
+  ];
+  const activeTrendRange = (typeof cbmDashTrendRangeValue!=='undefined' && trendRangeOptions.some(o=>o.value===cbmDashTrendRangeValue)) ? cbmDashTrendRangeValue : '';
+  const trendMonths = activeTrendRange ? trendMonthsAll.slice(-Number(activeTrendRange)) : trendMonthsAll;
+  const trendRangeSelectHtml = `<select class="dash-topbar-select" onchange="onCbmDashTrendRangeChange(this)">${trendRangeOptions.map(o=>`<option value="${o.value}" ${o.value===activeTrendRange?'selected':''}>${o.label}</option>`).join('')}</select>`;
 
   function sparklineSVG(values, color){
     const W=120, H=22, pad=2;
@@ -18168,7 +18501,7 @@ function renderKPIChartDashboard(k, globalStats){
 
       const labelFill = b.isActive ? '#FFC72C' : '#D0D5DC';
 
-      return `<g style="cursor:pointer" onclick="(function(){const s=document.querySelector('.trend-quarter-select');if(s){s.value='${b.qVal}';if(typeof onKpiTrendQuarterChange==='function')onKpiTrendQuarterChange(s);}})()">
+      return `<g style="cursor:pointer" onclick="(function(){const s=document.querySelector('.dash-quarter-select');if(s){s.value='${b.qVal}';if(typeof onKpiTrendQuarterChange==='function')onKpiTrendQuarterChange(s);}})()">
         <title>${b.fullLabel||b.label} · ${pct.toFixed(1)}% · ${statusLabel(pct)}</title>
         ${activeRing}
         <polygon points="${sidePts}" fill="${side}"/>
@@ -18256,7 +18589,7 @@ function renderKPIChartDashboard(k, globalStats){
     const color = QUARTER_LEGEND_PALETTE[(Math.max(1, qNum) - 1) % QUARTER_LEGEND_PALETTE.length];
     const activeCls = b.isActive ? ' active' : '';
     const qLabel = b.label || ('Q'+String(b.qVal).split('-Q')[1]);
-    return `<button type="button" class="qleg-chip${activeCls}" onclick="(function(){const s=document.querySelector('.trend-quarter-select');if(s){s.value='${b.qVal}';if(typeof onKpiTrendQuarterChange==='function')onKpiTrendQuarterChange(s);}})()">
+    return `<button type="button" class="qleg-chip${activeCls}" onclick="(function(){const s=document.querySelector('.dash-quarter-select');if(s){s.value='${b.qVal}';if(typeof onKpiTrendQuarterChange==='function')onKpiTrendQuarterChange(s);}})()">
       <span class="qleg-dot" style="background:${color};box-shadow:0 0 8px ${color}66"></span>
       <span class="qleg-label">${qLabel}</span>
       <span class="qleg-year">${b.year||''}</span>
@@ -18405,15 +18738,12 @@ function renderKPIChartDashboard(k, globalStats){
       </div>
     </div>`;
     })()}
-    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;margin-bottom:10px">
-      <span style="font-size:9px;color:var(--green);text-transform:uppercase;letter-spacing:.5px;display:inline-flex;align-items:center;gap:6px">
-        <span class="status-dot" style="margin-right:0"></span>Live Sync
-        <span style="font-size:10px;color:var(--text-dim);letter-spacing:.5px">Period</span>
-      </span>
-      ${monthlyChartSelectHtml}
+    <div class="dash-panel" style="margin-bottom:14px">
+      ${dashTopbar('Live Sync · Period', monthlyChartSelectHtml)}
+      <div class="kpi-dash-grid">${gaugeCardsHtml}</div>
     </div>
-    <div class="kpi-dash-grid">${gaugeCardsHtml}</div>
     <div class="dash-panel" style="position:relative;margin-bottom:14px">
+        ${dashTopbar('Period', monthlyChartSelectHtml)}
         <div class="dash-panel-title">KPI MAINTENANCE SUMMARY</div>
         <div style="overflow-x:auto">
           <table class="dash-sum-table">
@@ -18425,19 +18755,23 @@ function renderKPIChartDashboard(k, globalStats){
     ${(() => { const _trend = multiTrendSVG(); return `
     <div class="dash-quad-grid">
       <div class="dash-panel">
-        <div class="dash-panel-title">TREND KPI MAINTENANCE <span>(All Months · % Achievement)</span></div>
+        ${dashTopbar('Rentang Trend', trendRangeSelectHtml)}
+        <div class="dash-panel-title">TREND KPI MAINTENANCE <span>(% Achievement)</span></div>
         <div class="dash-panel-chart-fill">${_trend.chartSvg}</div>
       </div>
       <div class="dash-panel">
+        ${dashTopbar('Period', monthlyChartSelectHtml)}
         <div class="dash-panel-title">Comparison vs Target</div>
         <div class="dash-panel-chart-fill">${comparisonBarsSVG()}</div>
       </div>
       <div class="dash-panel">
-        <div class="dash-panel-title">MTBS <span>All Months Trend (Hours)</span></div>
+        ${dashTopbar('Rentang Trend', trendRangeSelectHtml)}
+        <div class="dash-panel-title">MTBS <span>Trend (Hours)</span></div>
         <div class="dash-panel-chart-fill">${mtbsTrendSVG()}</div>
       </div>
       <div class="dash-panel">
-        <div class="dash-panel-title">MTTR <span>All Months Trend (Hours)</span></div>
+        ${dashTopbar('Rentang Trend', trendRangeSelectHtml)}
+        <div class="dash-panel-title">MTTR <span>Trend (Hours)</span></div>
         <div class="dash-panel-chart-fill">${mttrTrendSVG()}</div>
       </div>
     </div>
@@ -18449,11 +18783,17 @@ function renderKPIChartDashboard(k, globalStats){
           <div class="dash-contrib-legend">${contribLegend}</div>
         </div>
       </div>
-      <div class="dash-panel">${_trend.tableHtml}</div>
+    </div>
+    <div class="dash-mid-grid">
+      <div class="dash-panel">
+        ${dashTopbar('Rentang Trend', trendRangeSelectHtml)}
+        ${_trend.tableHtml}
+      </div>
     </div>
     `; })()}
     <div class="dash-mid-grid">
       <div class="dash-panel">
+        ${dashTopbar('Triwulan', quarterSelectHtml)}
         <div class="chart-panel-title-row">
           <div class="dash-panel-title" style="margin-bottom:0">GRAFIK QUARTER</div>
         </div>
@@ -18468,6 +18808,7 @@ function renderKPIChartDashboard(k, globalStats){
         </div>
       </div>
       <div class="dash-panel">
+        ${dashTopbar('Triwulan', quarterSelectHtml)}
         <div class="dash-panel-title">KPI SUMMARY QUARTER</div>
         <div style="overflow-x:auto">
           <table class="dash-sum-table quarter-summary-table" style="width:100%;table-layout:fixed">
@@ -18485,8 +18826,8 @@ function renderKPIChartDashboard(k, globalStats){
       </div>
     </div>
     ${kpiDetailOverlay}`;
-  try{ placeMapaSourceBelowServiceAchievement(); }catch(_e){}
-  try{ requestAnimationFrame(function(){ placeMapaSourceBelowServiceAchievement(); }); }catch(_e){}
+  try{ placeMapaSourceAboveKpiCards(); applyDashboardTabFilter(); }catch(_e){}
+  try{ requestAnimationFrame(function(){ placeMapaSourceAboveKpiCards(); applyDashboardTabFilter(); }); }catch(_e){}
 }
 
 
@@ -18814,28 +19155,27 @@ function cellColor(pct){
 }
 
 
-function placeMapaSourceBelowServiceAchievement(){
+/** Tempatkan panel "MA & PA Data Source" TEPAT SEBELUM panel kartu KPI (kpi-dash-grid) di dalam
+ *  KPI Chart Dashboard, sehingga ikut masuk ke grup topbar "KPI Maintenance" bersama kartu KPI. */
+function placeMapaSourceAboveKpiCards(){
   try{
     const block = document.getElementById('mapa-source-block');
     const chart = document.getElementById('kpi-chart-dashboard');
     if(!block || !chart) return;
 
-    // Cari panel SERVICE ACHIEVEMENT di dalam chart
-    let achHost = null;
+    // Cari panel kartu KPI (kpi-dash-grid) di dalam chart
+    let kpiHost = null;
     chart.querySelectorAll('.dash-panel').forEach(p=>{
-      const t = p.querySelector('.dash-panel-title');
-      if(t && /SERVICE ACHIEVEMENT/i.test((t.textContent||'').trim())){
-        achHost = p.closest('.dash-mid-grid') || p;
-      }
+      if(!kpiHost && p.querySelector('.kpi-dash-grid')) kpiHost = p;
     });
 
-    if(achHost && achHost.parentNode){
-      // Sisipkan TEPAT setelah grid/panel SERVICE ACHIEVEMENT (di dalam chart)
-      if(block.previousSibling !== achHost){
-        achHost.parentNode.insertBefore(block, achHost.nextSibling);
+    if(kpiHost && kpiHost.parentNode){
+      // Sisipkan TEPAT sebelum panel kartu KPI (di dalam chart)
+      if(block.nextSibling !== kpiHost){
+        kpiHost.parentNode.insertBefore(block, kpiHost);
       }
       block.style.display = '';
-      block.style.marginTop = '16px';
+      block.style.marginTop = '0';
       block.style.marginBottom = '20px';
       return;
     }
@@ -18845,7 +19185,7 @@ function placeMapaSourceBelowServiceAchievement(){
       chart.parentNode.insertBefore(block, chart.nextSibling);
     }
     block.style.display = '';
-  }catch(e){ console.warn('placeMapaSourceBelowServiceAchievement', e); }
+  }catch(e){ console.warn('placeMapaSourceAboveKpiCards', e); }
 }
 
 /** Amankan panel MA&PA sebelum wrap.innerHTML menghapus isi chart (panel mungkin sudah di dalam chart). */
@@ -21871,7 +22211,7 @@ function renderCBMSafety(){
 function switchCBMTab(tab){
   cbmActiveTab = tab || 'overview';
   document.querySelectorAll('#cbm-tabs .chip').forEach(c=> c.classList.toggle('active', c.dataset.cbmTab===cbmActiveTab));
-  ['overview','lifetime','safety','pareto','insight'].forEach(t=>{
+  ['overview','lifetime','safety','pareto','insight','backlog'].forEach(t=>{
     const p = document.getElementById('cbm-tab-'+t);
     if(p) p.style.display = t===cbmActiveTab ? '' : 'none';
   });
@@ -21886,6 +22226,7 @@ function renderCBMActiveTab(){
   else if(cbmActiveTab==='safety') renderCBMSafety();
   else if(cbmActiveTab==='pareto') renderCBMPareto(rows, stats);
   else if(cbmActiveTab==='insight') renderCBMInsight(stats);
+  else if(cbmActiveTab==='backlog') renderCbmBacklog();
 }
 
 
@@ -23449,6 +23790,209 @@ function renderCBMInsight(stats){
   }).join('');
 }
 
+function cbmBacklogDays(dateStr){
+  if(!dateStr) return 0;
+  const d = new Date(dateStr);
+  if(isNaN(d.getTime())) return 0;
+  const now = new Date();
+  const base = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const day = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  return Math.max(0, Math.floor((base-day)/86400000));
+}
+function cbmBacklogPriority(source, item){
+  const txt = String(item?.desc || item?.jobDescription || item?.rootCause || '').toLowerCase();
+  const st = String(item?.status || '').toLowerCase();
+  if(source==='RCA' && /critical|crit/.test(st+' '+txt)) return 'Critical';
+  if(/waiting\s*part|spare\s*part|part\s*waiting|urgent|critical|safety|unsafe|leak|bocor|breakdown/.test(txt)) return 'High';
+  if(source==='RCA') return 'High';
+  if(source==='Planning System') return st==='open' ? 'High' : 'Medium';
+  return 'Medium';
+}
+function cbmBacklogBuildRows(){
+  const out = [];
+  // 1) Pre Inspection — only open defects
+  (Array.isArray(preInspectionRecords)?preInspectionRecords:[]).forEach(r=>{
+    const defects = Array.isArray(r.defects)?r.defects:[];
+    defects.filter(d=>String(d.status||'Open')!=='Close').forEach((d,idx)=>{
+      const date = r.tanggal || '';
+      const hm = r.hm ?? '';
+      const aging = cbmBacklogDays(date);
+      const item = {source:'Pre Inspection',unit:r.unitCode||'—',typeUnit:r.typeUnit||'',
+        component:d.component||'Inspection Finding',desc:d.desc||'Temuan Pre Inspection',
+        date,hm,aging,status:'Open',priority:cbmBacklogPriority('Pre Inspection',d),
+        id:`pre-${r.id}-${idx}`};
+      out.push(item);
+    });
+  });
+  // 2) Planning System — all records not closed
+  (Array.isArray(planningSystemRecords)?planningSystemRecords:[]).forEach(r=>{
+    const status = String(r.status||'Open');
+    if(status.toLowerCase()==='close' || status.toLowerCase()==='closed') return;
+    const date = r.planDate || r.planExecutionDate || r.tanggal || r.dueDate || '';
+    const item = {source:'Planning System',unit:r.unitCode||'—',typeUnit:r.typeUnit||'',
+      component:r.component||'Maintenance Job',desc:r.jobDescription||r.jobDesc||r.description||'Planned maintenance backlog',
+      date,hm:r.hm||r.hmPlan||'',aging:cbmBacklogDays(r.dueDate||date),status,
+      priority:cbmBacklogPriority('Planning System',r),id:`ps-${r.id||Math.random()}`};
+    out.push(item);
+  });
+  // 3) RCA — action records still Open / In Progress
+  (Array.isArray(rcaRecords)?rcaRecords:[]).forEach(r=>{
+    const status = String(r.status||'Open');
+    if(['close','closed','verified'].includes(status.toLowerCase())) return;
+    const date = r.tanggal || (r.createdAt ? String(r.createdAt).slice(0,10) : '');
+    const item = {source:'RCA',unit:r.unitCode||'—',typeUnit:r.typeUnit||'',
+      component:r.component||'—',desc:r.preventive||r.corrective||r.rootCause||'RCA follow-up',
+      date,hm:r.hm||'',aging:cbmBacklogDays(date),status,
+      priority:cbmBacklogPriority('RCA',r),id:`rca-${r.id||Math.random()}`};
+    out.push(item);
+  });
+  const visible = out.filter(r=>!cbmBacklogDismissed[r.id]);
+  visible.forEach(r=>{
+    const extra = cbmBacklogExtra[r.id] || {};
+    r.partNumber = extra.partNumber || '';
+    r.qty = extra.qty || '';
+    r.pr = extra.pr || '';
+    r.partLocation = extra.partLocation || '';
+  });
+  return visible.sort((a,b)=>{
+    const rank={Critical:0,High:1,Medium:2};
+    return (rank[a.priority]??9)-(rank[b.priority]??9) || (b.aging||0)-(a.aging||0);
+  });
+}
+function renderCbmBacklog(){
+  const rows = cbmBacklogBuildRows();
+  const unitSel = document.getElementById('cbm-bl-filter-unit');
+  const sourceSel = document.getElementById('cbm-bl-filter-source');
+  const priSel = document.getElementById('cbm-bl-filter-priority');
+  if(unitSel){
+    const current = unitSel.value;
+    const units = Array.from(new Set(rows.map(r=>r.unit).filter(Boolean)));
+    unitSel.innerHTML = '<option value="">Semua Unit</option>'+units.map(u=>`<option value="${escUH(u)}">${escUH(u)}</option>`).join('');
+    unitSel.value = units.includes(current)?current:'';
+  }
+  const unit = unitSel?.value || '', source = sourceSel?.value || '', priority = priSel?.value || '';
+  const filtered = rows.filter(r=>(!unit||r.unit===unit)&&(!source||r.source===source)&&(!priority||r.priority===priority));
+  const total = rows.length;
+  const critical = rows.filter(r=>r.priority==='Critical'||r.priority==='High').length;
+  const waiting = rows.filter(r=>/waiting\s*part|spare\s*part|part\s*waiting/i.test(r.desc)).length;
+  const aging = rows.filter(r=>(r.aging||0)>7).length;
+  const setText=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  setText('cbm-bl-total',total); setText('cbm-bl-critical',critical); setText('cbm-bl-waiting',waiting); setText('cbm-bl-aging',aging);
+  setText('cbm-backlog-count',total);
+  const summary=document.getElementById('cbm-backlog-summary');
+  if(summary) summary.textContent = total ? `${critical} PRIORITAS · ${aging} AGING > 7 HARI` : 'NO OPEN BACKLOG';
+  const tbody=document.getElementById('cbm-backlog-tbody');
+  if(!tbody) return;
+  if(!filtered.length){
+    tbody.innerHTML='<tr class="empty-row"><td colspan="13">Tidak ada backlog sesuai filter.</td></tr>';
+    return;
+  }
+  const esc=(v)=>escUH(v==null?'':String(v));
+  tbody.innerHTML=filtered.map(r=>{
+    const pc=r.priority.toLowerCase();
+    const agingClass=(r.aging||0)>7?'overdue':'';
+    const date=r.date?formatDateDMY(r.date):'—';
+    const hm=r.hm!==''&&r.hm!=null?Number(r.hm).toLocaleString('id-ID'):'—';
+    return `<tr data-row-id="${esc(r.id)}">
+      <td><span class="cbm-bl-priority ${pc}">${esc(r.priority)}</span></td>
+      <td><b>${esc(r.unit)}</b></td>
+      <td><span class="cbm-bl-component">${esc(r.component)}</span></td>
+      <td>${r.partNumber?esc(r.partNumber):'—'}</td>
+      <td>${r.qty?esc(r.qty):'—'}</td>
+      <td>${r.pr?esc(r.pr):'—'}</td>
+      <td>${r.partLocation?esc(r.partLocation):'—'}</td>
+      <td class="cbm-bl-desc">${esc(r.desc)}</td>
+      <td><span class="cbm-bl-source">${esc(r.source)}</span></td>
+      <td>${date}</td>
+      <td>${hm}</td>
+      <td><span class="cbm-bl-aging ${agingClass}">${r.aging||0} hari</span></td>
+      <td><span class="pill ${String(r.status).toLowerCase()==='open'?'ai-high':''}">${esc(r.status)}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+/* ===== CBM BACKLOG — Edit/Hapus Part Number, Qty, PR, Part Location =====
+   Data tambahan disimpan terpisah (keyed by id baris backlog) karena baris backlog
+   sendiri dibangun ulang dinamis dari Pre Inspection / Planning System / RCA setiap
+   render. "Hapus" berarti menyembunyikan baris tsb dari daftar Backlog (dismissed),
+   sumber datanya di menu asal tidak ikut terhapus. Modal hanya bisa dibuka lewat
+   double-click pada baris, dan hanya untuk user Fahmi Fanani — tidak ada tombol/menu
+   edit atau hapus apapun yang ditampilkan di tabel Backlog untuk user lain. */
+let cbmBacklogExtra = {};
+let cbmBacklogDismissed = {};
+let cbmBacklogEditRowId = null;
+async function loadCbmBacklogExtraData(){
+  try{
+    const cbe = await appStorage.get('cbm-backlog-extra');
+    cbmBacklogExtra = cbe ? JSON.parse(cbe.value) : {};
+  }catch(e){ cbmBacklogExtra = {}; }
+  try{
+    const cbd = await appStorage.get('cbm-backlog-dismissed');
+    cbmBacklogDismissed = cbd ? JSON.parse(cbd.value) : {};
+  }catch(e){ cbmBacklogDismissed = {}; }
+}
+async function saveCbmBacklogExtra(){
+  try{ await appStorage.set('cbm-backlog-extra', JSON.stringify(cbmBacklogExtra)); }
+  catch(e){ console.error('save cbm backlog extra failed', e); }
+}
+async function saveCbmBacklogDismissed(){
+  try{ await appStorage.set('cbm-backlog-dismissed', JSON.stringify(cbmBacklogDismissed)); }
+  catch(e){ console.error('save cbm backlog dismissed failed', e); }
+}
+function openCbmBacklogEditModal(rowId){
+  if(!isFahmiFanani() || !rowId) return;
+  const row = cbmBacklogBuildRows().find(r=>r.id===rowId);
+  if(!row) return;
+  cbmBacklogEditRowId = rowId;
+  const info = document.getElementById('cbm-bl-edit-info');
+  if(info) info.innerHTML = `<b>${escUH(row.unit)}</b> — ${escUH(row.component)} <span style="color:var(--text-faint)">(${escUH(row.source)})</span>`;
+  const setv=(id,v)=>{ const el=document.getElementById(id); if(el) el.value = v||''; };
+  setv('cbm-bl-edit-partnumber', row.partNumber);
+  setv('cbm-bl-edit-qty', row.qty);
+  setv('cbm-bl-edit-pr', row.pr);
+  setv('cbm-bl-edit-location', row.partLocation);
+  document.getElementById('cbm-backlog-edit-overlay')?.classList.add('show');
+}
+function closeCbmBacklogEditModal(){
+  cbmBacklogEditRowId = null;
+  document.getElementById('cbm-backlog-edit-overlay')?.classList.remove('show');
+}
+(function initCbmBacklogEditHandlers(){
+  document.getElementById('cbm-backlog-tbody')?.addEventListener('dblclick', (e)=>{
+    if(!isFahmiFanani()) return;
+    const tr = e.target.closest('tr[data-row-id]');
+    if(!tr) return;
+    openCbmBacklogEditModal(tr.dataset.rowId);
+  });
+  document.getElementById('cbm-bl-edit-modal-close')?.addEventListener('click', closeCbmBacklogEditModal);
+  document.getElementById('cbm-bl-edit-cancel')?.addEventListener('click', closeCbmBacklogEditModal);
+  document.getElementById('cbm-backlog-edit-overlay')?.addEventListener('click', (e)=>{
+    if(e.target && e.target.id==='cbm-backlog-edit-overlay') closeCbmBacklogEditModal();
+  });
+  document.getElementById('cbm-bl-edit-save')?.addEventListener('click', async ()=>{
+    if(!isFahmiFanani() || !cbmBacklogEditRowId) return;
+    cbmBacklogExtra[cbmBacklogEditRowId] = {
+      partNumber: String(document.getElementById('cbm-bl-edit-partnumber')?.value||'').trim(),
+      qty: String(document.getElementById('cbm-bl-edit-qty')?.value||'').trim(),
+      pr: String(document.getElementById('cbm-bl-edit-pr')?.value||'').trim(),
+      partLocation: String(document.getElementById('cbm-bl-edit-location')?.value||'').trim()
+    };
+    await saveCbmBacklogExtra();
+    closeCbmBacklogEditModal();
+    renderCbmBacklog();
+  });
+  document.getElementById('cbm-bl-edit-delete')?.addEventListener('click', async ()=>{
+    if(!isFahmiFanani() || !cbmBacklogEditRowId) return;
+    if(!confirm('Hapus baris ini dari daftar Backlog? Data pada menu sumber (Pre Inspection/Planning System/RCA) tidak akan terhapus.')) return;
+    cbmBacklogDismissed[cbmBacklogEditRowId] = true;
+    delete cbmBacklogExtra[cbmBacklogEditRowId];
+    await saveCbmBacklogDismissed();
+    await saveCbmBacklogExtra();
+    closeCbmBacklogEditModal();
+    renderCbmBacklog();
+  });
+})();
+
 function renderCBM(){
   initCBMFilters();
   switchCBMTab(cbmActiveTab);
@@ -23499,6 +24043,16 @@ function renderCBM(){
     const c=document.getElementById('cbm-filter-comp'); if(c) c.value='';
     renderCBMActiveTab();
   });
+  ['cbm-bl-filter-unit','cbm-bl-filter-source','cbm-bl-filter-priority'].forEach(id=>{
+    document.getElementById(id)?.addEventListener('change', ()=> renderCbmBacklog());
+  });
+  document.getElementById('cbm-bl-clear')?.addEventListener('click', ()=>{
+    ['cbm-bl-filter-unit','cbm-bl-filter-source','cbm-bl-filter-priority'].forEach(id=>{
+      const el=document.getElementById(id); if(el) el.value='';
+    });
+    renderCbmBacklog();
+  });
+  document.getElementById('cbm-bl-refresh')?.addEventListener('click', ()=> renderCbmBacklog());
   document.getElementById('cbm-refresh')?.addEventListener('click', async ()=>{
     try{ if(typeof ensureHmSynced==='function') await ensureHmSynced({ force:true }); }catch(e){}
     try{ if(typeof ensurePerformanceSynced==='function') await ensurePerformanceSynced({ force:true }); }catch(e){}
@@ -24445,7 +24999,7 @@ function subscribeDailyRealtime(){
     await fixCodeBDChronologicalOrder();
     await syncCodeBDChronological();
     renderAll();
-    try{ placeMapaSourceBelowServiceAchievement(); }catch(_e){}
+    try{ placeMapaSourceAboveKpiCards(); }catch(_e){}
     updateRoleUI();
     applySavedNavOrder();
     requestNotifPermission();
