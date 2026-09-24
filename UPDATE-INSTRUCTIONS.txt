@@ -1,12 +1,14 @@
 SEN-FleetCare — PWA UPDATE PACKAGE
-Tanggal: 22 September 2026
+Tanggal: 24 September 2026
 
 TUJUAN
 Memaksa aplikasi desktop dan HP/PWA mengambil HTML Dashboard terbaru dari GitHub Pages,
-terutama perubahan Dashboard Grouped Top Bar.
+yaitu versi dengan perubahan terbaru pada Backlog Register (ukuran teks tabel & header),
+grafik Register Status Mix (ukuran teks diperbesar), dan penghapusan tab "Backlog" dari
+topbar menu CBM.
 
 FILE YANG PERLU DIUPLOAD KE REPOSITORY GITHUB
-1. index.html                         -> file aplikasi terbaru
+1. index.html                         -> file aplikasi terbaru (sudah termasuk semua update)
 2. sw.js                              -> Service Worker baru dengan cache version baru
 3. manifest.json                      -> manifest PWA
 
@@ -16,23 +18,29 @@ sudah ada. Jangan hapus asset lama.
 
 JIKA FILE UTAMA REPOSITORY BUKAN index.html
 Gunakan file SEN-FleetCare-CBM-Backlog_2_2.html sebagai pengganti file HTML utama yang
-sekarang dipakai, lalu pastikan URL aplikasi memang mengarah ke file tersebut. Untuk
-GitHub Pages root, disarankan memakai index.html.
+sekarang dipakai (isinya sama persis dengan index.html versi terbaru ini), lalu pastikan
+URL aplikasi memang mengarah ke file tersebut. Untuk GitHub Pages root, disarankan
+memakai index.html.
 
 SETELAH PUSH KE GITHUB
 1. Tunggu GitHub Pages selesai build/deploy.
 2. Buka URL aplikasi di browser desktop.
 3. Tekan Ctrl+Shift+R sekali untuk hard refresh.
-4. Jika aplikasi terpasang sebagai PWA, tutup semua jendela aplikasi lalu buka kembali.
+4. Jika aplikasi terpasang sebagai PWA (desktop maupun HP), tutup semua jendela aplikasi
+   lalu buka kembali.
 5. Di HP Android Chrome: buka URL → menu ⋮ → Reload. Jika masih versi lama, buka
    Settings → Site settings/Storage untuk situs tersebut dan hapus data situs, lalu buka lagi.
+6. Di iPhone/iPad (Safari, PWA "Add to Home Screen"): hapus ikon aplikasi dari layar
+   utama lalu tambahkan ulang dari Safari agar mengambil sw.js dan HTML terbaru.
 
 CATATAN
-sw.js baru menggunakan versi cache: sen-fleetcare-20260922-1457.
-Halaman HTML/navigation menggunakan network-first + cache:no-store sehingga deployment
-HTML terbaru dari GitHub diprioritaskan. Cache lama akan dihapus saat Service Worker baru
-aktif.
+sw.js baru menggunakan versi cache: sen-fleetcare-20260924-1200 (berbeda dari versi
+sebelumnya sen-fleetcare-20260922-1457), sehingga cache lama otomatis dihapus saat
+Service Worker baru aktif. Halaman HTML/navigation menggunakan network-first +
+cache:no-store sehingga deployment HTML terbaru dari GitHub selalu diprioritaskan.
 
 PENTING
 Jangan hanya mengganti index.html jika repository/PWA masih menggunakan sw.js lama.
-Upload index.html + sw.js + manifest.json bersama-sama.
+Upload index.html + sw.js + manifest.json bersama-sama (dan SEN-FleetCare-CBM-Backlog_2_2.html
+bila repository memakainya sebagai file utama), agar update di aplikasi desktop maupun
+mobile/PWA sama-sama mengambil versi HTML yang terbaru ini.
