@@ -171,6 +171,34 @@ body:not(.role-wa-sync-allowed) .sync-only-fahmi{
   display:none !important;
 }
 .sp-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px;}
+/* ===== BACKLOG REGISTER — SOURCE CODING + TOP HORIZONTAL SCROLL ===== */
+#cbm-backlog-table-wrap.cbm-backlog-table-viewport{overflow-x:hidden!important;overflow-y:visible!important;}
+.cbm-backlog-top-scroll{
+  width:100%; height:13px; overflow-x:auto; overflow-y:hidden; margin:0 0 4px;
+  border-radius:8px; background:rgba(255,255,255,.025);
+  border:1px solid rgba(255,255,255,.055);
+  scrollbar-color:#59636e rgba(255,255,255,.035);
+  scrollbar-width:thin;
+}
+.cbm-backlog-top-scroll::-webkit-scrollbar{height:9px}
+.cbm-backlog-top-scroll::-webkit-scrollbar-track{background:rgba(255,255,255,.035);border-radius:10px}
+.cbm-backlog-top-scroll::-webkit-scrollbar-thumb{background:#59636e;border-radius:10px;border:2px solid transparent;background-clip:padding-box}
+.cbm-backlog-top-scroll-inner{height:1px;min-width:100%;}
+#cbm-backlog-table{min-width:1420px;}
+.cbm-bl-source{
+  display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:7px;
+  font:700 9px/1.15 'JetBrains Mono',monospace;letter-spacing:.25px;white-space:nowrap;
+  border:1px solid transparent;
+}
+.cbm-bl-source:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor;}
+.cbm-bl-source.source-pre{color:#62d9ff;background:rgba(98,217,255,.10);border-color:rgba(98,217,255,.24);}
+.cbm-bl-source.source-plan{color:#ffc72c;background:rgba(255,199,44,.10);border-color:rgba(255,199,44,.25);}
+.cbm-bl-source.source-daily-unplan{color:#ff8a65;background:rgba(255,107,53,.12);border-color:rgba(255,107,53,.28);}
+.cbm-bl-source.source-other{color:#aeb7c2;background:rgba(174,183,194,.07);border-color:rgba(174,183,194,.16);}
+.cbm-bl-daily-part{
+  margin-top:4px;display:block;color:#9aa6b2;font:600 8px/1.35 'JetBrains Mono',monospace;
+}
+.cbm-bl-part-used{color:#ffbd9f!important;}
 @media(max-width:900px){.sp-kpi-grid{grid-template-columns:repeat(2,1fr);}}
 .sp-kpi{background:linear-gradient(165deg,#161b22 0%,#10141a 100%);border:1px solid var(--line);border-radius:10px;padding:14px 16px;}
 .sp-kpi .sp-kpi-label{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim);margin-bottom:6px;}
@@ -472,6 +500,202 @@ body:not(.role-wa-sync-allowed) .sync-only-fahmi{
   font-family:'JetBrains Mono',monospace;
 }
 
+
+/* ===== CBM BACKLOG — ACTION CONTROL ===== */
+.cbm-backlog-tab{position:relative;display:inline-flex!important;align-items:center;gap:7px;}
+.cbm-backlog-count{
+  display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:18px;
+  padding:0 6px;border-radius:10px;background:rgba(255,107,53,.16);border:1px solid rgba(255,107,53,.32);
+  color:#ff9a76;font:700 10px/1 'JetBrains Mono',monospace;
+}
+.cbm-backlog-tab.active .cbm-backlog-count{background:#ff6b35;color:#fff;border-color:#ff6b35;box-shadow:0 0 12px rgba(255,107,53,.28);}
+.cbm-backlog-hero{
+  display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:16px;padding:18px 20px;
+  border:1px solid rgba(255,107,53,.22);border-radius:12px;
+  background:
+    radial-gradient(ellipse 60% 100% at 0% 0%,rgba(255,107,53,.12),transparent 60%),
+    linear-gradient(145deg,rgba(255,255,255,.035),rgba(255,255,255,.012)),#11161c;
+  box-shadow:0 10px 30px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.04);
+}
+.cbm-backlog-kicker{font:700 9px/1 'JetBrains Mono',monospace;letter-spacing:1.4px;color:var(--orange);margin-bottom:6px;}
+.cbm-backlog-title{font:600 25px/1.05 'Oswald',sans-serif;letter-spacing:.6px;color:#f2f4f7;}
+.cbm-backlog-sub{max-width:760px;margin-top:7px;font-size:11.5px;line-height:1.5;color:var(--text-dim);}
+.cbm-backlog-summary{
+  min-width:160px;text-align:center;padding:12px 14px;border-radius:10px;
+  background:rgba(255,107,53,.07);border:1px solid rgba(255,107,53,.18);
+  color:#ffb08f;font:700 11px/1.35 'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.5px;
+}
+.cbm-backlog-kpis{margin-bottom:16px;}
+.cbm-backlog-kpi{padding:14px 16px;position:relative;overflow:hidden;}
+.cbm-backlog-kpi::after{content:'';position:absolute;right:-18px;bottom:-26px;width:80px;height:80px;border-radius:50%;background:rgba(255,107,53,.05);}
+.cbm-bl-filter{min-width:120px!important;width:auto!important;padding:7px 9px!important;font-size:11px!important;}
+#cbm-backlog-table th{background:#262c35;color:#eef1f4;}
+#cbm-backlog-table td{vertical-align:middle;}
+.cbm-bl-priority{display:inline-flex;align-items:center;gap:5px;min-width:72px;justify-content:center;padding:4px 8px;border-radius:6px;font:700 9px/1 'JetBrains Mono',monospace;letter-spacing:.35px;}
+.cbm-bl-priority.critical{color:#ff8589;background:rgba(229,72,77,.13);border:1px solid rgba(229,72,77,.25);}
+.cbm-bl-priority.high{color:#ff9a76;background:rgba(255,107,53,.13);border:1px solid rgba(255,107,53,.25);}
+.cbm-bl-priority.medium{color:#ffd86a;background:rgba(255,199,44,.10);border:1px solid rgba(255,199,44,.22);}
+.cbm-bl-source{font:600 9px/1.2 'JetBrains Mono',monospace;color:var(--text-dim);white-space:nowrap;}
+.cbm-bl-aging{font:700 10px 'JetBrains Mono',monospace;color:var(--text-dim);}
+.cbm-bl-aging.overdue{color:var(--red);}
+.cbm-bl-desc{min-width:250px;white-space:normal;text-align:left;line-height:1.4;font-size:11px;}
+.cbm-bl-component{font-family:'Oswald',sans-serif;color:#6fe0b0;font-size:12px;letter-spacing:.35px;}
+.cbm-backlog-guide{margin-top:16px;}
+.cbm-backlog-flow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.cbm-backlog-flow>div{display:flex;gap:9px;align-items:flex-start;padding:11px;border:1px solid rgba(255,255,255,.07);border-radius:8px;background:rgba(255,255,255,.02);}
+.cbm-backlog-flow .flow-no{display:inline-flex;align-items:center;justify-content:center;flex:0 0 26px;height:26px;border-radius:7px;background:rgba(255,199,44,.12);color:var(--yellow);font:700 10px 'JetBrains Mono',monospace;}
+.cbm-backlog-flow b{display:block;font:600 12px 'Oswald',sans-serif;color:#eef1f4;margin-bottom:2px;}
+.cbm-backlog-flow small{display:block;color:var(--text-dim);font-size:10px;line-height:1.35;}
+@media(max-width:900px){
+  .cbm-backlog-hero{align-items:flex-start;flex-direction:column;}
+  .cbm-backlog-summary{width:100%;}
+  .cbm-backlog-flow{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:640px){
+  .cbm-backlog-flow{grid-template-columns:1fr;}
+  .cbm-bl-filter{min-width:105px!important;}
+}
+
+/* ===== CBM BACKLOG — EXECUTIVE / PREMIUM REDESIGN ===== */
+.cbm-backlog-dashboard{display:grid;grid-template-columns:1.35fr .95fr;gap:16px;margin:0 0 16px}
+.cbm-backlog-chart-card{position:relative;overflow:hidden;background:linear-gradient(145deg,rgba(23,29,37,.98),rgba(10,14,19,.98));border:1px solid rgba(255,255,255,.075);border-radius:16px;padding:16px 17px 13px;min-height:260px;box-shadow:0 14px 38px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.035)}
+.cbm-backlog-chart-card:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 88% 10%,rgba(255,199,44,.09),transparent 34%);pointer-events:none}
+.cbm-backlog-chart-head{position:relative;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px}
+.cbm-backlog-chart-title{font:700 13px 'Oswald',sans-serif;letter-spacing:.75px;text-transform:uppercase;color:#f5f7f9}
+.cbm-backlog-chart-sub{font:9px 'JetBrains Mono',monospace;color:#737d88;margin-top:4px}
+.cbm-backlog-chart{height:195px;position:relative}
+.cbm-backlog-chart svg{width:100%;height:195px;display:block;overflow:visible}
+.cbm-backlog-legend{display:flex;flex-wrap:wrap;gap:13px;margin-top:0;font:9px 'JetBrains Mono',monospace;color:#8d97a2}
+.cbm-backlog-legend span{display:inline-flex;align-items:center;gap:5px}.cbm-backlog-legend i{width:7px;height:7px;border-radius:50%;display:inline-block;box-shadow:0 0 8px currentColor}
+.cbm-bl-editable{cursor:pointer;position:relative;transition:.15s ease}.cbm-bl-editable::after{content:''}.cbm-bl-editable:hover{background:rgba(255,199,44,.075)!important;box-shadow:inset 0 0 0 1px rgba(255,199,44,.2)}
+.cbm-bl-closed-row td{background:rgba(76,175,109,.022)!important;color:#aeb7c0}
+.cbm-bl-status{display:inline-flex;align-items:center;gap:5px;padding:4px 8px!important;border-radius:999px!important;border:1px solid transparent;font:700 10px 'JetBrains Mono',monospace!important;letter-spacing:.2px;text-transform:uppercase}.cbm-bl-status:before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;box-shadow:0 0 7px currentColor}
+.cbm-bl-status.closed{color:#73d69a;background:rgba(76,175,109,.10);border-color:rgba(76,175,109,.22)}.cbm-bl-status.open{color:#ffad85;background:rgba(255,107,53,.10);border-color:rgba(255,107,53,.22)}.cbm-bl-status.in-progress{color:#ffe08a;background:rgba(255,199,44,.09);border-color:rgba(255,199,44,.2)}.cbm-bl-status.verified{color:#8fcfff;background:rgba(74,144,217,.1);border-color:rgba(74,144,217,.2)}
+.cbm-backlog-kpis{gap:12px!important;margin-bottom:16px!important}.cbm-backlog-kpi{border-radius:13px!important;background:linear-gradient(145deg,#151c24,#0d1217)!important;border:1px solid rgba(255,255,255,.065)!important;box-shadow:0 8px 24px rgba(0,0,0,.18)!important;padding:14px 15px!important}.cbm-backlog-kpi .cat-label{font-size:9px!important;letter-spacing:.8px}.cbm-backlog-kpi .type{font-size:25px!important;line-height:1.05;margin:7px 0 4px}.cbm-backlog-kpi .hint{font-size:8px!important;color:#69737e!important}
+#cbm-backlog-table-wrap{border-radius:14px;overflow:auto;border:1px solid rgba(255,255,255,.07);background:#0d1217;box-shadow:0 14px 35px rgba(0,0,0,.2)}
+#cbm-backlog-table{min-width:1500px;border-collapse:separate;border-spacing:0}#cbm-backlog-table thead th{position:sticky;top:0;z-index:5;background:linear-gradient(180deg,#1a222b,#131a21)!important;color:#8f9aa6!important;border-bottom:1px solid rgba(255,199,44,.18)!important;font:700 8px 'JetBrains Mono',monospace!important;letter-spacing:.55px;text-transform:uppercase;padding:11px 9px!important;white-space:nowrap}#cbm-backlog-table tbody td{padding:10px 9px!important;border-bottom:1px solid rgba(255,255,255,.045)!important;font-size:9px!important;color:#c8ced5;background:#0e141a}#cbm-backlog-table tbody tr:hover td{background:rgba(255,199,44,.035)!important}
+.cbm-bl-priority{display:inline-flex;padding:4px 7px;border-radius:5px;font:700 10px 'JetBrains Mono',monospace;letter-spacing:.25px}.cbm-bl-priority.critical{color:#ff8f8f;background:rgba(229,72,77,.11)}.cbm-bl-priority.high{color:#ffae83;background:rgba(255,107,53,.1)}.cbm-bl-priority.medium{color:#ffe18a;background:rgba(255,199,44,.08)}
+.cbm-bl-component{font-weight:700;color:#eef1f4}.cbm-bl-source{font:700 8px 'JetBrains Mono',monospace;color:#9da7b1;padding:4px 7px;border:1px solid rgba(255,255,255,.07);border-radius:5px;background:rgba(255,255,255,.025)}.cbm-bl-aging{font:700 8px 'JetBrains Mono',monospace;color:#89939e}.cbm-bl-aging.overdue{color:#ff9b78}
+.cbm-backlog-filter-note{font:8px 'JetBrains Mono',monospace;color:#68727d;padding:9px 11px;background:#0b1015;border-top:1px solid rgba(255,255,255,.045)}
+@media(max-width:900px){.cbm-backlog-dashboard{grid-template-columns:1fr}.cbm-backlog-chart-card{min-height:245px}}
+@media(max-width:640px){.cbm-backlog-kpis{grid-template-columns:repeat(2,1fr)!important}.cbm-backlog-chart-card{padding:13px}}
+
+
+/* ===== BACKLOG REGISTER — CLARITY / EASY-TO-READ REDESIGN ===== */
+.cbm-backlog-read-guide{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 8px;padding:9px 12px;border:1px solid rgba(255,199,44,.12);border-radius:10px;background:linear-gradient(90deg,rgba(255,199,44,.055),rgba(255,255,255,.018));}
+.cbm-backlog-read-title{display:flex;align-items:center;gap:7px;white-space:nowrap;font:700 9px 'Oswald',sans-serif;letter-spacing:.65px;text-transform:uppercase;color:#dce2e7}.cbm-read-dot{width:7px;height:7px;border-radius:50%;background:#ffc72c;box-shadow:0 0 8px rgba(255,199,44,.45)}
+.cbm-backlog-read-flow{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;font:8px 'JetBrains Mono',monospace;color:#78838e}.cbm-backlog-read-flow span{display:inline-flex;align-items:center;gap:5px}.cbm-backlog-read-flow b{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:5px;background:#171f27;color:#ffc72c;font-size:7px}.cbm-backlog-read-flow i{font-style:normal;color:#56616c}
+#cbm-backlog-table{min-width:1560px!important}
+#cbm-backlog-table thead .cbm-backlog-group-head th{position:sticky;top:0;z-index:8;height:32px;box-sizing:border-box;padding:0 10px!important;line-height:32px;background:linear-gradient(180deg,#101820,#0c1218)!important;color:#6f7d89!important;border-bottom:1px solid rgba(255,255,255,.055)!important;font:700 9px 'JetBrains Mono',monospace!important;letter-spacing:1px;text-align:left!important;vertical-align:middle;white-space:nowrap}
+#cbm-backlog-table thead .cbm-backlog-group-head th:nth-child(1){color:#aab4bd!important;border-left:3px solid #ffc72c}
+#cbm-backlog-table thead .cbm-backlog-group-head th:nth-child(2){color:#8fcfff!important;border-left:3px solid #4a90d9}
+#cbm-backlog-table thead .cbm-backlog-group-head th:nth-child(3){color:#9fe0b7!important;border-left:3px solid #4caf6d}
+#cbm-backlog-table thead .cbm-backlog-column-head th{position:sticky;top:32px;z-index:9;height:40px;box-sizing:border-box;padding:0 10px!important;line-height:40px;background:linear-gradient(180deg,#202a34,#161e26)!important;color:#e1e6ea!important;border-bottom:1px solid rgba(255,199,44,.18)!important;font:700 10px 'JetBrains Mono',monospace!important;letter-spacing:.5px;text-transform:uppercase;white-space:nowrap;vertical-align:middle}
+#cbm-backlog-table thead .cbm-backlog-column-head th:nth-child(1),#cbm-backlog-table thead .cbm-backlog-column-head th:nth-child(2){background:linear-gradient(180deg,#26323e,#1a242e)!important}
+#cbm-backlog-table tbody tr{transition:background .15s ease,transform .15s ease}
+#cbm-backlog-table tbody tr:nth-child(even) td{background:#10171e}
+#cbm-backlog-table tbody tr:nth-child(odd) td{background:#0d141a}
+#cbm-backlog-table tbody tr:hover td{background:#172129!important}
+#cbm-backlog-table tbody td{height:56px!important;padding:9px 10px!important;font-size:11px!important;vertical-align:middle!important}
+#cbm-backlog-table td:nth-child(3){min-width:170px}
+#cbm-backlog-table td:nth-child(8){min-width:300px}
+#cbm-backlog-table td:nth-child(9){min-width:125px}
+#cbm-backlog-table td:nth-child(10){white-space:nowrap}
+#cbm-backlog-table td:nth-child(11),#cbm-backlog-table td:nth-child(12),#cbm-backlog-table td:nth-child(13){text-align:center}
+#cbm-backlog-table td:nth-child(4),#cbm-backlog-table td:nth-child(5),#cbm-backlog-table td:nth-child(6),#cbm-backlog-table td:nth-child(7){font-family:'JetBrains Mono',monospace;font-size:10px!important;color:#aeb8c2!important}
+#cbm-backlog-table td:nth-child(4) .cbm-bl-editable,#cbm-backlog-table td:nth-child(5) .cbm-bl-editable,#cbm-backlog-table td:nth-child(6) .cbm-bl-editable,#cbm-backlog-table td:nth-child(7) .cbm-bl-editable{font-family:'JetBrains Mono',monospace}
+#cbm-backlog-table .cbm-bl-source{font-size:10px!important;padding:5px 8px!important;border-radius:6px!important}
+#cbm-backlog-table .cbm-bl-source.source-pre{color:#8fdcff!important;background:rgba(74,144,217,.11)!important;border-color:rgba(74,144,217,.28)!important}
+#cbm-backlog-table .cbm-bl-source.source-pre:before{background:#4a90d9!important;box-shadow:0 0 7px rgba(74,144,217,.5)!important}
+#cbm-backlog-table .cbm-bl-source.source-plan{color:#ffe08a!important;background:rgba(255,199,44,.10)!important;border-color:rgba(255,199,44,.27)!important}
+#cbm-backlog-table .cbm-bl-source.source-plan:before{background:#ffc72c!important;box-shadow:0 0 7px rgba(255,199,44,.5)!important}
+#cbm-backlog-table .cbm-bl-source.source-other{color:#b7c0c8!important}
+#cbm-backlog-table .cbm-bl-component{font-size:12px!important;line-height:1.3!important}
+#cbm-backlog-table .cbm-bl-desc{font-size:11px!important;line-height:1.45!important;color:#c0c8cf!important}
+#cbm-backlog-table .cbm-bl-aging{min-width:58px;padding:5px 7px!important;font-size:10px!important}
+#cbm-backlog-table .cbm-bl-aging.overdue{font-weight:800!important}
+#cbm-backlog-table .cbm-bl-status{min-width:82px;justify-content:center}
+@media(max-width:900px){.cbm-backlog-read-guide{align-items:flex-start;flex-direction:column}.cbm-backlog-read-flow{justify-content:flex-start}.cbm-backlog-read-flow i{display:none}}
+@media(max-width:640px){.cbm-backlog-read-guide{padding:8px 10px}.cbm-backlog-read-flow{gap:7px}.cbm-backlog-read-flow span{font-size:7px}}
+
+/* ===== PLAN SERVICE — SUB TOPBAR / TABLE WORKSPACE ===== */
+.ps-subnav{
+  display:flex;align-items:center;gap:7px;flex-wrap:wrap;
+  margin:0 0 14px;padding:8px;
+  background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.018));
+  border:1px solid rgba(255,199,44,.16);border-radius:10px;
+  box-shadow:0 8px 22px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.035);
+  position:sticky;top:0;z-index:30;backdrop-filter:blur(10px);
+}
+.ps-subtab{
+  appearance:none;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025);
+  color:var(--text-dim);padding:9px 13px;border-radius:8px;cursor:pointer;
+  font:700 11px 'Oswald',sans-serif;letter-spacing:.55px;text-transform:uppercase;
+  display:inline-flex;align-items:center;gap:7px;transition:.16s ease;
+}
+.ps-subtab:hover{color:var(--text);border-color:rgba(255,199,44,.32);background:rgba(255,199,44,.06)}
+.ps-subtab.active{
+  color:#15171b;background:linear-gradient(135deg,#FFC72C,#e8b020);
+  border-color:#FFC72C;box-shadow:0 5px 16px rgba(255,199,44,.22);
+}
+.ps-subtab .ps-subtab-dot{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.8}
+.ps-subview{display:none}
+.ps-subview.active{display:block}
+.ps-subview .panel-head{padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.06)}
+.ps-auto-btn.is-on{color:#76e3a0;border-color:rgba(76,175,109,.4);background:rgba(76,175,109,.08)}
+.ps-auto-btn.is-off{color:var(--text-dim)}
+.ps-sync-status{
+  margin-top:8px;font:10px 'JetBrains Mono',monospace;color:var(--text-faint);
+}
+.ps-sync-status b{color:#7fe0e0}
+.ps-live-toolbar{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:10px 12px;margin-bottom:14px;
+  border:1px solid rgba(64,196,196,.20);border-radius:9px;
+  background:linear-gradient(180deg,rgba(64,196,196,.065),rgba(255,255,255,.015));
+}
+.ps-live-toolbar .ps-live-field{min-width:130px}
+.ps-live-toolbar label{margin:0 0 3px;font-size:9px}
+.ps-live-toolbar input,.ps-live-toolbar select{padding:7px 9px;font-size:11px}
+.ps-live-summary{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px
+}
+.ps-live-kpi{
+  padding:12px 14px;border-radius:9px;border:1px solid rgba(255,255,255,.07);
+  background:linear-gradient(160deg,#171e26,#10151b)
+}
+.ps-live-kpi .lk-label{font-size:9px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.7px}
+.ps-live-kpi .lk-val{font:700 20px 'Oswald',sans-serif;color:#7fe0e0;margin-top:4px}
+.ps-live-kpi .lk-sub{font:9px 'JetBrains Mono',monospace;color:var(--text-dim);margin-top:2px}
+.ps-hm-chart-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.ps-hm-card{
+  background:linear-gradient(165deg,#151c24,#0e1319);border:1px solid rgba(64,196,196,.16);
+  border-radius:11px;padding:13px 14px;box-shadow:0 8px 22px rgba(0,0,0,.20)
+}
+.ps-hm-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.ps-hm-unit{font:700 15px 'Oswald',sans-serif;color:#7fe0e0;letter-spacing:.5px}
+.ps-hm-meta{font:9px 'JetBrains Mono',monospace;color:var(--text-dim);text-align:right}
+.ps-hm-chart{height:190px;min-height:190px}
+.ps-hm-chart svg{width:100%;height:190px;display:block;overflow:visible}
+.ps-hm-empty{height:190px;display:flex;align-items:center;justify-content:center;color:var(--text-faint);font:10px 'JetBrains Mono',monospace;text-align:center}
+.ps-hm-legend{display:flex;justify-content:space-between;gap:8px;margin-top:6px;font:9px 'JetBrains Mono',monospace;color:var(--text-faint)}
+.ps-hm-card-charts{display:grid;grid-template-columns:1fr;gap:8px;margin-top:6px}
+.ps-ops-chart{height:170px;min-height:170px;padding:8px 8px 2px;border:1px solid rgba(255,255,255,.055);border-radius:8px;background:rgba(0,0,0,.10)}
+.ps-ops-chart svg{width:100%;height:160px;display:block;overflow:visible}
+.ps-chart-title{font:700 9px 'Oswald',sans-serif;letter-spacing:.65px;text-transform:uppercase;color:var(--text-dim);margin:0 0 2px}
+.ps-ops-legend{display:flex;flex-wrap:wrap;gap:10px;margin:2px 2px 0;font:9px 'JetBrains Mono',monospace;color:var(--text-faint)}
+.ps-ops-legend span{display:inline-flex;align-items:center;gap:4px}.ps-ops-legend i{width:7px;height:7px;border-radius:50%;display:inline-block}
+.ps-hm-card .ps-hm-chart{margin-bottom:2px}
+
+@media(max-width:900px){
+  .ps-live-summary{grid-template-columns:repeat(2,1fr)}
+  .ps-hm-chart-grid{grid-template-columns:1fr}
+}
+@media(max-width:520px){
+  .ps-live-summary{grid-template-columns:1fr 1fr}
+  .ps-subnav{top:0}
+  .ps-subtab{flex:1;justify-content:center;padding:8px 7px;font-size:9px}
+}
 
 /* MAIN */
 .main{
@@ -968,7 +1192,7 @@ select.exec-close{ background:rgba(76,175,109,0.15); color:var(--green); }
 #rca-table th:nth-child(8), #rca-table td:nth-child(8){ width:200px; min-width:180px; }
 #rca-table th:nth-child(9), #rca-table td:nth-child(9){ width:140px; min-width:120px; }
 #rca-table th:nth-child(10), #rca-table td:nth-child(10){ width:100px; min-width:96px; white-space:nowrap; text-align:center; }
-#rca-table th:nth-child(11), #rca-table td:nth-child(11){ width:120px; min-width:110px; white-space:nowrap; text-align:center; }
+#rca-table tbody tr[data-rca-id]{ cursor:pointer; }
 
 /* Sel teks panjang: wrap rapi, tidak potong */
 #rca-table td.rca-text{
@@ -1347,6 +1571,51 @@ select.exec-close{ background:rgba(76,175,109,0.15); color:var(--green); }
   text-transform:uppercase; color:#EDEEF0; margin-bottom:10px;
 }
 .dash-panel-title span{ color:var(--text-faint); font-weight:500; text-transform:none; letter-spacing:0; font-size:10px; margin-left:6px; }
+/* Top bar filter — satu baris pilihan periode di bagian ATAS setiap grafik/tabel KPI Dashboard,
+   supaya masing-masing chart/tabel punya kontrol filternya sendiri yang jelas terlihat. */
+.dash-panel-topbar{
+  display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;
+  margin-bottom:10px; padding-bottom:9px; border-bottom:1px dashed rgba(255,255,255,0.08);
+}
+.dash-panel-topbar-label{
+  font-size:9px; text-transform:uppercase; letter-spacing:.6px; color:var(--text-faint);
+  font-family:'JetBrains Mono',monospace; display:flex; align-items:center; gap:5px;
+}
+.dash-panel-topbar-label .status-dot{ margin-right:0; }
+.dash-topbar-select{
+  background:#1b1e23; color:var(--text); border:1px solid var(--line); border-radius:7px;
+  font-size:11px; font-family:'JetBrains Mono',monospace; padding:5px 9px; cursor:pointer;
+  outline:none; max-width:100%;
+}
+.dash-topbar-select:focus{ border-color:var(--yellow); box-shadow:0 0 0 3px rgba(255,199,44,0.12); }
+.dash-topbar-select option{ background-color:#1b1e23; color:var(--yellow); }
+/* Top bar MENU DASHBOARD — mengelompokkan grafik & tabel per topik (mis. "Breakdown Category per
+   Month" + "Summary Breakdown Category per Month" jadi satu group), sehingga area konten dashboard
+   hanya menampilkan grup yang sedang dipilih di topbar ini. */
+.dash-menu-topbar{
+  display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; padding:8px;
+  background:linear-gradient(165deg, #161b28 0%, #10141c 100%);
+  border:1px solid rgba(255,255,255,0.08); border-radius:14px;
+  box-shadow:0 6px 22px rgba(0,0,0,0.35); position:sticky; top:0; z-index:20;
+}
+.dash-menu-tab{
+  appearance:none; -webkit-appearance:none; cursor:pointer; user-select:none;
+  background:#1b1e23; color:var(--text-dim); border:1px solid var(--line); border-radius:9px;
+  font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:700;
+  letter-spacing:0.4px; text-transform:uppercase; padding:9px 14px;
+  transition:background .15s ease, color .15s ease, border-color .15s ease, transform .12s ease;
+  white-space:nowrap;
+}
+.dash-menu-tab:hover{ color:var(--text); border-color:rgba(255,199,44,0.35); transform:translateY(-1px); }
+.dash-menu-tab.active{
+  background:linear-gradient(165deg, rgba(255,199,44,0.22), rgba(255,199,44,0.08));
+  color:var(--yellow); border-color:var(--yellow);
+  box-shadow:0 0 0 1px rgba(255,199,44,0.25) inset, 0 4px 14px rgba(255,199,44,0.15);
+}
+@media(max-width:640px){
+  .dash-menu-topbar{ gap:6px; padding:6px; }
+  .dash-menu-tab{ font-size:9.5px; padding:8px 10px; flex:1 1 calc(50% - 6px); text-align:center; }
+}
 .kpi-dash-spark{ margin-top:8px; height:22px; opacity:0.9; }
 .kpi-dash-spark svg{ width:100%; height:22px; display:block; }
 
@@ -1791,6 +2060,14 @@ select.exec-close{ background:rgba(76,175,109,0.15); color:var(--green); }
 #ps-close-overlay.show{ display:flex; }
 #rca-edit-overlay{ display:none; position:fixed; inset:0; z-index:230; align-items:flex-start; justify-content:center; background:rgba(0,0,0,0.6); padding:26px 16px; overflow-y:auto; }
 #rca-edit-overlay.show{ display:flex; }
+/* Modal Edit/Hapus data Backlog (Part Number/Qty/PR/Part Location) — hanya dapat dibuka
+   lewat double-click pada baris tabel Backlog, dan hanya untuk user Fahmi Fanani
+   (dijaga oleh isFahmiFanani() di JS; tidak ada tombol/menu apapun yang ditampilkan
+   di tabel untuk user lain). */
+#cbm-backlog-edit-overlay{ display:none; position:fixed; inset:0; z-index:230; align-items:flex-start; justify-content:center; background:rgba(0,0,0,0.6); padding:26px 16px; overflow-y:auto; }
+#cbm-backlog-edit-overlay.show{ display:flex; }
+body.role-wa-sync-allowed #cbm-backlog-tbody tr{ cursor:pointer; }
+body.role-wa-sync-allowed #cbm-backlog-tbody tr:hover{ background:rgba(255,199,44,0.055); }
 .view.access-readonly form button[type="submit"],
 .view.access-readonly .btn:not(.secondary):not(.small),
 .view.access-readonly .btn.danger,
@@ -2341,8 +2618,34 @@ body.role-mechanic #history-filters{ display:none !important; }
       </div>
     </div>
     <div class="detail-modal-foot">
+      <button type="button" class="btn danger" id="rca-edit-delete" style="margin-right:auto;">🗑 Hapus</button>
       <button type="button" class="btn secondary" id="rca-edit-cancel">Batal</button>
       <button type="button" class="btn" id="rca-edit-save">💾 Simpan Perubahan</button>
+    </div>
+  </div>
+</div>
+
+<div id="cbm-backlog-edit-overlay">
+  <div class="detail-modal" style="max-width:480px;">
+    <div class="detail-modal-head">
+      <h3>Edit Backlog</h3>
+      <button type="button" class="detail-modal-close" id="cbm-bl-edit-modal-close" title="Tutup">✕</button>
+    </div>
+    <div class="detail-modal-body">
+      <div class="hint" style="margin-bottom:14px;" id="cbm-bl-edit-info">—</div>
+      <div class="field"><label>Part Number</label><input type="text" id="cbm-bl-edit-partnumber" placeholder="Contoh: 6754-61-1030"></div>
+      <div class="field"><label>Qty</label><input type="text" id="cbm-bl-edit-qty" placeholder="Contoh: 2 pcs"></div>
+      <div class="field"><label>PR</label><input type="text" id="cbm-bl-edit-pr" placeholder="Nomor Purchase Request…"></div>
+      <div class="field"><label>Status</label><select id="cbm-bl-edit-status"><option value="Open">Open</option><option value="In Progress">In Progress</option><option value="Verified">Verified</option><option value="Close">Close</option><option value="Closed">Closed</option></select></div>
+      <div class="field"><label>Part Location</label><input type="text" id="cbm-bl-edit-location" placeholder="Contoh: Gudang Site A / WH Central"></div>
+      <div class="hint" style="margin-top:4px;">Menu edit &amp; hapus baris Backlog ini hanya dapat diakses oleh <b>Fahmi Fanani</b>.</div>
+    </div>
+    <div class="detail-modal-foot" style="justify-content:space-between;">
+      <button type="button" class="btn danger" id="cbm-bl-edit-delete">🗑 Hapus dari Backlog</button>
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="btn secondary" id="cbm-bl-edit-cancel">Batal</button>
+        <button type="button" class="btn" id="cbm-bl-edit-save">💾 Simpan Perubahan</button>
+      </div>
     </div>
   </div>
 </div>
@@ -2555,6 +2858,22 @@ body.role-mechanic #history-filters{ display:none !important; }
         <div class="mh-title" id="mh-title">MENU UTAMA</div>
         <div class="mh-sub" id="mh-sub">Pilih menu untuk membuka halaman</div>
       </div>
+      <div class="sen-maint-tips" id="sen-maint-tips" aria-label="Tips Maintenance Heavy Equipment">
+        <div class="sen-tip-head">
+          <div>
+            <span class="sen-tip-kicker">💡 MAINTENANCE TIPS</span>
+            <span class="sen-tip-icon" id="sen-tip-icon" aria-hidden="true">🔍</span><span class="sen-tip-title" id="sen-tip-title">Daily Inspection</span>
+          </div>
+          <div class="sen-tip-counter" id="sen-tip-counter">1 / 8</div>
+        </div>
+        <div class="sen-tip-body" id="sen-tip-body">Lakukan P2H sebelum unit beroperasi: cek kebocoran, level oil/coolant, tyre/track, attachment, alarm, dan safety device.</div>
+        <div class="sen-tip-foot">
+          <button type="button" class="sen-tip-nav" id="sen-tip-prev" aria-label="Tips sebelumnya">‹</button>
+          <div class="sen-tip-dots" id="sen-tip-dots"></div>
+          <button type="button" class="sen-tip-nav" id="sen-tip-next" aria-label="Tips berikutnya">›</button>
+        </div>
+      </div>
+
       <div class="mh-grid" id="mh-grid"></div>
       <div class="mh-foot">
         <img class="mh-brand" src="brand-tagline.png" alt="" draggable="false" onerror="this.style.display='none';var f=this.nextElementSibling;if(f)f.style.display='flex';">
@@ -2564,6 +2883,61 @@ body.role-mechanic #history-filters{ display:none !important; }
         </div>
       </div>
     </div>
+<style id="sen-maint-tips-style">
+.sen-maint-tips{
+  width:min(100%,1100px);margin:0 auto 16px;padding:12px 16px 10px;box-sizing:border-box;
+  border:1px solid rgba(255,199,44,.28);border-radius:14px;
+  background:linear-gradient(135deg,rgba(255,199,44,.10),rgba(21,23,27,.92));
+  box-shadow:0 8px 24px rgba(0,0,0,.16);position:relative;overflow:hidden;
+}
+.sen-maint-tips:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:#FFC72C}
+.sen-tip-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.sen-tip-kicker{font-size:10px;font-weight:800;letter-spacing:.12em;color:#FFC72C;display:inline-block;margin-right:9px}
+.sen-tip-title{font-size:14px;font-weight:800;color:#fff}.sen-tip-icon{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;margin-right:8px;border-radius:10px;background:rgba(255,199,44,.12);border:1px solid rgba(255,199,44,.28);font-size:19px;vertical-align:middle}.sen-tip-foot{display:none !important}
+.sen-tip-counter{font-size:11px;color:#aeb4bd;white-space:nowrap}
+.sen-tip-body{font-size:12px;line-height:1.5;color:#d9dde3;margin:6px 0 7px;min-height:36px}
+.sen-tip-foot{display:flex;align-items:center;justify-content:center;gap:8px}
+.sen-tip-nav{width:25px;height:25px;border:1px solid rgba(255,199,44,.3);border-radius:50%;background:rgba(255,199,44,.08);color:#FFC72C;font-size:19px;line-height:20px;cursor:pointer;padding:0}
+.sen-tip-nav:hover{background:rgba(255,199,44,.18)}
+.sen-tip-dots{display:flex;align-items:center;justify-content:center;gap:5px}
+.sen-tip-dot{width:6px;height:6px;border-radius:50%;background:#5c626b;cursor:pointer;border:0;padding:0}
+.sen-tip-dot.active{background:#FFC72C;transform:scale(1.25)}
+@media(max-width:600px){
+ .sen-maint-tips{margin-bottom:12px;padding:11px 13px 9px;border-radius:12px}
+ .sen-tip-kicker{display:block;margin:0 0 3px;font-size:9px}
+ .sen-tip-title{font-size:13px}
+ .sen-tip-body{font-size:11px;min-height:48px}
+}
+</style>
+
+<script id="sen-maint-tips-script">
+(function(){
+  const tips=[
+    {i:'🔍',t:'Daily Inspection',b:'Lakukan P2H sebelum unit beroperasi: cek kebocoran, level oil/coolant, tyre/track, attachment, alarm, dan safety device.'},
+    {i:'🌡️',t:'Engine & Cooling',b:'Pantau temperature engine, coolant level, radiator, fan belt, dan indikasi overheating. Jangan abaikan kenaikan temperatur yang tidak normal.'},
+    {i:'💧',t:'Hydraulic System',b:'Periksa hydraulic oil, hose, fitting, cylinder, dan tanda kebocoran. Kebocoran kecil dapat berkembang menjadi downtime besar.'},
+    {i:'🔧',t:'Lubrication & Greasing',b:'Ikuti interval greasing sesuai PM. Gunakan grease yang sesuai dan pastikan titik grease terisi tanpa kontaminasi.'},
+    {i:'📋',t:'PM Discipline',b:'Jalankan Planned Maintenance sesuai due HM/time. Catat actual pekerjaan dan temuan agar histori maintenance tetap akurat.'},
+    {i:'⚠️',t:'Early Failure Detection',b:'Perhatikan perubahan suara, vibration, temperature, pressure, smoke, dan performance unit. Temuan dini membantu mencegah breakdown.'},
+    {i:'🧽',t:'Cleanliness',b:'Jaga kebersihan engine compartment, radiator/cooler, hydraulic area, dan cabin. Debu serta kotoran dapat mempercepat kerusakan komponen.'},
+    {i:'🦺',t:'Safety First',b:'Sebelum maintenance: parkir aman, gunakan LOTO bila diperlukan, turunkan attachment, matikan engine, dan pastikan energi tersimpan sudah aman.'}
+  ];
+  let idx=0,timer=null;
+  function render(){
+    const title=document.getElementById('sen-tip-title'),body=document.getElementById('sen-tip-body'),counter=document.getElementById('sen-tip-counter'),dots=document.getElementById('sen-tip-dots');
+    if(!title||!body||!counter||!dots)return;
+    title.textContent=tips[idx].t;body.textContent=tips[idx].b;counter.textContent=(idx+1)+' / '+tips.length;const icon=document.getElementById('sen-tip-icon');if(icon)icon.textContent=tips[idx].i||'💡';
+    dots.innerHTML=tips.map((_,i)=>`<button type="button" class="sen-tip-dot ${i===idx?'active':''}" data-i="${i}" aria-label="Tip ${i+1}"></button>`).join('');
+    dots.querySelectorAll('.sen-tip-dot').forEach(d=>d.addEventListener('click',()=>{idx=Number(d.dataset.i);render();restart();}));
+  }
+  function next(){idx=(idx+1)%tips.length;render();}
+  function restart(){clearInterval(timer);timer=setInterval(next,6500);}
+  document.getElementById('sen-tip-prev')?.addEventListener('click',()=>{idx=(idx-1+tips.length)%tips.length;render();restart();});
+  document.getElementById('sen-tip-next')?.addEventListener('click',()=>{next();restart();});
+  render();restart();
+})();
+</script>
+
     <div class="content" id="content">
 
       <!-- DASHBOARD -->
@@ -2571,9 +2945,23 @@ body.role-mechanic #history-filters{ display:none !important; }
         <div class="banner">⛭ Data tersimpan otomatis dan dibagikan ke seluruh pengguna panel ini (shared workshop database).</div>
 
         <div class="section-title" style="display:none">Dashboard KPI</div>
+
+        <!-- TOP BAR MENU DASHBOARD: mengelompokkan grafik + tabel per topik. Klik satu tombol topbar
+             untuk hanya menampilkan grup terkait (mis. "Breakdown Category" -> chart "Breakdown
+             Category per Month" + tabel "Summary Breakdown Category per Month" saja yang tampil). -->
+        <div class="dash-menu-topbar" id="dash-menu-topbar">
+          <button type="button" class="dash-menu-tab active" data-dashtab="breakdown" onclick="setDashboardTab('breakdown')">📦 Breakdown Category</button>
+          <button type="button" class="dash-menu-tab" data-dashtab="service" onclick="setDashboardTab('service')">🛠 Dashboard Service</button>
+          <button type="button" class="dash-menu-tab" data-dashtab="kpi" onclick="setDashboardTab('kpi')">📊 KPI Maintenance</button>
+          <button type="button" class="dash-menu-tab" data-dashtab="monthlykpi" onclick="setDashboardTab('monthlykpi')">🧮 Monthly KPI Achievement</button>
+          <button type="button" class="dash-menu-tab" data-dashtab="trend" onclick="setDashboardTab('trend')">📈 Trend &amp; Comparison</button>
+          <button type="button" class="dash-menu-tab" data-dashtab="quarter" onclick="setDashboardTab('quarter')">🗓 Quarter Summary</button>
+          <span id="dash-menu-topbar-sync-slot" style="margin-left:auto;display:flex;align-items:center;"></span>
+        </div>
+
         <div id="kpi-chart-dashboard" style="margin-bottom:20px;"></div>
 
-<!-- MA & PA Data Source: di-render di bawah tabel SERVICE ACHIEVEMENT lewat placeMapaSourceBelowServiceAchievement() -->
+<!-- MA & PA Data Source: di-render di atas kartu KPI (grup topbar "KPI Maintenance") lewat placeMapaSourceAboveKpiCards() -->
         <div id="mapa-source-block" style="margin-bottom:20px;">
           <div class="section-title">MA &amp; PA Data Source</div>
           <div class="panel" style="margin-bottom:0;">
@@ -3053,8 +3441,15 @@ body.role-mechanic #history-filters{ display:none !important; }
         </div>
       </section>
 
-      <!-- PLAN SERVICE (auto-sync: W sheet performance — tanpa Daily Maintenance, tanpa batasan periode) -->
+      <!-- PLAN SERVICE — workspace terpisah untuk Schedule, Record dan Live HM -->
       <section class="view" id="view-plan">
+        <div class="ps-subnav" id="plan-service-subnav" role="tablist" aria-label="Plan Service">
+          <button type="button" class="ps-subtab active" data-ps-tab="schedule" role="tab"><span class="ps-subtab-dot"></span>Plan Schedule Service</button>
+          <button type="button" class="ps-subtab" data-ps-tab="record" role="tab"><span class="ps-subtab-dot"></span>Record Service Unit</button>
+          <button type="button" class="ps-subtab" data-ps-tab="livehm" role="tab"><span class="ps-subtab-dot"></span>Live HM · Per Day</button>
+        </div>
+
+        <div class="ps-subview active" id="ps-subview-schedule">
         <div class="panel">
           <div class="panel-head" id="plan-panel-head">
             <h2>Plan Schedule Service <span class="tag">AUTO SYNC · 4 UNIT LOCK</span></h2>
@@ -3097,6 +3492,7 @@ body.role-mechanic #history-filters{ display:none !important; }
               <button type="button" class="btn small secondary" id="plan-period-this-month-btn" title="Filter ke bulan berjalan (Open)">Bulan Ini</button>
             </div>
             <div class="hint" id="plan-daily-wh-status" style="margin-top:10px; margin-bottom:0;">source: <b>performance sheet</b> (WH/day) · daily auto-sync active · Last Synced: —</div>
+            <div class="ps-sync-status" id="plan-schedule-sync-status">Schedule sync: <b>AUTO LIVE</b> · Continuous sync active</div>
           </div>
           <div class="scroll-top-track" id="plan-scroll-top" title="Scroll to view other columns"><div class="scroll-top-track-inner" id="plan-scroll-top-inner"></div></div>
           <div class="table-wrap" id="plan-table-wrap">
@@ -3121,8 +3517,10 @@ body.role-mechanic #history-filters{ display:none !important; }
             </table>
           </div>
         </div>
+        </div>
 
         <!-- RECORD SERVICE UNIT — otomatis dari Plan Service yang Close -->
+        <div class="ps-subview" id="ps-subview-record">
         <div class="panel">
           <div class="panel-head">
             <h2>Record Service Unit <span class="tag">CLOSE</span></h2>
@@ -3135,6 +3533,7 @@ body.role-mechanic #history-filters{ display:none !important; }
             (hanya setelah service benar-benar dieksekusi). Tombol <b>↩ Open</b> mengembalikan ke jadwal plan.
             Sync ke sheet <code>Record Service</code> (setelah tab performance) lewat tombol di atas atau otomatis saat data Close berubah.
           </div>
+          <div class="ps-sync-status" id="plan-record-sync-status" style="margin:-4px 0 12px;">Record sync: <b>AUTO LIVE</b> · Continuous sync active</div>
           <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
             <label style="font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; margin:0;">Filter Unit Code</label>
             <select id="plan-record-filter-unit" style="min-width:160px; background:var(--panel-2); border:1px solid var(--line); color:var(--yellow); font-weight:600; padding:8px 10px; border-radius:var(--radius);">
@@ -3161,6 +3560,41 @@ body.role-mechanic #history-filters{ display:none !important; }
               </tr></thead>
               <tbody id="plan-record-tbody"></tbody>
             </table>
+          </div>
+        </div>
+        </div>
+
+        <!-- LIVE HM — pergerakan HM masing-masing unit per hari -->
+        <div class="ps-subview" id="ps-subview-livehm">
+          <div class="panel">
+            <div class="panel-head">
+              <h2>Live HM Movement <span class="tag">PER DAY · 4 UNIT</span></h2>
+              <div class="toolbar">
+                <button type="button" class="btn small" id="btn-live-hm-sync" title="Sync HM + Performance + Jam Kerja Harian sekarang">☁ Sync Live HM</button>
+              </div>
+            </div>
+            <div class="ps-live-toolbar">
+              <div class="ps-live-field">
+                <label>Unit</label>
+                <select id="ps-live-hm-unit">
+                  <option value="">Semua Unit</option>
+                  <option value="SWA-101">SWA-101</option>
+                  <option value="SWA-102">SWA-102</option>
+                  <option value="SBD-103">SBD-103</option>
+                  <option value="SPC-104">SPC-104</option>
+                </select>
+              </div>
+              <div class="ps-live-field">
+                <label>Dari</label><input type="date" id="ps-live-hm-start">
+              </div>
+              <div class="ps-live-field">
+                <label>Sampai</label><input type="date" id="ps-live-hm-end">
+              </div>
+              <button type="button" class="btn small secondary" id="ps-live-hm-reset">Reset Periode</button>
+              <span class="hint" id="ps-live-hm-status" style="margin:0 0 0 auto;">Source: HM Monitoring / telemetry · Last sync: —</span>
+            </div>
+            <div class="ps-live-summary" id="ps-live-hm-summary"></div>
+            <div class="ps-hm-chart-grid" id="ps-hm-chart-grid"></div>
           </div>
         </div>
       </section>
@@ -3675,7 +4109,7 @@ body.role-mechanic #history-filters{ display:none !important; }
                 <thead><tr>
                   <th>Tanggal</th><th>Unit</th><th>Component</th><th>Event</th>
                   <th>Root Cause</th><th>Kategori</th><th>Corrective Action</th><th>Preventive Action</th>
-                  <th>PIC</th><th>Status</th><th>Aksi</th>
+                  <th>PIC</th><th>Status</th>
                 </tr></thead>
                 <tbody id="cbm-rca-tbody"></tbody>
               </table>
@@ -3735,6 +4169,105 @@ body.role-mechanic #history-filters{ display:none !important; }
                 </tr></thead>
                 <tbody id="cbm-insight-tbody"></tbody>
               </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- BACKLOG -->
+        <div class="cbm-tab-panel" id="cbm-tab-backlog" style="display:none;">
+          <div class="cbm-backlog-hero">
+            <div class="cbm-backlog-hero-copy">
+              <div class="cbm-backlog-kicker">CBM · BACKLOG CONTROL CENTER</div>
+              <div class="cbm-backlog-title">Maintenance Backlog Register</div>
+              <div class="cbm-backlog-sub">Command center untuk monitoring backlog Pre Inspection dan Planning System. Status, aging, priority, serta histori Close ditampilkan dalam satu register yang clean dan audit-ready.</div>
+            </div>
+            <div class="cbm-backlog-summary" id="cbm-backlog-summary">—</div>
+          </div>
+
+          <div class="cbm-backlog-dashboard">
+            <div class="cbm-backlog-chart-card">
+              <div class="cbm-backlog-chart-head"><div><div class="cbm-backlog-chart-title">Backlog Load by Unit</div><div class="cbm-backlog-chart-sub">Open vs closed movement by unit</div></div><span class="pill" id="cbm-bl-chart-total">—</span></div>
+              <div class="cbm-backlog-chart" id="cbm-bl-unit-chart"></div>
+              <div class="cbm-backlog-legend"><span><i style="background:#ff6b35"></i>Open</span><span><i style="background:#4caf6d"></i>Closed</span></div>
+            </div>
+            <div class="cbm-backlog-chart-card">
+              <div class="cbm-backlog-chart-head"><div><div class="cbm-backlog-chart-title">Register Status Mix</div><div class="cbm-backlog-chart-sub">Status distribution · live register</div></div><span class="pill" id="cbm-bl-chart-openpct">—</span></div>
+              <div class="cbm-backlog-chart" id="cbm-bl-status-chart"></div>
+              <div class="cbm-backlog-legend"><span><i style="background:#ff6b35"></i>Open</span><span><i style="background:#ffc72c"></i>In Progress</span><span><i style="background:#4a90d9"></i>Verified</span><span><i style="background:#4caf6d"></i>Closed</span></div>
+            </div>
+          </div>
+
+          <div class="grid grid-4 cbm-backlog-kpis">
+            <div class="unit-card cbm-backlog-kpi"><div class="cat-label">Open Backlog</div><div class="type" id="cbm-bl-total">0</div><div class="hint">Open + historical closed</div></div>
+            <div class="unit-card cbm-backlog-kpi"><div class="cat-label">High / Critical</div><div class="type" style="color:var(--red)" id="cbm-bl-critical">0</div><div class="hint">Prioritas tindak lanjut</div></div>
+            <div class="unit-card cbm-backlog-kpi"><div class="cat-label">Waiting Part</div><div class="type" style="color:var(--orange)" id="cbm-bl-waiting">0</div><div class="hint">Terindikasi sparepart</div></div>
+            <div class="unit-card cbm-backlog-kpi"><div class="cat-label">Aging &gt; 7 Hari</div><div class="type" style="color:var(--yellow)" id="cbm-bl-aging">0</div><div class="hint">Belum ditutup</div></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <h2><span class="tag" style="background:rgba(255,107,53,0.18);color:var(--orange);">ACTION</span> Backlog Register</h2>
+              <div class="toolbar" style="gap:6px;">
+                <select id="cbm-bl-filter-unit" class="cbm-bl-filter"><option value="">Semua Unit</option></select>
+                <select id="cbm-bl-filter-source" class="cbm-bl-filter">
+                  <option value="">Semua Source</option>
+                  <option value="Pre Inspection">Pre Inspection</option>
+                  <option value="Planning System">Planning System</option>
+                </select>
+                <select id="cbm-bl-filter-priority" class="cbm-bl-filter">
+                  <option value="">Semua Priority</option>
+                  <option value="Critical">Critical</option>
+                  <option value="High">High</option>
+                  <option value="Medium">Medium</option>
+                </select>
+                <select id="cbm-bl-filter-status" class="cbm-bl-filter">
+                  <option value="">Semua Status</option>
+                  <option value="Open">Open</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Verified">Verified</option>
+                  <option value="Close">Close</option>
+                  <option value="Closed">Closed</option>
+                </select>
+                <button type="button" class="btn small secondary" id="cbm-bl-clear">Clear</button>
+                <button type="button" class="btn small secondary" id="cbm-bl-refresh">⟲ Refresh</button>
+              </div>
+            </div>
+            <div class="cbm-backlog-read-guide">
+              <div class="cbm-backlog-read-title"><span class="cbm-read-dot"></span> Cara membaca backlog</div>
+              <div class="cbm-backlog-read-flow">
+                <span><b>01</b> Prioritas</span><i>→</i><span><b>02</b> Unit &amp; pekerjaan</span><i>→</i><span><b>03</b> Part &amp; PR</span><i>→</i><span><b>04</b> Plan &amp; HM</span><i>→</i><span><b>05</b> Aging &amp; status</span>
+              </div>
+            </div>
+            <div class="cbm-backlog-top-scroll" id="cbm-backlog-top-scroll" aria-label="Horizontal scroll Backlog Register">
+              <div class="cbm-backlog-top-scroll-inner" id="cbm-backlog-top-scroll-inner"></div>
+            </div>
+            <div class="table-wrap cbm-backlog-table-viewport" id="cbm-backlog-table-wrap">
+              <table id="cbm-backlog-table">
+                <thead>
+                  <tr class="cbm-backlog-group-head">
+                    <th colspan="3">IDENTIFIKASI PEKERJAAN</th>
+                    <th colspan="4">PART &amp; PROCUREMENT</th>
+                    <th colspan="2">SUMBER &amp; RENCANA</th>
+                    <th colspan="3">CONTROL &amp; FOLLOW-UP</th>
+                  </tr>
+                  <tr class="cbm-backlog-column-head">
+                    <th>Prioritas</th><th>Unit</th><th>Komponen / Item</th>
+                    <th>No. Part</th><th>Qty</th><th>PR</th><th>Lokasi Part</th>
+                    <th>Deskripsi Backlog</th><th>Sumber</th><th>Plan / Due</th><th>HM</th><th>Aging</th><th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="cbm-backlog-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel cbm-backlog-guide">
+            <div class="panel-head"><h2><span class="tag">FLOW</span> Backlog Control</h2></div>
+            <div class="cbm-backlog-flow">
+              <div><span class="flow-no">01</span><div><b>Identify</b><small>Temuan Pre Inspection / Plan / RCA masuk register.</small></div></div>
+              <div><span class="flow-no">02</span><div><b>Prioritize</b><small>Critical → High → Medium berdasarkan urgensi source.</small></div></div>
+              <div><span class="flow-no">03</span><div><b>Execute</b><small>Follow-up pekerjaan melalui menu sumber masing-masing.</small></div></div>
+              <div><span class="flow-no">04</span><div><b>Close</b><small>Backlog hilang dari daftar saat status sumber sudah Close.</small></div></div>
             </div>
           </div>
         </div>
@@ -3900,7 +4433,7 @@ const KPI_INFO = {
   },
   pmr: {
     full: 'Planned Maintenance Ratio (PMR)',
-    formula: 'PMR = Planned Maintenance Hours / Total Maintenance Hours × 100%',
+    formula: 'PMR = Planned Maintenance Hours ÷ Total Maintenance Hours × 100%',
     desc: 'Planned Maintenance Hours ÷ Total Maintenance Hours × 100%. Achievement % of weight: >90% = 100%, 85–90% = 80%, <85% = 60%. Higher is better (target >90%). Calculated from duration hours of Approved Daily Maintenance records in the selected period.',
     unit: '%', higherBetter: true
   },
@@ -6500,6 +7033,7 @@ async function loadData(){
     const pip = await appStorage.get('pre-inspection-plans');
     preInspectionPlans = pip ? JSON.parse(pip.value) : [];
   }catch(e){ preInspectionPlans = []; }
+  try{ await loadCbmBacklogExtraData(); }catch(e){ console.warn('load cbm backlog extra gagal', e); }
   try{
     const hm = await appStorage.get('hm-records');
     hmRecords = hm ? JSON.parse(hm.value) : [];
@@ -7692,7 +8226,7 @@ function setupPwaInstallSupport(){
     // tidak bisa didaftarkan dari blob: URL di browser manapun (selalu gagal & memicu
     // warning di console). Di preview sandbox (protokol blob-request:/blob:) registrasi
     // SW otomatis dilewati; fitur PWA tetap aktif normal saat web sudah di-host di http/https.
-    navigator.serviceWorker.register('sw.js', { scope:'./' }).catch(err=> console.warn('SW register failed', err));
+    navigator.serviceWorker.register('sw.js?v=20260922-1457', { scope:'./' }).catch(err=> console.warn('SW register failed', err));
   }
 }
 function bindSiteQrUI(){
@@ -8422,7 +8956,7 @@ function maPaFromWSR(wsr){
    - Service Accuracy (SA): dari record Plan Service milik unit tsb.
    - MA & PA: otomatis dari data Monitoring HM milik unit tsb (fallback ke file jam operasional manual
      kalau unit tsb belum ada data HM). */
-/** PMR = Planned Maintenance Hours / Total Maintenance Hours × 100%
+/** PMR = Planned Maintenance Hours ÷ Total Maintenance Hours × 100%
  *  Formula resmi (LOCKED) — samakan di UI & perhitungan:
  *    Planned Maintenance Hours = Σ jam record Approved kategori planned
  *      (Periodical / Daily / Preventive; bukan Breakdown)
@@ -8480,7 +9014,7 @@ function computeUnitKPIs(unitCode){
   const mttrEligible = approvedRecords.filter(r=>r.category==='Breakdown' && r.duration!==null && r.duration!==undefined);
   const mttr = mttrEligible.length ? (mttrEligible.reduce((s,r)=>s+(Number(r.duration)||0),0)/mttrEligible.length) : 0;
 
-  // PMR = Planned Maintenance Hours / Total Maintenance Hours × 100 (formula resmi)
+  // PMR = Planned Maintenance Hours ÷ Total Maintenance Hours × 100 (formula resmi)
   const { pmr } = calcPMRFromRecords(approvedRecords);
 
   // Service Accuracy (SA): dihitung dari data Daily Maintenance (kategori Periodical, sudah Approved),
@@ -8515,7 +9049,7 @@ function computeUnitKPIsForRange(unitCode, startStr, endStr){
   const mttrEligible = approvedRecords.filter(r=>r.category==='Breakdown' && r.duration!==null && r.duration!==undefined);
   const mttr = mttrEligible.length ? (mttrEligible.reduce((s,r)=>s+(Number(r.duration)||0),0)/mttrEligible.length) : 0;
 
-  // PMR = Planned Maintenance Hours / Total Maintenance Hours × 100 (formula resmi)
+  // PMR = Planned Maintenance Hours ÷ Total Maintenance Hours × 100 (formula resmi)
   const { pmr } = calcPMRFromRecords(approvedRecords);
 
   // Service Accuracy (SA): dihitung dari data Daily Maintenance (kategori Periodical, sudah Approved)
@@ -9860,7 +10394,7 @@ document.getElementById('plan-record-sync-sheets-btn')?.addEventListener('click'
   if(!isFahmiFanani()){ alert('Fitur Sync hanya tersedia untuk user Fahmi Fanani.'); return; }
   const btn = document.getElementById('plan-record-sync-sheets-btn');
   if(btn){ btn.disabled = true; btn.textContent = '☁ Menyinkronkan...'; }
-  try{ await syncPlanServiceToSheets({ manual:true }); }
+  try{ await syncPlanServiceToSheets({ manual:true }); const st=document.getElementById('plan-record-sync-status'); if(st) st.innerHTML='Record sync: <b>SYNC OK</b> · Auto Sync <b>'+(psAutoSyncRecord?'ON':'OFF')+'</b>'; }
   finally{ if(btn){ btn.disabled = false; btn.textContent = '☁ Sync ke Sheet Record Service'; } }
 });
 
@@ -13183,6 +13717,7 @@ async function syncPlanAll(){
 document.getElementById('btn-sync-plan-all')?.addEventListener('click', ()=>{
   if(!isFahmiFanani()){ alert('Fitur Sync hanya tersedia untuk user Fahmi Fanani.'); return; }
   syncPlanAll();
+  const st=document.getElementById('plan-schedule-sync-status'); if(st) st.innerHTML='Schedule sync: <b>AUTO LIVE</b> · Continuous sync active';
 });
 
 document.getElementById('btn-rebuild-plan')?.addEventListener('click', async ()=>{
@@ -15622,7 +16157,273 @@ function showBcatChartOverlay(ev, monthKey, catKey, val){
           line-height:1.45;color:#E8ECF1;font-size:12.5px;
           box-sizing:border-box;overflow:hidden;
         }
-      </style>
+      
+/* ===== BACKLOG REGISTER · PROFESSIONAL TABLE REFINEMENT ===== */
+#cbm-tab-backlog > .panel:last-of-type{
+  border:1px solid rgba(255,255,255,.075);
+  border-radius:16px;
+  overflow:hidden;
+  background:linear-gradient(145deg,#111820,#0b1015);
+  box-shadow:0 16px 40px rgba(0,0,0,.24);
+}
+#cbm-tab-backlog > .panel:last-of-type .panel-head{
+  min-height:58px;
+  margin:0;
+  padding:13px 16px;
+  border-bottom:1px solid rgba(255,255,255,.065);
+  background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.008));
+}
+#cbm-tab-backlog > .panel:last-of-type .panel-head h2{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  font-size:15px;
+  letter-spacing:.3px;
+}
+#cbm-tab-backlog > .panel:last-of-type .panel-head h2:after{
+  content:'LIVE REGISTER · ACTION READY';
+  display:inline-flex;
+  align-items:center;
+  margin-left:5px;
+  padding:4px 7px;
+  border:1px solid rgba(76,175,109,.18);
+  border-radius:999px;
+  color:#75d99a;
+  background:rgba(76,175,109,.07);
+  font:700 7px/1 'JetBrains Mono',monospace;
+  letter-spacing:.55px;
+}
+#cbm-backlog-table-wrap{
+  margin:0;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(255,199,44,.35) rgba(255,255,255,.025);
+}
+#cbm-backlog-table{
+  min-width:1640px!important;
+  table-layout:fixed;
+}
+#cbm-backlog-table thead th{
+  height:42px;
+  padding:9px 10px!important;
+  background:linear-gradient(180deg,#202a34,#151c24)!important;
+  color:#aeb8c2!important;
+  border-right:1px solid rgba(255,255,255,.035)!important;
+  border-bottom:1px solid rgba(255,199,44,.25)!important;
+  box-shadow:inset 0 -1px 0 rgba(255,199,44,.06);
+  font-size:10px!important;
+  letter-spacing:.75px!important;
+}
+#cbm-backlog-table thead th:first-child{color:#ffbd9c!important}
+#cbm-backlog-table tbody{
+  counter-reset:backlog-row;
+}
+#cbm-backlog-table tbody tr{
+  counter-increment:backlog-row;
+  position:relative;
+  transition:background .16s ease,transform .16s ease;
+}
+#cbm-backlog-table tbody tr:nth-child(even) td{
+  background:#10171e;
+}
+#cbm-backlog-table tbody tr:nth-child(odd) td{
+  background:#0d141b;
+}
+#cbm-backlog-table tbody tr:hover td{
+  background:linear-gradient(90deg,rgba(255,199,44,.055),rgba(255,199,44,.018))!important;
+}
+#cbm-backlog-table tbody td{
+  height:56px;
+  padding:9px 10px!important;
+  color:#cbd2d9;
+  border-right:1px solid rgba(255,255,255,.025)!important;
+  border-bottom:1px solid rgba(255,255,255,.055)!important;
+  font-size:11px!important;
+  vertical-align:middle;
+}
+#cbm-backlog-table tbody td:first-child{
+  position:relative;
+  padding-left:30px!important;
+}
+#cbm-backlog-table tbody td:first-child:before{
+  content:counter(backlog-row,decimal-leading-zero);
+  position:absolute;
+  left:9px;
+  top:50%;
+  transform:translateY(-50%);
+  color:#5d6874;
+  font:700 7px/1 'JetBrains Mono',monospace;
+}
+#cbm-backlog-table th:nth-child(1),#cbm-backlog-table td:nth-child(1){width:104px}
+#cbm-backlog-table th:nth-child(2),#cbm-backlog-table td:nth-child(2){width:92px}
+#cbm-backlog-table th:nth-child(3),#cbm-backlog-table td:nth-child(3){width:175px}
+#cbm-backlog-table th:nth-child(4),#cbm-backlog-table td:nth-child(4){width:132px}
+#cbm-backlog-table th:nth-child(5),#cbm-backlog-table td:nth-child(5){width:58px}
+#cbm-backlog-table th:nth-child(6),#cbm-backlog-table td:nth-child(6){width:95px}
+#cbm-backlog-table th:nth-child(7),#cbm-backlog-table td:nth-child(7){width:130px}
+#cbm-backlog-table th:nth-child(8),#cbm-backlog-table td:nth-child(8){width:310px}
+#cbm-backlog-table th:nth-child(9),#cbm-backlog-table td:nth-child(9){width:130px}
+#cbm-backlog-table th:nth-child(10),#cbm-backlog-table td:nth-child(10){width:105px}
+#cbm-backlog-table th:nth-child(11),#cbm-backlog-table td:nth-child(11){width:78px}
+#cbm-backlog-table th:nth-child(12),#cbm-backlog-table td:nth-child(12){width:88px}
+#cbm-backlog-table th:nth-child(13),#cbm-backlog-table td:nth-child(13){width:112px}
+
+#cbm-backlog-table thead th:nth-child(1),
+#cbm-backlog-table tbody td:nth-child(1){
+  position:sticky;left:0;z-index:7;
+}
+#cbm-backlog-table thead th:nth-child(2),
+#cbm-backlog-table tbody td:nth-child(2){
+  position:sticky;left:104px;z-index:7;
+  box-shadow:7px 0 12px rgba(0,0,0,.18);
+}
+#cbm-backlog-table thead th:nth-child(1),
+#cbm-backlog-table thead th:nth-child(2){
+  background:linear-gradient(180deg,#232d38,#172029)!important;
+}
+#cbm-backlog-table tbody tr:nth-child(even) td:nth-child(1),
+#cbm-backlog-table tbody tr:nth-child(even) td:nth-child(2){background:#10171e!important}
+#cbm-backlog-table tbody tr:nth-child(odd) td:nth-child(1),
+#cbm-backlog-table tbody tr:nth-child(odd) td:nth-child(2){background:#0d141b!important}
+#cbm-backlog-table tbody tr:hover td:nth-child(1),
+#cbm-backlog-table tbody tr:hover td:nth-child(2){background:#172028!important}
+
+#cbm-backlog-table td:nth-child(2) b{
+  display:inline-flex;
+  align-items:center;
+  min-height:26px;
+  padding:0 8px;
+  border-left:2px solid rgba(255,199,44,.7);
+  color:#f2f5f7;
+  font:700 10px/1 'JetBrains Mono',monospace;
+  letter-spacing:.25px;
+}
+#cbm-backlog-table .cbm-bl-priority{
+  min-width:67px;
+  justify-content:center;
+  padding:6px 8px!important;
+  border-radius:7px!important;
+  font-size:8px!important;
+  letter-spacing:.45px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035);
+}
+#cbm-backlog-table .cbm-bl-priority.critical{
+  border-left:3px solid #e5484d;
+  background:linear-gradient(90deg,rgba(229,72,77,.17),rgba(229,72,77,.055));
+}
+#cbm-backlog-table .cbm-bl-priority.high{
+  border-left:3px solid #ff6b35;
+  background:linear-gradient(90deg,rgba(255,107,53,.16),rgba(255,107,53,.05));
+}
+#cbm-backlog-table .cbm-bl-priority.medium{
+  border-left:3px solid #ffc72c;
+  background:linear-gradient(90deg,rgba(255,199,44,.13),rgba(255,199,44,.045));
+}
+#cbm-backlog-table .cbm-bl-component{
+  display:block;
+  max-width:155px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:#e7edf2!important;
+  font:700 12px/1.35 'Oswald',sans-serif!important;
+  letter-spacing:.35px;
+}
+#cbm-backlog-table .cbm-bl-desc{
+  min-width:0;
+  max-width:310px;
+  white-space:normal;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  line-height:1.45;
+  color:#b7c0c9!important;
+  font-size:11px!important;
+}
+#cbm-backlog-table .cbm-bl-source{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  max-width:116px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  color:#aeb8c2;
+  background:rgba(255,255,255,.025);
+}
+#cbm-backlog-table .cbm-bl-source:before{
+  content:'';
+  width:5px;height:5px;border-radius:50%;
+  flex:0 0 5px;background:#6f7b87;
+}
+#cbm-backlog-table td:nth-child(9) .cbm-bl-source{border-color:rgba(255,199,44,.13)}
+#cbm-backlog-table td:nth-child(9) .cbm-bl-source:before{background:#ffc72c;box-shadow:0 0 6px rgba(255,199,44,.35)}
+#cbm-backlog-table .cbm-bl-aging{
+  display:inline-flex;
+  min-width:54px;
+  justify-content:center;
+  padding:5px 7px;
+  border-radius:7px;
+  background:rgba(255,255,255,.025);
+  border:1px solid rgba(255,255,255,.055);
+  color:#9da7b1;
+}
+#cbm-backlog-table .cbm-bl-aging.overdue{
+  color:#ff9b78;
+  background:rgba(255,107,53,.075);
+  border-color:rgba(255,107,53,.17);
+}
+#cbm-backlog-table .cbm-bl-status{
+  min-width:74px;
+  justify-content:center;
+  padding:6px 9px!important;
+}
+#cbm-backlog-table .cbm-bl-status.close{
+  color:#73d69a;
+  background:rgba(76,175,109,.10);
+  border-color:rgba(76,175,109,.22);
+}
+#cbm-backlog-table .cbm-bl-editable{
+  border-radius:5px;
+}
+#cbm-backlog-table .cbm-bl-editable:hover{
+  background:rgba(255,199,44,.08)!important;
+  box-shadow:inset 0 0 0 1px rgba(255,199,44,.16);
+}
+#cbm-backlog-table .cbm-bl-closed-row td{
+  color:#8f9aa5!important;
+}
+#cbm-backlog-table .empty-row td{
+  height:180px!important;
+  text-align:center!important;
+  color:#66717c!important;
+  font:600 10px 'JetBrains Mono',monospace!important;
+  background:#0d141b!important;
+}
+#cbm-backlog-table-wrap:after{
+  content:'SCROLL HORIZONTAL UNTUK DETAIL';
+  display:block;
+  padding:7px 12px;
+  color:#56616d;
+  background:#0a0f14;
+  border-top:1px solid rgba(255,255,255,.04);
+  text-align:right;
+  font:700 7px 'JetBrains Mono',monospace;
+  letter-spacing:.55px;
+}
+@media(max-width:900px){
+  #cbm-tab-backlog > .panel:last-of-type .panel-head h2:after{display:none}
+  #cbm-backlog-table{min-width:1560px!important}
+}
+@media(max-width:640px){
+  #cbm-tab-backlog > .panel:last-of-type .panel-head{padding:11px 12px}
+  #cbm-backlog-table tbody td{height:48px;padding:8px!important}
+  #cbm-backlog-table thead th{padding:8px!important}
+}
+
+</style>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-right:28px;">
         <i style="width:12px;height:12px;border-radius:3px;background:${cat.color};box-shadow:0 0 10px ${cat.color}88;display:inline-block;flex-shrink:0;"></i>
         <div>
@@ -16739,6 +17540,14 @@ function onKpiInspectionMonthChange(selectEl){
   kpiInspectionMonthValue = selectEl.value;
   renderDashboard();
 }
+/* ---- Top bar "Rentang Trend" — filter tampilan panel TREND KPI MAINTENANCE, MTBS Trend,
+   MTTR Trend & tabel Monthly KPI Achievement (chart + tabel semuanya turunan dari trendMonths
+   yang sama). Tidak memotong data yang disinkron ke sheet (selalu pakai trendMonthsAll penuh). */
+let cbmDashTrendRangeValue = ''; // '' = Semua Bulan (default)
+function onCbmDashTrendRangeChange(selectEl){
+  cbmDashTrendRangeValue = selectEl.value;
+  renderDashboard();
+}
 /** Target Pre Inspection: 4× per bulan per unit (tetap). */
 function weeksInMonth(year, month){
   // residual helper — target fixed 4×/bulan
@@ -16949,6 +17758,105 @@ function buildServiceAchievementTableHTML(stats){
   return { monthHeaders, body, months };
 }
 
+/** Top bar filter kecil di ATAS satu grafik/tabel KPI Dashboard: label + <select> pilihan periode. */
+function dashTopbar(label, selectHtml){
+  return `<div class="dash-panel-topbar"><span class="dash-panel-topbar-label"><span class="status-dot"></span>${label}</span>${selectHtml}</div>`;
+}
+
+/* ================= TOP BAR MENU DASHBOARD (pengelompokan tampilan) =================
+   #kpi-chart-dashboard di-render ulang setiap kali renderKPIChartDashboard() dipanggil (wrap.innerHTML
+   diganti total), sehingga pengelompokan dibuat lewat "tagging" DOM SETELAH render (bukan mengubah
+   template string yang sudah ada), supaya aman & tidak menyentuh logika chart/tabel yang sudah ada.
+   Setiap child langsung dari #kpi-chart-dashboard dicocokkan ke satu grup berdasarkan judul panel
+   (.dash-panel-title) yang ada di dalamnya, lalu disembunyikan/ditampilkan sesuai topbar aktif. */
+let activeDashboardTab = 'breakdown';
+const DASH_TAB_GROUPS = {
+  breakdown:   ['breakdown category per month', 'summary breakdown category per month'],
+  service:     ['dashboard service', 'service achievement'],
+  kpi:         ['kpi maintenance summary'],
+  monthlykpi:  ['monthly kpi achievement'],
+  trend:       ['trend kpi maintenance', 'comparison vs target', 'mtbs', 'mttr', 'contribution to reliability'],
+  quarter:     ['grafik quarter', 'kpi summary quarter']
+};
+function setDashboardTab(tab){
+  if(!DASH_TAB_GROUPS[tab]) return;
+  activeDashboardTab = tab;
+  document.querySelectorAll('#dash-menu-topbar .dash-menu-tab').forEach(function(b){
+    b.classList.toggle('active', b.dataset.dashtab === tab);
+  });
+  applyDashboardTabFilter();
+}
+/* Perintah "☁ Auto Sync" per grup topbar — dikembalikan di sini sebagai akses cepat di topbar itu
+   sendiri (selain tombol Auto Sync asli yang tetap ada di masing-masing panel/chart seperti semula):
+   - breakdown   -> sync "Breakdown Category per Month" (fungsi asli syncBreakdownCategoryToSheets)
+   - kpi         -> klik tombol asli "☁ Auto Sync KPI → Maintenance" (panel MA & PA Data Source)
+   - monthlykpi  -> sync "Monthly KPI Achievement" (fungsi asli syncMonthlyKpiAchievementToSheets)
+   Tab lain (service/trend/quarter) tidak punya perintah Auto Sync manual di dashboard awal, jadi
+   slotnya dikosongkan. Tombol ini tetap dibatasi khusus user Fahmi Fanani (class sync-only-fahmi),
+   sama seperti tombol Auto Sync aslinya. */
+const DASH_TAB_SYNC = {
+  breakdown: {
+    label: '☁ Auto Sync', title: 'Kirim chart & tabel summary Breakdown Category ke sheet "Dashboard" di spreadsheet Maintenance',
+    action: "syncBreakdownCategoryToSheets({manual:true})"
+  },
+  kpi: {
+    label: '☁ Auto Sync KPI → Maintenance', title: 'Fills Acv./Score on Maintenance tab (SEN KPI Performance). Only weeks that have ended.',
+    action: "document.getElementById('mapa-sync-kpi-btn')?.click()"
+  },
+  monthlykpi: {
+    label: '☁ Auto Sync', title: 'Kirim chart & tabel Monthly KPI Achievement ke sheet "Dashboard" di spreadsheet Maintenance',
+    action: "syncMonthlyKpiAchievementToSheets(window.__trendMonthsForSync||[], window.__monthlyKpiDefsForSync||[], {manual:true})"
+  }
+};
+function renderDashboardTopbarSync(){
+  const slot = document.getElementById('dash-menu-topbar-sync-slot');
+  if(!slot) return;
+  const cfg = DASH_TAB_SYNC[activeDashboardTab];
+  if(!cfg){ slot.innerHTML = ''; return; }
+  slot.innerHTML = `<button type="button" class="btn small sync-only-fahmi" style="white-space:nowrap" title="${cfg.title}" onclick="if(typeof isFahmiFanani==='function' && isFahmiFanani()){ ${cfg.action}; } else { alert('Fitur Sync hanya tersedia untuk user Fahmi Fanani.'); }">${cfg.label}</button>`;
+}
+function applyDashboardTabFilter(){
+  try{
+    const chart = document.getElementById('kpi-chart-dashboard');
+    if(!chart) return;
+    const tab = activeDashboardTab;
+    Array.prototype.forEach.call(chart.children, function(el){
+      // Header judul dashboard & overlay detail: selalu tampil, tidak ikut difilter topbar.
+      if(el.classList && (el.classList.contains('dash-hero-row') || el.classList.contains('kpi-detail-overlay'))){
+        el.style.display = '';
+        return;
+      }
+      // Panel "MA & PA Data Source" dipindah ke sini oleh placeMapaSourceAboveKpiCards(), tepat
+      // sebelum kartu KPI — jadi ikut masuk grup topbar "KPI Maintenance".
+      if(el.id === 'mapa-source-block'){
+        el.style.display = (tab === 'kpi') ? '' : 'none';
+        return;
+      }
+      // Panel kartu gauge KPI (MA/PA/MTBS/dst) tidak punya .dash-panel-title, dikenali lewat .kpi-dash-grid.
+      if(el.querySelector && el.querySelector('.kpi-dash-grid')){
+        el.style.display = (tab === 'kpi') ? '' : 'none';
+        return;
+      }
+      // Panel "Monthly KPI Achievement" (chart + tabel heatmap) memakai heading custom (bukan
+      // .dash-panel-title), dikenali lewat wrapper .mkpi-exec.
+      if(el.querySelector && el.querySelector('.mkpi-exec')){
+        el.style.display = (tab === 'monthlykpi') ? '' : 'none';
+        return;
+      }
+      const titleNodes = el.querySelectorAll ? el.querySelectorAll('.dash-panel-title') : [];
+      const combined = Array.prototype.map.call(titleNodes, function(t){ return (t.textContent||'').toLowerCase(); }).join(' | ');
+      let group = null;
+      for(const g in DASH_TAB_GROUPS){
+        if(DASH_TAB_GROUPS[g].some(function(k){ return combined.indexOf(k) !== -1; })){ group = g; break; }
+      }
+      // Blok tanpa judul yang dikenali (mis. konten lain di masa depan) dibiarkan tampil,
+      // supaya penambahan panel baru tidak otomatis hilang / perlu update mapping dulu.
+      el.style.display = group ? (group === tab ? '' : 'none') : '';
+    });
+    renderDashboardTopbarSync();
+  }catch(e){ console.warn('applyDashboardTabFilter', e); }
+}
+window.setDashboardTab = setDashboardTab;
 function renderKPIChartDashboard(k, globalStats){
   const wrap = document.getElementById('kpi-chart-dashboard');
   if(!wrap) return;
@@ -16985,7 +17893,7 @@ function renderKPIChartDashboard(k, globalStats){
   const quarterOptions = getQuarterOptions();
   const activeQuarterVal = (kpiTrendQuarterValue && quarterOptions.includes(kpiTrendQuarterValue)) ? kpiTrendQuarterValue : (quarterOptions[0]||'');
   const kQuarter = computeKPIsForQuarter(activeQuarterVal);
-  const quarterSelectHtml = `<select class="trend-quarter-select" onchange="onKpiTrendQuarterChange(this)">
+  const quarterSelectHtml = `<select class="trend-quarter-select dash-quarter-select dash-topbar-select" onchange="onKpiTrendQuarterChange(this)">
     ${quarterOptions.map(q=>`<option value="${q}" ${q===activeQuarterVal?'selected':''}>${quarterOptionLabel(q)}</option>`).join('')}
   </select>`;
   const quarterKpiDefs = monthlyKpiDefs.map(d=>{
@@ -17032,7 +17940,7 @@ function renderKPIChartDashboard(k, globalStats){
   }
 
   // --- All months trend: auto from Daily Maintenance + performance sheet periods ---
-  const trendMonths = [];
+  const trendMonthsAll = [];
   {
     const periodSet = new Set(getKPIPeriodOptions());
     // Include months covered by live performance sheet (periodStart–periodEnd)
@@ -17060,7 +17968,7 @@ function renderKPIChartDashboard(k, globalStats){
       const [y,m] = key.split('-').map(Number);
       const d = new Date(y, m-1, 1);
       const kk = computeKPIsFor(key); // MA/PA from performance sheet when period matches; MTBS/MTTR/PMR/SA from Daily Maintenance Approved
-      trendMonths.push({
+      trendMonthsAll.push({
         key, label: d.toLocaleDateString('en-US',{month:'short', year:'2-digit'}),
         short: d.toLocaleDateString('en-US',{month:'short'}),
         mtbs: kk.mtbs||0, mttr: kk.mttr||0, pmr: kk.pmr||0, sa: kk.sa||0, ma: kk.ma||0, pa: kk.pa||0,
@@ -17086,11 +17994,26 @@ function renderKPIChartDashboard(k, globalStats){
 
   // Auto sync diam-diam "Monthly KPI Achievement" (chart + tabel) ke sheet "Dashboard",
   // blok terpisah dari Breakdown Category (dibatasi TTL, tidak memblokir render UI).
-  autoSyncMonthlyKpiAchievementDashboard(trendMonths, monthlyKpiDefs);
+  // Sync selalu memakai data BULAN PENUH (trendMonthsAll), tidak ikut terpotong oleh filter
+  // "top bar" tampilan (trendMonths di bawah), supaya sheet tetap lengkap apa pun filter UI-nya.
+  autoSyncMonthlyKpiAchievementDashboard(trendMonthsAll, monthlyKpiDefs);
   // Disimpan di window supaya tombol "☁ Auto Sync" manual (onclick inline, scope global)
   // selalu bisa mengambil data trend/KPI TERBARU tanpa perlu re-render ulang.
-  window.__trendMonthsForSync = trendMonths;
+  window.__trendMonthsForSync = trendMonthsAll;
   window.__monthlyKpiDefsForSync = monthlyKpiDefs;
+
+  // --- Top bar "Rentang Trend" — filter tampilan (chart + tabel) untuk panel TREND KPI
+  //     MAINTENANCE, MTBS Trend, MTTR Trend & tabel Monthly KPI Achievement. Data sinkronisasi
+  //     ke sheet (di atas) tetap memakai trendMonthsAll (lengkap), hanya tampilan yang difilter. */
+  const trendRangeOptions = [
+    { value:'',   label:'Semua Bulan' },
+    { value:'3',  label:'3 Bulan Terakhir' },
+    { value:'6',  label:'6 Bulan Terakhir' },
+    { value:'12', label:'12 Bulan Terakhir' }
+  ];
+  const activeTrendRange = (typeof cbmDashTrendRangeValue!=='undefined' && trendRangeOptions.some(o=>o.value===cbmDashTrendRangeValue)) ? cbmDashTrendRangeValue : '';
+  const trendMonths = activeTrendRange ? trendMonthsAll.slice(-Number(activeTrendRange)) : trendMonthsAll;
+  const trendRangeSelectHtml = `<select class="dash-topbar-select" onchange="onCbmDashTrendRangeChange(this)">${trendRangeOptions.map(o=>`<option value="${o.value}" ${o.value===activeTrendRange?'selected':''}>${o.label}</option>`).join('')}</select>`;
 
   function sparklineSVG(values, color){
     const W=120, H=22, pad=2;
@@ -18168,7 +19091,7 @@ function renderKPIChartDashboard(k, globalStats){
 
       const labelFill = b.isActive ? '#FFC72C' : '#D0D5DC';
 
-      return `<g style="cursor:pointer" onclick="(function(){const s=document.querySelector('.trend-quarter-select');if(s){s.value='${b.qVal}';if(typeof onKpiTrendQuarterChange==='function')onKpiTrendQuarterChange(s);}})()">
+      return `<g style="cursor:pointer" onclick="(function(){const s=document.querySelector('.dash-quarter-select');if(s){s.value='${b.qVal}';if(typeof onKpiTrendQuarterChange==='function')onKpiTrendQuarterChange(s);}})()">
         <title>${b.fullLabel||b.label} · ${pct.toFixed(1)}% · ${statusLabel(pct)}</title>
         ${activeRing}
         <polygon points="${sidePts}" fill="${side}"/>
@@ -18256,7 +19179,7 @@ function renderKPIChartDashboard(k, globalStats){
     const color = QUARTER_LEGEND_PALETTE[(Math.max(1, qNum) - 1) % QUARTER_LEGEND_PALETTE.length];
     const activeCls = b.isActive ? ' active' : '';
     const qLabel = b.label || ('Q'+String(b.qVal).split('-Q')[1]);
-    return `<button type="button" class="qleg-chip${activeCls}" onclick="(function(){const s=document.querySelector('.trend-quarter-select');if(s){s.value='${b.qVal}';if(typeof onKpiTrendQuarterChange==='function')onKpiTrendQuarterChange(s);}})()">
+    return `<button type="button" class="qleg-chip${activeCls}" onclick="(function(){const s=document.querySelector('.dash-quarter-select');if(s){s.value='${b.qVal}';if(typeof onKpiTrendQuarterChange==='function')onKpiTrendQuarterChange(s);}})()">
       <span class="qleg-dot" style="background:${color};box-shadow:0 0 8px ${color}66"></span>
       <span class="qleg-label">${qLabel}</span>
       <span class="qleg-year">${b.year||''}</span>
@@ -18405,14 +19328,10 @@ function renderKPIChartDashboard(k, globalStats){
       </div>
     </div>`;
     })()}
-    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;margin-bottom:10px">
-      <span style="font-size:9px;color:var(--green);text-transform:uppercase;letter-spacing:.5px;display:inline-flex;align-items:center;gap:6px">
-        <span class="status-dot" style="margin-right:0"></span>Live Sync
-        <span style="font-size:10px;color:var(--text-dim);letter-spacing:.5px">Period</span>
-      </span>
-      ${monthlyChartSelectHtml}
+    <div class="dash-panel" style="margin-bottom:14px">
+      ${dashTopbar('Live Sync · Period', monthlyChartSelectHtml)}
+      <div class="kpi-dash-grid">${gaugeCardsHtml}</div>
     </div>
-    <div class="kpi-dash-grid">${gaugeCardsHtml}</div>
     <div class="dash-panel" style="position:relative;margin-bottom:14px">
         <div class="dash-panel-title">KPI MAINTENANCE SUMMARY</div>
         <div style="overflow-x:auto">
@@ -18425,19 +19344,23 @@ function renderKPIChartDashboard(k, globalStats){
     ${(() => { const _trend = multiTrendSVG(); return `
     <div class="dash-quad-grid">
       <div class="dash-panel">
-        <div class="dash-panel-title">TREND KPI MAINTENANCE <span>(All Months · % Achievement)</span></div>
+        ${dashTopbar('Rentang Trend', trendRangeSelectHtml)}
+        <div class="dash-panel-title">TREND KPI MAINTENANCE <span>(% Achievement)</span></div>
         <div class="dash-panel-chart-fill">${_trend.chartSvg}</div>
       </div>
       <div class="dash-panel">
+        ${dashTopbar('Period', monthlyChartSelectHtml)}
         <div class="dash-panel-title">Comparison vs Target</div>
         <div class="dash-panel-chart-fill">${comparisonBarsSVG()}</div>
       </div>
       <div class="dash-panel">
-        <div class="dash-panel-title">MTBS <span>All Months Trend (Hours)</span></div>
+        ${dashTopbar('Rentang Trend', trendRangeSelectHtml)}
+        <div class="dash-panel-title">MTBS <span>Trend (Hours)</span></div>
         <div class="dash-panel-chart-fill">${mtbsTrendSVG()}</div>
       </div>
       <div class="dash-panel">
-        <div class="dash-panel-title">MTTR <span>All Months Trend (Hours)</span></div>
+        ${dashTopbar('Rentang Trend', trendRangeSelectHtml)}
+        <div class="dash-panel-title">MTTR <span>Trend (Hours)</span></div>
         <div class="dash-panel-chart-fill">${mttrTrendSVG()}</div>
       </div>
     </div>
@@ -18449,11 +19372,17 @@ function renderKPIChartDashboard(k, globalStats){
           <div class="dash-contrib-legend">${contribLegend}</div>
         </div>
       </div>
-      <div class="dash-panel">${_trend.tableHtml}</div>
+    </div>
+    <div class="dash-mid-grid">
+      <div class="dash-panel">
+        ${dashTopbar('Rentang Trend', trendRangeSelectHtml)}
+        ${_trend.tableHtml}
+      </div>
     </div>
     `; })()}
     <div class="dash-mid-grid">
       <div class="dash-panel">
+        ${dashTopbar('Triwulan', quarterSelectHtml)}
         <div class="chart-panel-title-row">
           <div class="dash-panel-title" style="margin-bottom:0">GRAFIK QUARTER</div>
         </div>
@@ -18468,6 +19397,7 @@ function renderKPIChartDashboard(k, globalStats){
         </div>
       </div>
       <div class="dash-panel">
+        ${dashTopbar('Triwulan', quarterSelectHtml)}
         <div class="dash-panel-title">KPI SUMMARY QUARTER</div>
         <div style="overflow-x:auto">
           <table class="dash-sum-table quarter-summary-table" style="width:100%;table-layout:fixed">
@@ -18485,8 +19415,8 @@ function renderKPIChartDashboard(k, globalStats){
       </div>
     </div>
     ${kpiDetailOverlay}`;
-  try{ placeMapaSourceBelowServiceAchievement(); }catch(_e){}
-  try{ requestAnimationFrame(function(){ placeMapaSourceBelowServiceAchievement(); }); }catch(_e){}
+  try{ placeMapaSourceAboveKpiCards(); applyDashboardTabFilter(); }catch(_e){}
+  try{ requestAnimationFrame(function(){ placeMapaSourceAboveKpiCards(); applyDashboardTabFilter(); }); }catch(_e){}
 }
 
 
@@ -18544,7 +19474,7 @@ function computeKPIs(){
   const mttrEligible = approvedRecords.filter(r=>r.category==='Breakdown' && r.duration!==null && r.duration!==undefined);
   const mttr = mttrEligible.length ? (mttrEligible.reduce((s,r)=>s+(Number(r.duration)||0),0)/mttrEligible.length) : 0;
 
-  // PMR = Planned Maintenance Hours / Total Maintenance Hours × 100 (formula resmi)
+  // PMR = Planned Maintenance Hours ÷ Total Maintenance Hours × 100 (formula resmi)
   const { pmr } = calcPMRFromRecords(approvedRecords);
 
   // Service Accuracy (SA): dihitung dari data Daily Maintenance (kategori Periodical, sudah Approved),
@@ -18642,7 +19572,7 @@ function computeKPIsForRange(startStr, endStr){
   const mttrEligible = approvedRecords.filter(r=>r.category==='Breakdown' && r.duration!==null && r.duration!==undefined);
   const mttr = mttrEligible.length ? (mttrEligible.reduce((s,r)=>s+(Number(r.duration)||0),0)/mttrEligible.length) : 0;
 
-  // PMR = Planned Maintenance Hours / Total Maintenance Hours × 100 (formula resmi)
+  // PMR = Planned Maintenance Hours ÷ Total Maintenance Hours × 100 (formula resmi)
   const { pmr } = calcPMRFromRecords(approvedRecords);
 
   // Service Accuracy (SA): dihitung dari data Daily Maintenance (kategori Periodical, sudah Approved)
@@ -18814,28 +19744,27 @@ function cellColor(pct){
 }
 
 
-function placeMapaSourceBelowServiceAchievement(){
+/** Tempatkan panel "MA & PA Data Source" TEPAT SEBELUM panel kartu KPI (kpi-dash-grid) di dalam
+ *  KPI Chart Dashboard, sehingga ikut masuk ke grup topbar "KPI Maintenance" bersama kartu KPI. */
+function placeMapaSourceAboveKpiCards(){
   try{
     const block = document.getElementById('mapa-source-block');
     const chart = document.getElementById('kpi-chart-dashboard');
     if(!block || !chart) return;
 
-    // Cari panel SERVICE ACHIEVEMENT di dalam chart
-    let achHost = null;
+    // Cari panel kartu KPI (kpi-dash-grid) di dalam chart
+    let kpiHost = null;
     chart.querySelectorAll('.dash-panel').forEach(p=>{
-      const t = p.querySelector('.dash-panel-title');
-      if(t && /SERVICE ACHIEVEMENT/i.test((t.textContent||'').trim())){
-        achHost = p.closest('.dash-mid-grid') || p;
-      }
+      if(!kpiHost && p.querySelector('.kpi-dash-grid')) kpiHost = p;
     });
 
-    if(achHost && achHost.parentNode){
-      // Sisipkan TEPAT setelah grid/panel SERVICE ACHIEVEMENT (di dalam chart)
-      if(block.previousSibling !== achHost){
-        achHost.parentNode.insertBefore(block, achHost.nextSibling);
+    if(kpiHost && kpiHost.parentNode){
+      // Sisipkan TEPAT sebelum panel kartu KPI (di dalam chart)
+      if(block.nextSibling !== kpiHost){
+        kpiHost.parentNode.insertBefore(block, kpiHost);
       }
       block.style.display = '';
-      block.style.marginTop = '16px';
+      block.style.marginTop = '0';
       block.style.marginBottom = '20px';
       return;
     }
@@ -18845,7 +19774,7 @@ function placeMapaSourceBelowServiceAchievement(){
       chart.parentNode.insertBefore(block, chart.nextSibling);
     }
     block.style.display = '';
-  }catch(e){ console.warn('placeMapaSourceBelowServiceAchievement', e); }
+  }catch(e){ console.warn('placeMapaSourceAboveKpiCards', e); }
 }
 
 /** Amankan panel MA&PA sebelum wrap.innerHTML menghapus isi chart (panel mungkin sudah di dalam chart). */
@@ -19927,7 +20856,11 @@ async function runPlanHmLiveSyncCycle(opts){
         }
       }catch(_e){}
       if(planActive || needRefresh || hmTouched > 0){
-        try{ renderPlanTable(); }catch(_e){}
+        if(psAutoSyncSchedule || planActive) { try{ renderPlanTable(); }catch(_e){} }
+        const liveHmView = document.getElementById('ps-subview-livehm');
+        if(planActive && liveHmView && liveHmView.classList.contains('active') && psAutoRefreshLiveHM){
+          try{ renderPlanHmLiveChart(); }catch(_e){}
+        }
       }
     } else if(needRefresh){
       try{ await rebuildPlanServiceAuto({ silent:true }); }catch(_e){}
@@ -21871,7 +22804,7 @@ function renderCBMSafety(){
 function switchCBMTab(tab){
   cbmActiveTab = tab || 'overview';
   document.querySelectorAll('#cbm-tabs .chip').forEach(c=> c.classList.toggle('active', c.dataset.cbmTab===cbmActiveTab));
-  ['overview','lifetime','safety','pareto','insight'].forEach(t=>{
+  ['overview','lifetime','safety','pareto','insight','backlog'].forEach(t=>{
     const p = document.getElementById('cbm-tab-'+t);
     if(p) p.style.display = t===cbmActiveTab ? '' : 'none';
   });
@@ -21886,6 +22819,7 @@ function renderCBMActiveTab(){
   else if(cbmActiveTab==='safety') renderCBMSafety();
   else if(cbmActiveTab==='pareto') renderCBMPareto(rows, stats);
   else if(cbmActiveTab==='insight') renderCBMInsight(stats);
+  else if(cbmActiveTab==='backlog') renderCbmBacklog();
 }
 
 
@@ -23281,7 +24215,7 @@ function renderCbmRca(){
   rows.sort((a,b)=> String(b.date||'').localeCompare(String(a.date||'')));
 
   if(!rows.length){
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="11">Belum ada RCA. Klik <b>Generate Otomatis dari Breakdown</b> atau klik baris komponen di tabel Pareto di atas.</td></tr>';
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="10">Belum ada RCA. Klik <b>Generate Otomatis dari Breakdown</b> atau klik baris komponen di tabel Pareto di atas.</td></tr>';
     return;
   }
   // Rapikan teks kolom: spasi ganda, pipe berantakan, newline → spasi bersih
@@ -23310,7 +24244,7 @@ function renderCbmRca(){
       : picRaw.split(/\s*·\s*/).map(n=>escUH(n.trim())).filter(Boolean).join('<br>');
     const unit = escUH(String(r.unitCode||'').trim());
     const comp = escUH(String(r.component||'').trim() || '—');
-    return `<tr data-rca-id="${escUH(r.id)}">
+    return `<tr data-rca-id="${escUH(r.id)}" class="rca-row-dblclick" title="Klik 2 kali pada baris untuk Edit / Hapus" ondblclick="editRcaRecord('${id}')">
       <td><span class="rca-date">${formatDateDMY(r.date)}</span></td>
       <td><span class="rca-unit">${unit}</span></td>
       <td><span class="cat ${comp}">${comp}</span></td>
@@ -23321,12 +24255,6 @@ function renderCbmRca(){
       <td class="rca-text" title="${preventive}"><div class="rca-clip">${preventive}</div></td>
       <td class="rca-pic" title="${picTitle}">${picHtml}</td>
       <td><span class="pill ${stClass}">${escUH(st)}</span></td>
-      <td>
-        <div class="rca-actions">
-          <span class="edit-text-btn" onclick="editRcaRecord('${id}')">Edit</span>
-          <button type="button" class="btn danger" onclick="deleteRcaRecord('${id}')">Hapus</button>
-        </div>
-      </td>
     </tr>`;
   }).join('');
   try{ attachTopScroll('rca'); }catch(_e){}
@@ -23368,6 +24296,15 @@ window.deleteRcaRecord = async function(id){
   document.getElementById('rca-edit-cancel')?.addEventListener('click', closeRcaEditModal);
   document.getElementById('rca-edit-overlay')?.addEventListener('click', (e)=>{
     if(e.target && e.target.id==='rca-edit-overlay') closeRcaEditModal();
+  });
+  document.getElementById('rca-edit-delete')?.addEventListener('click', async ()=>{
+    if(!rcaEditActiveId) return;
+    const idToDelete = rcaEditActiveId;
+    if(!confirm('Hapus record RCA ini?')) return;
+    rcaRecords = (rcaRecords||[]).filter(r=>r.id!==idToDelete);
+    await saveRcaRecords();
+    closeRcaEditModal();
+    renderCbmRca();
   });
   document.getElementById('rca-edit-save')?.addEventListener('click', async ()=>{
     const r = (rcaRecords||[]).find(x=>x.id===rcaEditActiveId);
@@ -23449,6 +24386,269 @@ function renderCBMInsight(stats){
   }).join('');
 }
 
+function cbmBacklogDays(dateStr){
+  if(!dateStr) return 0;
+  const d = new Date(dateStr);
+  if(isNaN(d.getTime())) return 0;
+  const now = new Date();
+  const base = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const day = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  return Math.max(0, Math.floor((base-day)/86400000));
+}
+function cbmBacklogPriority(source, item){
+  const txt = String(item?.desc || item?.jobDescription || item?.rootCause || '').toLowerCase();
+  const st = String(item?.status || '').toLowerCase();
+  if(source==='RCA' && /critical|crit/.test(st+' '+txt)) return 'Critical';
+  if(/waiting\s*part|spare\s*part|part\s*waiting|urgent|critical|safety|unsafe|leak|bocor|breakdown/.test(txt)) return 'High';
+  if(source==='RCA') return 'High';
+  if(source==='Planning System') return st==='open' ? 'High' : 'Medium';
+  return 'Medium';
+}
+function cbmBacklogBuildRows(){
+  const out = [];
+  const normStatus = v => String(v||'Open').trim() || 'Open';
+
+  // Extract lightweight part-usage information from Daily Maintenance text fields.
+  // Daily Maintenance currently stores job/repair/keterangan text rather than a
+  // dedicated sparepart schema, so we preserve the original text and only parse
+  // explicit PN / Qty patterns when they exist.
+  const extractDailyPart = r => {
+    const text = [r.jobDesc, r.repairAction, r.keterangan].filter(Boolean).join(' | ');
+    const pnMatch = text.match(/\b(?:P\/N|PN|PART(?:\s*NUMBER)?|NO\.?\s*PART)\s*[:#-]?\s*([A-Z0-9][A-Z0-9./_-]{3,})/i);
+    const qtyMatch = text.match(/\b(?:QTY|QUANTITY|JUMLAH)\s*[:=-]?\s*(\d+(?:[.,]\d+)?)\s*(?:PCS|PC|EA|UNIT)?\b/i)
+      || text.match(/\b(\d+(?:[.,]\d+)?)\s*(?:PCS|PC|EA)\b/i);
+    const component = String(r.bdCategory||'').trim() || 'Daily Maintenance Unplan';
+    return {
+      text,
+      partNumber: pnMatch ? pnMatch[1].trim() : '',
+      qty: qtyMatch ? qtyMatch[1].replace(',', '.') : ''
+    , component};
+  };
+
+  // 1) Pre Inspection — only open defects
+  (Array.isArray(preInspectionRecords)?preInspectionRecords:[]).forEach(r=>{
+    const defects = Array.isArray(r.defects)?r.defects:[];
+    defects.filter(d=>String(d.status||'Open').toLowerCase()!=='close').forEach((d,idx)=>{
+      const date = r.tanggal || '';
+      const hm = r.hm ?? '';
+      out.push({source:'Pre Inspection',sourceKey:'pre',unit:r.unitCode||'—',typeUnit:r.typeUnit||'',component:d.component||'Inspection Finding',desc:d.desc||'Temuan Pre Inspection',date,hm,aging:cbmBacklogDays(date),status:'Open',priority:cbmBacklogPriority('Pre Inspection',d),id:`pre-${r.id}-${idx}`});
+    });
+  });
+
+  // 2) Planning System — Open AND Closed historical maintenance
+  (Array.isArray(planningSystemRecords)?planningSystemRecords:[]).forEach(r=>{
+    const status = normStatus(r.status);
+    const date = r.planDate || r.planExecutionDate || r.tanggal || r.dueDate || '';
+    const rid = r.id || `${r.unitCode||'unit'}-${date}-${r.component||''}-${r.jobDescription||r.jobDesc||r.description||''}`;
+    out.push({source:'Planning System',sourceKey:'plan',unit:r.unitCode||'—',typeUnit:r.typeUnit||'',component:r.component||'Maintenance Job',desc:r.jobDescription||r.jobDesc||r.description||'Planned maintenance',date,hm:r.hm||r.hmPlan||'',aging:cbmBacklogDays(r.dueDate||date),status,priority:cbmBacklogPriority('Planning System',r),id:`ps-${rid}`});
+  });
+
+  const visible = out.filter(r=>!cbmBacklogDismissed[r.id]);
+  visible.forEach(r=>{
+    const extra = cbmBacklogExtra[r.id] || {};
+    r.partNumber = extra.partNumber || r.partNumber || '';
+    r.qty = extra.qty || r.qty || '';
+    r.pr = extra.pr || '';
+    r.partLocation = extra.partLocation || '';
+    if(extra.status) r.status = extra.status;
+  });
+  return visible.sort((a,b)=>{
+    const closedA=/^(close|closed|done|completed)$/i.test(String(a.status||''));
+    const closedB=/^(close|closed|done|completed)$/i.test(String(b.status||''));
+    return Number(closedA)-Number(closedB) || ({Critical:0,High:1,Medium:2}[a.priority]??9)-({Critical:0,High:1,Medium:2}[b.priority]??9) || (b.aging||0)-(a.aging||0);
+  });
+}
+
+function cbmBacklogStatusClass(status){
+  return String(status||'Open').toLowerCase().replace(/\s+/g,'-').replace(/[^a-z-]/g,'');
+}
+function cbmBacklogChartSvg(rows){
+  const units=['SWA-101','SWA-102','SBD-103','SPC-104'];
+  const closed=v=>/^(close|closed|done|completed)$/i.test(String(v||''));
+  const data=units.map(u=>{
+    const rr=rows.filter(r=>String(r.unit||'').toUpperCase()===u);
+    return {u,open:rr.filter(r=>!closed(r.status)).length,closed:rr.filter(r=>closed(r.status)).length,total:rr.length};
+  });
+  const W=700,H=195,padL=46,padR=16,padT=18,padB=32;
+  const max=Math.max(1,...data.map(d=>Math.max(d.open,d.closed,d.total)));
+  const lo=0,hi=Math.max(1,max*1.15);
+  const x=i=>padL+(data.length===1?0:(W-padL-padR)*i/(data.length-1));
+  const y=v=>padT+(H-padT-padB)*(1-v/hi);
+  const gridVals=[0,Math.ceil(hi*.33),Math.ceil(hi*.66),Math.ceil(hi)];
+  const grid=gridVals.map(v=>`<line x1="${padL}" x2="${W-padR}" y1="${y(v)}" y2="${y(v)}" stroke="rgba(255,255,255,.08)" stroke-width="1"/>`).join('');
+  const labels=gridVals.map(v=>`<text x="${padL-7}" y="${y(v)+3}" text-anchor="end" fill="#737c87" font-size="9" font-family="JetBrains Mono">${v}</text>`).join('');
+  const buildPath=key=>data.map((d,i)=>`${x(i).toFixed(1)},${y(d[key]).toFixed(1)}`).join(' ');
+  const openPts=buildPath('open'), closedPts=buildPath('closed');
+  const area=`${padL},${H-padB} ${openPts} ${W-padR},${H-padB}`;
+  const dots=(key,color)=>data.map((d,i)=>`<circle cx="${x(i)}" cy="${y(d[key])}" r="3.1" fill="#151c24" stroke="${color}" stroke-width="2"><title>${d.u} · ${key==='open'?'Open':'Closed'} ${d[key]}</title></circle>`).join('');
+  const xlabels=data.map((d,i)=>`<text x="${x(i)}" y="${H-10}" text-anchor="middle" fill="#aeb7c0" font-size="9" font-family="Oswald">${d.u}</text>`).join('');
+  const totals=data.map((d,i)=>`<text x="${x(i)}" y="${Math.min(H-padB-5,y(d.total)-10)}" text-anchor="middle" fill="#f0f3f7" font-size="10" font-weight="700" font-family="JetBrains Mono">${d.total}</text>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Backlog load by unit">
+    <defs><linearGradient id="cbmBlGrad" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="rgba(127,224,224,.22)"/><stop offset="1" stop-color="rgba(127,224,224,0)"/></linearGradient></defs>
+    ${grid}${labels}
+    <polygon points="${area}" fill="url(#cbmBlGrad)"/>
+    <polyline points="${openPts}" fill="none" stroke="#7fe0e0" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    <polyline points="${closedPts}" fill="none" stroke="#FFC72C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/>
+    ${dots('open','#7fe0e0')}${dots('closed','#FFC72C')}${totals}${xlabels}
+  </svg>
+  <div class="ps-hm-legend" style="margin-top:2px;">
+    <span><i style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#7fe0e0;box-shadow:0 0 8px #7fe0e0"></i> Open Load</span>
+    <span><i style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#FFC72C;box-shadow:0 0 8px #FFC72C"></i> Closed Historical</span>
+    <span>Total records per unit</span>
+  </div>`;
+}
+
+function cbmBacklogStatusChartSvg(rows){
+  const labels=[['Open','#ff6b35'],['In Progress','#ffc72c'],['Verified','#4a90d9'],['Close','#4caf6d']];
+  const vals=labels.map(([n])=>rows.filter(r=>{const s=String(r.status||'').toLowerCase();return n==='Close'?(s==='close'||s==='closed'||s==='done'||s==='completed'):s===n.toLowerCase();}).length);
+  const total=vals.reduce((a,b)=>a+b,0), safe=total||1, W=620,H=195,cx=105,cy=95,r=57,stroke=18; let svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Backlog status mix">`;
+  const circ=2*Math.PI*r; let offset=0; labels.forEach((it,i)=>{const len=circ*vals[i]/safe; if(vals[i]) svg+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${it[1]}" stroke-width="${stroke}" stroke-linecap="round" stroke-dasharray="${len} ${circ-len}" stroke-dashoffset="${-offset}" transform="rotate(-90 ${cx} ${cy})"/>`; offset+=len;});
+  svg+=`<circle cx="${cx}" cy="${cy}" r="44" fill="#10161d"/><text x="${cx}" y="100" text-anchor="middle" fill="#f5f7f9" font-size="30" font-weight="700" font-family="Oswald">${total}</text><text x="${cx}" y="119" text-anchor="middle" fill="#707b86" font-size="10" font-family="JetBrains Mono">TOTAL RECORDS</text>`;
+  labels.forEach((it,i)=>{const x=215+(i%2)*195,y=52+Math.floor(i/2)*74,pct=total?Math.round(vals[i]/total*100):0;svg+=`<rect x="${x}" y="${y}" width="11" height="11" rx="3" fill="${it[1]}"/><text x="${x+18}" y="${y+10}" fill="#bfc6ce" font-size="13" font-family="Inter">${it[0]}</text><text x="${x+168}" y="${y+10}" text-anchor="end" fill="#f1f4f7" font-size="14" font-weight="700" font-family="JetBrains Mono">${vals[i]}</text><text x="${x+168}" y="${y+26}" text-anchor="end" fill="#69747f" font-size="10" font-family="JetBrains Mono">${pct}%</text>`;});
+  return svg+'</svg>';
+}
+
+function renderCbmBacklog(){
+  const rows = cbmBacklogBuildRows();
+  const unitSel = document.getElementById('cbm-bl-filter-unit');
+  const sourceSel = document.getElementById('cbm-bl-filter-source');
+  const priSel = document.getElementById('cbm-bl-filter-priority');
+  const statusSel = document.getElementById('cbm-bl-filter-status');
+  if(unitSel){
+    const current = unitSel.value;
+    const units = Array.from(new Set(rows.map(r=>r.unit).filter(Boolean)));
+    unitSel.innerHTML = '<option value="">Semua Unit</option>'+units.map(u=>`<option value="${escUH(u)}">${escUH(u)}</option>`).join('');
+    unitSel.value = units.includes(current)?current:'';
+  }
+  const unit=unitSel?.value||'',source=sourceSel?.value||'',priority=priSel?.value||'',status=statusSel?.value||'';
+  const filtered=rows.filter(r=>(!unit||r.unit===unit)&&(!source||r.source===source)&&(!priority||r.priority===priority)&&(!status||r.status===status));
+  const openRows=rows.filter(r=>!/^(close|closed|done|completed)$/i.test(String(r.status||'')));
+  const closedRows=rows.filter(r=>/^(close|closed|done|completed)$/i.test(String(r.status||'')));
+  const total=rows.length,critical=openRows.filter(r=>r.priority==='Critical'||r.priority==='High').length,waiting=openRows.filter(r=>/waiting\s*part|spare\s*part|part\s*waiting/i.test(r.desc)).length,aging=openRows.filter(r=>(r.aging||0)>7).length;
+  const setText=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v};
+  setText('cbm-bl-total',openRows.length);setText('cbm-bl-critical',critical);setText('cbm-bl-waiting',waiting);setText('cbm-bl-aging',aging);setText('cbm-backlog-count',openRows.length);
+  const summary=document.getElementById('cbm-backlog-summary');if(summary)summary.textContent=`${openRows.length} OPEN · ${closedRows.length} CLOSED · ${total} TOTAL`;
+  const chartTotal=document.getElementById('cbm-bl-chart-total');if(chartTotal)chartTotal.textContent=`${total} records`;
+  const openPct=document.getElementById('cbm-bl-chart-openpct');if(openPct)openPct.textContent=`${total?Math.round(openRows.length/total*100):0}% OPEN`;
+  const unitChart=document.getElementById('cbm-bl-unit-chart');if(unitChart)unitChart.innerHTML=cbmBacklogChartSvg(rows);
+  const statusChart=document.getElementById('cbm-bl-status-chart');if(statusChart)statusChart.innerHTML=cbmBacklogStatusChartSvg(rows);
+  const tbody=document.getElementById('cbm-backlog-tbody');if(!tbody)return;
+  if(!filtered.length){tbody.innerHTML='<tr class="empty-row"><td colspan="13">Tidak ada backlog sesuai filter.</td></tr>';return;}
+  const esc=(v)=>escUH(v==null?'':String(v));
+  tbody.innerHTML=filtered.map(r=>{
+    const pc=r.priority.toLowerCase(),agingClass=(r.aging||0)>7?'overdue':'',date=r.date?formatDateDMY(r.date):'—',hm=r.hm!==''&&r.hm!=null&&!isNaN(Number(r.hm))?Number(r.hm).toLocaleString('id-ID'):(''+(r.hm||'—'));
+    const closed=/^(close|closed|done|completed)$/i.test(String(r.status||''));
+    const statusCls=cbmBacklogStatusClass(r.status);
+    const sourceCls=r.sourceKey==='pre'?'source-pre':(r.sourceKey==='plan'?'source-plan':(r.sourceKey==='daily-unplan'?'source-daily-unplan':'source-other'));
+    return `<tr data-row-id="${esc(r.id)}" class="${closed?'cbm-bl-closed-row':''}">
+      <td><span class="cbm-bl-priority ${pc}">${esc(r.priority)}</span></td><td><b>${esc(r.unit)}</b></td><td><span class="cbm-bl-component">${esc(r.component)}</span></td>
+      <td class="cbm-bl-editable" data-edit-field="partNumber">${r.partNumber?esc(r.partNumber):'—'}</td>
+      <td class="cbm-bl-editable" data-edit-field="qty">${r.qty?esc(r.qty):'—'}</td>
+      <td class="cbm-bl-editable" data-edit-field="pr">${r.pr?esc(r.pr):'—'}</td><td class="cbm-bl-editable" data-edit-field="partLocation">${r.partLocation?esc(r.partLocation):'—'}</td>
+      <td class="cbm-bl-desc">${esc(r.desc)}${r.sourceKey==='daily-unplan' && r.partUsageText?`<span class="cbm-bl-daily-part ${r.partNumber?'cbm-bl-part-used':''}">PART TRACKING · ${esc(r.partUsageText)}</span>`:''}</td><td><span class="cbm-bl-source ${sourceCls}">${esc(r.source)}</span></td><td>${date}</td><td>${hm}</td>
+      <td><span class="cbm-bl-aging ${agingClass}">${r.aging||0} hari</span></td><td class="cbm-bl-editable" data-edit-field="status"><span class="pill cbm-bl-status ${statusCls}">${esc(r.status)}</span></td>
+    </tr>`;
+  }).join('');
+  // Keep a single horizontal scrollbar at the TOP of the register.
+  const topScroll=document.getElementById('cbm-backlog-top-scroll');
+  const topInner=document.getElementById('cbm-backlog-top-scroll-inner');
+  const tableWrap=document.getElementById('cbm-backlog-table-wrap');
+  const table=document.getElementById('cbm-backlog-table');
+  if(topScroll && topInner && tableWrap && table){
+    topInner.style.width=Math.max(table.scrollWidth, tableWrap.clientWidth)+'px';
+    if(!topScroll.dataset.bound){
+      topScroll.dataset.bound='1';
+      topScroll.addEventListener('scroll',()=>{ tableWrap.scrollLeft=topScroll.scrollLeft; });
+      tableWrap.addEventListener('scroll',()=>{ if(Math.abs(topScroll.scrollLeft-tableWrap.scrollLeft)>1) topScroll.scrollLeft=tableWrap.scrollLeft; });
+    }
+    topScroll.scrollLeft=tableWrap.scrollLeft;
+  }
+}
+
+/* ===== CBM BACKLOG — Edit/Hapus Part Number, Qty, PR, Part Location =====
+   Data tambahan disimpan terpisah (keyed by id baris backlog) karena baris backlog
+   sendiri dibangun ulang dinamis dari Pre Inspection / Planning System / RCA setiap
+   render. "Hapus" berarti menyembunyikan baris tsb dari daftar Backlog (dismissed),
+   sumber datanya di menu asal tidak ikut terhapus. Modal hanya bisa dibuka lewat
+   double-click pada baris, dan hanya untuk user Fahmi Fanani — tidak ada tombol/menu
+   edit atau hapus apapun yang ditampilkan di tabel Backlog untuk user lain. */
+let cbmBacklogExtra = {};
+let cbmBacklogDismissed = {};
+let cbmBacklogEditRowId = null;
+async function loadCbmBacklogExtraData(){
+  try{
+    const cbe = await appStorage.get('cbm-backlog-extra');
+    cbmBacklogExtra = cbe ? JSON.parse(cbe.value) : {};
+  }catch(e){ cbmBacklogExtra = {}; }
+  try{
+    const cbd = await appStorage.get('cbm-backlog-dismissed');
+    cbmBacklogDismissed = cbd ? JSON.parse(cbd.value) : {};
+  }catch(e){ cbmBacklogDismissed = {}; }
+}
+async function saveCbmBacklogExtra(){
+  try{ await appStorage.set('cbm-backlog-extra', JSON.stringify(cbmBacklogExtra)); }
+  catch(e){ console.error('save cbm backlog extra failed', e); }
+}
+async function saveCbmBacklogDismissed(){
+  try{ await appStorage.set('cbm-backlog-dismissed', JSON.stringify(cbmBacklogDismissed)); }
+  catch(e){ console.error('save cbm backlog dismissed failed', e); }
+}
+function openCbmBacklogEditModal(rowId){
+  if(!isFahmiFanani() || !rowId) return;
+  const row = cbmBacklogBuildRows().find(r=>r.id===rowId);
+  if(!row) return;
+  cbmBacklogEditRowId = rowId;
+  const info = document.getElementById('cbm-bl-edit-info');
+  if(info) info.innerHTML = `<b>${escUH(row.unit)}</b> — ${escUH(row.component)} <span style="color:var(--text-faint)">(${escUH(row.source)})</span>`;
+  const setv=(id,v)=>{ const el=document.getElementById(id); if(el) el.value = v||''; };
+  setv('cbm-bl-edit-partnumber', row.partNumber);
+  setv('cbm-bl-edit-qty', row.qty);
+  setv('cbm-bl-edit-pr', row.pr);
+  setv('cbm-bl-edit-location', row.partLocation);
+  const st=document.getElementById('cbm-bl-edit-status'); if(st) st.value = row.status || 'Open';
+  document.getElementById('cbm-backlog-edit-overlay')?.classList.add('show');
+}
+function closeCbmBacklogEditModal(){
+  cbmBacklogEditRowId = null;
+  document.getElementById('cbm-backlog-edit-overlay')?.classList.remove('show');
+}
+(function initCbmBacklogEditHandlers(){
+  document.getElementById('cbm-backlog-tbody')?.addEventListener('dblclick', (e)=>{
+    if(!isFahmiFanani()) return;
+    const tr = e.target.closest('tr[data-row-id]');
+    if(!tr) return;
+    openCbmBacklogEditModal(tr.dataset.rowId);
+  });
+  document.getElementById('cbm-bl-edit-modal-close')?.addEventListener('click', closeCbmBacklogEditModal);
+  document.getElementById('cbm-bl-edit-cancel')?.addEventListener('click', closeCbmBacklogEditModal);
+  document.getElementById('cbm-backlog-edit-overlay')?.addEventListener('click', (e)=>{
+    if(e.target && e.target.id==='cbm-backlog-edit-overlay') closeCbmBacklogEditModal();
+  });
+  document.getElementById('cbm-bl-edit-save')?.addEventListener('click', async ()=>{
+    if(!isFahmiFanani() || !cbmBacklogEditRowId) return;
+    cbmBacklogExtra[cbmBacklogEditRowId] = {
+      partNumber: String(document.getElementById('cbm-bl-edit-partnumber')?.value||'').trim(),
+      qty: String(document.getElementById('cbm-bl-edit-qty')?.value||'').trim(),
+      pr: String(document.getElementById('cbm-bl-edit-pr')?.value||'').trim(),
+      status: String(document.getElementById('cbm-bl-edit-status')?.value||'Open').trim(),
+      partLocation: String(document.getElementById('cbm-bl-edit-location')?.value||'').trim()
+    };
+    await saveCbmBacklogExtra();
+    closeCbmBacklogEditModal();
+    renderCbmBacklog();
+  });
+  document.getElementById('cbm-bl-edit-delete')?.addEventListener('click', async ()=>{
+    if(!isFahmiFanani() || !cbmBacklogEditRowId) return;
+    if(!confirm('Hapus baris ini dari daftar Backlog? Data pada menu sumber (Pre Inspection/Planning System/RCA) tidak akan terhapus.')) return;
+    cbmBacklogDismissed[cbmBacklogEditRowId] = true;
+    delete cbmBacklogExtra[cbmBacklogEditRowId];
+    await saveCbmBacklogDismissed();
+    await saveCbmBacklogExtra();
+    closeCbmBacklogEditModal();
+    renderCbmBacklog();
+  });
+})();
+
 function renderCBM(){
   initCBMFilters();
   switchCBMTab(cbmActiveTab);
@@ -23499,6 +24699,16 @@ function renderCBM(){
     const c=document.getElementById('cbm-filter-comp'); if(c) c.value='';
     renderCBMActiveTab();
   });
+  ['cbm-bl-filter-unit','cbm-bl-filter-source','cbm-bl-filter-priority','cbm-bl-filter-status'].forEach(id=>{
+    document.getElementById(id)?.addEventListener('change', ()=> renderCbmBacklog());
+  });
+  document.getElementById('cbm-bl-clear')?.addEventListener('click', ()=>{
+    ['cbm-bl-filter-unit','cbm-bl-filter-source','cbm-bl-filter-priority','cbm-bl-filter-status'].forEach(id=>{
+      const el=document.getElementById(id); if(el) el.value='';
+    });
+    renderCbmBacklog();
+  });
+  document.getElementById('cbm-bl-refresh')?.addEventListener('click', ()=> renderCbmBacklog());
   document.getElementById('cbm-refresh')?.addEventListener('click', async ()=>{
     try{ if(typeof ensureHmSynced==='function') await ensureHmSynced({ force:true }); }catch(e){}
     try{ if(typeof ensurePerformanceSynced==='function') await ensurePerformanceSynced({ force:true }); }catch(e){}
@@ -23513,6 +24723,235 @@ function renderCBM(){
   });
 })();
 
+
+
+/* ===== PLAN SERVICE SUB-TABS + LIVE HM PER-DAY ===== */
+let psActiveSubTab = 'schedule';
+const psAutoSyncSchedule = true;
+const psAutoSyncRecord = true;
+const psAutoRefreshLiveHM = true;
+
+function setPlanServiceSubTab(tab){
+  const allowed = ['schedule','record','livehm'];
+  if(allowed.indexOf(tab)<0) tab='schedule';
+  psActiveSubTab = tab;
+  document.querySelectorAll('#plan-service-subnav .ps-subtab').forEach(b=>{
+    const on = b.dataset.psTab===tab;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-selected', on ? 'true':'false');
+  });
+  document.querySelectorAll('#view-plan .ps-subview').forEach(v=>v.classList.remove('active'));
+  const v=document.getElementById('ps-subview-'+tab);
+  if(v) v.classList.add('active');
+  if(tab==='schedule'){ try{ renderPlanTable(); }catch(_e){} }
+  if(tab==='record'){ try{ renderRecordServiceTable(); }catch(_e){} }
+  if(tab==='livehm'){
+    try{ renderPlanHmLiveChart(); }catch(e){ console.warn('render live HM',e); }
+    try{ if(typeof runPlanHmLiveSyncCycle==='function') runPlanHmLiveSyncCycle({force:false}); }catch(_e){}
+  }
+}
+
+function togglePsAutoSync(kind){
+  // Auto Sync / Auto Refresh is permanently active. ON/OFF control intentionally removed.
+  if(kind==='schedule'){
+    const st=document.getElementById('plan-schedule-sync-status');
+    if(st) st.innerHTML='Schedule sync: <b>AUTO LIVE</b> · Continuous sync active';
+  } else if(kind==='record'){
+    const st=document.getElementById('plan-record-sync-status');
+    if(st) st.innerHTML='Record sync: <b>AUTO LIVE</b> · Continuous sync active';
+  }
+}
+
+function psFmtHm(n){
+  if(n===null||n===undefined||isNaN(Number(n))) return '—';
+  return Number(n).toLocaleString('id-ID',{minimumFractionDigits:1,maximumFractionDigits:1});
+}
+function psDateLabel(d){
+  if(!d) return '—';
+  const p=String(d).slice(0,10).split('-');
+  return p.length===3 ? p[2]+'/'+p[1] : String(d);
+}
+function psGetLiveHmSeries(unitCode,start,end){
+  const code=String(unitCode||'').toUpperCase();
+  let rows=[];
+  // Prioritas 1: telemetry / HM monitoring harian (nilai HM Akhir aktual per tanggal).
+  const srcs=[];
+  (typeof hmTelemetryRecords!=='undefined' ? hmTelemetryRecords : []).forEach(r=>{
+    if(String(r.unitCode||'').trim().toUpperCase()!==code) return;
+    const d=String(r.tanggal||'').slice(0,10), h=Number(r.smr!=null?r.smr:r.hmAkhir);
+    if(d && isFinite(h) && h>0) srcs.push({date:d,hm:h,source:'telemetry'});
+  });
+  (typeof hmRecords!=='undefined' ? hmRecords : []).forEach(r=>{
+    if(String(r.unitCode||'').trim().toUpperCase()!==code) return;
+    const d=String(r.tanggal||'').slice(0,10), h=Number(r.hmAkhir!=null?r.hmAkhir:r.hm);
+    if(d && isFinite(h) && h>0) srcs.push({date:d,hm:h,source:'monitoring'});
+  });
+  // Fallback: daily working-hours, cumulative dari baseline HM Plan Service.
+  if(!srcs.length && typeof dailyWhRecords!=='undefined'){
+    const baseMap=typeof getPlanServiceHMBase==='function'?getPlanServiceHMBase():{};
+    const base=baseMap[code] || baseMap[code.toUpperCase()];
+    let cumulative=base?Number(base.hm)||0:0;
+    (dailyWhRecords||[]).filter(r=>String(r.unitCode||'').toUpperCase()===code)
+      .sort((a,b)=>String(a.tanggal).localeCompare(String(b.tanggal))).forEach(r=>{
+        cumulative += Math.max(0,Number(r.actualWorkingHours!=null?r.actualWorkingHours:r.workingHours)||0);
+        srcs.push({date:String(r.tanggal).slice(0,10),hm:cumulative,source:'daily-wh'});
+      });
+  }
+  // Dedup: untuk tanggal sama, pilih HM terbesar.
+  const map={};
+  srcs.forEach(x=>{
+    if(start && x.date<start) return;
+    if(end && x.date>end) return;
+    if(!map[x.date] || Number(x.hm)>Number(map[x.date].hm)) map[x.date]=x;
+  });
+  return Object.keys(map).sort().map(d=>map[d]);
+}
+
+function psBuildHmSvg(series){
+  if(!series.length) return '<div class="ps-hm-empty">Belum ada pembacaan HM harian pada periode ini.<br>Sync Live HM untuk mengambil data terbaru.</div>';
+  const W=620,H=190, padL=46,padR=12,padT=18,padB=30;
+  const vals=series.map(x=>Number(x.hm));
+  let min=Math.min(...vals), max=Math.max(...vals);
+  if(min===max){min-=1;max+=1;}
+  const range=max-min, lo=min-range*.12, hi=max+range*.12;
+  const x=i=>padL+(series.length===1?0:(W-padL-padR)*i/(series.length-1));
+  const y=v=>padT+(H-padT-padB)*(1-(v-lo)/(hi-lo));
+  const pts=series.map((d,i)=>x(i).toFixed(1)+','+y(d.hm).toFixed(1)).join(' ');
+  const gridVals=[lo+(hi-lo)*.15,lo+(hi-lo)*.5,lo+(hi-lo)*.85];
+  const grid=gridVals.map(v=>`<line x1="${padL}" x2="${W-padR}" y1="${y(v)}" y2="${y(v)}" stroke="rgba(255,255,255,.08)" stroke-width="1"/>`).join('');
+  const labels=gridVals.map(v=>`<text x="${padL-7}" y="${y(v)+3}" text-anchor="end" fill="#737c87" font-size="9" font-family="JetBrains Mono">${Math.round(v*10)/10}</text>`).join('');
+  const maxDots=series.length>31?series.filter((_,i)=>i===0||i===series.length-1||i%Math.ceil(series.length/10)===0):series;
+  const circles=maxDots.map(d=>{
+    const i=series.indexOf(d); return `<circle cx="${x(i)}" cy="${y(d.hm)}" r="2.8" fill="#7fe0e0"><title>${psDateLabel(d.date)} · HM ${psFmtHm(d.hm)}</title></circle>`;
+  }).join('');
+  const start=series[0], last=series[series.length-1];
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    <defs><linearGradient id="psHmGrad" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="rgba(64,196,196,.24)"/><stop offset="1" stop-color="rgba(64,196,196,0)"/></linearGradient></defs>
+    ${grid}${labels}
+    <polygon points="${padL},${H-padB} ${pts} ${W-padR},${H-padB}" fill="url(#psHmGrad)"/>
+    <polyline points="${pts}" fill="none" stroke="#7fe0e0" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    ${circles}
+    <text x="${padL}" y="${H-8}" fill="#737c87" font-size="9" font-family="JetBrains Mono">${psDateLabel(start.date)}</text>
+    <text x="${W-padR}" y="${H-8}" text-anchor="end" fill="#737c87" font-size="9" font-family="JetBrains Mono">${psDateLabel(last.date)}</text>
+  </svg>`;
+}
+
+function psGetLiveOpsSeries(unitCode,start,end){
+  const code=String(unitCode||'').toUpperCase();
+  const map={};
+  // Working Hours + Standby berasal dari record Jam Kerja Harian / telemetry HM.
+  (dailyWhRecords||[]).filter(r=>String(r.unitCode||'').toUpperCase()===code).forEach(r=>{
+    const date=String(r.tanggal||'').slice(0,10); if(!date) return;
+    if(start && date<start) return; if(end && date>end) return;
+    const wh=Number(r.workingHours!=null?r.workingHours:r.actualWorkingHours)||0;
+    let standby=r.idlingHours;
+    if(standby==null && r.workingHours!=null && r.actualWorkingHours!=null) standby=Math.max(0,wh-(Number(r.actualWorkingHours)||0));
+    standby=Number(standby)||0;
+    map[date]=map[date]||{date,working:0,standby:0,breakdown:0};
+    // Jika ada lebih dari satu source pada tanggal sama, gunakan nilai terbesar agar tidak double count.
+    map[date].working=Math.max(map[date].working,wh);
+    map[date].standby=Math.max(map[date].standby,standby);
+  });
+  // Breakdown = durasi breakdown per hari dari Daily Maintenance.
+  (dailyRecords||[]).filter(r=>String(r.unitCode||r.unit_code||'').toUpperCase()===code).forEach(r=>{
+    const cat=String(r.category||'').trim().toLowerCase();
+    if(!(cat==='breakdown'||cat==='bd'||/breakdown/.test(cat))) return;
+    const rawDate=r.breakdownDate||r.breakdown_date||r.tanggal||r.startDate||r.start_date||'';
+    const date=String(rawDate||'').slice(0,10); if(!date) return;
+    if(start && date<start) return; if(end && date>end) return;
+    const hrs=Number(r.duration!=null?r.duration:r.totalBreakdown!=null?r.totalBreakdown:0)||0;
+    if(!map[date]) map[date]={date,working:0,standby:0,breakdown:0};
+    map[date].breakdown+=Math.max(0,hrs);
+  });
+  return Object.keys(map).sort().map(d=>map[d]);
+}
+
+function psBuildOpsSvg(series){
+  if(!series.length) return '<div class="ps-hm-empty" style="height:155px">Belum ada data Working Hours / Standby / Breakdown pada periode ini.</div>';
+  const W=620,H=160,padL=42,padR=12,padT=16,padB=27;
+  const vals=series.flatMap(d=>[Number(d.working)||0,Number(d.standby)||0,Number(d.breakdown)||0]);
+  let max=Math.max(...vals,1); const lo=0,hi=max*1.16;
+  const x=i=>padL+(series.length===1?0:(W-padL-padR)*i/(series.length-1));
+  const y=v=>padT+(H-padT-padB)*(1-(v-lo)/(hi-lo));
+  const lines=[
+    {key:'working',label:'Working Hours',stroke:'#4aa3ff'},
+    {key:'standby',label:'Standby',stroke:'#FFC72C'},
+    {key:'breakdown',label:'Breakdown',stroke:'#e5484d'}
+  ];
+  const gridVals=[hi*.25,hi*.5,hi*.75];
+  const grid=gridVals.map(v=>`<line x1="${padL}" x2="${W-padR}" y1="${y(v)}" y2="${y(v)}" stroke="rgba(255,255,255,.07)" stroke-width="1"/>`).join('');
+  const labels=gridVals.map(v=>`<text x="${padL-7}" y="${y(v)+3}" text-anchor="end" fill="#737c87" font-size="9" font-family="JetBrains Mono">${Math.round(v*10)/10}</text>`).join('');
+  const paths=lines.map(line=>{
+    const pts=series.map((d,i)=>`${x(i).toFixed(1)},${y(Number(d[line.key])||0).toFixed(1)}`).join(' ');
+    const step=Math.max(1,Math.ceil(series.length/14));
+    const dots=series.map((d,i)=>({d,i})).filter(o=>o.i===0||o.i===series.length-1||o.i%step===0).map(o=>`<circle cx="${x(o.i)}" cy="${y(Number(o.d[line.key])||0)}" r="2.2" fill="${line.stroke}"><title>${psDateLabel(o.d.date)} · ${line.label}: ${psFmtHm(o.d[line.key])} h</title></circle>`).join('');
+    return `<polyline points="${pts}" fill="none" stroke="${line.stroke}" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>${dots}`;
+  }).join('');
+  const first=series[0],last=series[series.length-1];
+  return `<div class="ps-chart-title">Daily Operating Hours</div><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${grid}${labels}${paths}<text x="${padL}" y="${H-6}" fill="#737c87" font-size="9" font-family="JetBrains Mono">${psDateLabel(first.date)}</text><text x="${W-padR}" y="${H-6}" text-anchor="end" fill="#737c87" font-size="9" font-family="JetBrains Mono">${psDateLabel(last.date)}</text></svg><div class="ps-ops-legend"><span><i style="background:#4aa3ff"></i>Working Hours</span><span><i style="background:#FFC72C"></i>Standby</span><span><i style="background:#e5484d"></i>Breakdown</span></div>`;
+}
+
+function renderPlanHmLiveChart(){
+  const grid=document.getElementById('ps-hm-chart-grid');
+  const summary=document.getElementById('ps-live-hm-summary');
+  if(!grid) return;
+  const unitSel=document.getElementById('ps-live-hm-unit')?.value||'';
+  const start=document.getElementById('ps-live-hm-start')?.value||'';
+  const end=document.getElementById('ps-live-hm-end')?.value||'';
+  const codes=unitSel?[unitSel]:['SWA-101','SWA-102','SBD-103','SPC-104'];
+  const allSeries=codes.map(c=>({code:c,series:psGetLiveHmSeries(c,start,end),ops:psGetLiveOpsSeries(c,start,end)}));
+  grid.innerHTML=allSeries.map(({code,series,ops})=>{
+    const last=series[series.length-1], first=series[0];
+    const delta=(last&&first)?Number(last.hm)-Number(first.hm):0;
+    const totalW=ops.reduce((a,r)=>a+(Number(r.working)||0),0);
+    const totalS=ops.reduce((a,r)=>a+(Number(r.standby)||0),0);
+    const totalB=ops.reduce((a,r)=>a+(Number(r.breakdown)||0),0);
+    return `<div class="ps-hm-card">
+      <div class="ps-hm-card-head"><div class="ps-hm-unit">${code}</div><div class="ps-hm-meta">Latest HM: <b style="color:#FFC72C">${last?psFmtHm(last.hm):'—'}</b><br>${last?psDateLabel(last.date):'—'}</div></div>
+      <div class="ps-hm-chart"><div class="ps-chart-title">HM Movement · Per Day</div>${psBuildHmSvg(series)}</div>
+      <div class="ps-hm-card-charts"><div class="ps-ops-chart">${psBuildOpsSvg(ops)}</div></div>
+      <div class="ps-hm-legend"><span>${series.length} HM points</span><span>Δ HM: ${series.length?psFmtHm(delta):'—'}</span><span>W ${psFmtHm(totalW)} h · S ${psFmtHm(totalS)} h · BD ${psFmtHm(totalB)} h</span></div>
+    </div>`;
+  }).join('');
+  const totals=allSeries.map(x=>x.series).filter(x=>x.length);
+  const latest=totals.map(x=>x[x.length-1].hm).filter(isFinite);
+  const totalPoints=totals.reduce((n,x)=>n+x.length,0);
+  const totalOps=allSeries.reduce((a,x)=>({w:a.w+x.ops.reduce((n,r)=>n+(Number(r.working)||0),0),s:a.s+x.ops.reduce((n,r)=>n+(Number(r.standby)||0),0),b:a.b+x.ops.reduce((n,r)=>n+(Number(r.breakdown)||0),0)}),{w:0,s:0,b:0});
+  if(summary){
+    summary.innerHTML=[
+      ['Unit','4 / '+codes.length,'Live HM scope'],
+      ['Daily Point',totalPoints,'HM readings'],
+      ['Working Hours',psFmtHm(totalOps.w)+' h','daily total'],
+      ['Standby',psFmtHm(totalOps.s)+' h','daily total'],
+      ['Breakdown',psFmtHm(totalOps.b)+' h','daily maintenance'],
+      ['Latest HM',latest.length?psFmtHm(Math.max(...latest)):'—','highest latest reading']
+    ].map(a=>`<div class="ps-live-kpi"><div class="lk-label">${a[0]}</div><div class="lk-val">${a[1]}</div><div class="lk-sub">${a[2]}</div></div>`).join('');
+  }
+  const st=document.getElementById('ps-live-hm-status');
+  if(st){ const t=new Date(); st.innerHTML='Source: <b>HM Monitoring / Telemetry + Jam Kerja Harian + Daily Maintenance</b> · Last sync: <b>'+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0')+'</b>'; }
+}
+
+(function initPlanServiceWorkspace(){
+  document.querySelectorAll('#plan-service-subnav .ps-subtab').forEach(b=>{
+    b.addEventListener('click',()=>setPlanServiceSubTab(b.dataset.psTab));
+  });
+  ['ps-live-hm-unit','ps-live-hm-start','ps-live-hm-end'].forEach(id=>{
+    document.getElementById(id)?.addEventListener('change',renderPlanHmLiveChart);
+  });
+  document.getElementById('ps-live-hm-reset')?.addEventListener('click',()=>{
+    ['ps-live-hm-start','ps-live-hm-end'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+    const u=document.getElementById('ps-live-hm-unit');if(u)u.value='';
+    renderPlanHmLiveChart();
+  });
+  document.getElementById('btn-live-hm-sync')?.addEventListener('click',async()=>{
+    if(!isFahmiFanani()){alert('Fitur Sync hanya tersedia untuk user Fahmi Fanani.');return;}
+    const b=document.getElementById('btn-live-hm-sync'); if(b){b.disabled=true;b.textContent='☁ Syncing...';}
+    try{
+      if(typeof runPlanHmLiveSyncCycle==='function') await runPlanHmLiveSyncCycle({force:true});
+      renderPlanHmLiveChart();
+    }finally{if(b){b.disabled=false;b.textContent='☁ Sync Live HM';}}
+  });
+})();
 
 /* ================= RENDER ALL ================= */
 
@@ -24445,7 +25884,7 @@ function subscribeDailyRealtime(){
     await fixCodeBDChronologicalOrder();
     await syncCodeBDChronological();
     renderAll();
-    try{ placeMapaSourceBelowServiceAchievement(); }catch(_e){}
+    try{ placeMapaSourceAboveKpiCards(); }catch(_e){}
     updateRoleUI();
     applySavedNavOrder();
     requestNotifPermission();
