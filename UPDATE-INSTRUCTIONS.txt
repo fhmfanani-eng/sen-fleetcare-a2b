@@ -1,41 +1,5 @@
-SEN-FleetCare — PWA UPDATE PACKAGE (VERSI 9)
-Tanggal: 25 September 2026
-
-PERBAIKAN UTAMA (v9)
-Menu Utama (launcher) sekarang memprioritaskan grid yang RATA:
-  - 10 menu → ideal 5 kolom × 2 baris di desktop/PWA (bukan 4×3 dengan baris
-    terakhir hanya 2 kotak kosong di kanan).
-  - Skor layout menghukum sel kosong di baris terakhir dan memberi bonus
-    kuat bila jumlah kolom membagi rata jumlah menu.
-  - Lebar grid diselaraskan dengan banner "Maintenance Tips".
-  - Tinggi tile sedikit dipadatkan (label 2 baris) supaya 2 baris selalu muat
-    di layar desktop/PWA tanpa scroll dan tanpa teks terpotong.
-
-FILE YANG PERLU DIUPLOAD KE REPOSITORY GITHUB
-1. index.html                         -> aplikasi terbaru (layout Menu Utama v9)
-2. sw.js                              -> Service Worker cache version baru
-3. manifest.json                      -> manifest PWA
-
-JIKA REPOSITORY SUDAH MEMILIKI ICON/ASSET
-Pertahankan favicon-32.png, icon-192.png, apple-touch-icon.png, brand-tagline.png,
-bg-login.jpg, dll. Jangan hapus asset lama.
-
-JIKA FILE UTAMA REPOSITORY BUKAN index.html
-Gunakan SEN-FleetCare-CBM-Backlog_2_2.html sebagai pengganti file HTML utama
-(isinya sama dengan index.html), lalu pastikan URL mengarah ke file tersebut.
-Untuk GitHub Pages root, disarankan memakai index.html.
-
-SETELAH PUSH KE GITHUB
-1. Tunggu GitHub Pages selesai build/deploy.
-2. Desktop: Ctrl+Shift+R (hard refresh).
-3. PWA (desktop/HP): tutup SEMUA jendela aplikasi, buka lagi.
-4. Android Chrome: Reload; bila masih lama → Site settings → hapus data situs.
-5. iOS: hapus ikon Home Screen, tambahkan ulang dari Safari.
-
-CATATAN
-sw.js memakai versi cache: sen-fleetcare-v9-20260925-1030
-HTML/navigation = network-first + cache:no-store → deployment terbaru selalu diprioritaskan.
-
-PENTING
-Upload index.html + sw.js + manifest.json BERSAMA-SAMA agar desktop dan mobile
-sama-sama mengambil layout Menu Utama yang rata (versi 9).
+v29 Button colors:
+- Sign In = GOLD
+- Simpan / Save / Submit = GOLD
+- Auto Sync / Sync = GOLD
+- Sync WA / Kirim Grup WhatsApp = GREEN
