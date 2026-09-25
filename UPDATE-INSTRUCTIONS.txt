@@ -1,16 +1,27 @@
-SEN-FleetCare — PWA UPDATE PACKAGE
-Tanggal: 24 September 2026
+SEN-FleetCare — PWA UPDATE PACKAGE (VERSI 8)
+Tanggal: 25 September 2026
 
 TUJUAN
-Memaksa aplikasi desktop dan HP/PWA mengambil HTML Dashboard terbaru dari GitHub Pages,
-yaitu versi dengan perubahan terbaru pada Backlog Register (ukuran teks tabel & header),
-grafik Register Status Mix (ukuran teks diperbesar), dan penghapusan tab "Backlog" dari
-topbar menu CBM.
+Memaksa aplikasi desktop dan HP/PWA mengambil HTML Menu Utama terbaru dari GitHub
+Pages, yaitu versi dengan perubahan pada halaman "Menu Utama" (launcher):
+  1. Grid 10 menu utama (Dashboard, Performance, Database Akun, Pre Inspection,
+     Daily Maintenance, Plan Service, Plan Schedule Maintenance, CBM Monitoring,
+     Plan Budgeting, Mechanic Activity Report) kini otomatis menghitung ukuran
+     tiap kotak dari kebutuhan konten (ikon + label sampai 3 baris), sehingga
+     SEMUA menu selalu terlihat penuh tanpa perlu discroll dan tanpa teks
+     label yang terpotong, di berbagai ukuran layar HP/tablet/desktop.
+  2. Lebar area menu disesuaikan dengan lebar kolom banner di atasnya, dan
+     ukuran kotak menu sedikit diperbesar.
+  3. Banner "💡 MAINTENANCE TIPS" di atas menu utama dirapikan (lebih kompak)
+     lalu teksnya (judul tip, isi tip, kicker, counter) diperbesar sedikit
+     agar lebih mudah dibaca, dan tinggi banner ini sekarang ikut
+     diperhitungkan otomatis oleh skrip layout menu supaya tidak mendorong
+     grid menu sampai terpotong.
 
 FILE YANG PERLU DIUPLOAD KE REPOSITORY GITHUB
-1. index.html                         -> file aplikasi terbaru (sudah termasuk semua update)
+1. index.html                         -> file aplikasi terbaru (sudah termasuk semua update v8)
 2. sw.js                              -> Service Worker baru dengan cache version baru
-3. manifest.json                      -> manifest PWA
+3. manifest.json                      -> manifest PWA (tidak berubah dari versi sebelumnya)
 
 JIKA REPOSITORY SUDAH MEMILIKI ICON/ASSET
 Pertahankan file favicon-32.png, icon-192.png, apple-touch-icon.png dan asset lain yang
@@ -34,8 +45,8 @@ SETELAH PUSH KE GITHUB
    utama lalu tambahkan ulang dari Safari agar mengambil sw.js dan HTML terbaru.
 
 CATATAN
-sw.js baru menggunakan versi cache: sen-fleetcare-20260924-1200 (berbeda dari versi
-sebelumnya sen-fleetcare-20260922-1457), sehingga cache lama otomatis dihapus saat
+sw.js baru menggunakan versi cache: sen-fleetcare-v8-20260925-1500 (berbeda dari versi
+sebelumnya sen-fleetcare-20260924-1200), sehingga cache lama otomatis dihapus saat
 Service Worker baru aktif. Halaman HTML/navigation menggunakan network-first +
 cache:no-store sehingga deployment HTML terbaru dari GitHub selalu diprioritaskan.
 
@@ -43,4 +54,4 @@ PENTING
 Jangan hanya mengganti index.html jika repository/PWA masih menggunakan sw.js lama.
 Upload index.html + sw.js + manifest.json bersama-sama (dan SEN-FleetCare-CBM-Backlog_2_2.html
 bila repository memakainya sebagai file utama), agar update di aplikasi desktop maupun
-mobile/PWA sama-sama mengambil versi HTML yang terbaru ini.
+mobile/PWA sama-sama mengambil versi HTML yang terbaru ini (versi 8).

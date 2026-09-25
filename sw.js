@@ -1,5 +1,5 @@
-/* SEN-FleetCare PWA Service Worker — forced update package 2026-09-24 */
-const SW_VERSION = 'sen-fleetcare-20260924-1200';
+/* SEN-FleetCare PWA Service Worker — forced update package v8, 2026-09-25 */
+const SW_VERSION = 'sen-fleetcare-v8-20260925-1500';
 const CACHE_NAME = SW_VERSION;
 const APP_SHELL = ['./', './index.html'];
 

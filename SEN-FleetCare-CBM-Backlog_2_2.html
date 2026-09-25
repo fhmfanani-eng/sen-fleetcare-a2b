@@ -2436,6 +2436,7 @@ body.role-mechanic #history-filters{ display:none !important; }
   display:grid; justify-content:center; align-content:start;
   grid-template-columns:repeat(var(--cols,2), var(--tw,160px));
   grid-auto-rows:var(--th,140px); gap:var(--gap,14px);
+  transform-origin:top center;
 }
 .mh-tile{
   --c:255,199,44;
@@ -2858,6 +2859,22 @@ body.role-mechanic #history-filters{ display:none !important; }
         <div class="mh-title" id="mh-title">MENU UTAMA</div>
         <div class="mh-sub" id="mh-sub">Pilih menu untuk membuka halaman</div>
       </div>
+      <div class="sen-maint-tips" id="sen-maint-tips" aria-label="Tips Maintenance Heavy Equipment">
+        <div class="sen-tip-head">
+          <div>
+            <span class="sen-tip-kicker">💡 MAINTENANCE TIPS</span>
+            <span class="sen-tip-icon" id="sen-tip-icon" aria-hidden="true">🔍</span><span class="sen-tip-title" id="sen-tip-title">Daily Inspection</span>
+          </div>
+          <div class="sen-tip-counter" id="sen-tip-counter">1 / 8</div>
+        </div>
+        <div class="sen-tip-body" id="sen-tip-body">Lakukan P2H sebelum unit beroperasi: cek kebocoran, level oil/coolant, tyre/track, attachment, alarm, dan safety device.</div>
+        <div class="sen-tip-foot">
+          <button type="button" class="sen-tip-nav" id="sen-tip-prev" aria-label="Tips sebelumnya">‹</button>
+          <div class="sen-tip-dots" id="sen-tip-dots"></div>
+          <button type="button" class="sen-tip-nav" id="sen-tip-next" aria-label="Tips berikutnya">›</button>
+        </div>
+      </div>
+
       <div class="mh-grid" id="mh-grid"></div>
       <div class="mh-foot">
         <img class="mh-brand" src="brand-tagline.png" alt="" draggable="false" onerror="this.style.display='none';var f=this.nextElementSibling;if(f)f.style.display='flex';">
@@ -2867,6 +2884,62 @@ body.role-mechanic #history-filters{ display:none !important; }
         </div>
       </div>
     </div>
+<style id="sen-maint-tips-style">
+.sen-maint-tips{
+  width:min(100%,1100px);margin:0 auto 8px;padding:8px 13px 6px;box-sizing:border-box;
+  border:1px solid rgba(255,199,44,.28);border-radius:10px;
+  background:linear-gradient(135deg,rgba(255,199,44,.10),rgba(21,23,27,.92));
+  box-shadow:0 6px 16px rgba(0,0,0,.14);position:relative;overflow:hidden;
+}
+.sen-maint-tips:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:#FFC72C}
+.sen-tip-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sen-tip-kicker{font-size:9.5px;font-weight:800;letter-spacing:.10em;color:#FFC72C;display:inline-block;margin-right:6px}
+.sen-tip-title{font-size:13px;font-weight:800;color:#fff}.sen-tip-icon{display:inline-flex;align-items:center;justify-content:center;width:23px;height:23px;margin-right:5px;border-radius:7px;background:rgba(255,199,44,.12);border:1px solid rgba(255,199,44,.28);font-size:14px;vertical-align:middle}.sen-tip-foot{display:none !important}
+.sen-tip-counter{font-size:10.5px;color:#aeb4bd;white-space:nowrap}
+.sen-tip-body{font-size:12px;line-height:1.38;color:#d9dde3;margin:3px 0 0;min-height:0;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.sen-tip-foot{display:flex;align-items:center;justify-content:center;gap:8px}
+.sen-tip-nav{width:25px;height:25px;border:1px solid rgba(255,199,44,.3);border-radius:50%;background:rgba(255,199,44,.08);color:#FFC72C;font-size:19px;line-height:20px;cursor:pointer;padding:0}
+.sen-tip-nav:hover{background:rgba(255,199,44,.18)}
+.sen-tip-dots{display:flex;align-items:center;justify-content:center;gap:5px}
+.sen-tip-dot{width:6px;height:6px;border-radius:50%;background:#5c626b;cursor:pointer;border:0;padding:0}
+.sen-tip-dot.active{background:#FFC72C;transform:scale(1.25)}
+@media(max-width:600px){
+ .sen-maint-tips{margin-bottom:7px;padding:5px 10px 4px;border-radius:9px}
+ .sen-tip-kicker{display:block;margin:0 0 2px;font-size:8.5px}
+ .sen-tip-title{font-size:12px}
+ .sen-tip-body{font-size:11px;min-height:0}
+}
+</style>
+
+<script id="sen-maint-tips-script">
+(function(){
+  const tips=[
+    {i:'🔍',t:'Daily Inspection',b:'Lakukan P2H sebelum unit beroperasi: cek kebocoran, level oil/coolant, tyre/track, attachment, alarm, dan safety device.'},
+    {i:'🌡️',t:'Engine & Cooling',b:'Pantau temperature engine, coolant level, radiator, fan belt, dan indikasi overheating. Jangan abaikan kenaikan temperatur yang tidak normal.'},
+    {i:'💧',t:'Hydraulic System',b:'Periksa hydraulic oil, hose, fitting, cylinder, dan tanda kebocoran. Kebocoran kecil dapat berkembang menjadi downtime besar.'},
+    {i:'🔧',t:'Lubrication & Greasing',b:'Ikuti interval greasing sesuai PM. Gunakan grease yang sesuai dan pastikan titik grease terisi tanpa kontaminasi.'},
+    {i:'📋',t:'PM Discipline',b:'Jalankan Planned Maintenance sesuai due HM/time. Catat actual pekerjaan dan temuan agar histori maintenance tetap akurat.'},
+    {i:'⚠️',t:'Early Failure Detection',b:'Perhatikan perubahan suara, vibration, temperature, pressure, smoke, dan performance unit. Temuan dini membantu mencegah breakdown.'},
+    {i:'🧽',t:'Cleanliness',b:'Jaga kebersihan engine compartment, radiator/cooler, hydraulic area, dan cabin. Debu serta kotoran dapat mempercepat kerusakan komponen.'},
+    {i:'🦺',t:'Safety First',b:'Sebelum maintenance: parkir aman, gunakan LOTO bila diperlukan, turunkan attachment, matikan engine, dan pastikan energi tersimpan sudah aman.'}
+  ];
+  let idx=0,timer=null;
+  function render(){
+    const title=document.getElementById('sen-tip-title'),body=document.getElementById('sen-tip-body'),counter=document.getElementById('sen-tip-counter'),dots=document.getElementById('sen-tip-dots');
+    if(!title||!body||!counter||!dots)return;
+    title.textContent=tips[idx].t;body.textContent=tips[idx].b;counter.textContent=(idx+1)+' / '+tips.length;const icon=document.getElementById('sen-tip-icon');if(icon)icon.textContent=tips[idx].i||'💡';
+    dots.innerHTML=tips.map((_,i)=>`<button type="button" class="sen-tip-dot ${i===idx?'active':''}" data-i="${i}" aria-label="Tip ${i+1}"></button>`).join('');
+    dots.querySelectorAll('.sen-tip-dot').forEach(d=>d.addEventListener('click',()=>{idx=Number(d.dataset.i);render();restart();}));
+  }
+  function next(){idx=(idx+1)%tips.length;render();}
+  function restart(){clearInterval(timer);timer=setInterval(next,6500);}
+  document.getElementById('sen-tip-prev')?.addEventListener('click',()=>{idx=(idx-1+tips.length)%tips.length;render();restart();});
+  document.getElementById('sen-tip-next')?.addEventListener('click',()=>{next();restart();});
+  render();restart();
+})();
+</script>
+
     <div class="content" id="content">
 
       <!-- DASHBOARD -->
@@ -4362,7 +4435,7 @@ const KPI_INFO = {
   },
   pmr: {
     full: 'Planned Maintenance Ratio (PMR)',
-    formula: 'PMR = Planned Maintenance Hours / Total Maintenance Hours × 100%',
+    formula: 'PMR = Planned Maintenance Hours ÷ Total Maintenance Hours × 100%',
     desc: 'Planned Maintenance Hours ÷ Total Maintenance Hours × 100%. Achievement % of weight: >90% = 100%, 85–90% = 80%, <85% = 60%. Higher is better (target >90%). Calculated from duration hours of Approved Daily Maintenance records in the selected period.',
     unit: '%', higherBetter: true
   },
@@ -8885,7 +8958,7 @@ function maPaFromWSR(wsr){
    - Service Accuracy (SA): dari record Plan Service milik unit tsb.
    - MA & PA: otomatis dari data Monitoring HM milik unit tsb (fallback ke file jam operasional manual
      kalau unit tsb belum ada data HM). */
-/** PMR = Planned Maintenance Hours / Total Maintenance Hours × 100%
+/** PMR = Planned Maintenance Hours ÷ Total Maintenance Hours × 100%
  *  Formula resmi (LOCKED) — samakan di UI & perhitungan:
  *    Planned Maintenance Hours = Σ jam record Approved kategori planned
  *      (Periodical / Daily / Preventive; bukan Breakdown)
@@ -8943,7 +9016,7 @@ function computeUnitKPIs(unitCode){
   const mttrEligible = approvedRecords.filter(r=>r.category==='Breakdown' && r.duration!==null && r.duration!==undefined);
   const mttr = mttrEligible.length ? (mttrEligible.reduce((s,r)=>s+(Number(r.duration)||0),0)/mttrEligible.length) : 0;
 
-  // PMR = Planned Maintenance Hours / Total Maintenance Hours × 100 (formula resmi)
+  // PMR = Planned Maintenance Hours ÷ Total Maintenance Hours × 100 (formula resmi)
   const { pmr } = calcPMRFromRecords(approvedRecords);
 
   // Service Accuracy (SA): dihitung dari data Daily Maintenance (kategori Periodical, sudah Approved),
@@ -8978,7 +9051,7 @@ function computeUnitKPIsForRange(unitCode, startStr, endStr){
   const mttrEligible = approvedRecords.filter(r=>r.category==='Breakdown' && r.duration!==null && r.duration!==undefined);
   const mttr = mttrEligible.length ? (mttrEligible.reduce((s,r)=>s+(Number(r.duration)||0),0)/mttrEligible.length) : 0;
 
-  // PMR = Planned Maintenance Hours / Total Maintenance Hours × 100 (formula resmi)
+  // PMR = Planned Maintenance Hours ÷ Total Maintenance Hours × 100 (formula resmi)
   const { pmr } = calcPMRFromRecords(approvedRecords);
 
   // Service Accuracy (SA): dihitung dari data Daily Maintenance (kategori Periodical, sudah Approved)
@@ -19262,7 +19335,6 @@ function renderKPIChartDashboard(k, globalStats){
       <div class="kpi-dash-grid">${gaugeCardsHtml}</div>
     </div>
     <div class="dash-panel" style="position:relative;margin-bottom:14px">
-        ${dashTopbar('Period', monthlyChartSelectHtml)}
         <div class="dash-panel-title">KPI MAINTENANCE SUMMARY</div>
         <div style="overflow-x:auto">
           <table class="dash-sum-table">
@@ -19404,7 +19476,7 @@ function computeKPIs(){
   const mttrEligible = approvedRecords.filter(r=>r.category==='Breakdown' && r.duration!==null && r.duration!==undefined);
   const mttr = mttrEligible.length ? (mttrEligible.reduce((s,r)=>s+(Number(r.duration)||0),0)/mttrEligible.length) : 0;
 
-  // PMR = Planned Maintenance Hours / Total Maintenance Hours × 100 (formula resmi)
+  // PMR = Planned Maintenance Hours ÷ Total Maintenance Hours × 100 (formula resmi)
   const { pmr } = calcPMRFromRecords(approvedRecords);
 
   // Service Accuracy (SA): dihitung dari data Daily Maintenance (kategori Periodical, sudah Approved),
@@ -19502,7 +19574,7 @@ function computeKPIsForRange(startStr, endStr){
   const mttrEligible = approvedRecords.filter(r=>r.category==='Breakdown' && r.duration!==null && r.duration!==undefined);
   const mttr = mttrEligible.length ? (mttrEligible.reduce((s,r)=>s+(Number(r.duration)||0),0)/mttrEligible.length) : 0;
 
-  // PMR = Planned Maintenance Hours / Total Maintenance Hours × 100 (formula resmi)
+  // PMR = Planned Maintenance Hours ÷ Total Maintenance Hours × 100 (formula resmi)
   const { pmr } = calcPMRFromRecords(approvedRecords);
 
   // Service Accuracy (SA): dihitung dari data Daily Maintenance (kategori Periodical, sudah Approved)
@@ -25954,33 +26026,64 @@ function subscribeDailyRealtime(){
       var t=navBadge(it); bd.textContent=t; bd.style.display=t?'':'none';
     });
   }
+  /* Hitung tinggi tile yang BENAR-BENAR dibutuhkan (bukan cuma kira-kira persegi),
+     supaya ikon + label (sampai 3 baris) + padding pasti muat — mencegah teks
+     bawah terpotong. */
+  function neededTh(tw){
+    var ico=Math.max(18,Math.min(tw*0.30,46));
+    var fs=Math.max(8,Math.min(tw*0.105,14.5));
+    var lineH=fs*1.16;
+    var labelH=lineH*3; // asumsikan skenario terburuk: label 3 baris
+    var padTop=5, padBottom=7, midGap=4;
+    var fixedSum=padTop+padBottom+ico+midGap+labelH;
+    return {th:fixedSum, ico:ico, fs:fs};
+  }
   function layout(){
     var home=$('menu-home'), grid=$('mh-grid');
     if(!home||!grid||!grid.children.length) return;
+    grid.style.zoom=1;
     var n=grid.children.length, vw=window.innerWidth, vh=window.innerHeight;
     var tb=document.querySelector('.topbar'), tbh=tb?tb.offsetHeight:62;
-    var hd=home.querySelector('.mh-head'), hh=hd?hd.offsetHeight+16:60;
+    var hd=home.querySelector('.mh-head'), hh=hd?hd.offsetHeight+10:56;
+    /* Banner "Maintenance Tips" ikut dihitung di sini — sebelumnya tidak
+       diperhitungkan sama sekali, sehingga JS mengira ruang tersedia lebih
+       banyak dari kenyataan dan grid menu jadi kepotong/perlu scroll. */
+    var tips=home.querySelector('.sen-maint-tips'), tipsH=tips?tips.offsetHeight+8:0;
     var ft=home.querySelector('.mh-foot'), fh=ft?ft.offsetHeight:0;
-    var padX=vw<520?14:28, W=Math.min(vw-2*padX,1180), H=vh-tbh-hh-fh-40;
-    var gap=vw<520?12:16, best=null;
+    var padX=vw<520?10:28, W=Math.min(vw-2*padX,1100), H=vh-tbh-hh-tipsH-fh-24;
+    var gap=vw<520?8:14, best=null;
     for(var c=1;c<=Math.min(n,7);c++){
       var rows=Math.ceil(n/c);
-      var tw=Math.min((W-(c-1)*gap)/c,270);
-      var th=Math.min(tw,(H-(rows-1)*gap)/rows,230);
-      if(tw<84||th<84) continue;
+      var tw=Math.min((W-(c-1)*gap)/c,205);
+      if(tw<48) continue;
+      var nt=neededTh(tw), th=nt.th;
+      var totalH=rows*th+(rows-1)*gap;
+      if(totalH>H) continue;
       var score=tw*th*(n/(c*rows));
-      if(!best||score>best.score) best={c:c,tw:tw,th:th,score:score};
+      if(!best||score>best.score) best={c:c,tw:tw,th:th,ico:nt.ico,fs:nt.fs};
     }
-    if(!best){ // layar sangat kecil: biarkan scroll
-      var c2=Math.max(2,Math.min(7,Math.floor((W+gap)/(120+gap))));
-      var tw2=Math.min((W-(c2-1)*gap)/c2,270);
-      best={c:c2,tw:tw2,th:Math.max(92,Math.min(tw2,150))};
+    if(!best){
+      var c2=Math.min(n,7);
+      var tw2=Math.max(48,Math.min((W-(c2-1)*gap)/c2,205));
+      var nt2=neededTh(tw2);
+      best={c:c2,tw:tw2,th:nt2.th,ico:nt2.ico,fs:nt2.fs};
     }
     var st=grid.style;
     st.setProperty('--cols',best.c); st.setProperty('--tw',Math.floor(best.tw)+'px');
-    st.setProperty('--th',Math.floor(best.th)+'px'); st.setProperty('--gap',gap+'px');
-    st.setProperty('--ico',Math.round(Math.max(34,Math.min(best.th*0.40,64)))+'px');
-    st.setProperty('--fs',Math.round(Math.max(11,Math.min(best.th*0.105,16)))+'px');
+    st.setProperty('--th',Math.ceil(best.th)+'px'); st.setProperty('--gap',gap+'px');
+    st.setProperty('--ico',Math.round(best.ico)+'px');
+    st.setProperty('--fs',best.fs.toFixed(1)+'px');
+    /* Safety pass terakhir: ukur ulang tinggi/lebar grid yang sesungguhnya
+       dirender browser; kalau masih melebihi ruang yang ada, seluruh grid
+       diperkecil lagi (zoom) secara proporsional tanpa memotong teks. */
+    requestAnimationFrame(function(){
+      grid.style.zoom=1;
+      var gh=grid.scrollHeight, gw=grid.scrollWidth;
+      var z=1;
+      if(gh>H && H>0) z=Math.min(z, H/gh);
+      if(gw>W && W>0) z=Math.min(z, W/gw);
+      if(z<0.995) grid.style.zoom=Math.max(0.5, z*0.98);
+    });
   }
   function build(){
     var grid=$('mh-grid'); if(!grid) return;
