@@ -26029,12 +26029,15 @@ function subscribeDailyRealtime(){
   /* Hitung tinggi tile yang BENAR-BENAR dibutuhkan (bukan cuma kira-kira persegi),
      supaya ikon + label (sampai 3 baris) + padding pasti muat — mencegah teks
      bawah terpotong. */
+  /* Hitung tinggi tile agar ikon + label (maks 2 baris praktis) + padding muat.
+     Label menu utama biasanya 1–2 baris; pakai 2.2 baris supaya tile tidak terlalu
+     tinggi dan grid bisa tetap 2 baris (lebih rata) di layar desktop/PWA. */
   function neededTh(tw){
-    var ico=Math.max(18,Math.min(tw*0.30,46));
-    var fs=Math.max(8,Math.min(tw*0.105,14.5));
-    var lineH=fs*1.16;
-    var labelH=lineH*3; // asumsikan skenario terburuk: label 3 baris
-    var padTop=5, padBottom=7, midGap=4;
+    var ico=Math.max(18,Math.min(tw*0.28,42));
+    var fs=Math.max(9,Math.min(tw*0.095,13.5));
+    var lineH=fs*1.18;
+    var labelH=lineH*2.2;
+    var padTop=6, padBottom=8, midGap=5;
     var fixedSum=padTop+padBottom+ico+midGap+labelH;
     return {th:fixedSum, ico:ico, fs:fs};
   }
@@ -26043,46 +26046,66 @@ function subscribeDailyRealtime(){
     if(!home||!grid||!grid.children.length) return;
     grid.style.zoom=1;
     var n=grid.children.length, vw=window.innerWidth, vh=window.innerHeight;
-    var tb=document.querySelector('.topbar'), tbh=tb?tb.offsetHeight:62;
+    /* Topbar disembunyikan di launcher-mode → tinggi efektif 0 */
+    var app=appEl(), isLauncher=app&&app.classList.contains('launcher-mode');
+    var tb=document.querySelector('.topbar');
+    var tbh=(isLauncher||!tb||tb.offsetParent===null)?0:(tb.offsetHeight||0);
     var hd=home.querySelector('.mh-head'), hh=hd?hd.offsetHeight+10:56;
-    /* Banner "Maintenance Tips" ikut dihitung di sini — sebelumnya tidak
-       diperhitungkan sama sekali, sehingga JS mengira ruang tersedia lebih
-       banyak dari kenyataan dan grid menu jadi kepotong/perlu scroll. */
     var tips=home.querySelector('.sen-maint-tips'), tipsH=tips?tips.offsetHeight+8:0;
     var ft=home.querySelector('.mh-foot'), fh=ft?ft.offsetHeight:0;
-    var padX=vw<520?10:28, W=Math.min(vw-2*padX,1100), H=vh-tbh-hh-tipsH-fh-24;
-    var gap=vw<520?8:14, best=null;
-    for(var c=1;c<=Math.min(n,7);c++){
+    /* Lebar grid selaras dengan banner tips (max 1100) supaya tampilan rata */
+    var padX=vw<520?10:28;
+    var W=Math.min(vw-2*padX, 1100);
+    if(tips && tips.offsetWidth>80) W=Math.min(W, tips.offsetWidth);
+    var H=Math.max(120, vh-tbh-hh-tipsH-fh-20);
+    var gap=vw<520?8:12, best=null;
+    var maxC=Math.min(n, vw<520?3:vw<900?5:6);
+    for(var c=1;c<=maxC;c++){
       var rows=Math.ceil(n/c);
-      var tw=Math.min((W-(c-1)*gap)/c,205);
-      if(tw<48) continue;
+      var tw=(W-(c-1)*gap)/c;
+      /* Batas tile: jangan terlalu besar (supaya banyak kolom & baris penuh),
+         jangan terlalu kecil */
+      if(tw<56) continue;
+      if(tw>188) tw=188;
       var nt=neededTh(tw), th=nt.th;
       var totalH=rows*th+(rows-1)*gap;
-      if(totalH>H) continue;
-      var score=tw*th*(n/(c*rows));
-      if(!best||score>best.score) best={c:c,tw:tw,th:th,ico:nt.ico,fs:nt.fs};
+      if(totalH>H+4) continue;
+      var cells=c*rows;
+      var empty=cells-n;
+      var fill=n/cells;
+      /* Skor: prioritaskan grid rata (fill tinggi, empty sedikit, baris sedikit),
+         lalu ukuran tile. Ini mencegah 4×3 (baris akhir 2 item) menang atas 5×2. */
+      var score=(tw*th)*(fill*fill*fill)*1000 - empty*8000 - (rows-1)*1200;
+      /* Bonus kuat jika baris terakhir penuh (n % c === 0) */
+      if(n%c===0) score+=15000;
+      /* Prefer 2 baris di desktop bila memungkinkan */
+      if(rows===2 && n>=6) score+=6000;
+      if(rows===1 && n<=4) score+=4000;
+      if(!best||score>best.score) best={c:c,tw:tw,th:th,ico:nt.ico,fs:nt.fs,score:score};
     }
     if(!best){
-      var c2=Math.min(n,7);
-      var tw2=Math.max(48,Math.min((W-(c2-1)*gap)/c2,205));
+      /* Fallback: pilih kolom yang meminimalkan baris kosong */
+      var c2=Math.min(n, maxC||5);
+      if(n%5===0) c2=Math.min(5,maxC);
+      else if(n%4===0) c2=Math.min(4,maxC);
+      var tw2=Math.max(56,Math.min((W-(c2-1)*gap)/c2,188));
       var nt2=neededTh(tw2);
       best={c:c2,tw:tw2,th:nt2.th,ico:nt2.ico,fs:nt2.fs};
     }
     var st=grid.style;
-    st.setProperty('--cols',best.c); st.setProperty('--tw',Math.floor(best.tw)+'px');
-    st.setProperty('--th',Math.ceil(best.th)+'px'); st.setProperty('--gap',gap+'px');
+    st.setProperty('--cols',best.c);
+    st.setProperty('--tw',Math.floor(best.tw)+'px');
+    st.setProperty('--th',Math.ceil(best.th)+'px');
+    st.setProperty('--gap',gap+'px');
     st.setProperty('--ico',Math.round(best.ico)+'px');
     st.setProperty('--fs',best.fs.toFixed(1)+'px');
-    /* Safety pass terakhir: ukur ulang tinggi/lebar grid yang sesungguhnya
-       dirender browser; kalau masih melebihi ruang yang ada, seluruh grid
-       diperkecil lagi (zoom) secara proporsional tanpa memotong teks. */
     requestAnimationFrame(function(){
       grid.style.zoom=1;
       var gh=grid.scrollHeight, gw=grid.scrollWidth;
       var z=1;
       if(gh>H && H>0) z=Math.min(z, H/gh);
       if(gw>W && W>0) z=Math.min(z, W/gw);
-      if(z<0.995) grid.style.zoom=Math.max(0.5, z*0.98);
+      if(z<0.995) grid.style.zoom=Math.max(0.55, z*0.98);
     });
   }
   function build(){
