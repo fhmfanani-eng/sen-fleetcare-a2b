@@ -1,5 +1,1 @@
-v29 Button colors:
-- Sign In = GOLD
-- Simpan / Save / Submit = GOLD
-- Auto Sync / Sync = GOLD
-- Sync WA / Kirim Grup WhatsApp = GREEN
+v33: Enlarge "Cara membaca backlog" guide above Backlog Register table.

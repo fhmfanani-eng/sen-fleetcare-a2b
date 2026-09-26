@@ -2966,6 +2966,322 @@ button.wa-green:hover, button.wa-sync-only-fahmi:hover{
   background: linear-gradient(135deg, #7EE0A0 0%, #5FD68A 50%, #25D366 100%) !important;
 }
 
+
+/* Dashboard title + topbar lock on scroll */
+.dash-sticky-header{
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  margin: 0 0 14px;
+  padding: 8px 10px 10px;
+  background:
+    linear-gradient(180deg, rgba(10,14,20,0.98) 0%, rgba(12,17,23,0.96) 100%);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.35);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.dash-sticky-header .dash-hero-page-title{
+  margin: 2px 4px 10px !important;
+  padding: 2px 4px 8px !important;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.dash-sticky-header .dash-menu-topbar{
+  position: static !important; /* parent is sticky */
+  top: auto !important;
+  margin-bottom: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+/* When app topbar exists, offset sticky below it on desktop content scroll */
+.main .dash-sticky-header,
+.content .dash-sticky-header,
+#view-dashboard .dash-sticky-header{
+  top: 0;
+}
+/* Backlog chart legend — single clean row, no overlap */
+.cbm-backlog-legend{
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 18px !important;
+  margin-top: 10px !important;
+  padding: 8px 10px !important;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  font: 10px/1.3 'JetBrains Mono', monospace !important;
+  color: #aeb7c2 !important;
+}
+.cbm-backlog-legend span{
+  display: inline-flex !important;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+.cbm-backlog-legend i{
+  width: 8px; height: 8px; border-radius: 50%;
+  display: inline-block; flex-shrink: 0;
+  box-shadow: 0 0 8px currentColor;
+}
+.cbm-backlog-chart .ps-hm-legend{ display: none !important; } /* hide SVG-embedded duplicate */
+.ps-hm-legend{
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px !important;
+  justify-content: flex-start !important;
+  margin-top: 8px !important;
+  font: 10px/1.3 'JetBrains Mono', monospace !important;
+  color: #aeb7c2 !important;
+}
+.ps-hm-legend span{
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+}
+
+
+.pill.cbm-bl-status.follow-up-pr, .cbm-bl-status.follow-up-pr{
+  color:#1a1408!important;
+  background:linear-gradient(135deg,#FFC72C,#FF8A1F)!important;
+  border:1px solid rgba(255,180,40,.55)!important;
+  font-weight:700!important;
+  box-shadow:0 0 12px rgba(255,180,40,.25);
+}
+
+
+/* Backlog Register — header rapi + Sumber badge redesign */
+.cbm-backlog-group-head th{
+  background: linear-gradient(180deg, #1a2836 0%, #141e2a 100%) !important;
+  color: #8ec0f5 !important;
+  font: 700 9px/1.2 'JetBrains Mono', monospace !important;
+  letter-spacing: 0.8px !important;
+  text-transform: uppercase !important;
+  text-align: center !important;
+  padding: 8px 10px !important;
+  border-bottom: 1px solid rgba(74,144,217,0.28) !important;
+  border-right: 1px solid rgba(255,255,255,0.05) !important;
+}
+.cbm-backlog-group-head th:last-child{ border-right: none !important; }
+.cbm-backlog-column-head th{
+  background: linear-gradient(180deg, #151c26 0%, #10161e 100%) !important;
+  color: #c5cdd6 !important;
+  font: 700 10px/1.25 'Oswald', sans-serif !important;
+  letter-spacing: 0.4px !important;
+  text-transform: none !important;
+  padding: 9px 10px !important;
+  border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+  white-space: nowrap !important;
+  vertical-align: middle !important;
+}
+.cbm-backlog-column-head th.th-prio{ min-width: 88px; }
+.cbm-backlog-column-head th.th-unit{ min-width: 78px; }
+.cbm-backlog-column-head th.th-comp{ min-width: 120px; }
+.cbm-backlog-column-head th.th-pn{ min-width: 90px; }
+.cbm-backlog-column-head th.th-qty{ min-width: 48px; text-align: center; }
+.cbm-backlog-column-head th.th-pr{ min-width: 70px; }
+.cbm-backlog-column-head th.th-loc{ min-width: 90px; }
+.cbm-backlog-column-head th.th-desc{ min-width: 180px; }
+.cbm-backlog-column-head th.th-src{ min-width: 118px; text-align: center; }
+.cbm-backlog-column-head th.th-date{ min-width: 88px; }
+.cbm-backlog-column-head th.th-hm{ min-width: 70px; text-align: right; }
+.cbm-backlog-column-head th.th-age{ min-width: 64px; text-align: center; }
+.cbm-backlog-column-head th.th-st{ min-width: 110px; text-align: center; }
+
+/* Sumber column — stacked code + name */
+.cbm-bl-source{
+  display: inline-flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 2px !important;
+  padding: 5px 10px 5px 11px !important;
+  border-radius: 8px !important;
+  font: 700 9px/1.15 'JetBrains Mono', monospace !important;
+  letter-spacing: 0.2px !important;
+  white-space: nowrap !important;
+  border: 1px solid transparent !important;
+  position: relative;
+  min-width: 96px;
+}
+.cbm-bl-source:before{
+  content: "" !important;
+  position: absolute !important;
+  left: 0 !important; top: 6px !important; bottom: 6px !important;
+  width: 3px !important; border-radius: 2px !important;
+  background: currentColor !important;
+  box-shadow: 0 0 8px currentColor !important;
+}
+.cbm-bl-src-code{
+  font: 800 10px/1 'Oswald', sans-serif !important;
+  letter-spacing: 0.6px !important;
+  text-transform: uppercase !important;
+}
+.cbm-bl-src-name{
+  font: 500 8px/1.2 'Inter', sans-serif !important;
+  opacity: 0.72 !important;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cbm-bl-source.source-pre{
+  color: #62d9ff !important;
+  background: linear-gradient(135deg, rgba(98,217,255,.14), rgba(98,217,255,.05)) !important;
+  border-color: rgba(98,217,255,.28) !important;
+}
+.cbm-bl-source.source-plan{
+  color: #FFC72C !important;
+  background: linear-gradient(135deg, rgba(255,199,44,.14), rgba(255,199,44,.05)) !important;
+  border-color: rgba(255,199,44,.30) !important;
+}
+.cbm-bl-source.source-cbm-life{
+  color: #6fe0b0 !important;
+  background: linear-gradient(135deg, rgba(64,196,140,.14), rgba(64,196,140,.05)) !important;
+  border-color: rgba(64,196,140,.30) !important;
+}
+.cbm-bl-source.source-daily-unplan{
+  color: #ff8a65 !important;
+  background: linear-gradient(135deg, rgba(255,107,53,.14), rgba(255,107,53,.05)) !important;
+  border-color: rgba(255,107,53,.28) !important;
+}
+.cbm-bl-source.source-other{
+  color: #aeb7c2 !important;
+  background: rgba(174,183,194,.08) !important;
+  border-color: rgba(174,183,194,.18) !important;
+}
+#cbm-backlog-table{ min-width: 1280px !important; }
+#cbm-backlog-table td{ vertical-align: middle !important; padding: 8px 10px !important; }
+
+
+/* Backlog headers EN · CENTER · LARGER */
+#cbm-backlog-table thead .cbm-backlog-group-head th{
+  text-align: center !important;
+  font: 800 12px/1.2 'Oswald', sans-serif !important;
+  letter-spacing: 1.2px !important;
+  text-transform: uppercase !important;
+  height: auto !important;
+  min-height: 36px !important;
+  padding: 10px 12px !important;
+  line-height: 1.25 !important;
+  vertical-align: middle !important;
+}
+#cbm-backlog-table thead .cbm-backlog-column-head th{
+  text-align: center !important;
+  font: 700 13px/1.25 'Oswald', sans-serif !important;
+  letter-spacing: 0.5px !important;
+  height: auto !important;
+  min-height: 42px !important;
+  padding: 11px 12px !important;
+  line-height: 1.25 !important;
+  vertical-align: middle !important;
+  white-space: nowrap !important;
+  color: #e8eef4 !important;
+}
+#cbm-backlog-table thead .cbm-backlog-group-head th:nth-child(1){
+  color: #FFC72C !important; border-left: 3px solid #FFC72C !important;
+}
+#cbm-backlog-table thead .cbm-backlog-group-head th:nth-child(2){
+  color: #8ec0f5 !important; border-left: 3px solid #4A90D9 !important;
+}
+#cbm-backlog-table thead .cbm-backlog-group-head th:nth-child(3){
+  color: #7ed99a !important; border-left: 3px solid #4CAF6D !important;
+}
+#cbm-backlog-table thead .cbm-backlog-group-head th:nth-child(4){
+  color: #f0a878 !important; border-left: 3px solid #FF6B35 !important;
+}
+/* How to Read Backlog — larger text */
+.cbm-backlog-guide .panel-head h2{
+  font-size: 16px !important;
+  letter-spacing: 0.4px;
+}
+.cbm-backlog-flow b{
+  font: 700 15px/1.2 'Oswald', sans-serif !important;
+  color: #f0f3f7 !important;
+  margin-bottom: 4px !important;
+}
+.cbm-backlog-flow small{
+  font-size: 12.5px !important;
+  line-height: 1.45 !important;
+  color: #c5cdd6 !important;
+}
+.cbm-backlog-flow .flow-no{
+  width: 30px !important; height: 30px !important; flex: 0 0 30px !important;
+  font: 800 12px 'JetBrains Mono', monospace !important;
+}
+.cbm-backlog-flow>div{
+  padding: 14px !important;
+  gap: 12px !important;
+}
+
+
+/* Cara membaca backlog — diperbesar */
+.cbm-backlog-read-guide{
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 12px 18px !important;
+  margin: 14px 0 16px !important;
+  padding: 14px 16px !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(255,199,44,0.22) !important;
+  background:
+    linear-gradient(180deg, rgba(255,199,44,0.08) 0%, transparent 70%),
+    linear-gradient(145deg, #151c24, #0e141b) !important;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.22) !important;
+}
+.cbm-backlog-read-title{
+  font: 700 15px/1.25 'Oswald', sans-serif !important;
+  letter-spacing: 0.6px !important;
+  color: #FFC72C !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  white-space: nowrap !important;
+  text-transform: none !important;
+}
+.cbm-backlog-read-title .cbm-read-dot{
+  width: 10px !important;
+  height: 10px !important;
+  border-radius: 50% !important;
+  background: #FFC72C !important;
+  box-shadow: 0 0 12px rgba(255,199,44,0.55) !important;
+  flex-shrink: 0 !important;
+}
+.cbm-backlog-read-flow{
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 8px 6px !important;
+  font: 600 14px/1.35 'Inter', sans-serif !important;
+  color: #e8eef4 !important;
+}
+.cbm-backlog-read-flow span{
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 6px 12px !important;
+  border-radius: 8px !important;
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  white-space: nowrap !important;
+}
+.cbm-backlog-read-flow span b{
+  font: 800 13px/1 'JetBrains Mono', monospace !important;
+  color: #FFC72C !important;
+  letter-spacing: 0.3px !important;
+}
+.cbm-backlog-read-flow i{
+  font-style: normal !important;
+  color: #6b7480 !important;
+  font-size: 14px !important;
+  padding: 0 2px !important;
+  font-weight: 700 !important;
+}
+@media (max-width: 720px){
+  .cbm-backlog-read-guide{ flex-direction: column; align-items: flex-start !important; }
+  .cbm-backlog-read-title{ font-size: 14px !important; }
+  .cbm-backlog-read-flow{ font-size: 13px !important; }
+}
+
 </style>
 
 </head>
@@ -3099,7 +3415,7 @@ button.wa-green:hover, button.wa-sync-only-fahmi:hover{
       <div class="field"><label>Part Number</label><input type="text" id="cbm-bl-edit-partnumber" placeholder="Contoh: 6754-61-1030"></div>
       <div class="field"><label>Qty</label><input type="text" id="cbm-bl-edit-qty" placeholder="Contoh: 2 pcs"></div>
       <div class="field"><label>PR</label><input type="text" id="cbm-bl-edit-pr" placeholder="Nomor Purchase Request…"></div>
-      <div class="field"><label>Status</label><select id="cbm-bl-edit-status"><option value="Open">Open</option><option value="Ordering / Segera proses naikan PR">Ordering / Segera proses naikan PR</option><option value="In Progress">In Progress</option><option value="Verified">Verified</option><option value="Close">Close</option><option value="Closed">Closed</option></select></div>
+      <div class="field"><label>Status</label><select id="cbm-bl-edit-status"><option value="Open">Open</option><option value="Follow Up PR">Follow Up PR</option><option value="In Progress">In Progress</option><option value="Verified">Verified</option><option value="Close">Close</option><option value="Closed">Closed</option></select></div>
       <div class="field"><label>Part Location</label><input type="text" id="cbm-bl-edit-location" placeholder="Contoh: Gudang Site A / WH Central"></div>
       <div class="hint" style="margin-top:4px;">Menu edit &amp; hapus baris Backlog ini hanya dapat diakses oleh <b>Fahmi Fanani</b>.</div>
     </div>
@@ -3410,7 +3726,8 @@ button.wa-green:hover, button.wa-sync-only-fahmi:hover{
 
         <div class="section-title" style="display:none">Dashboard KPI</div>
 
-        <!-- Judul halaman di atas SEMUA top bar menu dashboard -->
+        <!-- Judul + top bar dashboard: STICKY saat scroll -->
+        <div class="dash-sticky-header" id="dash-sticky-header">
         <div class="dash-hero-row dash-hero-page-title" id="dash-page-hero">
           <div>
             <h2 class="dash-hero-title">MAINTENANCE KPI DASHBOARD</h2>
@@ -3418,9 +3735,7 @@ button.wa-green:hover, button.wa-sync-only-fahmi:hover{
           </div>
         </div>
 
-        <!-- TOP BAR MENU DASHBOARD: mengelompokkan grafik + tabel per topik. Klik satu tombol topbar
-             untuk hanya menampilkan grup terkait (mis. "Breakdown Category" -> chart "Breakdown
-             Category per Month" + tabel "Summary Breakdown Category per Month" saja yang tampil). -->
+        <!-- TOP BAR MENU DASHBOARD -->
         <div class="dash-menu-topbar" id="dash-menu-topbar">
           <button type="button" class="dash-menu-tab active" data-dashtab="breakdown" onclick="setDashboardTab('breakdown')">📦 Breakdown Category</button>
           <button type="button" class="dash-menu-tab" data-dashtab="service" onclick="setDashboardTab('service')">🛠 Dashboard Service</button>
@@ -3430,6 +3745,7 @@ button.wa-green:hover, button.wa-sync-only-fahmi:hover{
           <button type="button" class="dash-menu-tab" data-dashtab="quarter" onclick="setDashboardTab('quarter')">🗓 Quarter Summary</button>
           <span id="dash-menu-topbar-sync-slot" style="margin-left:auto;display:flex;align-items:center;"></span>
         </div>
+        </div><!-- /dash-sticky-header -->
 
         <div id="kpi-chart-dashboard" style="margin-bottom:20px;"></div>
 
@@ -4661,7 +4977,11 @@ button.wa-green:hover, button.wa-sync-only-fahmi:hover{
             <div class="cbm-backlog-chart-card">
               <div class="cbm-backlog-chart-head"><div><div class="cbm-backlog-chart-title">Backlog Load by Unit</div><div class="cbm-backlog-chart-sub">Open vs closed movement by unit</div></div><span class="pill" id="cbm-bl-chart-total">—</span></div>
               <div class="cbm-backlog-chart" id="cbm-bl-unit-chart"></div>
-              <div class="cbm-backlog-legend"><span><i style="background:#ff6b35"></i>Open</span><span><i style="background:#4caf6d"></i>Closed</span></div>
+              <div class="cbm-backlog-legend" id="cbm-bl-unit-legend">
+                <span><i style="background:#7fe0e0"></i>Open Load</span>
+                <span><i style="background:#FFC72C"></i>Closed Historical</span>
+                <span style="margin-left:auto;opacity:.7">Total records per unit</span>
+              </div>
             </div>
             <div class="cbm-backlog-chart-card">
               <div class="cbm-backlog-chart-head"><div><div class="cbm-backlog-chart-title">Register Status Mix</div><div class="cbm-backlog-chart-sub">Status distribution · live register</div></div><span class="pill" id="cbm-bl-chart-openpct">—</span></div>
@@ -4673,7 +4993,7 @@ button.wa-green:hover, button.wa-sync-only-fahmi:hover{
           <div class="grid grid-4 cbm-backlog-kpis">
             <div class="unit-card cbm-backlog-kpi"><div class="cat-label">Total Backlog</div><div class="type" id="cbm-bl-total">0</div><div class="hint">Semua work order terbuka</div></div>
             <div class="unit-card cbm-backlog-kpi"><div class="cat-label">Critical / High</div><div class="type" style="color:var(--red)" id="cbm-bl-critical">0</div><div class="hint">Perlu tindakan segera</div></div>
-            <div class="unit-card cbm-backlog-kpi cbm-bl-kpi-ordering"><div class="cat-label">Ordering / Naikkan PR</div><div class="type" style="color:#FFB020" id="cbm-bl-ordering">0</div><div class="hint">Critical · segera proses PR</div></div>
+            <div class="unit-card cbm-backlog-kpi cbm-bl-kpi-ordering"><div class="cat-label">Follow Up PR</div><div class="type" style="color:#FFB020" id="cbm-bl-ordering">0</div><div class="hint">Critical · follow up PR</div></div>
             <div class="unit-card cbm-backlog-kpi"><div class="cat-label">Aging &gt; 7 Hari</div><div class="type" style="color:var(--green)" id="cbm-bl-aging">0</div><div class="hint">Belum ditutup</div></div>
           </div>
 
@@ -4714,7 +5034,7 @@ button.wa-green:hover, button.wa-sync-only-fahmi:hover{
                   <select id="cbm-bl-filter-status" class="cbm-bl-filter">
                     <option value="">Semua Status</option>
                     <option value="Open">Open</option>
-                    <option value="Ordering / Segera proses naikan PR">Ordering / Segera proses naikan PR</option>
+                    <option value="Follow Up PR">Follow Up PR</option>
                     <option value="In Progress">In Progress</option>
                     <option value="Verified">Verified</option>
                     <option value="Close">Close</option>
@@ -4740,15 +5060,25 @@ button.wa-green:hover, button.wa-sync-only-fahmi:hover{
               <table id="cbm-backlog-table">
                 <thead>
                   <tr class="cbm-backlog-group-head">
-                    <th colspan="3">IDENTIFIKASI PEKERJAAN</th>
-                    <th colspan="4">PART &amp; PROCUREMENT</th>
-                    <th colspan="2">SUMBER &amp; RENCANA</th>
-                    <th colspan="3">CONTROL &amp; FOLLOW-UP</th>
+                    <th colspan="3">IDENTITY</th>
+                    <th colspan="4">PART &amp; PR</th>
+                    <th colspan="2">DESCRIPTION &amp; SOURCE</th>
+                    <th colspan="4">CONTROL</th>
                   </tr>
                   <tr class="cbm-backlog-column-head">
-                    <th>Prioritas</th><th>Unit</th><th>Komponen / Item</th>
-                    <th>No. Part</th><th>Qty</th><th>PR</th><th>Lokasi Part</th>
-                    <th>Deskripsi Backlog</th><th>Sumber</th><th>Plan / Due</th><th>HM</th><th>Aging</th><th>Status</th>
+                    <th class="th-prio">Priority</th>
+                    <th class="th-unit">Unit</th>
+                    <th class="th-comp">Component</th>
+                    <th class="th-pn">Part No.</th>
+                    <th class="th-qty">Qty</th>
+                    <th class="th-pr">PR</th>
+                    <th class="th-loc">Location</th>
+                    <th class="th-desc">Description</th>
+                    <th class="th-src">Source</th>
+                    <th class="th-date">Date</th>
+                    <th class="th-hm">HM</th>
+                    <th class="th-age">Aging</th>
+                    <th class="th-st">Status</th>
                   </tr>
                 </thead>
                 <tbody id="cbm-backlog-tbody"></tbody>
@@ -4757,12 +5087,12 @@ button.wa-green:hover, button.wa-sync-only-fahmi:hover{
           </div>
 
           <div class="panel cbm-backlog-guide">
-            <div class="panel-head"><h2><span class="tag">FLOW</span> Backlog Control</h2></div>
+            <div class="panel-head"><h2><span class="tag">GUIDE</span> How to Read Backlog</h2></div>
             <div class="cbm-backlog-flow">
-              <div><span class="flow-no">01</span><div><b>Identify</b><small>Temuan Pre Inspection / Plan / RCA masuk register.</small></div></div>
-              <div><span class="flow-no">02</span><div><b>Prioritize</b><small>Critical → High → Medium berdasarkan urgensi source.</small></div></div>
-              <div><span class="flow-no">03</span><div><b>Execute</b><small>Follow-up pekerjaan melalui menu sumber masing-masing.</small></div></div>
-              <div><span class="flow-no">04</span><div><b>Close</b><small>Backlog hilang dari daftar saat status sumber sudah Close.</small></div></div>
+              <div><span class="flow-no">01</span><div><b>Identify</b><small>Findings from Pre Inspection / Plan / RCA enter the register.</small></div></div>
+              <div><span class="flow-no">02</span><div><b>Prioritize</b><small>Critical → High → Medium based on source urgency.</small></div></div>
+              <div><span class="flow-no">03</span><div><b>Execute</b><small>Follow up work via each source menu.</small></div></div>
+              <div><span class="flow-no">04</span><div><b>Close</b><small>Item leaves the list when source status is Closed.</small></div></div>
             </div>
           </div>
         </div>
@@ -25463,7 +25793,7 @@ function cbmBacklogBuildRows(){
     else if(String(r.priority||'')==='Critical'){
       const st=String(r.status||'Open');
       if(!/^(close|closed|done|completed|verified)$/i.test(st)){
-        r.status='Ordering / Segera proses naikan PR'; r.statusAuto=true;
+        r.status='Follow Up PR'; r.statusAuto=true;
       }
     }
   });
@@ -25505,12 +25835,7 @@ function cbmBacklogChartSvg(rows){
     <polyline points="${openPts}" fill="none" stroke="#7fe0e0" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
     <polyline points="${closedPts}" fill="none" stroke="#FFC72C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 4"/>
     ${dots('open','#7fe0e0')}${dots('closed','#FFC72C')}${totals}${xlabels}
-  </svg>
-  <div class="ps-hm-legend" style="margin-top:2px;">
-    <span><i style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#7fe0e0;box-shadow:0 0 8px #7fe0e0"></i> Open Load</span>
-    <span><i style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#FFC72C;box-shadow:0 0 8px #FFC72C"></i> Closed Historical</span>
-    <span>Total records per unit</span>
-  </div>`;
+  </svg>`;
 }
 
 function cbmBacklogStatusChartSvg(rows){
@@ -25555,13 +25880,21 @@ function renderCbmBacklog(){
     const closed=/^(close|closed|done|completed)$/i.test(String(r.status||''));
     const statusCls=cbmBacklogStatusClass(r.status);
     const sourceCls=r.sourceKey==='pre'?'source-pre':(r.sourceKey==='plan'?'source-plan':(r.sourceKey==='cbm-life'?'source-cbm-life':(r.sourceKey==='daily-unplan'?'source-daily-unplan':'source-other')));
+    const sourceShort=({pre:'PRE',plan:'PLAN','cbm-life':'CBM','daily-unplan':'DAILY'}[r.sourceKey])||'OTHER';
+    const sourceTitle=esc(r.source||sourceShort);
     return `<tr data-row-id="${esc(r.id)}" class="${closed?'cbm-bl-closed-row':''}">
-      <td><span class="cbm-bl-priority ${pc}">${esc(r.priority)}</span></td><td><b>${esc(r.unit)}</b></td><td><span class="cbm-bl-component">${esc(r.component)}</span></td>
+      <td><span class="cbm-bl-priority ${pc}">${esc(r.priority)}</span></td>
+      <td><b class="cbm-bl-unit">${esc(r.unit)}</b></td>
+      <td><span class="cbm-bl-component">${esc(r.component)}</span></td>
       <td class="cbm-bl-editable" data-edit-field="partNumber">${r.partNumber?esc(r.partNumber):'—'}</td>
       <td class="cbm-bl-editable" data-edit-field="qty">${r.qty?esc(r.qty):'—'}</td>
-      <td class="cbm-bl-editable" data-edit-field="pr">${r.pr?esc(r.pr):'—'}</td><td class="cbm-bl-editable" data-edit-field="partLocation">${r.partLocation?esc(r.partLocation):'—'}</td>
-      <td class="cbm-bl-desc">${esc(r.desc)}${r.sourceKey==='daily-unplan' && r.partUsageText?`<span class="cbm-bl-daily-part ${r.partNumber?'cbm-bl-part-used':''}">PART TRACKING · ${esc(r.partUsageText)}</span>`:''}</td><td><span class="cbm-bl-source ${sourceCls}">${esc(r.source)}</span></td><td>${date}</td><td>${hm}</td>
-      <td><span class="cbm-bl-aging ${agingClass}">${r.aging||0} hari</span></td><td class="cbm-bl-editable" data-edit-field="status"><span class="pill cbm-bl-status ${statusCls}">${esc(r.status)}</span></td>
+      <td class="cbm-bl-editable" data-edit-field="pr">${r.pr?esc(r.pr):'—'}</td>
+      <td class="cbm-bl-editable" data-edit-field="partLocation">${r.partLocation?esc(r.partLocation):'—'}</td>
+      <td class="cbm-bl-desc">${esc(r.desc)}${r.sourceKey==='daily-unplan' && r.partUsageText?`<span class="cbm-bl-daily-part ${r.partNumber?'cbm-bl-part-used':''}">PART · ${esc(r.partUsageText)}</span>`:''}</td>
+      <td><span class="cbm-bl-source ${sourceCls}" title="${sourceTitle}"><span class="cbm-bl-src-code">${sourceShort}</span><span class="cbm-bl-src-name">${sourceTitle}</span></span></td>
+      <td class="cbm-bl-date">${date}</td><td class="cbm-bl-hm">${hm}</td>
+      <td><span class="cbm-bl-aging ${agingClass}">${r.aging||0}h</span></td>
+      <td class="cbm-bl-editable" data-edit-field="status"><span class="pill cbm-bl-status ${statusCls}">${esc(r.status)}</span></td>
     </tr>`;
   }).join('');
   // Keep a single horizontal scrollbar at the TOP of the register.

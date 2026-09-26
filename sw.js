@@ -1,5 +1,5 @@
-/* SEN-FleetCare SW v29 — gold SignIn/Simpan/Sync + green WA */
-const SW_VERSION='sen-fleetcare-v29-20260926-0650';
+/* SEN-FleetCare SW v33 — enlarge Cara membaca backlog guide */
+const SW_VERSION='sen-fleetcare-v33-20260926-0920';
 const CACHE_NAME=SW_VERSION;
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(['./','./index.html'])).catch(()=>{}));});
 self.addEventListener('activate',e=>{e.waitUntil((async()=>{const keys=await caches.keys();await Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)));await self.clients.claim();})());});
