@@ -3287,6 +3287,69 @@ button.wa-green:hover, button.wa-sync-only-fahmi:hover{
   .cbm-backlog-read-flow{ font-size: 13px !important; }
 }
 
+
+/* ===== FORCE-CLICKABLE TABS (nasrun / PJO / view-only) — JANGAN DIHAPUS ===== */
+#cbm-tabs,
+#cbm-tabs .chip,
+#cbm-tabs .blk-tab-group,
+#cbm-tabs .blk-tab-group .chip,
+.chip-tabs .chip,
+#plan-service-subnav,
+#plan-service-subnav .ps-subtab,
+.ps-subnav .ps-subtab,
+.ps-subtab,
+#dash-menu-topbar .dash-menu-tab,
+.dash-menu-tab{
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  opacity: 1 !important;
+  position: relative;
+  z-index: 50 !important;
+}
+#cbm-tabs, #plan-service-subnav, .ps-subnav{
+  z-index: 80 !important;
+  isolation: isolate;
+}
+#cbm-tabs .chip:disabled,
+#plan-service-subnav .ps-subtab:disabled,
+.ps-subtab:disabled,
+.chip-tabs .chip:disabled{
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  opacity: 1 !important;
+}
+.view.access-readonly #cbm-tabs,
+.view.access-readonly #cbm-tabs .chip,
+.view.access-readonly .chip-tabs .chip,
+.view.access-readonly #plan-service-subnav,
+.view.access-readonly .ps-subtab,
+.view.access-readonly [role="tablist"] button,
+.view.access-readonly [role="tab"],
+.view.access-readonly #cbm-refresh,
+.view.access-readonly .blk-filterbar button,
+.view.access-readonly .blk-filterbar select,
+.view.access-readonly #cbm-bl-clear,
+.view.access-readonly #cbm-bl-export,
+.view.access-readonly #cbm-bl-refresh,
+.view.access-readonly #cbm-bl-sync-sheets-btn{
+  display: inline-flex !important;
+  pointer-events: auto !important;
+  opacity: 1 !important;
+  cursor: pointer !important;
+  visibility: visible !important;
+}
+.view.access-readonly #cbm-tabs .chip:disabled,
+.view.access-readonly .ps-subtab:disabled{
+  pointer-events: auto !important;
+  opacity: 1 !important;
+  cursor: pointer !important;
+}
+/* pastikan tidak tertutup overlay */
+#view-cbm #cbm-tabs, #view-plan #plan-service-subnav{
+  pointer-events: auto !important;
+  z-index: 90 !important;
+}
+
 </style>
 
 </head>
@@ -8727,7 +8790,10 @@ navItems.forEach(item=>{
           return;
         }
         if(view==='plan'){
-          // Render dulu dari data cache — sync background tanpa force
+          try{ forceEnableAllNavTabs(); }catch(_e){}
+          try{ applyPanelAccessLocks(); }catch(_e){}
+          try{ forceEnableAllNavTabs(); }catch(_e){}
+          try{ if(typeof setPlanServiceSubTab==='function') setPlanServiceSubTab(typeof psActiveSubTab!=='undefined'?psActiveSubTab:'schedule'); }catch(_e){}
           try{ renderPlanTable(); }catch(_e){}
           (async ()=>{
             try{ await ensurePerformanceSynced({ force:false }); }catch(_e){}
@@ -8737,7 +8803,10 @@ navItems.forEach(item=>{
               else await syncPlanFromHM({ silent:true });
             }catch(_e){}
             try{ renderPlanTable(); }catch(_e){}
+            try{ forceEnableAllNavTabs(); }catch(_e){}
           })().finally(clearBusy);
+          setTimeout(function(){ try{ forceEnableAllNavTabs(); }catch(_e){} }, 50);
+          setTimeout(function(){ try{ forceEnableAllNavTabs(); }catch(_e){} }, 300);
           return;
         }
         if(view==='accounts'){
@@ -8745,7 +8814,13 @@ navItems.forEach(item=>{
           return;
         }
         if(view==='cbm'){
+          try{ forceEnableAllNavTabs(); }catch(_e){}
+          try{ applyPanelAccessLocks(); }catch(_e){}
+          try{ forceEnableAllNavTabs(); }catch(_e){}
           try{ renderCBM(); }catch(_e){}
+          try{ forceEnableAllNavTabs(); }catch(_e){}
+          setTimeout(function(){ try{ forceEnableAllNavTabs(); }catch(_e){} }, 50);
+          setTimeout(function(){ try{ forceEnableAllNavTabs(); }catch(_e){} }, 300);
           clearBusy();
           return;
         }
@@ -9008,9 +9083,9 @@ async function loadUserPanelAccess(){
       const ov = userPanelAccess[uname];
       if(ov && ov.dashboard === 'none'){ delete ov.dashboard; fixed = true; }
     });
-    if(userPanelAccess['nasrun'] && userPanelAccess['nasrun'].plan === 'none'){
-      delete userPanelAccess['nasrun'].plan;
-      fixed = true;
+    if(userPanelAccess['nasrun']){
+      const n = userPanelAccess['nasrun'];
+      ['plan','cbm','dashboard'].forEach(k=>{ if(n[k]==='none'){ delete n[k]; fixed=true; } });
     }
     if(fixed) await saveUserPanelAccess();
   }catch(e){ console.error('sanitize user panel access failed', e); }
@@ -9164,6 +9239,62 @@ document.getElementById('access-modal-reset')?.addEventListener('click', async (
 });
 
 /* Kunci form/input pada panel ber-level view (pantau saja). Filter KPI & Master Unit tetap aktif. */
+function isNavOrFilterControl(el){
+  if(!el) return false;
+  if(el.closest('.filters') || el.closest('.period-panel') || el.closest('.topbar') || el.closest('.sidebar') || el.closest('.notif-wrap')) return true;
+  if(el.closest('#dash-menu-topbar') || el.closest('.dash-menu-topbar') || el.closest('.dash-sticky-header')) return true;
+  if(el.closest('#plan-service-subnav') || el.closest('.ps-subnav')) return true;
+  if(el.classList.contains('ps-subtab') || (el.dataset && el.dataset.psTab)) return true;
+  if(el.closest('#cbm-tabs') || el.closest('.chip-tabs') || el.closest('.blk-tab-group')) return true;
+  if(el.closest('#cbm-pareto-metric-tabs') || el.closest('#cbm-safety-model-tabs')) return true;
+  if(el.closest('.sp-oil-type-tabs') || el.closest('.sp-oil-topbar')) return true;
+  if(el.closest('.blk-filterbar') || el.closest('.cbm-backlog-kpis')) return true;
+  if(el.closest('[role="tablist"]') || el.closest('.plan-tab-bar')) return true;
+  if(el.classList.contains('dash-menu-tab') || el.classList.contains('chip') || el.classList.contains('sp-oil-type-tab')) return true;
+  if(el.classList.contains('trend-quarter-select') || el.classList.contains('period-input-caret')) return true;
+  if(el.classList.contains('cbm-bl-filter') || el.classList.contains('mh-tile')) return true;
+  if(el.dataset && (el.dataset.dashtab || el.dataset.psTab || el.dataset.tab || el.dataset.cbmTab || el.dataset.paretoMetric || el.dataset.cbmSafetyModel)) return true;
+  if(el.getAttribute && el.getAttribute('role') === 'tab') return true;
+  if(el.id && /filter|period|week-period|month|tab|dashtab|subnav|subtab|cbm-bl-|cbm-refresh|cbm-filter|cbm-tabs/i.test(el.id)) return true;
+  if(el.id === 'cbm-refresh' || el.id === 'cbm-bl-sync-sheets-btn' || el.id === 'cbm-bl-export' || el.id === 'cbm-bl-clear' || el.id === 'cbm-bl-refresh') return true;
+  return false;
+}
+function forceEnableAllNavTabs(){
+  try{
+    document.querySelectorAll(
+      '#cbm-tabs .chip, .chip-tabs .chip, #cbm-tabs button, ' +
+      '#plan-service-subnav .ps-subtab, .ps-subnav .ps-subtab, .ps-subtab, ' +
+      '#dash-menu-topbar .dash-menu-tab, .dash-menu-tab, ' +
+      '[role="tablist"] [role="tab"], [role="tablist"] button, ' +
+      '#cbm-refresh, #cbm-bl-sync-sheets-btn, #cbm-bl-export, #cbm-bl-clear, #cbm-bl-refresh, ' +
+      '.blk-filterbar button, .blk-filterbar select'
+    ).forEach(btn=>{
+      btn.disabled = false;
+      btn.removeAttribute('disabled');
+      if(btn.dataset) delete btn.dataset.accessLocked;
+      try{
+        btn.style.setProperty('pointer-events','auto','important');
+        btn.style.setProperty('opacity','1','important');
+        btn.style.setProperty('cursor','pointer','important');
+      }catch(_e){
+        btn.style.pointerEvents='auto'; btn.style.opacity='1'; btn.style.cursor='pointer';
+      }
+    });
+    const cbmTabs = document.getElementById('cbm-tabs');
+    if(cbmTabs){
+      cbmTabs.style.setProperty('pointer-events','auto','important');
+      cbmTabs.style.setProperty('z-index','90','important');
+    }
+    const psNav = document.getElementById('plan-service-subnav');
+    if(psNav){
+      psNav.style.setProperty('pointer-events','auto','important');
+      psNav.style.setProperty('z-index','90','important');
+    }
+  }catch(_e){}
+}
+function forceEnableCbmTabs(){ forceEnableAllNavTabs(); }
+function forceEnablePlanServiceTabs(){ forceEnableAllNavTabs(); }
+
 function applyPanelAccessLocks(){
   document.querySelectorAll('.view').forEach(viewEl => {
     const viewKey = (viewEl.id || '').replace(/^view-/, '');
@@ -9172,28 +9303,28 @@ function applyPanelAccessLocks(){
     const readonly = access === 'view';
     viewEl.classList.toggle('access-readonly', readonly);
 
-    // Banner View Only: tidak ditampilkan untuk user mana pun (termasuk view-only).
-    // Hanya Fahmi Fanani yang full access; user lain view-only tanpa banner peringatan.
     const ban = viewEl.querySelector('.access-readonly-banner');
     if(ban) ban.remove();
 
     viewEl.querySelectorAll('input, select, textarea, button').forEach(el => {
-      // Selalu izinkan navigasi/filter/logout/notif
-      if(el.closest('.filters') || el.closest('.period-panel') || el.closest('.topbar') || el.closest('.sidebar') || el.closest('.notif-wrap')){
+      // TAB / FILTER / TOP BAR — SELALU aktif (nasrun, PJO, view-only)
+      if(isNavOrFilterControl(el)){
+        el.disabled = false;
+        el.removeAttribute('disabled');
+        if(el.dataset) delete el.dataset.accessLocked;
+        try{
+          el.style.setProperty('pointer-events','auto','important');
+          el.style.setProperty('opacity','1','important');
+          el.style.setProperty('cursor','pointer','important');
+        }catch(_e){}
         return;
       }
-      if(el.classList.contains('trend-quarter-select') || el.classList.contains('period-input-caret')) return;
-      if(el.id && (el.id.includes('filter') || el.id.includes('period') || el.id.includes('week-period') || el.id.includes('month'))) return;
-      // Type unit disabled fields stay disabled
       if(el.disabled && el.hasAttribute('disabled') && (el.id||'').includes('typeunit')) return;
 
       if(readonly){
         if(el.tagName === 'BUTTON' || el.type === 'submit' || el.type === 'button' || el.type === 'reset'){
-          // hide handled by CSS for primary actions; secondary filter clear may be in .filters
-          if(!el.closest('.filters') && !el.closest('.period-panel')){
-            el.dataset.accessLocked = '1';
-            el.disabled = true;
-          }
+          el.dataset.accessLocked = '1';
+          el.disabled = true;
         } else {
           el.dataset.accessLocked = '1';
           el.disabled = true;
@@ -9204,7 +9335,38 @@ function applyPanelAccessLocks(){
       }
     });
   });
+  // Selalu jalankan di akhir — override bug view-only
+  forceEnableAllNavTabs();
 }
+
+
+/* Global capture: tab CBM & Plan Service klik untuk SEMUA user (nasrun/view-only) */
+(function bindGlobalTabClicks(){
+  if(window.__senTabClicksBound) return;
+  window.__senTabClicksBound = true;
+  document.addEventListener('click', function(e){
+    const t = e.target;
+    if(!t || !t.closest) return;
+    // CBM top bar chips
+    const cbmChip = t.closest('#cbm-tabs .chip[data-cbm-tab], .chip-tabs .chip[data-cbm-tab]');
+    if(cbmChip){
+      const key = cbmChip.getAttribute('data-cbm-tab') || (cbmChip.dataset && cbmChip.dataset.cbmTab);
+      if(key && typeof switchCBMTab === 'function'){
+        try{ switchCBMTab(key); }catch(err){ console.warn('switchCBMTab', err); }
+      }
+      return;
+    }
+    // Plan Service sub tabs
+    const psTab = t.closest('#plan-service-subnav .ps-subtab, .ps-subnav .ps-subtab');
+    if(psTab){
+      const key = psTab.getAttribute('data-ps-tab') || (psTab.dataset && psTab.dataset.psTab);
+      if(key && typeof setPlanServiceSubTab === 'function'){
+        e.preventDefault();
+        try{ setPlanServiceSubTab(key); }catch(err){ console.warn('setPlanServiceSubTab', err); }
+      }
+    }
+  }, true);
+})();
 
 /* ---- Database Akun (Supervisor/PJO) — SEMUA user + hapus hanya self-register. */
 function getAccountsList(){
@@ -9929,6 +10091,7 @@ function updateRoleUI(){
   renderPreInspectionPlans();
   renderPreInspectionMechanicNotify();
   applyPanelAccessLocks();
+  try{ forceEnableAllNavTabs(); }catch(_e){}
 }
 
 /* ================= HELPERS ================= */
@@ -26164,8 +26327,10 @@ document.getElementById('cbm-backlog-view-overlay')?.addEventListener('click', (
 })();
 
 function renderCBM(){
+  try{ forceEnableAllNavTabs(); }catch(_e){}
   initCBMFilters();
   switchCBMTab(cbmActiveTab);
+  try{ forceEnableAllNavTabs(); }catch(_e){}
 }
 
 (function initCBMHandlers(){
@@ -26469,8 +26634,10 @@ function renderPlanHmLiveChart(){
 
 (function initPlanServiceWorkspace(){
   document.querySelectorAll('#plan-service-subnav .ps-subtab').forEach(b=>{
-    b.addEventListener('click',()=>setPlanServiceSubTab(b.dataset.psTab));
+    b.addEventListener('click',function(ev){ ev.preventDefault(); setPlanServiceSubTab(b.dataset.psTab); });
   });
+  try{ forceEnableAllNavTabs(); }catch(_e){}
+
   ['ps-live-hm-unit','ps-live-hm-start','ps-live-hm-end'].forEach(id=>{
     document.getElementById(id)?.addEventListener('change',renderPlanHmLiveChart);
   });
