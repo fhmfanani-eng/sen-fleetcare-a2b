@@ -2251,8 +2251,13 @@ select.exec-close{ background:rgba(76,175,109,0.15); color:var(--green); }
    di tabel untuk user lain). */
 #cbm-backlog-edit-overlay{ display:none; position:fixed; inset:0; z-index:230; align-items:flex-start; justify-content:center; background:rgba(0,0,0,0.6); padding:26px 16px; overflow-y:auto; }
 #cbm-backlog-edit-overlay.show{ display:flex; }
+#cbm-backlog-view-overlay{ display:none; position:fixed; inset:0; z-index:230; align-items:flex-start; justify-content:center; background:rgba(0,0,0,0.6); padding:26px 16px; overflow-y:auto; }
+#cbm-backlog-view-overlay.show{ display:flex; }
+#cbm-backlog-view-overlay .field > div{ padding:7px 10px; border-radius:7px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); font-size:12.5px; color:#e1e6ea; min-height:18px; }
 body.role-wa-sync-allowed #cbm-backlog-tbody tr{ cursor:pointer; }
 body.role-wa-sync-allowed #cbm-backlog-tbody tr:hover{ background:rgba(255,199,44,0.055); }
+body.role-backlog-view-allowed #cbm-backlog-tbody tr{ cursor:pointer; }
+body.role-backlog-view-allowed #cbm-backlog-tbody tr:hover{ background:rgba(74,144,217,0.07); }
 .view.access-readonly form button[type="submit"],
 .view.access-readonly .btn:not(.secondary):not(.small),
 .view.access-readonly .btn.danger,
@@ -3425,6 +3430,36 @@ button.wa-green:hover, button.wa-sync-only-fahmi:hover{
         <button type="button" class="btn secondary" id="cbm-bl-edit-cancel">Batal</button>
         <button type="button" class="btn" id="cbm-bl-edit-save">💾 Simpan Perubahan</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Lihat Detail Backlog (read-only) — dibuka lewat double-click pada baris
+     tabel Backlog Register oleh user selain Fahmi Fanani (mis. nasrun) yang memiliki
+     akses lihat (view) pada menu CBM. Tidak ada opsi edit/hapus di modal ini. -->
+<div id="cbm-backlog-view-overlay">
+  <div class="detail-modal" style="max-width:480px;">
+    <div class="detail-modal-head">
+      <h3>Detail Backlog</h3>
+      <button type="button" class="detail-modal-close" id="cbm-bl-view-modal-close" title="Tutup">✕</button>
+    </div>
+    <div class="detail-modal-body">
+      <div class="hint" style="margin-bottom:14px;" id="cbm-bl-view-info">—</div>
+      <div class="field"><label>Priority</label><div id="cbm-bl-view-priority">—</div></div>
+      <div class="field"><label>Unit</label><div id="cbm-bl-view-unit">—</div></div>
+      <div class="field"><label>Component</label><div id="cbm-bl-view-component">—</div></div>
+      <div class="field"><label>Description</label><div id="cbm-bl-view-desc">—</div></div>
+      <div class="field"><label>Part Number</label><div id="cbm-bl-view-partnumber">—</div></div>
+      <div class="field"><label>Qty</label><div id="cbm-bl-view-qty">—</div></div>
+      <div class="field"><label>PR</label><div id="cbm-bl-view-pr">—</div></div>
+      <div class="field"><label>Part Location</label><div id="cbm-bl-view-location">—</div></div>
+      <div class="field"><label>Source</label><div id="cbm-bl-view-source">—</div></div>
+      <div class="field"><label>Date / HM</label><div id="cbm-bl-view-datehm">—</div></div>
+      <div class="field"><label>Aging</label><div id="cbm-bl-view-aging">—</div></div>
+      <div class="field"><label>Status</label><div id="cbm-bl-view-status">—</div></div>
+    </div>
+    <div class="detail-modal-foot" style="justify-content:flex-end;">
+      <button type="button" class="btn secondary" id="cbm-bl-view-close">Tutup</button>
     </div>
   </div>
 </div>
@@ -5045,6 +5080,7 @@ button.wa-green:hover, button.wa-sync-only-fahmi:hover{
               <div class="blk-filterbar-actions">
                 <button type="button" class="btn small secondary" id="cbm-bl-clear">✕ Reset Filter</button>
                 <button type="button" class="btn small secondary blk-export" id="cbm-bl-export">⭳ Export</button>
+                <button type="button" class="btn small sync-gold sync-only-fahmi" id="cbm-bl-sync-sheets-btn" title="Kirim semua record Backlog Register ke Google Sheets tab Backlog Register">☁ Sync ke Sheet Backlog</button>
               </div>
             </div>
             <div class="cbm-backlog-read-guide">
@@ -8961,6 +8997,23 @@ async function loadUserPanelAccess(){
     userPanelAccess = raw ? JSON.parse(raw.value) : {};
     if(!userPanelAccess || typeof userPanelAccess !== 'object') userPanelAccess = {};
   }catch(e){ userPanelAccess = {}; }
+  // FIX: perbaikan menu top bar "Dashboard" & "Plan Service" yang sempat tidak bisa
+  // dibuka oleh user nasrun (tersembunyi karena override akses tersimpan 'none').
+  // Menu Dashboard tidak boleh pernah tersembunyi total untuk siapapun, dan khusus
+  // akun nasrun menu Plan Service dikembalikan minimal ke 'view' sesuai default
+  // posisinya (PJO). Perubahan ini disimpan ulang supaya konsisten di semua device.
+  try{
+    let fixed = false;
+    Object.keys(userPanelAccess).forEach(uname=>{
+      const ov = userPanelAccess[uname];
+      if(ov && ov.dashboard === 'none'){ delete ov.dashboard; fixed = true; }
+    });
+    if(userPanelAccess['nasrun'] && userPanelAccess['nasrun'].plan === 'none'){
+      delete userPanelAccess['nasrun'].plan;
+      fixed = true;
+    }
+    if(fixed) await saveUserPanelAccess();
+  }catch(e){ console.error('sanitize user panel access failed', e); }
 }
 async function saveUserPanelAccess(){
   try{ await appStorage.set('user-panel-access', JSON.stringify(userPanelAccess)); }
@@ -9764,6 +9817,10 @@ function updateRoleUI(){
   document.body.classList.toggle('role-mechanic', isMechanicUser);
   // Tombol/panel sync WA Group di Plan Schedule Maintenance hanya untuk Fahmi Fanani.
   document.body.classList.toggle('role-wa-sync-allowed', isFahmiFanani());
+  // Double-click pada baris Backlog Register untuk melihat detail (read-only) —
+  // tersedia untuk user selain Fahmi Fanani yang punya akses lihat (view/full) di
+  // menu CBM, misalnya user nasrun (PJO).
+  document.body.classList.toggle('role-backlog-view-allowed', !isFahmiFanani() && canViewPanel('cbm'));
   if(userInfoEl){ userInfoEl.textContent = loggedInUser ? (loggedInUser.name || loggedInUser.username || '—') : '—'; }
   const banner = document.getElementById('daily-role-banner');
   if(banner){
@@ -11689,6 +11746,78 @@ document.getElementById('rca-sync-sheets-btn')?.addEventListener('click', async 
   if(btn){ btn.disabled = true; btn.textContent = '☁ Menyinkronkan...'; }
   try{ await syncRcaToSheets({ manual:true }); }
   finally{ if(btn){ btn.disabled = false; btn.textContent = '☁ Sync ke Sheet RCA'; } }
+});
+
+/* ---- Sinkron CBM Maintenance Backlog Register → Google Sheets tab "Backlog Register" ----
+   Sama pola dengan sync Sheet data / Dashboard / Record Service: sheet dibuat otomatis
+   di Apps Script. Mengirim seluruh baris Backlog Register (Pre Inspection, Planning
+   System, CBM Lifetime) beserta Part Number/Qty/PR/Part Location hasil edit Fahmi. */
+async function syncCbmBacklogToSheets(opts){
+  opts = opts || {};
+  if(!BACKEND_CONFIG.sheetsWebAppUrl){
+    if(opts.manual) alert('⚠ sheetsWebAppUrl belum diisi di BACKEND_CONFIG.');
+    return { ok:false, error:'no sheetsWebAppUrl' };
+  }
+  const rows = (typeof cbmBacklogBuildRows==='function') ? cbmBacklogBuildRows() : [];
+  try{
+    const res = await fetch(BACKEND_CONFIG.sheetsWebAppUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'sync',
+        sheet: 'Backlog Register',
+        spreadsheetId: BACKEND_CONFIG.sheetsSpreadsheetId || '',
+        records: rows.map(r=>({
+          id: r.id || '',
+          priority: r.priority || '',
+          unit_code: r.unit || '',
+          unitCode: r.unit || '',
+          type_unit: r.typeUnit || '',
+          typeUnit: r.typeUnit || '',
+          component: r.component || '',
+          part_number: r.partNumber || '',
+          partNumber: r.partNumber || '',
+          qty: r.qty || '',
+          pr: r.pr || '',
+          part_location: r.partLocation || '',
+          partLocation: r.partLocation || '',
+          description: r.desc || '',
+          desc: r.desc || '',
+          source: r.source || '',
+          date: r.date || '',
+          hm: r.hm != null ? r.hm : '',
+          aging_days: r.aging || 0,
+          aging: r.aging || 0,
+          status: r.status || 'Open'
+        })),
+        syncedAt: new Date().toISOString()
+      })
+    });
+    let data = null;
+    try{ data = await res.json(); }catch(_e){ data = null; }
+    if(opts.manual){
+      if(data && data.ok){
+        alert('✓ Berhasil sync '+ (data.written!=null?data.written:rows.length) +' record Backlog ke sheet "Backlog Register".\nBuka spreadsheet dan refresh tab Backlog Register.');
+      } else if(data && data.error){
+        alert('⚠ Sync Backlog gagal: '+ data.error);
+      } else {
+        alert('✓ Permintaan sync terkirim ('+ rows.length +' record Backlog).\nCek tab "Backlog Register" di spreadsheet.');
+      }
+    }
+    return data || { ok:true };
+  }catch(e){
+    console.error('Sync Backlog Register ke Google Sheets gagal', e);
+    if(opts.manual) alert('⚠ Sync Backlog Register gagal: '+ (e.message||e) +'\nPastikan Apps Script sudah di-deploy ulang (New version).');
+    return { ok:false, error:String(e) };
+  }
+}
+
+document.getElementById('cbm-bl-sync-sheets-btn')?.addEventListener('click', async ()=>{
+  if(!isFahmiFanani()){ alert('Fitur Sync hanya tersedia untuk user Fahmi Fanani.'); return; }
+  const btn = document.getElementById('cbm-bl-sync-sheets-btn');
+  if(btn){ btn.disabled = true; btn.textContent = '☁ Menyinkronkan...'; }
+  try{ await syncCbmBacklogToSheets({ manual:true }); }
+  finally{ if(btn){ btn.disabled = false; btn.textContent = '☁ Sync ke Sheet Backlog'; } }
 });
 
 /**
@@ -25960,12 +26089,49 @@ function closeCbmBacklogEditModal(){
   cbmBacklogEditRowId = null;
   document.getElementById('cbm-backlog-edit-overlay')?.classList.remove('show');
 }
+function openCbmBacklogViewModal(rowId){
+  if(!rowId) return;
+  const row = cbmBacklogBuildRows().find(r=>r.id===rowId);
+  if(!row) return;
+  const info = document.getElementById('cbm-bl-view-info');
+  if(info) info.innerHTML = `<b>${escUH(row.unit)}</b> — ${escUH(row.component)} <span style="color:var(--text-faint)">(${escUH(row.source)})</span>`;
+  const setv=(id,v)=>{ const el=document.getElementById(id); if(el) el.textContent = (v===''||v==null)?'—':v; };
+  setv('cbm-bl-view-priority', row.priority);
+  setv('cbm-bl-view-unit', row.unit);
+  setv('cbm-bl-view-component', row.component);
+  setv('cbm-bl-view-desc', row.desc);
+  setv('cbm-bl-view-partnumber', row.partNumber);
+  setv('cbm-bl-view-qty', row.qty);
+  setv('cbm-bl-view-pr', row.pr);
+  setv('cbm-bl-view-location', row.partLocation);
+  setv('cbm-bl-view-source', row.source);
+  const date = row.date?formatDateDMY(row.date):'—';
+  const hm = row.hm!==''&&row.hm!=null&&!isNaN(Number(row.hm))?Number(row.hm).toLocaleString('id-ID'):(row.hm||'—');
+  setv('cbm-bl-view-datehm', `${date} · ${hm} HM`);
+  setv('cbm-bl-view-aging', `${row.aging||0} hari`);
+  setv('cbm-bl-view-status', row.status);
+  document.getElementById('cbm-backlog-view-overlay')?.classList.add('show');
+}
+function closeCbmBacklogViewModal(){
+  document.getElementById('cbm-backlog-view-overlay')?.classList.remove('show');
+}
+document.getElementById('cbm-bl-view-modal-close')?.addEventListener('click', closeCbmBacklogViewModal);
+document.getElementById('cbm-bl-view-close')?.addEventListener('click', closeCbmBacklogViewModal);
+document.getElementById('cbm-backlog-view-overlay')?.addEventListener('click', (e)=>{
+  if(e.target && e.target.id==='cbm-backlog-view-overlay') closeCbmBacklogViewModal();
+});
+
 (function initCbmBacklogEditHandlers(){
   document.getElementById('cbm-backlog-tbody')?.addEventListener('dblclick', (e)=>{
-    if(!isFahmiFanani()) return;
     const tr = e.target.closest('tr[data-row-id]');
     if(!tr) return;
-    openCbmBacklogEditModal(tr.dataset.rowId);
+    if(isFahmiFanani()){
+      openCbmBacklogEditModal(tr.dataset.rowId);
+    } else if(canViewPanel('cbm')){
+      // User lain (mis. nasrun) yang punya akses lihat CBM: buka modal detail
+      // read-only saja — tidak ada opsi edit/hapus.
+      openCbmBacklogViewModal(tr.dataset.rowId);
+    }
   });
   document.getElementById('cbm-bl-edit-modal-close')?.addEventListener('click', closeCbmBacklogEditModal);
   document.getElementById('cbm-bl-edit-cancel')?.addEventListener('click', closeCbmBacklogEditModal);

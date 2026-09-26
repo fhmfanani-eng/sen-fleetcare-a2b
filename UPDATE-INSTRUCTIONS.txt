@@ -1,1 +1,41 @@
-v33: Enlarge "Cara membaca backlog" guide above Backlog Register table.
+v34 — Update SEN-FleetCare:
+
+1. FIX: Menu top bar "Dashboard" & "Plan Service" yang tidak bisa dibuka oleh user
+   nasrun. Penyebabnya adalah override akses panel tersimpan (dari fitur "Atur Akses"
+   di Database Akun) yang men-set kedua menu tersebut ke "None" untuk akun nasrun.
+   Sekarang aplikasi otomatis membetulkan override "None" pada menu Dashboard untuk
+   SEMUA user (menu Dashboard tidak boleh pernah tersembunyi total), dan khusus akun
+   nasrun, menu Plan Service juga dikembalikan ke akses default posisinya (PJO = View).
+   Perbaikan ini berjalan otomatis satu kali saat aplikasi dimuat, lalu disimpan ulang
+   ke database bersama sehingga konsisten di semua device.
+
+2. BARU: Sync tabel "Backlog Register" (menu CBM > Backlog) ke Google Sheets, sama
+   seperti sync yang sudah ada untuk sheet "data" (Daily Maintenance), "Dashboard"
+   (KPI), dan "Record Service" (Plan Service). Tombol baru "☁ Sync ke Sheet Backlog"
+   ada di toolbar filter Backlog Register, di sebelah tombol Export. Sheet baru
+   bernama "Backlog Register" akan dibuat otomatis oleh Apps Script saat pertama kali
+   sync dijalankan (asalkan script Apps Script di spreadsheet mendukung pembuatan
+   sheet otomatis seperti sheet-sheet lain). Sama seperti tombol sync lainnya, tombol
+   ini hanya terlihat & bisa dipakai oleh user Fahmi Fanani.
+
+3. BARU: Fitur double-klik pada baris tabel Backlog Register untuk melihat detail
+   data (read-only) oleh user nasrun. Sebelumnya double-klik pada baris Backlog hanya
+   berfungsi untuk Fahmi Fanani (membuka modal Edit/Hapus). Sekarang user lain yang
+   memiliki akses lihat (View) pada menu CBM — termasuk nasrun — juga bisa
+   double-klik baris untuk membuka modal "Detail Backlog" yang menampilkan semua
+   kolom (Priority, Unit, Component, Description, Part Number, Qty, PR, Part
+   Location, Source, Date/HM, Aging, Status) secara read-only, tanpa opsi edit atau
+   hapus.
+
+CATATAN PENTING SETELAH UPLOAD:
+- Jika Anda memakai backend Google Sheets (Apps Script) yang sama seperti sheet
+  "data"/"Dashboard"/"Record Service", pastikan script Apps Script (code.gs) di
+  spreadsheet Anda menerima sheet baru bernama "Backlog Register" — biasanya
+  script yang sudah ada otomatis membuat tab baru untuk nama sheet apa pun yang
+  dikirim, mengikuti pola sheet "Historical Breakdown"/"RCA" yang sudah ada
+  sebelumnya. Jika script Apps Script Anda dibuat manual per-sheet (bukan generik),
+  Anda perlu menambahkan penanganan untuk sheet "Backlog Register" di code.gs lalu
+  deploy ulang (New version) sebelum tombol sync berfungsi penuh.
+- Setelah upload file index.html yang baru, service worker (sw.js) sudah dinaikkan
+  versinya ke v34 supaya cache lama otomatis dibersihkan dan semua user mendapat
+  versi terbaru saat membuka ulang aplikasi (mungkin perlu refresh 1x).
