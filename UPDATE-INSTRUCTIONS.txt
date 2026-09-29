@@ -1,11 +1,45 @@
-v52: FIX permanen top bar CBM & Plan Service untuk nasrun (view-only)
+v56: Mechanic Report + Dashboard Service + Dashboard Quarter = TABEL & CHART NATIVE (tanpa snapshot gambar)
 
-Lapisan perlindungan (agar bug tidak terulang):
-1. CSS !important — pointer-events:auto pada #cbm-tabs .chip & .ps-subtab
-2. isNavOrFilterControl — tab/filter TIDAK di-disable di applyPanelAccessLocks
-3. forceEnableAllNavTabs() — dipanggil di akhir locks, buka menu, renderCBM, updateRoleUI
-4. Event capture document — klik tab CBM/Plan tetap jalan meski disabled residual
-5. Override akses nasrun: plan/cbm/dashboard tidak boleh 'none'
+SHEET DI SPREADSHEET BACKUP SETELAH UPDATE
+1) Dashboard              -> tabel Breakdown Category + chart, tabel Monthly KPI + chart (dari v55)
+2) Dashboard Service      -> BARU: chart "Stacked by Unit (Close/Open/Overdue)" + "% Close per Type Service"
+                             + tabel Service Achievement (unit x bulan)
+3) Dashboard Quarter      -> BARU: chart Grafik Quarter (avg % achievement per triwulan + garis target 100%)
+                             + tabel KPI Summary Quarter (Q1..Qn, Value, Status, baris Average)
+4) Mechanic Activity Report -> DIUBAH: isi sheet HANYA
+                             - 4 chart: Total Job per Mechanic, Job Category Composition,
+                               Job Status Composition, Mechanic Activity Trend (Monthly)
+                             - tabel Historical Report (12 kolom, semua record Daily Maintenance)
+                             (kartu KPI, judul, tabel Detail Summary & Summary Mechanic Activity dihapus)
+   Chart bulanan (per mechanic, kategori, status) memakai BULAN BERJALAN.
+   Tab tersembunyi "_Chart Data", "_Chart Service", "_Chart Quarter", "_Chart Mechanic"
+   menyimpan data chart -> JANGAN dihapus.
+   Sheet lama "Dashboard - ..." (snapshot) dihapus otomatis.
+   Semua sheet hanya ditulis ulang bila datanya berubah.
 
-Deploy: index.html + sw.js ke GitHub. Tidak perlu Apps Script.
-Setelah deploy: Ctrl+Shift+R, login nasrun, buka CBM — klik Overview/Lifetime/Backlog dll.
+FILE DI ZIP
+- index.html                             -> deploy ke GitHub / hosting web
+- SEN-FleetCare-LiveBackup-Database.html -> salinan nama rilis (opsional)
+- AppsScript-DatabaseBackup.gs           -> WAJIB deploy di spreadsheet backup
+- manifest.json, sw.js                   -> PWA (deploy bersama index.html)
+- UPDATE-INSTRUCTIONS.txt                -> file ini
+
+LANGKAH DEPLOY (urutan penting: Apps Script dulu, baru web)
+A. APPS SCRIPT
+   Spreadsheet: https://docs.google.com/spreadsheets/d/1ADSaUT1u1veuMCFhoMzxhWsmz0XBRJV1xjz-JD6iS0Q
+   1. Extensions -> Apps Script -> hapus isi Code.gs -> tempel SELURUH AppsScript-DatabaseBackup.gs
+   2. Deploy -> Manage deployments -> pensil -> Version: New version -> Deploy
+B. WEB
+   1. Ganti index.html, sw.js, manifest.json
+   2. Hard refresh Ctrl+Shift+R
+   3. Login -> Database Akun -> klik "Sync Manual (Data + Grafik)" sekali
+      (sync manual memaksa semua sheet native ditulis ulang)
+C. VERIFIKASI
+   1. Urutan tab: Dashboard, Dashboard Service, Dashboard Quarter, ... Mechanic Activity Report
+   2. Mechanic Activity Report: 4 chart di atas, tabel Historical Report di bawah
+   3. Ubah 1 record -> tunggu ~12 dtk -> angka/chart ikut berubah
+
+Catatan:
+- Web lama (v54/v55) + script baru: Service/Quarter/Mechanic tidak ter-update (web lama tidak
+  mengirim data native) -> ganti web ke v56.
+- Live sync membutuhkan tab web terbuka.
