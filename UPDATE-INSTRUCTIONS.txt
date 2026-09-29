@@ -1,3 +1,4 @@
+v57: Aksi Oil Consumable -> tombol Edit + Hapus HANYA untuk Fahmi Fanani (user lain: kolom Aksi disembunyikan). Kedua file HTML kini identik.
 v56: Mechanic Report + Dashboard Service + Dashboard Quarter = TABEL & CHART NATIVE (tanpa snapshot gambar)
 
 SHEET DI SPREADSHEET BACKUP SETELAH UPDATE
@@ -19,7 +20,7 @@ SHEET DI SPREADSHEET BACKUP SETELAH UPDATE
 
 FILE DI ZIP
 - index.html                             -> deploy ke GitHub / hosting web
-- SEN-FleetCare-LiveBackup-Database.html -> salinan nama rilis (opsional)
+- SEN-FleetCare-LiveBackup-Database.html -> salinan identik index.html (pakai salah satu saja, sudah berisi fitur Edit Oil)
 - AppsScript-DatabaseBackup.gs           -> WAJIB deploy di spreadsheet backup
 - manifest.json, sw.js                   -> PWA (deploy bersama index.html)
 - UPDATE-INSTRUCTIONS.txt                -> file ini

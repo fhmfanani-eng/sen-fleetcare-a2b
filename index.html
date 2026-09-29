@@ -255,6 +255,8 @@ body.role-backlog-sync-allowed .sync-backlog-allowed{
 .sp-oil-type-table .qty-out{color:#f28b8e;font:700 12.5px 'JetBrains Mono',monospace;text-align:right}
 .sp-oil-type-table .qty-bal{color:#FFC72C;font:700 12.5px 'JetBrains Mono',monospace;text-align:right}
 .sp-oil-type-table .sp-oil-del{height:28px;padding:0 8px;font-size:11px;border-radius:7px;color:#f28b8e!important;border-color:rgba(229,72,77,.3)!important;background:rgba(229,72,77,.08)!important}
+.sp-oil-type-table .sp-oil-edit{height:28px;padding:0 8px;font-size:11px;border-radius:7px;color:#FFC72C!important;border-color:rgba(255,199,44,.35)!important;background:rgba(255,199,44,.08)!important;margin-right:4px}
+.sp-oil-type-table tr.is-editing td{background:rgba(255,199,44,.10)!important}
 .sp-oil-type-table tfoot td{background:#121a22!important;padding:10px!important;border-top:1px solid rgba(255,255,255,.08)!important;font:700 12px 'JetBrains Mono',monospace}
 .sp-oil-empty{padding:18px 16px;color:#7a8490;font-size:12.5px;text-align:center}
 
@@ -5353,7 +5355,7 @@ button.wa-green:hover, button.wa-sync-only-fahmi:hover{
                     <th style="text-align:right">Keluar (L)</th>
                     <th style="text-align:right">Saldo (L)</th>
                     <th>Catatan</th>
-                    <th style="text-align:center">Aksi</th>
+                    <th class="sp-oil-aksi-th" style="text-align:center">Aksi</th>
                   </tr>
                 </thead>
                 <tbody data-oil-tbody="engine-15w40"></tbody>
@@ -5395,7 +5397,7 @@ button.wa-green:hover, button.wa-sync-only-fahmi:hover{
                     <th style="text-align:right">Keluar (L)</th>
                     <th style="text-align:right">Saldo (L)</th>
                     <th>Catatan</th>
-                    <th style="text-align:center">Aksi</th>
+                    <th class="sp-oil-aksi-th" style="text-align:center">Aksi</th>
                   </tr>
                 </thead>
                 <tbody data-oil-tbody="trans-to10"></tbody>
@@ -5437,7 +5439,7 @@ button.wa-green:hover, button.wa-sync-only-fahmi:hover{
                     <th style="text-align:right">Keluar (L)</th>
                     <th style="text-align:right">Saldo (L)</th>
                     <th>Catatan</th>
-                    <th style="text-align:center">Aksi</th>
+                    <th class="sp-oil-aksi-th" style="text-align:center">Aksi</th>
                   </tr>
                 </thead>
                 <tbody data-oil-tbody="trans-to30"></tbody>
@@ -5479,7 +5481,7 @@ button.wa-green:hover, button.wa-sync-only-fahmi:hover{
                     <th style="text-align:right">Keluar (L)</th>
                     <th style="text-align:right">Saldo (L)</th>
                     <th>Catatan</th>
-                    <th style="text-align:center">Aksi</th>
+                    <th class="sp-oil-aksi-th" style="text-align:center">Aksi</th>
                   </tr>
                 </thead>
                 <tbody data-oil-tbody="hyd-ho46"></tbody>
@@ -5521,7 +5523,7 @@ button.wa-green:hover, button.wa-sync-only-fahmi:hover{
                     <th style="text-align:right">Keluar (L)</th>
                     <th style="text-align:right">Saldo (L)</th>
                     <th>Catatan</th>
-                    <th style="text-align:center">Aksi</th>
+                    <th class="sp-oil-aksi-th" style="text-align:center">Aksi</th>
                   </tr>
                 </thead>
                 <tbody data-oil-tbody="axel-syz"></tbody>
@@ -28182,6 +28184,7 @@ function renderSpCatalog(){
 const SP_OIL_CATALOG = [{'id': 'engine-15w40', 'name': 'Engine Oil', 'part': '15W40-DH', 'color': '#FF6B35', 'short': 'Engine'}, {'id': 'trans-to10', 'name': 'Transmission Oil', 'part': 'TO-10-CF/D209', 'color': '#4A90D9', 'short': 'TO-10'}, {'id': 'trans-to30', 'name': 'Transmission Oil', 'part': 'TO-30-DM/D209', 'color': '#5B8DEF', 'short': 'TO-30'}, {'id': 'hyd-ho46', 'name': 'Hydraulic Oil', 'part': 'KGO HO46-DM/209', 'color': '#7fe0e0', 'short': 'Hydraulic'}, {'id': 'axel-syz', 'name': 'Axel Oil', 'part': 'SYZ-AXO80DM-YD209Z', 'color': '#FFC72C', 'short': 'Axel'}];
 let spOilTxns = null;
 let spOilActiveTab = '__all__';
+let spOilEditingId = null;
 
 function spOilToday(){
   const d=new Date();
@@ -28237,6 +28240,7 @@ function spOilSetDir(dir){
   document.getElementById('sp-oil-f-qty')?.focus();
 }
 function spOilResetForm(){
+  spOilEditingId=null; try{ spOilSetEditUI(false); }catch(_e){}
   const d=document.getElementById('sp-oil-f-date'); if(d) d.value=spOilToday();
   const oil=document.getElementById('sp-oil-f-oil');
   if(oil){
@@ -28256,6 +28260,22 @@ async function spOilSaveTxn(){
   const unitRef=(document.getElementById('sp-oil-f-unit-ref')?.value||'').trim();
   const note=(document.getElementById('sp-oil-f-note')?.value||'').trim();
   if(!Array.isArray(spOilTxns)) await spOilLoad();
+  if(spOilEditingId){
+    if(!spOilCanEdit()){ alert('Edit transaksi oli hanya untuk Fahmi Fanani.'); return; }
+    const idx=spOilTxns.findIndex(x=>x.id===spOilEditingId);
+    if(idx>=0){
+      spOilTxns[idx]=Object.assign({}, spOilTxns[idx], {
+        date, dir:dir==='out'?'out':'in', oilId: meta.id, oil: meta.name, part: meta.part,
+        qty, unitRef, note, updatedAt:new Date().toISOString(),
+        updatedBy:(loggedInUser && (loggedInUser.name||loggedInUser.username))||''
+      });
+      await spOilSave();
+      spOilResetForm();
+      renderSpOil();
+      return;
+    }
+    spOilEditingId=null;
+  }
   spOilTxns.push({
     id:'txn-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),
     date, dir:dir==='out'?'out':'in', oilId: meta.id, oil: meta.name, part: meta.part,
@@ -28265,8 +28285,37 @@ async function spOilSaveTxn(){
   spOilResetForm();
   renderSpOil();
 }
+function spOilCanEdit(){ return (typeof isFahmiFanani==='function') && isFahmiFanani(); }
+function spOilSetEditUI(on){
+  const save=document.getElementById('sp-oil-save');
+  if(save) save.textContent = on ? '💾 Update' : '💾 Simpan';
+  const title=document.querySelector('#sp-oil-form .sp-oil-form-title');
+  if(title){
+    let tag=title.querySelector('.sp-oil-edit-tag');
+    if(on && !tag){ tag=document.createElement('span'); tag.className='sp-oil-edit-tag'; tag.style.cssText='margin-left:8px;color:#FFC72C;font-size:11px;font-weight:700'; tag.textContent='✏️ MODE EDIT'; title.appendChild(tag); }
+    if(!on && tag) tag.remove();
+  }
+}
+function spOilStartEdit(id){
+  if(!spOilCanEdit()){ alert('Edit transaksi oli hanya untuk Fahmi Fanani.'); return; }
+  const t=(spOilTxns||[]).find(x=>x.id===id); if(!t) return;
+  spOilEditingId=id;
+  spOilSetDir(t.dir==='out'?'out':'in');
+  const set=(el,v)=>{ const e=document.getElementById(el); if(e) e.value=v; };
+  set('sp-oil-f-date', t.date||spOilToday());
+  set('sp-oil-f-oil', t.oilId||SP_OIL_CATALOG[0].id);
+  set('sp-oil-f-qty', t.qty);
+  set('sp-oil-f-unit-ref', t.unitRef||'');
+  set('sp-oil-f-note', t.note||'');
+  spOilSetEditUI(true);
+  document.querySelectorAll('.sp-oil-type-table tr.is-editing').forEach(r=>r.classList.remove('is-editing'));
+  document.querySelectorAll('.sp-oil-type-table tr[data-id]').forEach(r=>{ if(r.getAttribute('data-id')===id) r.classList.add('is-editing'); });
+  document.getElementById('sp-oil-form')?.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
 async function spOilDelete(id){
+  if(!spOilCanEdit()){ alert('Hapus transaksi oli hanya untuk Fahmi Fanani.'); return; }
   if(!id||!confirm('Hapus transaksi ini?')) return;
+  if(spOilEditingId===id){ spOilEditingId=null; spOilSetEditUI(false); spOilResetForm(); }
   spOilTxns=(spOilTxns||[]).filter(t=>t.id!==id);
   await spOilSave();
   renderSpOil();
@@ -28318,14 +28367,19 @@ function spOilRenderTypeTable(oilId, rows){
   const tabBal=document.querySelector('[data-tab-bal="'+oilId+'"]');
   if(tabBal) tabBal.textContent=spOilNum(bal)+' L';
 
+  const canEdit = (typeof isFahmiFanani==='function') && isFahmiFanani();
+  if(panel){
+    panel.querySelectorAll('.sp-oil-aksi-th').forEach(th=>{ th.style.display = canEdit ? '' : 'none'; });
+    const ft = panel.querySelector('tfoot tr td:last-child'); if(ft) ft.colSpan = canEdit ? 2 : 1;
+  }
   if(!local.length){
-    tbody.innerHTML='<tr><td colspan="9" class="sp-oil-empty">Belum ada transaksi untuk oli ini. Gunakan form ＋ Masuk / − Keluar.</td></tr>';
+    tbody.innerHTML='<tr><td colspan="'+(canEdit?9:8)+'" class="sp-oil-empty">Belum ada transaksi untuk oli ini. Gunakan form ＋ Masuk / − Keluar.</td></tr>';
     return;
   }
   const view=local.slice().reverse();
   tbody.innerHTML=view.map((t,i)=>{
     const isIn=t.dir==='in';
-    return `<tr data-id="${spOilEsc(t.id)}">
+    return `<tr data-id="${spOilEsc(t.id)}"${(canEdit && spOilEditingId===t.id)?' class="is-editing"':''}>
       <td class="col-no">${i+1}</td>
       <td class="col-date">${spOilEsc(t.date||'—')}</td>
       <td><span class="badge-dir ${isIn?'in':'out'}">${isIn?'▲ MASUK':'▼ KELUAR'}</span></td>
@@ -28334,7 +28388,7 @@ function spOilRenderTypeTable(oilId, rows){
       <td class="qty-out">${!isIn?spOilNum(t.qty):'—'}</td>
       <td class="qty-bal">${spOilNum(t.typeBalance)}</td>
       <td style="text-align:left;color:#9aa3ad;font-size:11px">${spOilEsc(t.note||'')}</td>
-      <td style="text-align:center"><button type="button" class="btn small secondary sp-oil-del" data-oil-del="${spOilEsc(t.id)}">🗑</button></td>
+      ${canEdit ? `<td style="text-align:center;white-space:nowrap"><button type="button" class="btn small secondary sp-oil-edit" data-oil-edit="${spOilEsc(t.id)}" title="Edit transaksi">✏️</button><button type="button" class="btn small secondary sp-oil-del" data-oil-del="${spOilEsc(t.id)}" title="Hapus transaksi">🗑</button></td>` : ''}
     </tr>`;
   }).join('');
 }
@@ -28581,6 +28635,7 @@ function spOilBindOnce(){
     const btn=e.target.closest('[data-oil-tab]'); if(!btn) return; spOilSetTab(btn.dataset.oilTab);
   });
   document.getElementById('sp-oil-type-panels')?.addEventListener('click', e=>{
+    const eb=e.target.closest('[data-oil-edit]'); if(eb){ spOilStartEdit(eb.getAttribute('data-oil-edit')); return; }
     const btn=e.target.closest('[data-oil-del]'); if(btn) spOilDelete(btn.getAttribute('data-oil-del'));
   });
 }

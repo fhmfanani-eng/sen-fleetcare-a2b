@@ -1,5 +1,5 @@
 /**
- * ================= SEN-FleetCare — DATABASE BACKUP (Apps Script) v3.1 =================
+ * ================= SEN-FleetCare — DATABASE BACKUP (Apps Script) v3.2 =================
  * Deploy script ini KHUSUS di spreadsheet backup:
  *   https://docs.google.com/spreadsheets/d/1ADSaUT1u1veuMCFhoMzxhWsmz0XBRJV1xjz-JD6iS0Q
  *
@@ -168,7 +168,7 @@ function doPost(e) {
 }
 
 function doGet(e) {
-  return jsonResponse({ ok: true, message: 'SEN-FleetCare Database Backup endpoint aktif (v3.1 — native views).' });
+  return jsonResponse({ ok: true, message: 'SEN-FleetCare Database Backup endpoint aktif (v3.2 — native views).' });
 }
 
 function openTargetSpreadsheet(spreadsheetId) {
@@ -820,26 +820,37 @@ function writeRecordBlock(cs, col, records) {
   return { rows: nR + 1, cols: nC };
 }
 
-/** Sisipkan 1 chart native. o: {type,title,row,col,offsetX,width,height,colors,stacked,legend,options} */
+/** Sisipkan 1 chart native. o: {type,title,row,col,offsetX,width,height,colors,stacked,legend,options}
+ *  v3.2: builder generik newChart() TIDAK punya setStacked() -> pakai opsi 'isStacked'.
+ *  Error 1 chart tidak lagi menghentikan penulisan tabel/chart lain (pesan error ditulis di sheet). */
 function placeChart(sheet, cs, dataCol, records, o) {
   if (!records || !records.length) return false;
-  var blk = writeRecordBlock(cs, dataCol, records);
-  var b = sheet.newChart()
-    .setChartType(o.type)
-    .addRange(cs.getRange(1, dataCol, blk.rows, blk.cols))
-    .setNumHeaders(1)
-    .setPosition(o.row, o.col || 1, o.offsetX || 0, o.offsetY || 0)
-    .setOption('title', o.title)
-    .setOption('width', o.width)
-    .setOption('height', o.height)
-    .setOption('legend', { position: o.legend || 'top' })
-    .setOption('backgroundColor', '#FFFFFF');
-  if (o.colors) b.setOption('colors', o.colors);
-  if (o.stacked) b.setStacked();
-  var extra = o.options || {};
-  Object.keys(extra).forEach(function (k) { b.setOption(k, extra[k]); });
-  sheet.insertChart(b.build());
-  return true;
+  try {
+    var blk = writeRecordBlock(cs, dataCol, records);
+    var b = sheet.newChart()
+      .setChartType(o.type)
+      .addRange(cs.getRange(1, dataCol, blk.rows, blk.cols))
+      .setNumHeaders(1)
+      .setPosition(o.row, o.col || 1, o.offsetX || 0, o.offsetY || 0)
+      .setOption('title', o.title)
+      .setOption('width', o.width)
+      .setOption('height', o.height)
+      .setOption('legend', { position: o.legend || 'top' })
+      .setOption('backgroundColor', '#FFFFFF');
+    if (o.colors) b.setOption('colors', o.colors);
+    if (o.stacked) b.setOption('isStacked', true);
+    var extra = o.options || {};
+    Object.keys(extra).forEach(function (k) { b.setOption(k, extra[k]); });
+    sheet.insertChart(b.build());
+    return true;
+  } catch (err) {
+    try {
+      sheet.getRange(o.row, o.col || 1)
+        .setValue('[Chart "' + o.title + '" gagal: ' + String(err).substring(0, 160) + ']')
+        .setFontColor('#E5484D');
+    } catch (_e) {}
+    return false;
+  }
 }
 
 function chartRowsSpan(h) { return Math.ceil(h / DASH.ROW_PX); }
@@ -906,7 +917,7 @@ function writeMechanicNative(ss, m, force) {
   var recs = m.historical || [];
   var titleRow = row2 + chartRowsSpan(H2) + 2;
   var tblRow = titleRow + 1;
-  ensureSize(sheet, tblRow + recs.length + 5, 14);
+  ensureSize(sheet, tblRow + recs.length + 5, Math.max(14, collectHeaders(recs).length + 1));
   sheet.getRange(titleRow, 1).setValue('Historical Report')
     .setFontWeight('bold').setFontSize(12).setFontColor(DASH.HEADER_BG);
   var written = 0;
@@ -974,7 +985,7 @@ function writeServiceNative(ss, sv, force, position) {
 
   var recs = sv.table || [];
   var titleRow = 1 + chartRowsSpan(H) + 2, tblRow = titleRow + 1;
-  ensureSize(sheet, tblRow + recs.length + 5, 14);
+  ensureSize(sheet, tblRow + recs.length + 5, Math.max(14, collectHeaders(recs).length + 1));
   sheet.getRange(titleRow, 1).setValue('Service Achievement')
     .setFontWeight('bold').setFontSize(12).setFontColor(DASH.HEADER_BG);
   var written = 0;
@@ -1024,7 +1035,7 @@ function writeQuarterNative(ss, qd, force, position) {
 
   var recs = qd.table || [];
   var titleRow = 1 + chartRowsSpan(H) + 2, tblRow = titleRow + 1;
-  ensureSize(sheet, tblRow + recs.length + 5, 14);
+  ensureSize(sheet, tblRow + recs.length + 5, Math.max(14, collectHeaders(recs).length + 1));
   sheet.getRange(titleRow, 1).setValue('KPI Summary Quarter')
     .setFontWeight('bold').setFontSize(12).setFontColor(DASH.HEADER_BG);
   var written = 0;
