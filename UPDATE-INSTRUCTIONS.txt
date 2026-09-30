@@ -44,3 +44,6 @@ Catatan:
 - Web lama (v54/v55) + script baru: Service/Quarter/Mechanic tidak ter-update (web lama tidak
   mengirim data native) -> ganti web ke v56.
 - Live sync membutuhkan tab web terbuka.
+
+v58: (1) Prompt URL di Database Akun DIHAPUS. Isi BACKEND_CONFIG.fullBackupWebAppUrl (index.html, ~baris 7587) SEKALI dengan Web App URL /exec -> sync jalan otomatis.
+     (2) Chart Mechanic Activity Trend di sheet: semua label bulan tampil (Sep 2026 tidak terpotong lagi). Deploy ulang Apps Script (New version), lalu Sync Manual sekali.

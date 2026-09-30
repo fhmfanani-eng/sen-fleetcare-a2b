@@ -7584,7 +7584,7 @@ const BACKEND_CONFIG = {
   //     AppsScript-DatabaseBackup.gs), lalu tempel Web App URL /exec di bawah.
   //     Tombol sync-nya ada di menu "Database Akun" → "☁ Sync Semua Database ke Spreadsheet".
   fullBackupSpreadsheetId: '1ADSaUT1u1veuMCFhoMzxhWsmz0XBRJV1xjz-JD6iS0Q',
-  fullBackupWebAppUrl: '', // <-- isi setelah deploy Apps Script backup (Web App URL, diakhiri /exec)
+  fullBackupWebAppUrl: '', // <-- TEMPEL Web App URL Apps Script backup (diakhiri /exec) SEKALI di sini; sesudahnya sync jalan otomatis tanpa prompt
 };
 
 const localFallbackStorage = {
@@ -13159,19 +13159,8 @@ async function runFullDatabaseBackupSync(opts){
   const FB_URL_KEY = 'sen_fullBackupWebAppUrl';
   let url = _fbGetBackupUrl();
   if(!url){
-    if(opts.manual){
-      const input = prompt('Web App URL Apps Script backup belum diisi.\n\nDeploy dulu file AppsScript-DatabaseBackup.gs di spreadsheet backup (Deploy → New deployment → Web app → Anyone), lalu tempel Web App URL (diakhiri /exec) di sini:\n\nContoh: https://script.google.com/macros/s/XXXXX/exec');
-      const val = (input || '').trim();
-      if(!val) return { ok:false, error:'no_url' };
-      if(!/^https:\/\/script\.google\.com\/(a\/[^\/]+\/)?macros\/s\/[^\/]+\/exec$/.test(val)){
-        alert('⚠ URL tidak valid. Harus berbentuk https://script.google.com/macros/s/.../exec');
-        return { ok:false, error:'invalid_url' };
-      }
-      url = val;
-      try{ localStorage.setItem(FB_URL_KEY, url); }catch(_e){}
-    } else {
-      return { ok:false, error:'no_url' };
-    }
+    _fbLiveStatus('⚠ URL Apps Script backup belum diisi di BACKEND_CONFIG.fullBackupWebAppUrl (isi sekali di kode).');
+    return { ok:false, error:'no_url' };
   }
 
   if(LIVE_BACKUP.busy && opts.live){

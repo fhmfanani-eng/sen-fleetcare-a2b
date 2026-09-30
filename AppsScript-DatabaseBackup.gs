@@ -905,7 +905,10 @@ function writeMechanicNative(ss, m, force) {
   placeChart(sheet, cs, 11, ch.trend, {
     type: Charts.ChartType.AREA, title: 'Mechanic Activity Trend — Monthly',
     row: row2, offsetX: 0, width: W1, height: H2, legend: 'none',
-    colors: ['#FFC72C'], options: { pointSize: 5, vAxis: { title: 'Total Job', minValue: 0 } }
+    colors: ['#FFC72C'], options: { pointSize: 5, curveType: 'function',
+      hAxis: { showTextEvery: 1, slantedText: true, slantedTextAngle: 35, textStyle: { fontSize: 10 } },
+      chartArea: { left: 60, right: 30, top: 50, bottom: 70 },
+      vAxis: { title: 'Total Job', minValue: 0 } }
   });
   if (sumField(ch.status, 'Jumlah') > 0) placeChart(sheet, cs, 16, ch.status, {
     type: Charts.ChartType.PIE, title: 'Job Status Composition' + mSuffix,
