@@ -1,6 +1,17 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+<script id="sen-errcap-v60">
+(function(){
+  var L=window.__senErrs=[];
+  function add(t,m){ try{ L.push({t:Date.now(),type:t,msg:String(m).slice(0,300)}); if(L.length>40) L.shift(); }catch(e){} }
+  window.addEventListener('error',function(e){ add('error',(e.message||'error')+(e.filename?' @'+String(e.filename).split('/').pop()+':'+(e.lineno||''):'')); });
+  window.addEventListener('unhandledrejection',function(e){ var r=e.reason; add('promise',(r&&r.message)||r||'rejection'); });
+  window.__senLong=0;
+  try{ new PerformanceObserver(function(l){ window.__senLong+=l.getEntries().length; }).observe({entryTypes:['longtask']}); }catch(e){}
+})();
+</script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SEN-FleetCare — Heavy Equipment Maintenance Management Control System</title>
@@ -3767,6 +3778,8 @@ button.wa-green:hover, button.wa-sync-only-fahmi:hover{
 
       <div class="mh-grid" id="mh-grid"></div>
       <div class="mh-foot">
+        <div class="mh-userbar" id="mh-userbar"><span class="mh-user-lbl">USER</span><span class="mh-user-name" id="mh-user-name">-</span><button type="button" class="mh-logout" id="btn-logout-home">Logout</button></div>
+        <div class="mh-maintbar" id="mh-maintbar"><button type="button" class="mh-maint" id="btn-maint-home" style="display:none;">&#128736; Maintenance Server</button></div>
         <img class="mh-brand" src="brand-tagline.png" alt="" draggable="false" onerror="this.style.display='none';var f=this.nextElementSibling;if(f)f.style.display='flex';">
         <div class="mh-brand mh-brand-fb" style="display:none;" aria-label="SEN-FleetCare — Heavy Equipment Maintenance Control">
           <div class="fb-mark"><span class="fb-y">SEN-</span><span class="fb-g">FleetCare</span></div>
@@ -3774,6 +3787,92 @@ button.wa-green:hover, button.wa-sync-only-fahmi:hover{
         </div>
       </div>
     </div>
+<style id="sen-perf-v59">
+/* v59: performa - backdrop-filter/blur memaksa GPU render ulang tiap scroll (penyebab ngeframe di HP & desktop). */
+*,*::before,*::after{ -webkit-backdrop-filter:none !important; backdrop-filter:none !important; }
+.quarter-chart-legend .qleg-chip{ background-color:rgba(16,20,26,.96); }
+html{ scroll-behavior:auto !important; }
+.main, #content{ overscroll-behavior-y:contain; }
+@media (pointer:coarse), (max-width:860px){
+  *{ text-shadow:none !important; }
+  .mh-tile{ box-shadow:0 4px 10px rgba(0,0,0,.4) !important; }
+}
+@media (prefers-reduced-motion:reduce){ *{ animation-duration:.01ms !important; transition-duration:.01ms !important; } }
+/* Logout hanya di tampilan Menu Utama; di halaman isi menu disembunyikan */
+#btn-logout{ display:none !important; }
+.mh-userbar{ display:none; align-items:center; justify-content:center; gap:8px; margin:0 auto 12px; padding:5px 6px 5px 12px;
+  border:1px solid rgba(255,199,44,.28); border-radius:999px; background:rgba(16,20,26,.9); max-width:100%; }
+.app.launcher-mode .mh-userbar{ display:inline-flex; }
+.mh-user-lbl{ font:600 9px 'JetBrains Mono',monospace; letter-spacing:1px; color:#8b95a3; }
+.mh-user-name{ font:600 12.5px 'Oswald',sans-serif; color:#ffc72c; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:46vw; }
+.mh-logout{ appearance:none; cursor:pointer; border:1px solid rgba(229,72,77,.55); background:rgba(229,72,77,.14); color:#ff8a8d;
+  font:700 11px 'Oswald',sans-serif; letter-spacing:.8px; text-transform:uppercase; padding:6px 14px; border-radius:999px; }
+.mh-logout:active{ background:rgba(229,72,77,.3); }
+.mh-foot{ flex-direction:column; align-items:center; }
+</style>
+<style id="sen-maint-v60">
+.mh-userbar{ flex-wrap:nowrap; }
+.mh-maint{ appearance:none; cursor:pointer; border:1px solid rgba(255,199,44,.55); background:rgba(255,199,44,.12); color:#ffc72c;
+  font:700 11px 'Oswald',sans-serif; letter-spacing:.8px; text-transform:uppercase; padding:6px 12px; border-radius:999px; }
+.mh-maint:active{ background:rgba(255,199,44,.28); }
+.mh-maintbar{ display:none; justify-content:center; margin:0 auto 12px; }
+.app.launcher-mode .mh-maintbar{ display:flex; }
+.mh-maint{ position:relative; z-index:5; touch-action:manipulation; }
+#sen-maint-ov{ position:fixed; inset:0; z-index:99990; display:none; align-items:flex-start; justify-content:center; padding:max(12px,env(safe-area-inset-top,0px)) 10px 10px; background:rgba(0,0,0,.82); overflow:auto; }
+#sen-maint-ov.open{ display:flex; }
+#sen-maint{ width:min(100%,720px); background:#10151c; border:1px solid rgba(255,199,44,.35); border-radius:14px; padding:14px; color:#e8ecf1; font:13px 'Inter',system-ui,sans-serif; }
+#sen-maint h3{ margin:0; font:700 16px 'Oswald',sans-serif; letter-spacing:1px; text-transform:uppercase; color:#ffc72c; }
+.sm-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
+.sm-x{ appearance:none; border:1px solid rgba(255,255,255,.2); background:transparent; color:#e8ecf1; border-radius:8px; padding:4px 10px; cursor:pointer; font-size:14px; }
+.sm-sec{ font:600 10px 'JetBrains Mono',monospace; letter-spacing:1.2px; color:#8b95a3; text-transform:uppercase; margin:12px 0 6px; }
+.sm-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px; }
+.sm-card{ border:1px solid rgba(255,255,255,.1); border-radius:10px; padding:8px 10px; background:rgba(255,255,255,.03); min-width:0; }
+.sm-card b{ display:block; font:600 10px 'JetBrains Mono',monospace; color:#8b95a3; letter-spacing:.6px; text-transform:uppercase; }
+.sm-card span{ display:block; margin-top:3px; font-weight:600; word-break:break-word; }
+.sm-ok{ color:#3fb950; } .sm-warn{ color:#ffc72c; } .sm-bad{ color:#ff6b6f; }
+.sm-btns{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:8px; }
+.sm-btn{ appearance:none; cursor:pointer; text-align:left; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.04); color:#e8ecf1; border-radius:10px; padding:9px 11px; font:600 12.5px 'Inter',system-ui,sans-serif; }
+.sm-btn small{ display:block; font-weight:400; color:#8b95a3; margin-top:2px; font-size:11px; }
+.sm-btn:active{ background:rgba(255,199,44,.18); }
+.sm-btn.danger{ border-color:rgba(229,72,77,.5); }
+.sm-btn[disabled]{ opacity:.5; }
+#sm-log{ max-height:150px; overflow:auto; font:11px 'JetBrains Mono',monospace; background:#0a0d12; border-radius:8px; padding:8px; white-space:pre-wrap; word-break:break-word; color:#c9d1d9; }
+#sm-msg{ min-height:16px; margin-top:8px; font-size:12px; color:#ffc72c; }
+.sm-in{ width:100%; box-sizing:border-box; background:#0a0d12; color:#e8ecf1; border:1px solid rgba(255,255,255,.16); border-radius:8px; padding:8px; font:13px 'Inter',system-ui,sans-serif; }
+#sen-maint-banner{ position:fixed; left:0; right:0; top:0; z-index:99980; display:none; padding:max(6px,env(safe-area-inset-top,0px)) 12px 6px; text-align:center;
+  background:#b7791f; color:#fff; font:600 12.5px 'Inter',system-ui,sans-serif; }
+html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none !important; transition:none !important; box-shadow:none !important; text-shadow:none !important; filter:none !important; }
+
+/* v62: kontras teks panel Maintenance - kunci warna di semua state (hover/focus/active) agar tidak emas-di-atas-emas */
+#sen-maint .sm-btn,#sen-maint .sm-btn:hover,#sen-maint .sm-btn:focus,#sen-maint .sm-btn:focus-visible,#sen-maint .sm-btn:active{
+  background:#1a212b !important; background-image:none !important; color:#f4f7fb !important; border:1px solid rgba(255,255,255,.28) !important;
+  box-shadow:none !important; filter:none !important; transform:none !important; outline:none !important; }
+#sen-maint .sm-btn:hover,#sen-maint .sm-btn:focus-visible{ background:#252e3b !important; border-color:#ffc72c !important; }
+#sen-maint .sm-btn:active{ background:#2f3a4a !important; }
+#sen-maint .sm-btn.danger,#sen-maint .sm-btn.danger:hover,#sen-maint .sm-btn.danger:focus,#sen-maint .sm-btn.danger:active{ border-color:#ff6b6f !important; }
+#sen-maint .sm-btn.danger:hover{ background:#3a1f24 !important; }
+#sen-maint .sm-btn,#sen-maint .sm-btn *{ color:#f4f7fb !important; }
+#sen-maint .sm-btn small{ color:#b9c4d2 !important; font-size:11.5px; }
+#sen-maint .sm-card{ background:#161c25 !important; border-color:rgba(255,255,255,.16) !important; }
+#sen-maint .sm-card b{ color:#a9b5c4 !important; }
+#sen-maint .sm-card span{ color:#f4f7fb; }
+#sen-maint .sm-card span.sm-ok{ color:#4ade80 !important; } #sen-maint .sm-card span.sm-warn{ color:#ffd452 !important; } #sen-maint .sm-card span.sm-bad{ color:#ff8085 !important; }
+#sen-maint .sm-sec{ color:#c3cdda !important; }
+#sen-maint .sm-in{ color:#f4f7fb !important; background:#0a0d12 !important; } #sen-maint .sm-in::placeholder{ color:#8b95a3; }
+#sen-maint #sm-log{ color:#e1e7ef; background:#0a0d12; }
+#sen-maint #sm-msg{ color:#ffd452; }
+/* riwayat aktivitas user */
+.sm-tbl-wrap{ overflow-x:auto; border:1px solid rgba(255,255,255,.14); border-radius:10px; }
+.sm-tbl{ width:100%; border-collapse:collapse; font:12px 'Inter',system-ui,sans-serif; min-width:520px; }
+.sm-tbl th{ text-align:left; padding:7px 9px; background:#1b2330; color:#c3cdda; font:600 10px 'JetBrains Mono',monospace; letter-spacing:.6px; text-transform:uppercase; position:sticky; top:0; }
+.sm-tbl td{ padding:7px 9px; border-top:1px solid rgba(255,255,255,.08); color:#f4f7fb; white-space:nowrap; }
+.sm-pill{ display:inline-block; padding:2px 8px; border-radius:999px; font:700 10.5px 'Inter',system-ui,sans-serif; }
+.sm-pill.on{ background:rgba(74,222,128,.16); color:#4ade80; border:1px solid rgba(74,222,128,.5); }
+.sm-pill.off{ background:rgba(255,255,255,.07); color:#c3cdda; border:1px solid rgba(255,255,255,.2); }
+.sm-scroll{ max-height:230px; overflow:auto; }
+.sm-row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:8px; }
+.sm-row select{ background:#0a0d12; color:#f4f7fb; border:1px solid rgba(255,255,255,.2); border-radius:8px; padding:6px 8px; font:12.5px 'Inter',system-ui,sans-serif; }
+</style>
 <style id="sen-maint-tips-style">
 .sen-maint-tips{
   width:min(100%,1100px);margin:0 auto 8px;padding:8px 13px 6px;box-sizing:border-box;
@@ -8979,12 +9078,19 @@ navItems.forEach(item=>{
   });
 })();
 
+const _senClockFmt = new Intl.DateTimeFormat('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+const _senDateFmt = new Intl.DateTimeFormat('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+let _senLastDateStr = '';
 function updateTopbarDateTime(){
+  /* v59: hemat CPU - tidak update saat tab tersembunyi atau di halaman menu utama (topbar disembunyikan) */
+  if(document.hidden) return;
+  const appEl0 = document.querySelector('.app');
+  if(appEl0 && appEl0.classList.contains('launcher-mode')) return;
   const now = new Date();
   const clockEl = document.getElementById('topbar-clock');
   const dateEl = document.getElementById('topbar-date');
-  if(clockEl) clockEl.textContent = now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
-  if(dateEl) dateEl.textContent = now.toLocaleDateString('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  if(clockEl) clockEl.textContent = _senClockFmt.format(now);
+  if(dateEl){ const ds = _senDateFmt.format(now); if(ds!==_senLastDateStr){ _senLastDateStr = ds; dateEl.textContent = ds; } }
 }
 updateTopbarDateTime();
 setInterval(updateTopbarDateTime, 1000);
@@ -23787,6 +23893,7 @@ function startPerformanceLiveSync(){
 
   // Poll rutin 20 detik — live per-shift (sheet performance: waktu operasi/standby/total jam kerja)
   _perfAutoTimer = setInterval(()=>{
+    if(document.hidden) return;
     runPlanHmLiveSyncCycle({ force:false }).catch(()=>{});
   }, 20000);
 
@@ -29351,7 +29458,7 @@ function subscribeDailyRealtime(){
     // Ini menjaga data tetap sinkron walau channel realtime sempat putus koneksi
     // (mis. laptop sleep semalaman) dan tidak mengirim ulang perubahan yang terlewat.
     setInterval(async ()=>{
-      if(!loggedInUser) return;
+      if(!loggedInUser || document.hidden) return;
       const before = JSON.stringify(dailyRecords.map(r=>r.id+r.updatedAt));
       await refreshDailyRecords();
       await enforceCodeBDLock();
@@ -29364,7 +29471,7 @@ function subscribeDailyRealtime(){
     // sistem browser) begitu Supervisor membuat rencana maintenance baru berstatus Open,
     // tanpa perlu me-refresh halaman secara manual.
     setInterval(async ()=>{
-      if(!loggedInUser) return;
+      if(!loggedInUser || document.hidden) return;
       const before = JSON.stringify(planningSystemRecords.map(r=>r.id+r.status));
       await refreshPlanningSystemRecords();
       const after = JSON.stringify(planningSystemRecords.map(r=>r.id+r.status));
@@ -29372,10 +29479,10 @@ function subscribeDailyRealtime(){
     }, 30000);
     // Cek ulang notifikasi (Plan Service jatuh tempo, approval baru, dll) tiap 1 menit —
     // supaya lonceng & notifikasi sistem tetap up-to-date walau tidak ada perubahan data lain.
-    setInterval(()=>{ if(loggedInUser) renderNotificationCenter(); }, 60000);
+    setInterval(()=>{ if(loggedInUser && !document.hidden) renderNotificationCenter(); }, 60000);
     // Render ulang tabel Daily Maintenance tiap 1 menit supaya tautan "Edit" milik mekanik
     // otomatis hilang begitu lewat batas 24 jam, walau tidak ada perubahan data lain.
-    setInterval(()=>{ if(loggedInUser && document.getElementById('daily-tbody')) renderDailyTable(); }, 60000);
+    setInterval(()=>{ if(loggedInUser && !document.hidden && document.getElementById('daily-tbody')) renderDailyTable(); }, 60000);
   } else {
     showLoginScreen();
   }
@@ -29620,9 +29727,243 @@ function subscribeDailyRealtime(){
       clearTimeout(t); t=setTimeout(build,120);
     }).observe(navEl,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style']});
   }
-  setInterval(function(){ var app=appEl(); if(app&&app.classList.contains('launcher-mode')) updateBadges(); },3000);
+  setInterval(function(){ if(document.hidden) return; var app=appEl(); if(app&&app.classList.contains('launcher-mode')) updateBadges(); },3000);
   window.addEventListener('resize',layout);
   window.addEventListener('orientationchange',function(){ setTimeout(layout,150); });
+})();
+</script>
+<script id="sen-home-logout-v59">
+(function(){
+  var b=document.getElementById('btn-logout-home'), src=document.getElementById('user-info'), dst=document.getElementById('mh-user-name');
+  if(b) b.addEventListener('click', function(){ var o=document.getElementById('btn-logout'); if(o) o.click(); });
+  function sync(){ if(src&&dst) dst.textContent=src.textContent||'-'; }
+  if(src&&dst){ sync(); new MutationObserver(sync).observe(src,{childList:true,characterData:true,subtree:true}); }
+})();
+</script>
+<script id="sen-maint-v60">
+(function(){
+  'use strict';
+  var LITE_KEY='sen_lite_mode', TOK_KEY='sen_reload_token_seen', NOTICE_KEY='sen-maint-notice';
+  function $(i){ return document.getElementById(i); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+  function isAdmin(){ try{ return typeof isFahmiFanani==='function' && isFahmiFanani(); }catch(e){ return false; } }
+
+  /* ---- Mode Ringan (per perangkat) ---- */
+  function applyLite(on){ document.documentElement.classList.toggle('sen-lite',!!on); }
+  applyLite(lsGet(LITE_KEY)==='1');
+
+  /* ---- tombol hanya untuk Fahmi Fanani ---- */
+  var btn=$('btn-maint-home');
+  var ov=null;
+  function updateVis(){ if(btn) btn.style.display = isAdmin() ? '' : 'none'; if(!isAdmin() && ov) ov.classList.remove('open'); }
+  var ui=$('user-info');
+  if(ui) new MutationObserver(updateVis).observe(ui,{childList:true,characterData:true,subtree:true});
+  updateVis();
+
+  /* ---- panel ---- */
+  ov=document.createElement('div'); ov.id='sen-maint-ov';
+  ov.innerHTML='<div id="sen-maint" role="dialog" aria-label="Maintenance">'+
+   '<div class="sm-head"><h3>&#128736; Maintenance Sistem</h3><button class="sm-x" id="sm-close" type="button">&#10005;</button></div>'+
+   '<div class="sm-sec">Status</div><div class="sm-grid" id="sm-status"></div>'+
+   '<div class="sm-sec">Perbaikan cepat</div><div class="sm-btns">'+
+    '<button class="sm-btn" id="sm-diag" type="button">Jalankan diagnosa<small>Cek internet, database, endpoint backup, FPS</small></button>'+
+    '<button class="sm-btn" id="sm-refresh" type="button">Refresh data dari server<small>Muat ulang Daily, Planning &amp; tampilan</small></button>'+
+    '<button class="sm-btn" id="sm-resetsync" type="button">Reset sync macet<small>Buka kunci Live Sync lalu sync ulang</small></button>'+
+    '<button class="sm-btn" id="sm-lite" type="button">Mode Ringan: -<small>Matikan animasi &amp; bayangan (HP/PC lemot)</small></button>'+
+    '<button class="sm-btn danger" id="sm-cache" type="button">Bersihkan cache &amp; muat ulang<small>Hapus cache app + service worker (data &amp; login aman)</small></button>'+
+    '<button class="sm-btn" id="sm-copy" type="button">Salin laporan diagnosa<small>Untuk dikirim saat lapor error</small></button>'+
+   '</div>'+
+   '<div class="sm-sec">Pengumuman &amp; muat ulang semua perangkat</div>'+
+   '<input class="sm-in" id="sm-notice" type="text" maxlength="160" placeholder="Contoh: Sistem maintenance 10 menit, harap simpan data Anda">'+
+   '<div class="sm-btns" style="margin-top:8px">'+
+    '<button class="sm-btn" id="sm-notice-on" type="button">Tampilkan pengumuman<small>Banner muncul di semua user (max ~1 menit)</small></button>'+
+    '<button class="sm-btn" id="sm-notice-off" type="button">Hapus pengumuman<small>Sembunyikan banner di semua user</small></button>'+
+    '<button class="sm-btn danger" id="sm-force" type="button">Paksa semua perangkat muat ulang<small>Semua user yang online refresh otomatis</small></button>'+
+   '</div>'+
+   '<div class="sm-sec">Riwayat user online / buka web</div>'+
+   '<div class="sm-row"><select id="sm-act-range"><option value="1">Hari ini</option><option value="7" selected>7 hari</option><option value="30">30 hari</option></select>'+
+    '<select id="sm-act-user"><option value="">Semua user</option></select>'+
+    '<button class="sm-btn" id="sm-act-reload" type="button" style="padding:6px 12px">Muat ulang riwayat</button></div>'+
+   '<div class="sm-sec" style="margin-top:4px">Ringkasan per user</div><div class="sm-tbl-wrap sm-scroll"><table class="sm-tbl"><thead><tr><th>User</th><th>Status</th><th>Terakhir aktif</th><th>Sesi</th><th>Total durasi</th><th>Perangkat</th></tr></thead><tbody id="sm-act-sum"><tr><td colspan="6">-</td></tr></tbody></table></div>'+
+   '<div class="sm-sec">Riwayat sesi (terbaru dulu)</div><div class="sm-tbl-wrap sm-scroll"><table class="sm-tbl"><thead><tr><th>User</th><th>Tanggal</th><th>Masuk</th><th>Terakhir aktif</th><th>Durasi</th><th>Perangkat</th></tr></thead><tbody id="sm-act-list"><tr><td colspan="6">-</td></tr></tbody></table></div>'+
+   '<div class="sm-sec">Log error terakhir</div><div id="sm-log">-</div>'+
+   '<div id="sm-msg"></div></div>';
+  document.body.appendChild(ov);
+  var banner=document.createElement('div'); banner.id='sen-maint-banner'; document.body.appendChild(banner);
+
+  var lastReport='';
+  function msg(t){ var m=$('sm-msg'); if(m) m.textContent=t||''; }
+  function card(l,v,c){ return '<div class="sm-card"><b>'+esc(l)+'</b><span class="'+(c||'')+'">'+esc(v)+'</span></div>'; }
+  function fmtBytes(n){ if(n==null) return '-'; if(n<1024) return n+' B'; if(n<1048576) return (n/1024).toFixed(1)+' KB'; return (n/1048576).toFixed(1)+' MB'; }
+  function lsSize(){ var t=0; try{ for(var i=0;i<localStorage.length;i++){ var k=localStorage.key(i); t+=k.length+(localStorage.getItem(k)||'').length; } }catch(e){} return t*2; }
+  function fps(ms){ return new Promise(function(res){ var n=0,t0=performance.now(); function f(t){ n++; if(t-t0<ms) requestAnimationFrame(f); else res(Math.round(n*1000/(t-t0))); } requestAnimationFrame(f); }); }
+  function ping(url,opt){ var t0=performance.now(); return fetch(url,Object.assign({cache:'no-store'},opt||{})).then(function(r){ return {ok:true,ms:Math.round(performance.now()-t0),status:r.status}; }).catch(function(e){ return {ok:false,ms:Math.round(performance.now()-t0),err:String(e&&e.message||e)}; }); }
+  function lat(r){ return r.ms+' ms'; }
+  function latCls(r,ok){ return !r.ok?'sm-bad':(r.ms>1500?'sm-warn':(ok||'sm-ok')); }
+
+  async function diagnose(){
+    var st=$('sm-status'); msg('Menjalankan diagnosa...'); st.innerHTML=card('Diagnosa','Sedang berjalan...','sm-warn');
+    var rows=[], rep=[]; function add(l,v,c){ rows.push(card(l,v,c)); rep.push(l+': '+v); }
+    add('Internet', navigator.onLine?'Online':'Offline', navigator.onLine?'sm-ok':'sm-bad');
+    var conn=navigator.connection; if(conn) add('Jaringan',(conn.effectiveType||'-')+(conn.rtt?' · RTT '+conn.rtt+' ms':'')+(conn.downlink?' · '+conn.downlink+' Mbps':''));
+    var cfg=(typeof BACKEND_CONFIG!=='undefined')?BACKEND_CONFIG:{};
+    var pr=[];
+    if(cfg.supabaseUrl) pr.push(ping(cfg.supabaseUrl+'/rest/v1/',{headers:{apikey:cfg.supabaseAnonKey||''}}).then(function(r){ add('Database (Supabase)', r.ok?('OK · '+lat(r)):('GAGAL · '+r.err), latCls(r)); }));
+    var bu=(typeof _fbGetBackupUrl==='function')?_fbGetBackupUrl():'';
+    if(bu) pr.push(ping(bu,{mode:'no-cors'}).then(function(r){ add('Endpoint backup (Apps Script)', r.ok?('Terjangkau · '+lat(r)):('GAGAL · '+r.err), latCls(r)); }));
+    else add('Endpoint backup','URL belum diisi','sm-bad');
+    var sw='-'; try{ if('serviceWorker' in navigator){ var regs=await navigator.serviceWorker.getRegistrations(); sw=regs.length?('Aktif ('+regs.length+')'):'Tidak ada'; } else sw='Tidak didukung'; }catch(e){ sw='Error'; }
+    add('Service worker', sw);
+    try{ if(navigator.storage&&navigator.storage.estimate){ var e=await navigator.storage.estimate(); add('Storage browser', fmtBytes(e.usage)+' / '+fmtBytes(e.quota)); } }catch(e){}
+    var cn=0; try{ if(window.caches){ cn=(await caches.keys()).length; } }catch(e){} add('Cache app', cn+' cache');
+    add('localStorage', fmtBytes(lsSize()), lsSize()>4000000?'sm-warn':'');
+    if(performance.memory) add('Memori JS', fmtBytes(performance.memory.usedJSHeapSize)+' / '+fmtBytes(performance.memory.jsHeapSizeLimit), performance.memory.usedJSHeapSize/performance.memory.jsHeapSizeLimit>.7?'sm-warn':'');
+    add('DOM node', String(document.getElementsByTagName('*').length), document.getElementsByTagName('*').length>15000?'sm-warn':'');
+    add('Long task (>50ms)', String(window.__senLong||0), (window.__senLong||0)>100?'sm-warn':'');
+    try{ if(typeof LIVE_BACKUP!=='undefined') add('Live Sync', (LIVE_BACKUP.busy?'SEDANG JALAN':'Idle')+(LIVE_BACKUP.lastOkAt?' · OK '+new Date(LIVE_BACKUP.lastOkAt).toLocaleTimeString('id-ID'):' · belum ada')+(LIVE_BACKUP.lastError?' · '+LIVE_BACKUP.lastError:''), LIVE_BACKUP.lastError?'sm-warn':''); }catch(e){}
+    try{ if(typeof STORAGE_MODE!=='undefined') add('Mode penyimpanan', String(STORAGE_MODE)); }catch(e){}
+    await Promise.all(pr);
+    var f=await fps(1500); add('FPS (layar)', f+' fps', f<30?'sm-bad':(f<50?'sm-warn':'sm-ok'));
+    add('Perangkat', (/Mobi|Android|iPhone/i.test(navigator.userAgent)?'HP':'Desktop')+' · '+innerWidth+'x'+innerHeight+' · '+(navigator.hardwareConcurrency||'?')+' core'+(navigator.deviceMemory?' · '+navigator.deviceMemory+' GB':''));
+    st.innerHTML=rows.join('');
+    lastReport='SEN-FleetCare diagnosa '+new Date().toLocaleString('id-ID')+'\n'+rep.join('\n')+'\n\nError terakhir:\n'+errText();
+    msg('Diagnosa selesai.'); renderLog();
+  }
+  function errText(){ var L=window.__senErrs||[]; return L.length?L.slice().reverse().map(function(e){ return new Date(e.t).toLocaleTimeString('id-ID')+' ['+e.type+'] '+e.msg; }).join('\n'):'(tidak ada error tercatat)'; }
+  function renderLog(){ var l=$('sm-log'); if(l) l.textContent=errText(); }
+  function liteLabel(){ var b=$('sm-lite'); if(b) b.firstChild.nodeValue='Mode Ringan: '+(document.documentElement.classList.contains('sen-lite')?'AKTIF':'mati'); }
+
+  async function clearCaches(){ try{ if(window.caches){ var k=await caches.keys(); await Promise.all(k.map(function(x){ return caches.delete(x); })); } }catch(e){} try{ if('serviceWorker' in navigator){ var r=await navigator.serviceWorker.getRegistrations(); await Promise.all(r.map(function(x){ return x.unregister(); })); } }catch(e){} }
+
+  function openPanel(){ if(!isAdmin()) return; ov.classList.add('open'); liteLabel(); renderLog(); diagnose(); }
+  function closePanel(){ if(ov) ov.classList.remove('open'); }
+  if(btn) btn.addEventListener('click',openPanel);
+  $('sm-close').addEventListener('click',closePanel);
+  ov.addEventListener('click',function(e){ if(e.target===ov) closePanel(); });
+  $('sm-diag').addEventListener('click',diagnose);
+  $('sm-refresh').addEventListener('click',async function(){
+    msg('Memuat ulang data...');
+    try{ if(typeof refreshDailyRecords==='function') await refreshDailyRecords(); if(typeof refreshPlanningSystemRecords==='function') await refreshPlanningSystemRecords(); if(typeof refreshPlanDailyRecords==='function') await refreshPlanDailyRecords(); if(typeof renderAll==='function') renderAll(); msg('Data berhasil disegarkan.'); }
+    catch(e){ msg('Gagal: '+(e&&e.message||e)); }
+  });
+  $('sm-resetsync').addEventListener('click',async function(){
+    try{ if(typeof LIVE_BACKUP!=='undefined'){ LIVE_BACKUP.busy=false; LIVE_BACKUP.pending=false; LIVE_BACKUP.lastError=''; if(LIVE_BACKUP.timer){ clearTimeout(LIVE_BACKUP.timer); LIVE_BACKUP.timer=null; } }
+      msg('Sync di-reset, menjalankan sync ulang...');
+      if(typeof runLiveDatabaseBackup==='function') await runLiveDatabaseBackup('maintenance');
+      msg('Reset sync selesai.'); diagnose();
+    }catch(e){ msg('Gagal: '+(e&&e.message||e)); }
+  });
+  $('sm-lite').addEventListener('click',function(){ var on=!document.documentElement.classList.contains('sen-lite'); applyLite(on); lsSet(LITE_KEY,on?'1':'0'); liteLabel(); msg('Mode Ringan '+(on?'diaktifkan':'dimatikan')+' (hanya di perangkat ini).'); });
+  $('sm-cache').addEventListener('click',async function(){ if(!confirm('Hapus cache aplikasi & muat ulang? Data dan login tetap aman.')) return; msg('Membersihkan cache...'); await clearCaches(); location.reload(); });
+  $('sm-copy').addEventListener('click',async function(){ if(!lastReport) await diagnose(); try{ await navigator.clipboard.writeText(lastReport); msg('Laporan disalin ke clipboard.'); }catch(e){ msg('Tidak bisa menyalin otomatis; lihat log di bawah.'); } });
+
+  /* ---- broadcast ke semua perangkat lewat appStorage (shared) ---- */
+  async function setNotice(obj){
+    try{ var cur=null; try{ var g=await appStorage.get(NOTICE_KEY); cur=g&&g.value?JSON.parse(g.value):null; }catch(e){}
+      var nx=Object.assign({msg:'',active:false,reloadToken:'',ts:0},cur||{},obj,{ts:Date.now(),by:'Fahmi Fanani'});
+      await appStorage.set(NOTICE_KEY,JSON.stringify(nx)); return true; }catch(e){ msg('Gagal menyimpan: '+(e&&e.message||e)); return false; }
+  }
+  $('sm-notice-on').addEventListener('click',async function(){ var t=$('sm-notice').value.trim(); if(!t){ msg('Isi teks pengumuman dulu.'); return; } if(await setNotice({msg:t,active:true})){ msg('Pengumuman aktif untuk semua user.'); pollNotice(); } });
+  $('sm-notice-off').addEventListener('click',async function(){ if(await setNotice({active:false})){ msg('Pengumuman dihapus.'); pollNotice(); } });
+  $('sm-force').addEventListener('click',async function(){ if(!confirm('Semua user yang sedang online akan refresh otomatis. Lanjutkan?')) return; var tok=String(Date.now()); lsSet(TOK_KEY,tok); if(await setNotice({reloadToken:tok})) msg('Perintah muat ulang terkirim ke semua perangkat.'); });
+
+  var polling=false;
+  async function pollNotice(){
+    if(polling) return; polling=true;
+    try{
+      if(typeof loggedInUser==='undefined'||!loggedInUser||typeof appStorage==='undefined') return;
+      var g=await appStorage.get(NOTICE_KEY); var n=g&&g.value?JSON.parse(g.value):null;
+      if(!n){ banner.style.display='none'; return; }
+      if(n.active&&n.msg){ banner.textContent='\u26A0 '+n.msg; banner.style.display='block'; } else banner.style.display='none';
+      if(n.reloadToken){ var seen=lsGet(TOK_KEY); if(seen===null){ lsSet(TOK_KEY,n.reloadToken); } else if(seen!==n.reloadToken){ lsSet(TOK_KEY,n.reloadToken); await clearCaches(); location.reload(); } }
+    }catch(e){} finally{ polling=false; }
+  }
+  setInterval(function(){ if(!document.hidden) pollNotice(); },60000);
+  setTimeout(pollNotice,8000);
+  document.addEventListener('visibilitychange',function(){ if(!document.hidden) pollNotice(); });
+})();
+</script>
+<script id="sen-activity-v62">
+(function(){
+  'use strict';
+  var PREFIX='sen-activity-', BEAT_MS=120000, GAP_MS=10*60*1000, MAX_SESS=60;
+  function keyOf(u){ return PREFIX+String(u||'').toLowerCase().replace(/[^a-z0-9]/g,'_'); }
+  function dev(){ var ua=navigator.userAgent, m=/Mobi|Android|iPhone/i.test(ua)?'HP':'Desktop';
+    var b=/Edg\//.test(ua)?'Edge':/OPR\//.test(ua)?'Opera':/Chrome\//.test(ua)?'Chrome':/Firefox\//.test(ua)?'Firefox':/Safari\//.test(ua)?'Safari':'Browser';
+    var pwa=(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)?' · App':''; return m+' · '+b+pwa; }
+  var cur=null, curUser=null, sess=[], busy=false, dirty=false;
+
+  async function load(u){ try{ var g=await appStorage.get(keyOf(u)); return g&&g.value?JSON.parse(g.value):[]; }catch(e){ return []; } }
+  async function save(){
+    if(!curUser||busy){ dirty=true; return; } busy=true; dirty=false;
+    try{ await appStorage.set(keyOf(curUser.username), JSON.stringify(sess.slice(-MAX_SESS))); }catch(e){}
+    busy=false; if(dirty) save();
+  }
+  async function begin(u){
+    curUser=u; sess=await load(u.username); var now=Date.now();
+    var lastS=sess[sess.length-1];
+    /* lanjutkan sesi terakhir bila di perangkat yang sama & jeda < 10 menit (mis. refresh halaman) */
+    if(lastS && lastS.dev===dev() && now-lastS.last<GAP_MS){ cur=lastS; cur.last=now; }
+    else { cur={id:now.toString(36),start:now,last:now,dev:dev(),name:u.name||u.username}; sess.push(cur); }
+    save();
+  }
+  function beat(){ if(!curUser||!cur) return; var now=Date.now();
+    if(now-cur.last>GAP_MS){ cur={id:now.toString(36),start:now,last:now,dev:dev(),name:curUser.name||curUser.username}; sess.push(cur); }
+    else cur.last=now; save(); }
+  function end(){ if(cur){ cur.last=Date.now(); cur.out=1; save(); } cur=null; curUser=null; }
+
+  setInterval(function(){
+    var u=(typeof loggedInUser!=='undefined')?loggedInUser:null;
+    if(u&&u.username){ if(!curUser||curUser.username!==u.username){ if(curUser) end(); begin(u); } }
+    else if(curUser) end();
+  },4000);
+  setInterval(function(){ if(!document.hidden) beat(); },BEAT_MS);
+  document.addEventListener('visibilitychange',function(){ if(!document.hidden) beat(); else if(cur){ cur.last=Date.now(); save(); } });
+  window.addEventListener('pagehide',function(){ if(cur){ cur.last=Date.now(); save(); } });
+
+  /* ---------- viewer (panel Maintenance, admin) ---------- */
+  function $(i){ return document.getElementById(i); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function dur(ms){ ms=Math.max(0,ms); var m=Math.round(ms/60000); if(m<1) return '<1 mnt'; var h=Math.floor(m/60); return h?(h+' j '+(m%60)+' m'):(m+' mnt'); }
+  function tm(t){ return new Date(t).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}); }
+  function dt(t){ return new Date(t).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}); }
+  function ago(t){ var d=Date.now()-t; if(d<60000) return 'baru saja'; if(d<3600000) return Math.round(d/60000)+' mnt lalu'; if(d<86400000) return Math.round(d/3600000)+' jam lalu'; return dt(t)+' '+tm(t); }
+  var loading=false;
+  async function render(){
+    if(loading||!$('sm-act-sum')) return; loading=true;
+    $('sm-act-sum').innerHTML='<tr><td colspan="6">Memuat...</td></tr>';
+    try{
+      var users=(typeof getAllUsers==='function')?getAllUsers():[];
+      var sel=$('sm-act-user'), keep=sel.value;
+      if(sel.options.length<=1){ users.forEach(function(u){ var o=document.createElement('option'); o.value=u.username; o.textContent=u.name||u.username; sel.appendChild(o); }); }
+      var days=parseInt($('sm-act-range').value,10)||7, since=Date.now()-days*86400000;
+      if(days===1){ var d0=new Date(); d0.setHours(0,0,0,0); since=d0.getTime(); }
+      var only=sel.value||keep||'';
+      var list=users.filter(function(u){ return !only||u.username===only; });
+      var all=await Promise.all(list.map(async function(u){ var s=(u.username===(curUser&&curUser.username))?sess:await load(u.username); return {u:u,s:s}; }));
+      var sumRows=[], rows=[];
+      all.forEach(function(x){
+        var inr=x.s.filter(function(s){ return s.last>=since; });
+        var lastS=x.s[x.s.length-1];
+        var online=lastS&&!lastS.out&&(Date.now()-lastS.last)<BEAT_MS*1.6+15000;
+        var total=inr.reduce(function(a,s){ return a+(s.last-s.start); },0);
+        sumRows.push({o:online,l:lastS?lastS.last:0,h:'<tr><td><b>'+esc(x.u.name||x.u.username)+'</b></td><td>'+(online?'<span class="sm-pill on">ONLINE</span>':'<span class="sm-pill off">Offline</span>')+'</td><td>'+(lastS?esc(ago(lastS.last)):'Belum pernah')+'</td><td>'+inr.length+'</td><td>'+dur(total)+'</td><td>'+esc(lastS?lastS.dev:'-')+'</td></tr>'});
+        inr.forEach(function(s){ rows.push({t:s.start,h:'<tr><td>'+esc(x.u.name||x.u.username)+'</td><td>'+dt(s.start)+'</td><td>'+tm(s.start)+'</td><td>'+tm(s.last)+(s.out?' <span class="sm-pill off">logout</span>':'')+'</td><td>'+dur(s.last-s.start)+'</td><td>'+esc(s.dev||'-')+'</td></tr>'}); });
+      });
+      sumRows.sort(function(a,b){ return (b.o-a.o)||(b.l-a.l); });
+      rows.sort(function(a,b){ return b.t-a.t; });
+      $('sm-act-sum').innerHTML=sumRows.length?sumRows.map(function(r){return r.h;}).join(''):'<tr><td colspan="6">Tidak ada user.</td></tr>';
+      $('sm-act-list').innerHTML=rows.length?rows.slice(0,150).map(function(r){return r.h;}).join(''):'<tr><td colspan="6">Belum ada riwayat pada rentang ini. Riwayat mulai tercatat sejak versi ini dipakai.</td></tr>';
+    }catch(e){ $('sm-act-sum').innerHTML='<tr><td colspan="6">Gagal memuat: '+esc(e&&e.message||e)+'</td></tr>'; }
+    loading=false;
+  }
+  var btn=$('btn-maint-home');
+  if(btn) btn.addEventListener('click',function(){ setTimeout(render,50); });
+  ['sm-act-range','sm-act-user'].forEach(function(id){ var e=$(id); if(e) e.addEventListener('change',render); });
+  var rl=$('sm-act-reload'); if(rl) rl.addEventListener('click',render);
+  window.__senActivityRender=render;
 })();
 </script>
 </body>

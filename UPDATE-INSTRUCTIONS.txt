@@ -51,3 +51,12 @@ v58: (1) Prompt URL di Database Akun DIHAPUS. Isi BACKEND_CONFIG.fullBackupWebAp
 v58b: fullBackupWebAppUrl sudah terisi -> sync otomatis tanpa prompt.
 
 v58c: Fix chart Mechanic Activity Trend (opsi chartArea ditolak Apps Script). placeChart kini membuang opsi tak didukung & retry. WAJIB tempel ulang .gs + New version + Sync Manual.
+
+v59: (1) Performa/ngeframe: backdrop-filter dimatikan, jam tidak update saat tab tersembunyi / di menu utama, polling 30-60 dtk & badge dijeda saat tab tidak aktif.
+     (2) Tombol Logout dipindah: hanya tampil di Menu Utama (chip USER + Logout); disembunyikan dari header halaman isi menu.
+
+v60: Panel Maintenance (khusus Fahmi Fanani) di samping Logout Menu Utama: diagnosa (internet, Supabase, endpoint backup, SW, cache, memori, FPS, long task), refresh data, reset sync macet, Mode Ringan, bersihkan cache, salin laporan, pengumuman & paksa muat ulang semua perangkat (via appStorage key sen-maint-notice), log error.
+
+v61: Fix tombol Maintenance tidak bisa diklik (error inisialisasi: panel dipakai sebelum dibuat). Tombol dipisah dari kolom Logout (baris sendiri: 'Maintenance Server').
+
+v62: (1) Panel Maintenance: kontras teks diperbaiki (tombol tidak lagi emas saat hover/fokus, teks putih di latar gelap). (2) Riwayat user online / buka web: tiap user mencatat sesi (masuk, terakhir aktif, durasi, perangkat) ke appStorage key sen-activity-<username>; ringkasan & riwayat sesi tampil di panel Maintenance (filter 1/7/30 hari & per user).
