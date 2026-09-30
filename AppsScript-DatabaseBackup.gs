@@ -825,32 +825,52 @@ function writeRecordBlock(cs, col, records) {
  *  Error 1 chart tidak lagi menghentikan penulisan tabel/chart lain (pesan error ditulis di sheet). */
 function placeChart(sheet, cs, dataCol, records, o) {
   if (!records || !records.length) return false;
+  var lastErr = '';
   try {
     var blk = writeRecordBlock(cs, dataCol, records);
-    var b = sheet.newChart()
-      .setChartType(o.type)
-      .addRange(cs.getRange(1, dataCol, blk.rows, blk.cols))
-      .setNumHeaders(1)
-      .setPosition(o.row, o.col || 1, o.offsetX || 0, o.offsetY || 0)
-      .setOption('title', o.title)
-      .setOption('width', o.width)
-      .setOption('height', o.height)
-      .setOption('legend', { position: o.legend || 'top' })
-      .setOption('backgroundColor', '#FFFFFF');
-    if (o.colors) b.setOption('colors', o.colors);
-    if (o.stacked) b.setOption('isStacked', true);
-    var extra = o.options || {};
-    Object.keys(extra).forEach(function (k) { b.setOption(k, extra[k]); });
-    sheet.insertChart(b.build());
-    return true;
-  } catch (err) {
-    try {
-      sheet.getRange(o.row, o.col || 1)
-        .setValue('[Chart "' + o.title + '" gagal: ' + String(err).substring(0, 160) + ']')
-        .setFontColor('#E5484D');
-    } catch (_e) {}
-    return false;
+    var extra = JSON.parse(JSON.stringify(o.options || {}));
+    // v58c: bila Apps Script menolak sebuah opsi ("no longer supported: a.b"), opsi itu dibuang lalu chart dicoba lagi.
+    for (var attempt = 0; attempt < 8; attempt++) {
+      try {
+        var b = sheet.newChart()
+          .setChartType(o.type)
+          .addRange(cs.getRange(1, dataCol, blk.rows, blk.cols))
+          .setNumHeaders(1)
+          .setPosition(o.row, o.col || 1, o.offsetX || 0, o.offsetY || 0)
+          .setOption('title', o.title)
+          .setOption('width', o.width)
+          .setOption('height', o.height)
+          .setOption('legend', { position: o.legend || 'top' })
+          .setOption('backgroundColor', '#FFFFFF');
+        if (o.colors) b.setOption('colors', o.colors);
+        if (o.stacked) b.setOption('isStacked', true);
+        Object.keys(extra).forEach(function (k) { b.setOption(k, extra[k]); });
+        sheet.insertChart(b.build());
+        return true;
+      } catch (err) {
+        lastErr = String(err);
+        var m = lastErr.match(/no longer supported:\s*([\w.]+)/i) || lastErr.match(/not supported:\s*([\w.]+)/i);
+        if (!m) break;
+        var parts = m[1].split('.');
+        if (parts.length > 1 && extra[parts[0]] && typeof extra[parts[0]] === 'object' && parts[1] in extra[parts[0]]) {
+          delete extra[parts[0]][parts[1]];
+          if (!Object.keys(extra[parts[0]]).length) delete extra[parts[0]];
+        } else if (parts[0] in extra) {
+          delete extra[parts[0]];
+        } else {
+          break;
+        }
+      }
+    }
+  } catch (err0) {
+    lastErr = String(err0);
   }
+  try {
+    sheet.getRange(o.row, o.col || 1)
+      .setValue('[Chart "' + o.title + '" gagal: ' + lastErr.substring(0, 160) + ']')
+      .setFontColor('#E5484D');
+  } catch (_e) {}
+  return false;
 }
 
 function chartRowsSpan(h) { return Math.ceil(h / DASH.ROW_PX); }
@@ -907,7 +927,6 @@ function writeMechanicNative(ss, m, force) {
     row: row2, offsetX: 0, width: W1, height: H2, legend: 'none',
     colors: ['#FFC72C'], options: { pointSize: 5, curveType: 'function',
       hAxis: { showTextEvery: 1, slantedText: true, slantedTextAngle: 35, textStyle: { fontSize: 10 } },
-      chartArea: { left: 60, right: 30, top: 50, bottom: 70 },
       vAxis: { title: 'Total Job', minValue: 0 } }
   });
   if (sumField(ch.status, 'Jumlah') > 0) placeChart(sheet, cs, 16, ch.status, {

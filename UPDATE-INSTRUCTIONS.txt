@@ -47,3 +47,7 @@ Catatan:
 
 v58: (1) Prompt URL di Database Akun DIHAPUS. Isi BACKEND_CONFIG.fullBackupWebAppUrl (index.html, ~baris 7587) SEKALI dengan Web App URL /exec -> sync jalan otomatis.
      (2) Chart Mechanic Activity Trend di sheet: semua label bulan tampil (Sep 2026 tidak terpotong lagi). Deploy ulang Apps Script (New version), lalu Sync Manual sekali.
+
+v58b: fullBackupWebAppUrl sudah terisi -> sync otomatis tanpa prompt.
+
+v58c: Fix chart Mechanic Activity Trend (opsi chartArea ditolak Apps Script). placeChart kini membuang opsi tak didukung & retry. WAJIB tempel ulang .gs + New version + Sync Manual.
