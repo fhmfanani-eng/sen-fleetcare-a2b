@@ -1,3 +1,6 @@
+v65: Oil Consumable -> semua kolom tabel rata tengah, lebar kolom tetap & seragam di kelima jenis oli (kolom TOTAL tetap rata kanan).
+v64: Format tabel Oil Consumable -> No | Tanggal | Unit | HM | PR | Masuk | Keluar | Qty Stock | Remark | Action (kolom Arah & Ref tidak lagi ditampilkan di tabel; Ref tetap ada di form & Excel).
+v63: Oil Consumable -> kolom Unit & Ref dipisah; tambah kolom HM (hour meter) & PR (nomor PR) di semua jenis oli (Engine, TO-10, TO-30, Hydraulic, Axel): form input, tabel, edit, export Excel. Data lama otomatis dipecah dari "Unit / Ref" (kode unit -> Unit; transaksi Masuk non-kode -> Ref). Hard refresh Ctrl+Shift+R.
 v57: Aksi Oil Consumable -> tombol Edit + Hapus HANYA untuk Fahmi Fanani (user lain: kolom Aksi disembunyikan). Kedua file HTML kini identik.
 v56: Mechanic Report + Dashboard Service + Dashboard Quarter = TABEL & CHART NATIVE (tanpa snapshot gambar)
 

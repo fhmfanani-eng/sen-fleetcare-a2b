@@ -226,7 +226,7 @@ body.role-backlog-sync-allowed .sync-backlog-allowed{
 #sp-oil-add-in{border-color:rgba(76,175,109,.45)!important;color:#7ed99a!important;background:rgba(76,175,109,.1)!important}
 #sp-oil-add-out{border-color:rgba(229,72,77,.4)!important;color:#f28b8e!important;background:rgba(229,72,77,.1)!important}
 #sp-oil-export{border-color:rgba(74,144,217,.4)!important;color:#8ec0f5!important;background:rgba(74,144,217,.1)!important}
-.sp-oil-form{display:grid;grid-template-columns:repeat(5,minmax(0,1fr)) auto;gap:10px;align-items:end;padding:14px 16px;margin-bottom:14px;border-radius:12px;background:linear-gradient(145deg,#141c24,#0e141b);border:1px solid rgba(74,144,217,.2)}
+.sp-oil-form{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;gap:10px;align-items:end;padding:14px 16px;margin-bottom:14px;border-radius:12px;background:linear-gradient(145deg,#141c24,#0e141b);border:1px solid rgba(74,144,217,.2)}
 .sp-oil-form .field{display:flex;flex-direction:column;gap:4px;min-width:0}
 .sp-oil-form label{font:700 8.5px 'JetBrains Mono',monospace;letter-spacing:.5px;color:#7a8490;text-transform:uppercase}
 .sp-oil-form input,.sp-oil-form select{height:36px;padding:0 11px;border-radius:9px;border:1px solid rgba(255,255,255,.1);background:#0c1218;color:var(--text);font:500 12.5px 'Inter',sans-serif;outline:none;width:100%}
@@ -252,7 +252,7 @@ body.role-backlog-sync-allowed .sync-backlog-allowed{
 .sp-oil-type-kpi .k-lab{display:block;font:700 8px 'JetBrains Mono',monospace;letter-spacing:.4px;color:#6b7480;text-transform:uppercase}
 .sp-oil-type-kpi .k-val{display:block;font:700 14px 'Oswald',sans-serif;margin-top:2px;font-variant-numeric:tabular-nums}
 .sp-oil-type-kpi.in .k-val{color:#7ed99a}.sp-oil-type-kpi.out .k-val{color:#f28b8e}.sp-oil-type-kpi.bal .k-val{color:#FFC72C}.sp-oil-type-kpi.txn .k-val{color:#8ec0f5}
-.sp-oil-type-table{width:100%;border-collapse:separate;border-spacing:0;min-width:700px}
+.sp-oil-type-table{width:100%;border-collapse:separate;border-spacing:0;min-width:860px}
 .sp-oil-type-table thead th{background:#1a2430!important;color:#d0d8e0!important;font:700 10px 'JetBrains Mono',monospace!important;letter-spacing:.35px;text-transform:uppercase;padding:9px 10px!important;text-align:left;border-bottom:1px solid rgba(255,255,255,.08)!important;white-space:nowrap}
 .sp-oil-type-table tbody td{padding:8px 10px!important;border-bottom:1px solid rgba(255,255,255,.04);background:#0e141b;font-size:12px;vertical-align:middle}
 .sp-oil-type-table tbody tr:nth-child(even) td{background:#101820}
@@ -270,6 +270,25 @@ body.role-backlog-sync-allowed .sync-backlog-allowed{
 .sp-oil-type-table tr.is-editing td{background:rgba(255,199,44,.10)!important}
 .sp-oil-type-table tfoot td{background:#121a22!important;padding:10px!important;border-top:1px solid rgba(255,255,255,.08)!important;font:700 12px 'JetBrains Mono',monospace}
 .sp-oil-empty{padding:18px 16px;color:#7a8490;font-size:12.5px;text-align:center}
+/* v65 — Oil Consumable: semua kolom rata tengah + lebar kolom tetap & seragam di semua jenis oli */
+.sp-oil-type-panel .sp-oil-type-table{table-layout:fixed;width:100%;min-width:900px}
+.sp-oil-type-panel .sp-oil-type-table thead th,
+.sp-oil-type-panel .sp-oil-type-table tbody td,
+.sp-oil-type-panel .sp-oil-type-table tfoot td{text-align:center!important;vertical-align:middle!important;padding:10px 8px!important}
+.sp-oil-type-panel .sp-oil-type-table tfoot td[colspan="5"]{text-align:right!important;padding-right:14px!important}
+.sp-oil-type-panel .sp-oil-type-table th:nth-child(1){width:5%}
+.sp-oil-type-panel .sp-oil-type-table th:nth-child(2){width:11%}
+.sp-oil-type-panel .sp-oil-type-table th:nth-child(3){width:11%}
+.sp-oil-type-panel .sp-oil-type-table th:nth-child(4){width:8%}
+.sp-oil-type-panel .sp-oil-type-table th:nth-child(5){width:11%}
+.sp-oil-type-panel .sp-oil-type-table th:nth-child(6){width:8%}
+.sp-oil-type-panel .sp-oil-type-table th:nth-child(7){width:8%}
+.sp-oil-type-panel .sp-oil-type-table th:nth-child(8){width:9%}
+.sp-oil-type-panel .sp-oil-type-table th:nth-child(9){width:21%}
+.sp-oil-type-panel .sp-oil-type-table th:nth-child(10){width:8%}
+.sp-oil-type-panel .sp-oil-type-table tbody td{overflow:hidden;text-overflow:ellipsis;overflow-wrap:anywhere;line-height:1.35}
+.sp-oil-type-panel .sp-oil-type-table .col-no,.sp-oil-type-panel .sp-oil-type-table .qty-in,.sp-oil-type-panel .sp-oil-type-table .qty-out,.sp-oil-type-panel .sp-oil-type-table .qty-bal{text-align:center!important}
+.sp-oil-type-panel .sp-oil-type-table td.sp-oil-empty{text-align:center!important}
 
 /* Monthly recap panel */
 .sp-oil-monthly-panel{margin-top:16px;border-radius:14px;overflow:hidden;border:1px solid rgba(255,199,44,.22);background:linear-gradient(165deg,#141b14,#0d1210);box-shadow:0 10px 28px rgba(0,0,0,.24)}
@@ -5417,7 +5436,10 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
 <option value="axel-syz">Axel Oil — SYZ-AXO80DM-YD209Z</option></select>
             </div>
             <div class="field"><label for="sp-oil-f-qty">Qty (Liter)</label><input type="number" id="sp-oil-f-qty" min="0" step="0.1" placeholder="0"></div>
-            <div class="field"><label for="sp-oil-f-unit-ref">Unit / Ref</label><input type="text" id="sp-oil-f-unit-ref" placeholder="SWA-101 / PO / Gudang"></div>
+            <div class="field"><label for="sp-oil-f-unit">Unit</label><input type="text" id="sp-oil-f-unit" placeholder="SWA-101"></div>
+            <div class="field"><label for="sp-oil-f-ref">Ref</label><input type="text" id="sp-oil-f-ref" placeholder="PO / Gudang / No. Dok"></div>
+            <div class="field"><label for="sp-oil-f-hm">HM</label><input type="number" id="sp-oil-f-hm" min="0" step="0.1" placeholder="Hour meter"></div>
+            <div class="field"><label for="sp-oil-f-pr">PR</label><input type="text" id="sp-oil-f-pr" placeholder="No. PR"></div>
             <div class="field"><label for="sp-oil-f-note">Catatan</label><input type="text" id="sp-oil-f-note" placeholder="Keterangan…"></div>
             <div class="form-actions">
               <input type="hidden" id="sp-oil-f-dir" value="in">
@@ -5449,18 +5471,18 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
               <table class="sp-oil-type-table">
                 <thead>
                   <tr>
-                    <th>No</th><th>Tanggal</th><th>Arah</th><th>Unit / Ref</th>
-                    <th style="text-align:right">Masuk (L)</th>
-                    <th style="text-align:right">Keluar (L)</th>
-                    <th style="text-align:right">Saldo (L)</th>
-                    <th>Catatan</th>
-                    <th class="sp-oil-aksi-th" style="text-align:center">Aksi</th>
+                    <th>No</th><th>Tanggal</th><th>Unit</th><th style="text-align:right">HM</th><th>PR</th>
+                    <th style="text-align:right">Masuk</th>
+                    <th style="text-align:right">Keluar</th>
+                    <th style="text-align:right">Qty Stock</th>
+                    <th>Remark</th>
+                    <th class="sp-oil-aksi-th" style="text-align:center">Action</th>
                   </tr>
                 </thead>
                 <tbody data-oil-tbody="engine-15w40"></tbody>
                 <tfoot>
                   <tr>
-                    <td colspan="4" style="text-align:right;color:#9aa3ad">TOTAL</td>
+                    <td colspan="5" style="text-align:right;color:#9aa3ad">TOTAL</td>
                     <td class="qty-in" data-f="in">0</td>
                     <td class="qty-out" data-f="out">0</td>
                     <td class="qty-bal" data-f="bal">0</td>
@@ -5491,18 +5513,18 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
               <table class="sp-oil-type-table">
                 <thead>
                   <tr>
-                    <th>No</th><th>Tanggal</th><th>Arah</th><th>Unit / Ref</th>
-                    <th style="text-align:right">Masuk (L)</th>
-                    <th style="text-align:right">Keluar (L)</th>
-                    <th style="text-align:right">Saldo (L)</th>
-                    <th>Catatan</th>
-                    <th class="sp-oil-aksi-th" style="text-align:center">Aksi</th>
+                    <th>No</th><th>Tanggal</th><th>Unit</th><th style="text-align:right">HM</th><th>PR</th>
+                    <th style="text-align:right">Masuk</th>
+                    <th style="text-align:right">Keluar</th>
+                    <th style="text-align:right">Qty Stock</th>
+                    <th>Remark</th>
+                    <th class="sp-oil-aksi-th" style="text-align:center">Action</th>
                   </tr>
                 </thead>
                 <tbody data-oil-tbody="trans-to10"></tbody>
                 <tfoot>
                   <tr>
-                    <td colspan="4" style="text-align:right;color:#9aa3ad">TOTAL</td>
+                    <td colspan="5" style="text-align:right;color:#9aa3ad">TOTAL</td>
                     <td class="qty-in" data-f="in">0</td>
                     <td class="qty-out" data-f="out">0</td>
                     <td class="qty-bal" data-f="bal">0</td>
@@ -5533,18 +5555,18 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
               <table class="sp-oil-type-table">
                 <thead>
                   <tr>
-                    <th>No</th><th>Tanggal</th><th>Arah</th><th>Unit / Ref</th>
-                    <th style="text-align:right">Masuk (L)</th>
-                    <th style="text-align:right">Keluar (L)</th>
-                    <th style="text-align:right">Saldo (L)</th>
-                    <th>Catatan</th>
-                    <th class="sp-oil-aksi-th" style="text-align:center">Aksi</th>
+                    <th>No</th><th>Tanggal</th><th>Unit</th><th style="text-align:right">HM</th><th>PR</th>
+                    <th style="text-align:right">Masuk</th>
+                    <th style="text-align:right">Keluar</th>
+                    <th style="text-align:right">Qty Stock</th>
+                    <th>Remark</th>
+                    <th class="sp-oil-aksi-th" style="text-align:center">Action</th>
                   </tr>
                 </thead>
                 <tbody data-oil-tbody="trans-to30"></tbody>
                 <tfoot>
                   <tr>
-                    <td colspan="4" style="text-align:right;color:#9aa3ad">TOTAL</td>
+                    <td colspan="5" style="text-align:right;color:#9aa3ad">TOTAL</td>
                     <td class="qty-in" data-f="in">0</td>
                     <td class="qty-out" data-f="out">0</td>
                     <td class="qty-bal" data-f="bal">0</td>
@@ -5575,18 +5597,18 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
               <table class="sp-oil-type-table">
                 <thead>
                   <tr>
-                    <th>No</th><th>Tanggal</th><th>Arah</th><th>Unit / Ref</th>
-                    <th style="text-align:right">Masuk (L)</th>
-                    <th style="text-align:right">Keluar (L)</th>
-                    <th style="text-align:right">Saldo (L)</th>
-                    <th>Catatan</th>
-                    <th class="sp-oil-aksi-th" style="text-align:center">Aksi</th>
+                    <th>No</th><th>Tanggal</th><th>Unit</th><th style="text-align:right">HM</th><th>PR</th>
+                    <th style="text-align:right">Masuk</th>
+                    <th style="text-align:right">Keluar</th>
+                    <th style="text-align:right">Qty Stock</th>
+                    <th>Remark</th>
+                    <th class="sp-oil-aksi-th" style="text-align:center">Action</th>
                   </tr>
                 </thead>
                 <tbody data-oil-tbody="hyd-ho46"></tbody>
                 <tfoot>
                   <tr>
-                    <td colspan="4" style="text-align:right;color:#9aa3ad">TOTAL</td>
+                    <td colspan="5" style="text-align:right;color:#9aa3ad">TOTAL</td>
                     <td class="qty-in" data-f="in">0</td>
                     <td class="qty-out" data-f="out">0</td>
                     <td class="qty-bal" data-f="bal">0</td>
@@ -5617,18 +5639,18 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
               <table class="sp-oil-type-table">
                 <thead>
                   <tr>
-                    <th>No</th><th>Tanggal</th><th>Arah</th><th>Unit / Ref</th>
-                    <th style="text-align:right">Masuk (L)</th>
-                    <th style="text-align:right">Keluar (L)</th>
-                    <th style="text-align:right">Saldo (L)</th>
-                    <th>Catatan</th>
-                    <th class="sp-oil-aksi-th" style="text-align:center">Aksi</th>
+                    <th>No</th><th>Tanggal</th><th>Unit</th><th style="text-align:right">HM</th><th>PR</th>
+                    <th style="text-align:right">Masuk</th>
+                    <th style="text-align:right">Keluar</th>
+                    <th style="text-align:right">Qty Stock</th>
+                    <th>Remark</th>
+                    <th class="sp-oil-aksi-th" style="text-align:center">Action</th>
                   </tr>
                 </thead>
                 <tbody data-oil-tbody="axel-syz"></tbody>
                 <tfoot>
                   <tr>
-                    <td colspan="4" style="text-align:right;color:#9aa3ad">TOTAL</td>
+                    <td colspan="5" style="text-align:right;color:#9aa3ad">TOTAL</td>
                     <td class="qty-in" data-f="in">0</td>
                     <td class="qty-out" data-f="out">0</td>
                     <td class="qty-bal" data-f="bal">0</td>
@@ -28304,11 +28326,33 @@ function spOilMonthLabel(key){
   return (months[mo]||key.slice(5,7))+' '+y;
 }
 
+/* Data lama hanya punya 'unitRef' gabungan. Pisahkan ke Unit & Ref:
+   - ada ' / ' atau ' - ' dipisah → kiri=Unit, kanan=Ref
+   - kode unit (mis. SWA-101, SBD-103) → Unit
+   - selain itu: transaksi Keluar → Unit, Masuk → Ref (PO/Gudang) */
+function spOilLegacySplit(t){
+  if(t && (t.unit!==undefined || t.ref!==undefined)) return {unit:String(t.unit||''), ref:String(t.ref||'')};
+  const raw=String((t&&t.unitRef)||'').trim();
+  if(!raw) return {unit:'',ref:''};
+  const parts=raw.split(/\s+\/\s+/);
+  if(parts.length>=2) return {unit:parts[0].trim(), ref:parts.slice(1).join(' / ').trim()};
+  if(/^[A-Za-z]{2,5}[- ]?\d{1,4}[A-Za-z]?$/.test(raw)) return {unit:raw, ref:''};
+  return (t.dir==='in') ? {unit:'',ref:raw} : {unit:raw,ref:''};
+}
+function spOilMigrate(list){
+  (list||[]).forEach(t=>{
+    if(!t || (t.unit!==undefined || t.ref!==undefined)) { if(t){ if(t.hm===undefined) t.hm=''; if(t.pr===undefined) t.pr=''; } return; }
+    const lg=spOilLegacySplit(t); t.unit=lg.unit; t.ref=lg.ref;
+    if(t.hm===undefined) t.hm=''; if(t.pr===undefined) t.pr='';
+  });
+  return list;
+}
+
 async function spOilLoad(){
   try{
     if(typeof appStorage!=='undefined' && appStorage.get){
       const raw=await appStorage.get('sp-oil-stock-ledger');
-      if(raw&&raw.value){ const p=JSON.parse(raw.value); if(Array.isArray(p)){ spOilTxns=p; return spOilTxns; } }
+      if(raw&&raw.value){ const p=JSON.parse(raw.value); if(Array.isArray(p)){ spOilTxns=spOilMigrate(p); return spOilTxns; } }
     }
   }catch(e){ console.warn('spOilLoad',e); }
   spOilTxns=[]; return spOilTxns;
@@ -28343,7 +28387,7 @@ function spOilResetForm(){
     if(spOilActiveTab && spOilActiveTab!=='__all__' && spOilActiveTab!=='__monthly__') oil.value=spOilActiveTab;
     else oil.value=SP_OIL_CATALOG[0].id;
   }
-  ['sp-oil-f-qty','sp-oil-f-unit-ref','sp-oil-f-note'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  ['sp-oil-f-qty','sp-oil-f-unit','sp-oil-f-ref','sp-oil-f-hm','sp-oil-f-pr','sp-oil-f-note'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
 }
 
 async function spOilSaveTxn(){
@@ -28353,7 +28397,12 @@ async function spOilSaveTxn(){
   const meta=spOilMeta(oilId);
   const qty=parseFloat(String(document.getElementById('sp-oil-f-qty')?.value||'').replace(',','.'))||0;
   if(qty<=0){ alert('Qty (Liter) harus lebih dari 0.'); return; }
-  const unitRef=(document.getElementById('sp-oil-f-unit-ref')?.value||'').trim();
+  const unit=(document.getElementById('sp-oil-f-unit')?.value||'').trim();
+  const ref=(document.getElementById('sp-oil-f-ref')?.value||'').trim();
+  const hmRaw=String(document.getElementById('sp-oil-f-hm')?.value||'').replace(',','.').trim();
+  const hm=(hmRaw!=='' && !isNaN(parseFloat(hmRaw))) ? parseFloat(hmRaw) : '';
+  const pr=(document.getElementById('sp-oil-f-pr')?.value||'').trim();
+  const unitRef=[unit,ref].filter(Boolean).join(' / '); // kompatibilitas data lama / backup
   const note=(document.getElementById('sp-oil-f-note')?.value||'').trim();
   if(!Array.isArray(spOilTxns)) await spOilLoad();
   if(spOilEditingId){
@@ -28362,7 +28411,7 @@ async function spOilSaveTxn(){
     if(idx>=0){
       spOilTxns[idx]=Object.assign({}, spOilTxns[idx], {
         date, dir:dir==='out'?'out':'in', oilId: meta.id, oil: meta.name, part: meta.part,
-        qty, unitRef, note, updatedAt:new Date().toISOString(),
+        qty, unit, ref, hm, pr, unitRef, note, updatedAt:new Date().toISOString(),
         updatedBy:(loggedInUser && (loggedInUser.name||loggedInUser.username))||''
       });
       await spOilSave();
@@ -28375,7 +28424,7 @@ async function spOilSaveTxn(){
   spOilTxns.push({
     id:'txn-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),
     date, dir:dir==='out'?'out':'in', oilId: meta.id, oil: meta.name, part: meta.part,
-    qty, unitRef, note, createdAt:new Date().toISOString()
+    qty, unit, ref, hm, pr, unitRef, note, createdAt:new Date().toISOString()
   });
   await spOilSave();
   spOilResetForm();
@@ -28401,7 +28450,11 @@ function spOilStartEdit(id){
   set('sp-oil-f-date', t.date||spOilToday());
   set('sp-oil-f-oil', t.oilId||SP_OIL_CATALOG[0].id);
   set('sp-oil-f-qty', t.qty);
-  set('sp-oil-f-unit-ref', t.unitRef||'');
+  const lg=spOilLegacySplit(t);
+  set('sp-oil-f-unit', lg.unit);
+  set('sp-oil-f-ref', lg.ref);
+  set('sp-oil-f-hm', (t.hm===0||t.hm)?t.hm:'');
+  set('sp-oil-f-pr', t.pr||'');
   set('sp-oil-f-note', t.note||'');
   spOilSetEditUI(true);
   document.querySelectorAll('.sp-oil-type-table tr.is-editing').forEach(r=>r.classList.remove('is-editing'));
@@ -28469,7 +28522,7 @@ function spOilRenderTypeTable(oilId, rows){
     const ft = panel.querySelector('tfoot tr td:last-child'); if(ft) ft.colSpan = canEdit ? 2 : 1;
   }
   if(!local.length){
-    tbody.innerHTML='<tr><td colspan="'+(canEdit?9:8)+'" class="sp-oil-empty">Belum ada transaksi untuk oli ini. Gunakan form ＋ Masuk / − Keluar.</td></tr>';
+    tbody.innerHTML='<tr><td colspan="'+(canEdit?10:9)+'" class="sp-oil-empty">Belum ada transaksi untuk oli ini. Gunakan form ＋ Masuk / − Keluar.</td></tr>';
     return;
   }
   const view=local.slice().reverse();
@@ -28478,8 +28531,9 @@ function spOilRenderTypeTable(oilId, rows){
     return `<tr data-id="${spOilEsc(t.id)}"${(canEdit && spOilEditingId===t.id)?' class="is-editing"':''}>
       <td class="col-no">${i+1}</td>
       <td class="col-date">${spOilEsc(t.date||'—')}</td>
-      <td><span class="badge-dir ${isIn?'in':'out'}">${isIn?'▲ MASUK':'▼ KELUAR'}</span></td>
-      <td style="text-align:left;color:#9aa3ad">${spOilEsc(t.unitRef||'—')}</td>
+      <td style="text-align:left;color:#c5cdd6;font-weight:600">${spOilEsc(spOilLegacySplit(t).unit||'—')}</td>
+      <td style="text-align:right;font:600 12px 'JetBrains Mono',monospace;color:#c5cdd6">${(t.hm===0||t.hm)&&t.hm!==''?spOilNum(t.hm):'—'}</td>
+      <td style="text-align:left;color:#9aa3ad">${spOilEsc(t.pr||'—')}</td>
       <td class="qty-in">${isIn?spOilNum(t.qty):'—'}</td>
       <td class="qty-out">${!isIn?spOilNum(t.qty):'—'}</td>
       <td class="qty-bal">${spOilNum(t.typeBalance)}</td>
@@ -28641,7 +28695,7 @@ function spExportOilXlsx(){
     const wb=XLSX.utils.book_new();
     const allRows=sorted.map((t,i)=>({
       No:i+1, Tanggal:t.date||'', Arah:t.dir==='in'?'Masuk':'Keluar',
-      'Jenis Oli':t.oil||'', 'Part Number':t.part||'', 'Unit/Ref':t.unitRef||'',
+      'Jenis Oli':t.oil||'', 'Part Number':t.part||'', Unit:spOilLegacySplit(t).unit, Ref:spOilLegacySplit(t).ref, HM:(t.hm===0||t.hm)?t.hm:'', PR:t.pr||'',
       'Masuk (L)':t.dir==='in'?t.qty:0, 'Keluar (L)':t.dir==='out'?t.qty:0, Catatan:t.note||''
     }));
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(allRows.length?allRows:[{Info:'Kosong'}]), 'Semua');
@@ -28650,7 +28704,7 @@ function spExportOilXlsx(){
       let b=0;
       const data=rows.map((t,i)=>{
         const q=Number(t.qty)||0; if(t.dir==='in') b+=q; else b-=q;
-        return { No:i+1, Tanggal:t.date||'', Arah:t.dir==='in'?'Masuk':'Keluar', 'Unit/Ref':t.unitRef||'',
+        return { No:i+1, Tanggal:t.date||'', Arah:t.dir==='in'?'Masuk':'Keluar', Unit:spOilLegacySplit(t).unit, Ref:spOilLegacySplit(t).ref, HM:(t.hm===0||t.hm)?t.hm:'', PR:t.pr||'',
           'Masuk (L)':t.dir==='in'?t.qty:0, 'Keluar (L)':t.dir==='out'?t.qty:0, 'Saldo (L)':b, Catatan:t.note||'' };
       });
       const sheet=(o.short+' '+o.part).replace(/[\\/?*[\]]/g,'').slice(0,28);
