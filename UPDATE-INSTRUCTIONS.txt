@@ -1,3 +1,37 @@
+v66o: Constraint Ranking -> kendala yang sama pada unit & tanggal yang sama digabung jadi satu baris (Event & Delay dijumlahkan, deskripsi/keterangan dirangkum bila beda). Unit/tanggal/kendala berbeda tetap terpisah. Export Excel 'Detail Ranking' ikut.
+
+v66n: Constraint Ranking -> tabel tanpa sel gabungan: satu baris = satu event/unit dengan kendala, keterangan, event, delay, kontribusi, kumulatif & klasifikasi miliknya sendiri (diurutkan per delay terbesar, batas 80% dihitung per baris). Tidak ada lagi angka/keterangan unit lain yang menumpuk. Chart Pareto per jenis kendala tidak berubah.
+
+v66m: Constraint Ranking -> kolom 'Unit Terdampak' dihapus. Tabel kini detail per event: Tanggal | Unit | Deskripsi | Kendala | Keterangan | Delay (jam) per baris, dikelompokkan per kendala (rank); Total Event, Total Delay, Kontribusi, Kumulatif, Klasifikasi digabung per kelompok. Export Excel: sheet baru 'Detail Ranking'.
+
+v66l: Constraint Ranking -> kolom 'Unit Terdampak' dipisah per unit: tiap unit di baris sendiri dengan jumlah event & jam delay miliknya saja (untuk kendala tsb). Baris TOTAL menampilkan akumulasi per unit. Export Excel kolom Unit Terdampak ikut per unit.
+
+v66k: Constraint Ranking didesain ulang: badge rank, aksen warna per kendala, bar Kontribusi & Kumulatif (tanda garis 80%), badge Vital Few/Trivial Many, bar distribusi SEN/DTJ, chip unit berwarna per grup, garis pemisah 'Batas 80%', baris TOTAL, header sticky.
+
+v66j: Constraint Ranking -> kolom baru 'Keterangan Kendala' (catatan dari event dikelompokkan & diurutkan, 'xN' bila berulang, '+N keterangan lain'; bila belum ada catatan tampil definisi jenis kendala). Header dirapikan 2 tingkat: Dampak (Event, Delay jam), Proporsi (% Total, Kumulatif), Per Grup Unit (SEN, DTJ). Kolom Keterangan ikut Export Excel.
+
+v66i: Constraint Pareto -> tombol grup 'Lainnya' dihapus; unit di luar daftar SEN otomatis masuk grup DTJ (muncul di dropdown Nomor Unit DTJ).
+
+v66h: Constraint Pareto -> pemisahan grup unit. SEN = SWA-101, SWA-102, SBD-103, SPC-104. DTJ = DZ-04, DZ-09, WA-10, EX-11, EX-12, EX-17. Ada tombol Grup (Semua/SEN/DTJ/Lainnya), dropdown Nomor Unit yang DIKUNCI otomatis sesuai grup (pilih unit -> grup ikut terkunci), kolom Grup di tabel event, kolom SEN & DTJ di Constraint Ranking, kolom Grup di Export Excel & sheet backup. Daftar unit ada di konstanta PK_UNIT_GROUPS (index.html) bila perlu ditambah.
+
+v66g: Constraint Pareto -> chart dikembalikan ke GRAFIK BATANG (Pareto klasik): batang berwarna per kendala, garis Kumulatif %, batas 80%, batang pudar = Trivial Many, plus tooltip hover & lebar otomatis. Tombol toggle Kumulatif dihapus (kumulatif selalu tampil).
+
+v66f: Constraint Pareto -> chart garis didesain ulang mengikuti gaya chart 'Total Job': satu garis kuning halus + area gradasi, marker cincin, angka putih tebal, grid tipis, judul sumbu di kiri atas. Tombol 'Kumulatif %' (default mati) menampilkan garis kumulatif, batas 80% & zona Vital Few.
+
+v66e: Constraint Pareto -> grafik batang diganti CHART GARIS profesional: garis nilai (Jumlah Event / Jam Delay) berkurva halus + area gradasi, garis Kumulatif % (kanan), batas 80%, zona Vital Few, marker berwarna per kendala, tooltip interaktif saat hover/klik, animasi gambar garis, lebar menyesuaikan layar.
+
+v66d: Constraint Pareto -> form Edit kini juga bisa mengubah KOMPONEN & DESKRIPSI event (hanya Fahmi Fanani). Perubahan hanya tersimpan di data Pareto Kendala (tanda ✎ di tabel), TIDAK mengubah record Daily Maintenance. Layout tabel didesain ulang: blok Kendala | Durasi (jam) | Catatan tiga kolom sejajar per event, kolom Aksi menempel di kanan. Sheet backup 'Pareto Kendala' bertambah kolom Deskripsi.
+
+v66c: Constraint Pareto -> input / edit / hapus kendala HANYA untuk Fahmi Fanani (dijaga isFahmiFanani()). User lain hanya melihat chart, ranking & tabel; tombol Input/Edit tidak tampil.
+
+v66b: Constraint Pareto -> satu event bisa punya banyak kendala (tombol "+ Tambah Kendala Lain"), tiap kendala punya kolom DURASI sendiri + catatan. Tabel event kini satu baris per kendala (kolom Kendala | Durasi Kendala (jam) | Catatan) plus Total Delay per event. Form input menampilkan total durasi kendala vs durasi BD (merah bila melebihi).
+
+v66: CBM -> tab topbar baru "Constraint Pareto" (di samping Pareto Analysis, badge merah = jumlah event BD yang belum diisi kendalanya).
+     - Input kendala per event Breakdown (tombol "Input Kendala"/"Edit"): jenis kendala bisa lebih dari satu - Manpower, Sparepart, Tools, Consumable, Akses Unit, Alat Bantu, Teknis & Approval, Vendor/Logistik, Cuaca, Lainnya (wajib catatan) - plus jam delay & catatan. Opsi "Event ini tidak ada kendala".
+     - Pareto 80/20 kendala (toggle Jumlah Event / Jam Delay), KPI kelengkapan input, insight Vital Few, tabel ranking, filter status isian / jenis kendala / pencarian, Export Excel.
+     - Mengikuti filter CBM (Unit, periode, komponen). Data disimpan di key 'cbm-constraints' dan ikut backup ke sheet baru "Pareto Kendala" (otomatis dibuat; Apps Script TIDAK perlu diubah).
+     Deploy: ganti index.html + sw.js, hard refresh Ctrl+Shift+R, lalu Sync Manual sekali.
+
 v65: Oil Consumable -> semua kolom tabel rata tengah, lebar kolom tetap & seragam di kelima jenis oli (kolom TOTAL tetap rata kanan).
 v64: Format tabel Oil Consumable -> No | Tanggal | Unit | HM | PR | Masuk | Keluar | Qty Stock | Remark | Action (kolom Arah & Ref tidak lagi ditampilkan di tabel; Ref tetap ada di form & Excel).
 v63: Oil Consumable -> kolom Unit & Ref dipisah; tambah kolom HM (hour meter) & PR (nomor PR) di semua jenis oli (Engine, TO-10, TO-30, Hydraulic, Axel): form input, tabel, edit, export Excel. Data lama otomatis dipecah dari "Unit / Ref" (kode unit -> Unit; transaksi Masuk non-kode -> Ref). Hard refresh Ctrl+Shift+R.

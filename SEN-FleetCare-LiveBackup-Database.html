@@ -3394,6 +3394,202 @@ button.wa-green:hover, button.wa-sync-only-fahmi:hover{
   z-index: 90 !important;
 }
 
+/* ===== PARETO KENDALA (CBM) — v66 ===== */
+#cbm-tabs .chip.cbm-constraint-tab .blk-tab-badge{ background:rgba(229,72,77,0.18); color:#ff8a8d; }
+#cbm-tabs .chip.cbm-constraint-tab.active .blk-tab-badge{ background:rgba(21,23,27,0.2); color:#15171b; }
+.pk-kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px;}
+@media(max-width:1100px){.pk-kpi-grid{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:640px){.pk-kpi-grid{grid-template-columns:repeat(2,1fr);}}
+.pk-kpi{background:linear-gradient(165deg,#161b22 0%,#10141a 100%);border:1px solid var(--line);border-radius:10px;padding:11px 13px;}
+.pk-kpi .k-l{font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:var(--text-faint);margin-bottom:5px;}
+.pk-kpi .k-v{font-family:Oswald,sans-serif;font-size:22px;color:var(--text);line-height:1.1;}
+.pk-kpi .k-s{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text-dim);margin-top:3px;}
+.pk-kpi.warn .k-v{color:var(--yellow);} .pk-kpi.bad .k-v{color:var(--red);} .pk-kpi.ok .k-v{color:var(--green);}
+.pk-legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin:0 0 12px;padding:9px 12px;background:rgba(255,255,255,0.02);border:1px solid var(--line);border-radius:8px;font-size:11px;color:var(--text-dim);}
+.pk-legend i{width:11px;height:11px;border-radius:3px;display:inline-block;margin-right:5px;vertical-align:-1px;}
+.pk-chip{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:2px 9px;font-size:10.5px;font-weight:600;border:1px solid transparent;margin:2px 4px 2px 0;white-space:nowrap;}
+.pk-chip .h{font-family:'JetBrains Mono',monospace;opacity:.85;font-weight:500;}
+.pk-status{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap;}
+.pk-status.none{background:rgba(229,72,77,.15);color:var(--red);}
+.pk-status.done{background:rgba(76,175,109,.15);color:var(--green);}
+.pk-status.clear{background:rgba(174,183,194,.12);color:var(--text-dim);}
+.pk-desc{max-width:280px;white-space:normal;line-height:1.4;font-size:12px;}
+#pk-event-table td,#pk-rank-table td{vertical-align:middle;}
+#pk-chart svg .pk-guide{opacity:0;transition:opacity .12s;}
+#pk-chart svg .pk-pt:hover .pk-guide{opacity:1;}
+#pk-chart svg .pk-m{transition:r .12s;}
+#pk-chart svg .pk-bar{transition:filter .12s,opacity .12s;}
+#pk-chart svg .pk-pt:hover .pk-bar{filter:brightness(1.18);opacity:1;}
+#pk-chart svg .pk-hit{cursor:crosshair;}
+.pk-draw{stroke-dasharray:1;stroke-dashoffset:1;animation:pkDraw 1s ease-out forwards;}
+@keyframes pkDraw{to{stroke-dashoffset:0;}}
+.pk-fade{opacity:0;animation:pkFade .7s .45s ease forwards;}
+@keyframes pkFade{to{opacity:1;}}
+@media (prefers-reduced-motion:reduce){.pk-draw{animation:none;stroke-dashoffset:0;}.pk-fade{animation:none;opacity:1;}}
+.pk-tip{position:absolute;z-index:5;pointer-events:none;opacity:0;transition:opacity .1s;min-width:170px;background:rgba(12,16,22,.96);border:1px solid rgba(255,199,44,.35);border-radius:10px;padding:10px 12px;box-shadow:0 10px 30px rgba(0,0,0,.55);font-size:11.5px;color:var(--text);}
+.pk-tip .tt{font-family:Oswald,sans-serif;font-size:13.5px;letter-spacing:.4px;margin-bottom:6px;display:flex;align-items:center;gap:7px;}
+.pk-tip .tt i{width:10px;height:10px;border-radius:50%;display:inline-block;}
+.pk-tip .tr{display:flex;justify-content:space-between;gap:16px;padding:2px 0;color:var(--text-dim);}
+.pk-tip .tr b{font-family:'JetBrains Mono',monospace;color:var(--text);font-weight:600;}
+.pk-groupbar{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between;margin:0 0 14px;padding:10px 14px;background:linear-gradient(165deg,#161b22 0%,#10141a 100%);border:1px solid var(--line);border-radius:10px;}
+.pk-gb-left,.pk-gb-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.pk-gb-label{font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:var(--text-faint);}
+.pk-gb-right select{min-width:170px;background:#10141a;border:1px solid var(--line);color:var(--text);border-radius:6px;padding:6px 9px;font-size:12.5px;}
+.pk-gc{font-family:'JetBrains Mono',monospace;font-size:10px;opacity:.75;margin-left:3px;}
+.pk-lock{font-size:11px;color:var(--text-dim);}
+.pk-lock b{color:var(--yellow);}
+.pk-grp{display:inline-block;font:700 10.5px/1 'JetBrains Mono',monospace;letter-spacing:.5px;padding:3px 8px;border-radius:999px;border:1px solid transparent;}
+.pk-gcell{white-space:nowrap;font-size:12px;}
+/* ===== Constraint Ranking (desain profesional) ===== */
+.pk-rank-card{border:1px solid var(--line);border-radius:12px;overflow-x:auto;background:linear-gradient(180deg,#131922 0%,#0f141b 100%);}
+#pk-rank-table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;min-width:1240px;}
+#pk-rank-table thead th{position:sticky;top:0;white-space:nowrap;vertical-align:middle;text-align:left;padding:12px 10px;font-size:10px;letter-spacing:.7px;text-transform:uppercase;color:var(--text-dim);background:#0d1218;border-bottom:1px solid rgba(255,199,44,.35);}
+#pk-rank-table thead th.c,#pk-rank-table td.c{text-align:center;}
+#pk-rank-table .pk-th-note{display:block;margin:2px 0 0;font-size:9px;letter-spacing:.3px;text-transform:none;color:#ff8a8d;opacity:.9;}
+#pk-rank-table tbody td{padding:12px 10px;vertical-align:middle;border-bottom:1px solid rgba(255,255,255,.05);}
+#pk-rank-table tbody tr.pk-rr{transition:background .12s;}
+#pk-rank-table tbody tr.pk-rr:hover{background:rgba(255,255,255,.035);}
+#pk-rank-table tbody tr.pk-rr td:first-child{box-shadow:inset 3px 0 0 var(--cat);}
+#pk-rank-table tbody tr.pk-rr.trivial{opacity:.82;}
+#pk-rank-table td.num{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:var(--text);}
+.pk-rank-badge{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;font:700 12px/1 'JetBrains Mono',monospace;background:rgba(255,255,255,.06);color:var(--text-dim);border:1px solid var(--line);}
+.pk-rr.vital .pk-rank-badge{background:rgba(255,199,44,.14);color:var(--yellow);border-color:rgba(255,199,44,.5);}
+.pk-c-cat{min-width:135px;}
+.pk-cat-name{display:flex;align-items:center;gap:8px;font-family:Oswald,sans-serif;font-size:14.5px;letter-spacing:.3px;color:var(--text);}
+.pk-cat-name i{width:10px;height:10px;border-radius:3px;background:var(--cat);flex:none;}
+.pk-cat-sub{margin:2px 0 0 18px;font-size:10.5px;color:var(--text-faint);}
+#pk-rank-table td.pk-keter{min-width:190px;max-width:270px;white-space:normal;font-size:12px;line-height:1.45;}
+.pk-c-bar{min-width:108px;}
+.pk-bar-wrap{display:flex;flex-direction:column;gap:5px;}
+.pk-bar-val{font-family:'JetBrains Mono',monospace;font-size:12.5px;font-weight:600;color:var(--text);}
+.pk-bar-track{position:relative;height:7px;border-radius:999px;background:rgba(255,255,255,.07);overflow:hidden;}
+.pk-bar-track i{position:absolute;left:0;top:0;bottom:0;border-radius:999px;}
+.pk-bar-track s{position:absolute;left:80%;top:-2px;bottom:-2px;width:0;border-left:1.5px dashed #E5484D;}
+.pk-class{display:inline-block;padding:4px 9px;border-radius:999px;font:700 10px/1 'JetBrains Mono',monospace;letter-spacing:.5px;text-transform:uppercase;white-space:nowrap;}
+.pk-class.vital{background:rgba(229,72,77,.15);color:#ff8a8d;border:1px solid rgba(229,72,77,.4);}
+.pk-class.trivial{background:rgba(255,199,44,.1);color:var(--yellow);border:1px solid rgba(255,199,44,.3);}
+.pk-c-grp{min-width:128px;}
+.pk-split{display:flex;height:7px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.07);margin-bottom:6px;}
+.pk-split span{display:block;height:100%;}
+.pk-split-l{display:flex;gap:10px;font-size:11px;white-space:nowrap;}
+.pk-split-l b{font-family:'JetBrains Mono',monospace;margin:0 4px 0 3px;color:var(--text);}
+.pk-split-l em{font-style:normal;font-size:10px;color:var(--text-faint);}
+.pk-split-l .sen{color:#FFC72C;} .pk-split-l .dtj{color:#6aa9e8;}
+.pk-c-units{min-width:220px;max-width:none;}
+.pk-c-units .pk-unit-list{display:flex;flex-wrap:wrap;gap:5px 6px;align-items:center;}
+.pk-u{display:inline-block;margin:2px 4px 2px 0;padding:3px 8px;border-radius:6px;font:600 10.5px/1 'JetBrains Mono',monospace;border:1px solid transparent;}
+.pk-u.sen{color:#FFC72C;background:rgba(255,199,44,.09);border-color:rgba(255,199,44,.3);}
+.pk-u.dtj{color:#6aa9e8;background:rgba(74,144,217,.1);border-color:rgba(74,144,217,.32);}
+.pk-unit-rows{display:flex;flex-direction:column;gap:3px;margin-top:4px;}
+.pk-unit-row{display:grid;grid-template-columns:78px 62px auto;align-items:center;gap:8px;font-size:11px;padding:2px 0;border-bottom:1px dashed rgba(255,255,255,.06);}
+.pk-unit-row:last-child{border-bottom:0;}
+.pk-unit-row .pk-u{margin:0;text-align:center;}
+.pk-ur-n{color:var(--text-dim);white-space:nowrap;}
+.pk-ur-n b{font-family:'JetBrains Mono',monospace;color:var(--text);}
+.pk-ur-h{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text-faint);white-space:nowrap;}
+.pk-u.more{color:var(--text-dim);background:rgba(255,255,255,.05);border-color:var(--line);cursor:help;}
+
+#pk-rank-table td.pk-c-date{white-space:nowrap;font-size:12px;color:var(--text-dim);}
+
+
+#pk-rank-table tr.pk-cut td{padding:0;border-bottom:0;background:linear-gradient(90deg,rgba(229,72,77,.0),rgba(229,72,77,.12) 30%,rgba(229,72,77,.0));}
+#pk-rank-table tr.pk-cut span{display:block;text-align:center;padding:5px 10px;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#ff8a8d;border-top:1px dashed rgba(229,72,77,.5);border-bottom:1px dashed rgba(229,72,77,.5);}
+#pk-rank-table tfoot td{padding:12px 10px;background:#0d1218;border-top:1px solid rgba(255,199,44,.35);vertical-align:middle;}
+#pk-rank-table tfoot .pk-ft-l{font:700 11px/1 'JetBrains Mono',monospace;letter-spacing:1px;color:var(--yellow);}
+#pk-rank-table tfoot .pk-ft-s{font-size:11px;color:var(--text-dim);}
+
+.pk-rc-list{display:flex;flex-direction:column;}
+.pk-rc{display:grid;grid-template-columns:minmax(0,1fr) 84px;column-gap:14px;align-items:center;padding:6px 0 6px 10px;border-left:2px solid var(--cat);margin-left:1px;}
+.pk-rc + .pk-rc{margin-top:6px;}
+.pk-rc-hd{display:grid;grid-template-columns:minmax(0,1fr) 84px;column-gap:14px;padding-left:12px;}
+.pk-rc-hd .r{text-align:right;}
+.pk-rc-name{display:flex;align-items:center;gap:7px;font-family:Oswald,sans-serif;font-size:13.5px;letter-spacing:.3px;color:var(--text);}
+.pk-rc-name i{width:8px;height:8px;border-radius:2px;background:var(--cat);flex:none;}
+.pk-rc-note{margin-top:3px;font-size:12px;line-height:1.4;color:var(--text-dim);white-space:normal;}
+.pk-rc-dur{text-align:right;white-space:nowrap;}
+.pk-rc-dur b{font:700 14px/1 'JetBrains Mono',monospace;color:var(--text);}
+.pk-rc-dur em{font-style:normal;font-size:10px;margin-left:4px;color:var(--text-faint);}
+.pk-rc-bar{height:4px;margin-top:6px;border-radius:999px;background:rgba(255,255,255,.07);overflow:hidden;}
+.pk-rc-bar i{display:block;height:100%;background:var(--cat);border-radius:999px;}
+/* --- rapi: lebar kolom tetap, header & isi sejajar --- */
+#pk-rank-table th,#pk-rank-table td{box-sizing:border-box;}
+#pk-rank-table{min-width:1350px;}
+#pk-rank-table thead th{padding:13px 12px;font-size:10px;line-height:1.3;white-space:normal;}
+#pk-rank-table thead th:nth-child(1){width:48px;}
+#pk-rank-table thead th:nth-child(2){width:98px;}
+#pk-rank-table thead th:nth-child(3){width:96px;}
+#pk-rank-table thead th:nth-child(4){width:17%;}
+#pk-rank-table thead th:nth-child(5){width:auto;}
+#pk-rank-table thead th:nth-child(6){width:70px;}
+#pk-rank-table thead th:nth-child(7){width:108px;}
+#pk-rank-table thead th:nth-child(8){width:132px;}
+#pk-rank-table thead th:nth-child(9){width:132px;}
+#pk-rank-table thead th:nth-child(10){width:136px;}
+#pk-rank-table tbody td{padding:12px;vertical-align:middle;}
+#pk-rank-table tbody tr.pk-rr:nth-of-type(odd){background:rgba(255,255,255,.012);}
+#pk-rank-table td.pk-c-date{white-space:nowrap;font-size:12px;color:var(--text-dim);font-variant-numeric:tabular-nums;}
+#pk-rank-table td.pk-c-desc{white-space:normal;word-break:break-word;font-size:12.5px;line-height:1.45;color:var(--text);}
+#pk-rank-table td.pk-c-cons{padding-top:8px;padding-bottom:8px;}
+.pk-keter-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px;}
+.pk-keter-list li{position:relative;padding-left:11px;}
+.pk-keter-list li::before{content:"";position:absolute;left:0;top:.62em;width:4px;height:4px;border-radius:50%;background:currentColor;opacity:.45;}
+.pk-rc{padding:7px 0 7px 12px;}
+.pk-rc + .pk-rc{margin-top:0;border-top:1px dashed rgba(255,255,255,.08);}
+.pk-rc-hd{padding-left:14px;}
+.pk-rc-main{min-width:0;}
+.pk-rc-dur{width:84px;}
+#pk-rank-table thead th.c{text-align:center;white-space:nowrap;}
+#pk-rank-table tfoot td{padding:12px;}
+#pk-event-table{table-layout:auto;}
+#pk-event-table td{padding-top:10px;padding-bottom:10px;}
+#pk-event-table .pk-th-cons,#pk-event-table .pk-td-cons{min-width:440px;width:440px;}
+#pk-event-table td.pk-desc{min-width:240px;max-width:300px;}
+#pk-event-table td:nth-child(5){min-width:115px;}
+#pk-event-table .pk-cons-h{font-size:inherit;}
+#pk-event-table th:last-child,#pk-event-table td:last-child{position:sticky;right:0;z-index:2;background:#121820;box-shadow:-8px 0 10px -8px rgba(0,0,0,.6);}
+.pk-cons-h,.pk-cons-r{display:grid;grid-template-columns:116px 96px minmax(140px,1fr);column-gap:12px;align-items:center;}
+.pk-cons-h span:nth-child(2){text-align:center;}
+.pk-cons{display:flex;flex-direction:column;gap:4px;}
+.pk-cons-r{padding:4px 0;border-bottom:1px dashed rgba(255,255,255,.07);}
+.pk-cons-r:last-child{border-bottom:0;}
+.pk-cons-r .pk-chip{margin:0;}
+.pk-cons-r .pk-notecell{font-size:11.5px;color:var(--text-dim);line-height:1.35;word-break:break-word;}
+.pk-edited{color:var(--yellow);font-size:10px;cursor:help;}
+.pk-fields{display:grid;grid-template-columns:200px 1fr;gap:10px;margin:0 0 12px;}
+@media(max-width:560px){.pk-fields{grid-template-columns:1fr;}}
+.pk-fields .pk-fl>span{display:block;font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:var(--text-faint);margin-bottom:4px;}
+.pk-fields input,.pk-fields textarea{width:100%;background:#10141a;border:1px solid var(--line);color:var(--text);border-radius:6px;padding:7px 8px;font-size:12.5px;font-family:inherit;resize:vertical;}
+.pk-fields input:focus,.pk-fields textarea:focus{outline:none;border-color:var(--yellow);}
+#pk-event-table tr.pk-first td{border-top:2px solid rgba(255,255,255,.09);}
+#pk-event-table tr.pk-sub td{border-top:1px dashed rgba(255,255,255,.07);}
+#pk-event-table .pk-dur{font-family:'JetBrains Mono',monospace;text-align:center;white-space:nowrap;}
+#pk-event-table .pk-total{font-weight:700;color:var(--yellow);}
+#pk-event-table .pk-notecell{max-width:220px;white-space:normal;font-size:11.5px;color:var(--text-dim);}
+.pk-addnext{margin:2px 0 4px;width:100%;border:1px dashed rgba(255,199,44,.5);background:rgba(255,199,44,.05);color:var(--yellow);border-radius:8px;padding:8px;font-size:12px;font-weight:600;cursor:pointer;}
+.pk-addnext:hover{background:rgba(255,199,44,.12);}
+.pk-totalbar{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:10px;padding:9px 12px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid var(--line);font-size:12px;color:var(--text-dim);}
+.pk-totalbar b{font-family:'JetBrains Mono',monospace;color:var(--text);}
+.pk-totalbar.over b.t{color:var(--red);}
+.pk-overlay{position:fixed;inset:0;background:rgba(4,7,11,.72);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:4vh 14px;overflow-y:auto;}
+.pk-modal{width:100%;max-width:680px;background:linear-gradient(165deg,#161b22 0%,#0f141a 100%);border:1px solid rgba(255,199,44,.35);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.6);padding:18px 20px;}
+.pk-modal h3{font-family:Oswald,sans-serif;font-size:17px;letter-spacing:.4px;color:var(--yellow);margin-bottom:4px;}
+.pk-modal .pk-ev{font-size:12px;color:var(--text-dim);line-height:1.5;padding:9px 11px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:8px;margin:8px 0 12px;}
+.pk-modal .pk-ev b{color:var(--text);}
+.pk-quick{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+.pk-quick button{border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--text);border-radius:999px;padding:5px 11px;font-size:11.5px;cursor:pointer;}
+.pk-quick button:hover{border-color:var(--yellow);color:var(--yellow);}
+.pk-row{display:grid;grid-template-columns:150px 86px 1fr 30px;gap:8px;align-items:center;margin-bottom:8px;}
+@media(max-width:560px){.pk-row{grid-template-columns:1fr 1fr;}.pk-row .pk-note{grid-column:1/3;}}
+.pk-row select,.pk-row input{width:100%;background:#10141a;border:1px solid var(--line);color:var(--text);border-radius:6px;padding:7px 8px;font-size:12.5px;font-family:inherit;}
+.pk-row select:focus,.pk-row input:focus{outline:none;border-color:var(--yellow);}
+.pk-row .pk-x{background:transparent;border:1px solid var(--line);color:var(--text-dim);border-radius:6px;height:32px;cursor:pointer;}
+.pk-row .pk-x:hover{border-color:var(--red);color:var(--red);}
+.pk-colhead{display:grid;grid-template-columns:150px 86px 1fr 30px;gap:8px;font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:var(--text-faint);margin-bottom:5px;}
+@media(max-width:560px){.pk-colhead{display:none;}}
+.pk-foot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);}
+.pk-foot label{font-size:12px;color:var(--text-dim);display:flex;align-items:center;gap:8px;cursor:pointer;text-transform:none;letter-spacing:0;font-family:Inter,sans-serif;font-weight:500;margin:0;}
+.pk-foot input[type=checkbox]{width:16px;height:16px;flex:none;margin:0;padding:0;accent-color:#FFC72C;}
+.pk-err{color:var(--red);font-size:11.5px;margin-top:6px;min-height:14px;}
 </style>
 
 </head>
@@ -4992,6 +5188,7 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
             <button type="button" class="chip" data-cbm-tab="lifetime"><span class="blk-tab-ico">⏱</span>Life Time &amp; Performance</button>
             <button type="button" class="chip" data-cbm-tab="safety"><span class="blk-tab-ico">⚑</span>Critical Parts</button>
             <button type="button" class="chip" data-cbm-tab="pareto"><span class="blk-tab-ico">▤</span>Pareto Analysis</button>
+            <button type="button" class="chip cbm-constraint-tab" data-cbm-tab="constraint" title="Constraint Pareto (Manpower, Spare Part, Tools, etc.) per breakdown event"><span class="blk-tab-ico">⚠</span>Constraint Pareto <span class="blk-tab-badge" id="cbm-topbar-constraint-count">0</span></button>
             <button type="button" class="chip" data-cbm-tab="insight"><span class="blk-tab-ico">✦</span>Insight AI</button>
             <button type="button" class="chip cbm-backlog-tab" data-cbm-tab="backlog" title="Buka Backlog Unit Alat Berat"><span class="blk-tab-ico">☰</span>Backlog Unit <span class="cbm-backlog-count blk-tab-badge" id="cbm-topbar-backlog-count">0</span></button>
           </div>
@@ -5154,6 +5351,89 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
                   <th>PIC</th><th>Status</th>
                 </tr></thead>
                 <tbody id="cbm-rca-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- PARETO KENDALA (input kendala per event breakdown) -->
+        <div class="cbm-tab-panel" id="cbm-tab-constraint" style="display:none;">
+          <div class="panel">
+            <div class="panel-head">
+              <h2><span class="tag" style="background:rgba(229,72,77,0.18);color:var(--red);">CONSTRAINT</span> Pareto Analysis — Breakdown Event Constraints</h2>
+              <div class="toolbar" id="pk-metric-tabs">
+                <button type="button" class="chip active" data-pk-metric="count">Jumlah Event</button>
+                <button type="button" class="chip" data-pk-metric="hours">Jam Delay</button>
+              </div>
+            </div>
+            <p class="hint" style="margin-bottom:12px;">Catat <b>kendala</b> (Manpower, Sparepart, Tools, dll.) yang memperlambat perbaikan di setiap event breakdown. Pareto di bawah menunjukkan <b>Vital Few</b> kendala yang paling banyak menahan penyelesaian breakdown. Filter Unit / periode / komponen mengikuti filter CBM di atas. <span id="pk-edit-note" style="color:var(--yellow);">Input &amp; edit kendala hanya dapat dilakukan oleh <b>Fahmi Fanani</b>; user lain hanya dapat melihat.</span></p>
+
+            <div class="pk-groupbar">
+              <div class="pk-gb-left">
+                <span class="pk-gb-label">GRUP UNIT</span>
+                <div class="toolbar" id="pk-group-tabs"></div>
+              </div>
+              <div class="pk-gb-right">
+                <span class="pk-gb-label">Nomor Unit</span>
+                <select id="pk-filter-unit"></select>
+                <span class="pk-lock" id="pk-lock-note"></span>
+              </div>
+            </div>
+
+            <div class="pk-kpi-grid" id="pk-kpis"></div>
+
+            <div class="pk-legend" id="pk-legend"></div>
+            <div id="pk-chart" style="position:relative;width:100%;overflow-x:auto;background:linear-gradient(180deg,rgba(255,255,255,0.025),rgba(255,255,255,0));border:1px solid var(--line);border-radius:12px;padding:8px 4px;"></div>
+            <div class="pdm-insight" id="pk-insight" style="margin-top:14px;"></div>
+
+            <div class="section-title" style="margin-top:18px;">Constraint Ranking</div>
+            <div class="table-wrap pk-rank-card">
+              <table id="pk-rank-table">
+                <thead><tr>
+                  <th class="c">#</th>
+                  <th>Tanggal</th>
+                  <th>Unit</th>
+                  <th>Deskripsi</th>
+                  <th class="pk-th-cons"><div class="pk-rc-hd"><span>Kendala &amp; Keterangan</span><span class="r">Duration</span></div></th>
+                  <th class="c">Event</th>
+                  <th class="c">Delay (jam)</th>
+                  <th id="pk-th-contrib">Kontribusi</th>
+                  <th>Kumulatif <span class="pk-th-note">garis = 80%</span></th>
+                  <th class="c">Klasifikasi</th>
+                </tr></thead>
+                <tbody id="pk-rank-tbody"></tbody>
+                <tfoot id="pk-rank-tfoot"></tfoot>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel" style="margin-top:18px;" id="pk-events-panel">
+            <div class="panel-head">
+              <h2><span class="tag">INPUT</span> Breakdown Events &amp; Constraints</h2>
+              <div class="toolbar">
+                <button type="button" class="btn small secondary" id="pk-filter-export" title="Unduh daftar event + kendala ke Excel">⬇ Export Excel</button>
+              </div>
+            </div>
+            <div class="filters" style="margin-bottom:12px;">
+              <select id="pk-filter-status">
+                <option value="">Semua Status Isian</option>
+                <option value="none">Belum diisi</option>
+                <option value="done">Ada kendala</option>
+                <option value="clear">Tanpa kendala</option>
+              </select>
+              <select id="pk-filter-cat"><option value="">Semua Kendala</option></select>
+              <input type="text" id="pk-filter-q" placeholder="Cari unit / kode BD / deskripsi…" style="min-width:210px;">
+              <button type="button" class="btn small secondary" id="pk-clear-filter">Clear Filter</button>
+            </div>
+            <div class="table-wrap">
+              <table id="pk-event-table">
+                <thead><tr>
+                  <th>Tanggal</th><th>Kode BD</th><th>Grup</th><th>Unit</th><th>Komponen</th><th>Deskripsi</th>
+                  <th>Durasi BD (jam)</th>
+                  <th class="pk-th-cons"><div class="pk-cons-h"><span>Kendala</span><span>Durasi (jam)</span><span>Catatan</span></div></th>
+                  <th>Total Delay (jam)</th><th>Status</th><th>Aksi</th>
+                </tr></thead>
+                <tbody id="pk-event-tbody"></tbody>
               </table>
             </div>
           </div>
@@ -7914,6 +8194,7 @@ function sanitizePlanServiceUnits(){
 let planningSystemRecords = [];
 let planDailyRecords = [];
 let rcaRecords = []; // Root Cause Analysis (CBM Pareto)
+let cbmConstraints = []; // Kendala per event breakdown (CBM Pareto Kendala)
 let cbmLastParetoRows = []; // breakdown rows terakhir dari Pareto (untuk auto-fill RCA)
 let p2hRecords = [];
 let preInspectionRecords = [];
@@ -8390,6 +8671,11 @@ async function loadData(){
     const rca = await appStorage.get('rca-records');
     rcaRecords = rca ? JSON.parse(rca.value) : [];
   }catch(e){ rcaRecords = []; }
+  try{
+    const pkc = await appStorage.get('cbm-constraints');
+    cbmConstraints = pkc ? JSON.parse(pkc.value) : [];
+    if(!Array.isArray(cbmConstraints)) cbmConstraints = [];
+  }catch(e){ cbmConstraints = []; }
   try{
     const p2h = await appStorage.get('p2h-records');
     p2hRecords = p2h ? JSON.parse(p2h.value) : [];
@@ -9432,7 +9718,7 @@ function isNavOrFilterControl(el){
   if(el.closest('#plan-service-subnav') || el.closest('.ps-subnav')) return true;
   if(el.classList.contains('ps-subtab') || (el.dataset && el.dataset.psTab)) return true;
   if(el.closest('#cbm-tabs') || el.closest('.chip-tabs') || el.closest('.blk-tab-group')) return true;
-  if(el.closest('#cbm-pareto-metric-tabs') || el.closest('#cbm-safety-model-tabs')) return true;
+  if(el.closest('#cbm-pareto-metric-tabs') || el.closest('#pk-metric-tabs') || el.closest('#pk-group-tabs') || el.closest('#cbm-safety-model-tabs')) return true;
   if(el.closest('.sp-oil-type-tabs') || el.closest('.sp-oil-topbar')) return true;
   if(el.closest('.blk-filterbar') || el.closest('.cbm-backlog-kpis')) return true;
   if(el.closest('[role="tablist"]') || el.closest('.plan-tab-bar')) return true;
@@ -12961,6 +13247,18 @@ async function collectFullDatabaseTables(){
   // 6) RCA (Root Cause Analysis)
   tables['RCA'] = (typeof rcaRecords!=='undefined' ? rcaRecords : []).map(r=>({ ...r }));
   coveredKeys.add('rca-records');
+
+  // 6b) Pareto Kendala (kendala per event breakdown)
+  tables['Pareto Kendala'] = (typeof cbmConstraints!=='undefined' ? cbmConstraints : []).map(r=>({
+    'Tanggal': r.tanggal||'', 'Kode BD': r.codeBD||'', 'Grup': (typeof pkGroupOf==='function'? pkGroupOf(r.unitCode) : ''), 'Unit': r.unitCode||'', 'Komponen': r.component||'',
+    'Deskripsi': r.description||'',
+    'Kendala': (r.items||[]).map(i=>i.cat).join(', '),
+    'Total Jam Delay': (r.items||[]).reduce((a,i)=>a+(Number(i.hours)||0),0),
+    'Catatan': (r.items||[]).map(i=>i.cat+': '+(i.note||'-')).join(' | '),
+    'Status': (r.items&&r.items.length)?'Ada kendala':'Tanpa kendala',
+    'Diinput Oleh': r.updatedBy||'', 'Update': r.updatedAt||''
+  }));
+  coveredKeys.add('cbm-constraints');
 
   // 7) Pre Inspection (hasil inspeksi)
   tables['Pre Inspection'] = (typeof preInspectionRecords!=='undefined' ? preInspectionRecords : []).map(r=>({ ...r }));
@@ -25817,7 +26115,7 @@ function renderCBMSafety(){
 function switchCBMTab(tab){
   cbmActiveTab = tab || 'overview';
   document.querySelectorAll('#cbm-tabs .chip').forEach(c=> c.classList.toggle('active', c.dataset.cbmTab===cbmActiveTab));
-  ['overview','lifetime','safety','pareto','insight','backlog'].forEach(t=>{
+  ['overview','lifetime','safety','pareto','constraint','insight','backlog'].forEach(t=>{
     const p = document.getElementById('cbm-tab-'+t);
     if(p) p.style.display = t===cbmActiveTab ? '' : 'none';
   });
@@ -25837,12 +26135,14 @@ function updateCBMTopbarBacklogCount(){
 
 function renderCBMActiveTab(){
   updateCBMTopbarBacklogCount();
+  try{ if(cbmActiveTab!=='constraint') pkUpdateBadge(); }catch(_e){}
   const rows = cbmBreakdownRecords();
   const stats = cbmBuildStats(rows);
   if(cbmActiveTab==='overview') renderCBMOverview(rows, stats);
   else if(cbmActiveTab==='lifetime') renderCBMLifetime(stats);
   else if(cbmActiveTab==='safety') renderCBMSafety();
   else if(cbmActiveTab==='pareto') renderCBMPareto(rows, stats);
+  else if(cbmActiveTab==='constraint') renderCbmConstraint();
   else if(cbmActiveTab==='insight') renderCBMInsight(stats);
   else if(cbmActiveTab==='backlog') renderCbmBacklog();
 }
@@ -27759,6 +28059,758 @@ document.getElementById('cbm-backlog-view-overlay')?.addEventListener('click', (
     closeCbmBacklogEditModal();
     renderCbmBacklog();
   });
+})();
+
+/* ===================================================================
+   PARETO KENDALA (CBM) — v66
+   Input kendala (Manpower, Sparepart, Tools, dll.) per event Breakdown,
+   lalu dianalisis dengan Pareto 80/20. Disimpan di appStorage key
+   'cbm-constraints' (ikut backup ke sheet "Pareto Kendala").
+   =================================================================== */
+const PK_CATS = [
+  { key:'Manpower',          color:'#4A90D9', hint:'Mekanik kurang / skill / pergantian shift' },
+  { key:'Sparepart',         color:'#FF6B35', hint:'Part belum ada, menunggu PR/PO, salah part' },
+  { key:'Tools',             color:'#FFC72C', hint:'Tools / special tool tidak tersedia atau rusak' },
+  { key:'Consumable',        color:'#4CAF6D', hint:'Oli, grease, filter, material habis pakai' },
+  { key:'Akses Unit',        color:'#B44CFF', hint:'Unit sulit dijangkau, lokasi jauh, unit belum bisa masuk workshop' },
+  { key:'Alat Bantu',        color:'#16D9E8', hint:'Crane, towing, lifting, welding / genset' },
+  { key:'Teknis & Approval', color:'#E5484D', hint:'Menunggu diagnosa, manual, persetujuan, izin kerja' },
+  { key:'Vendor / Logistik', color:'#FF8A1F', hint:'Pengiriman part, vendor luar, kendala transportasi' },
+  { key:'Cuaca',             color:'#8ec0f5', hint:'Hujan, petir, kondisi lapangan' },
+  { key:'Lainnya',           color:'#A6A6A6', hint:'Isi catatan agar jelas' }
+];
+/* Grup unit: SEN (unit milik SEN) & DTJ. Nomor unit dikunci otomatis sesuai grup. */
+const PK_UNIT_GROUPS = {
+  SEN: ['SWA-101','SWA-102','SBD-103','SPC-104'],
+  DTJ: ['DZ-04','DZ-09','WA-10','EX-11','EX-12','EX-17']
+};
+const PK_GROUP_META = {
+  SEN:   { label:'SEN',     color:'#FFC72C' },
+  DTJ:   { label:'DTJ',     color:'#4A90D9' },
+  OTHER: { label:'Lainnya', color:'#A6A6A6' }
+};
+let pkGroup = 'SEN';   // 'SEN' | 'DTJ' | 'OTHER' — tab SEMUA GRUP dihapus
+let pkUnit = '';
+function pkNormUnit(u){ return String(u||'').trim().toUpperCase(); }
+/* Unit di luar daftar SEN otomatis masuk grup DTJ (tidak ada grup "Lainnya"). */
+function pkGroupOf(unit){
+  const u = pkNormUnit(unit);
+  return PK_UNIT_GROUPS.SEN.includes(u) ? 'SEN' : 'DTJ';
+}
+function pkGroupPill(g){
+  const m = PK_GROUP_META[g] || PK_GROUP_META.OTHER;
+  return `<span class="pk-grp" style="color:${m.color};background:${m.color}1f;border-color:${m.color}55;">${escUH(m.label)}</span>`;
+}
+let pkMetric = 'count';
+let pkEditorState = null;
+
+function pkMeta(k){ return PK_CATS.find(c=>c.key===k) || { key:k||'Lainnya', color:'#A6A6A6', hint:'' }; }
+/* Input/edit/hapus kendala HANYA untuk Fahmi Fanani; user lain view-only. */
+function pkCanEdit(){ try{ return (typeof isFahmiFanani==='function') && isFahmiFanani(); }catch(_e){ return false; } }
+function pkReadonly(){ const v=document.getElementById('view-cbm'); return !pkCanEdit() || !!(v && v.classList.contains('access-readonly')); }
+function pkEntry(eventId){ return (cbmConstraints||[]).find(e=>e.eventId===eventId) || null; }
+function pkStatusOf(entry){
+  if(!entry) return 'none';
+  if(entry.items && entry.items.length) return 'done';
+  return entry.noConstraint ? 'clear' : 'none';
+}
+async function saveCbmConstraints(){
+  try{ await appStorage.set('cbm-constraints', JSON.stringify(cbmConstraints)); }
+  catch(e){ console.error('saveCbmConstraints', e); alert('Gagal menyimpan kendala. Cek koneksi lalu coba lagi.'); }
+}
+
+/* Event Breakdown mengikuti filter CBM (unit / tanggal / komponen) */
+function pkEventsBase(){
+  const f = (typeof cbmGetFilters==='function') ? cbmGetFilters() : {};
+  const list = (typeof dailyRecords!=='undefined' && Array.isArray(dailyRecords)) ? dailyRecords : [];
+  return list.filter(r=>{
+    if(r.category !== 'Breakdown') return false;
+    const rg = pkGroupOf(r.unitCode);
+    if(pkGroup && rg !== pkGroup) return false;
+    if(pkUnit && pkNormUnit(r.unitCode) !== pkNormUnit(pkUnit)) return false;
+    if(f.unit && !pkGroup && !pkUnit && r.unitCode !== f.unit) return false;
+    if(f.start && r.tanggal && r.tanggal < f.start) return false;
+    if(f.end && r.tanggal && r.tanggal > f.end) return false;
+    const comp = pkCompOf(r);
+    if(f.comp && !(comp && cbmCompFilterMatch(f.comp, comp))) return false;
+    return true;
+  }).sort((a,b)=> String(b.tanggal||'').localeCompare(String(a.tanggal||'')) || String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
+}
+function pkEvents(){
+  // Filter unit/periode/komponen mengikuti filter CBM global.
+  return pkEventsBase();
+}
+function pkCompOrig(r){
+  try{ return normalizeCBMComponent(bdCatPrimary(r) || r.bdcategory || r.bdCategory, r.jobDesc) || ''; }
+  catch(_e){ return ''; }
+}
+/* Komponen & Deskripsi "efektif": hasil edit di Pareto Kendala (bila ada), jika tidak pakai data Daily Maintenance asli.
+   Edit di sini TIDAK mengubah record Daily Maintenance. */
+function pkCompOf(r){ const en = pkEntry(r.id); return (en && en.compEdit) ? en.compEdit : pkCompOrig(r); }
+function pkDescOf(r){ const en = pkEntry(r.id); return (en && en.descEdit) ? en.descEdit : (r.jobDesc||''); }
+
+function pkBuildStats(events){
+  const by = {};
+  let withCons = 0, noCons = 0, pending = 0, totalHours = 0;
+  const gEv = { SEN:0, DTJ:0, OTHER:0 }, gHours = { SEN:0, DTJ:0, OTHER:0 };
+  events.forEach(ev=>{
+    const en = pkEntry(ev.id); const st = pkStatusOf(en);
+    if(st==='done') withCons++; else if(st==='clear') noCons++; else pending++;
+    if(st!=='done') return;
+    gEv[pkGroupOf(ev.unitCode)]++;
+    const seen = new Set();
+    en.items.forEach(it=>{
+      const k = it.cat || 'Lainnya';
+      if(!by[k]) by[k] = { key:k, count:0, hours:0, units:new Set(), uStat:{}, rows:[], notes:[], g:{ SEN:{count:0,hours:0}, DTJ:{count:0,hours:0}, OTHER:{count:0,hours:0} } };
+      const h = Number(it.hours)||0, gk = pkGroupOf(ev.unitCode);
+      by[k].hours += h; totalHours += h; by[k].g[gk].hours += h; gHours[gk] += h;
+      if(!seen.has(k)){ by[k].count++; by[k].g[gk].count++; seen.add(k); }
+      if(ev.unitCode) by[k].units.add(ev.unitCode);
+      { const un = pkNormUnit(ev.unitCode) || '(tanpa unit)';
+        const us = by[k].uStat[un] || (by[k].uStat[un] = { count:0, hours:0, evs:new Set() });
+        us.hours += h; if(!us.evs.has(ev.id)){ us.evs.add(ev.id); us.count++; } }
+      if(it.note) by[k].notes.push(it.note);
+      by[k].rows.push({ ev, hours:h, note:it.note||'' });
+    });
+  });
+  const items = Object.values(by).map(c=>({ ...c, value: pkMetric==='hours' ? c.hours : c.count }))
+    .filter(c=>c.value>0 || pkMetric==='count')
+    .sort((a,b)=> b.value-a.value || b.count-a.count);
+  const total = items.reduce((a,d)=>a+d.value,0);
+  let cum = 0;
+  items.forEach(d=>{
+    d.pct = total ? d.value/total*100 : 0;
+    d.before = total ? cum/total*100 : 0;
+    cum += d.value;
+    d.cumPct = total ? cum/total*100 : 0;
+    d.vital = d.before < 80;
+  });
+  return { items, total, withCons, noCons, pending, totalHours, events:events.length, gEv, gHours };
+}
+
+function pkWrap(label, max){
+  const w = String(label).split(' '); const lines=[]; let cur='';
+  w.forEach(x=>{ if((cur+' '+x).trim().length>max && cur){ lines.push(cur); cur=x; } else cur=(cur+' '+x).trim(); });
+  if(cur) lines.push(cur);
+  return lines.slice(0,3);
+}
+
+function pkNice(v, isCount){
+  if(!(v>0)) return 5;
+  if(isCount && v<=5) return 5;
+  const p = Math.pow(10, Math.floor(Math.log10(v))), f = v/p;
+  const nf = f<=1?1 : f<=2?2 : f<=2.5?2.5 : f<=5?5 : 10;
+  return nf*p;
+}
+/* Kurva halus monotone (Fritsch–Carlson): tidak overshoot sehingga garis kumulatif tetap naik */
+function pkSmoothPath(pts){
+  const n = pts.length; if(!n) return '';
+  const f = v=>v.toFixed(1);
+  if(n===1) return `M${f(pts[0][0])} ${f(pts[0][1])}`;
+  const dx=[], m=[], t=[];
+  for(let i=0;i<n-1;i++){ dx[i]=pts[i+1][0]-pts[i][0]; m[i]=(pts[i+1][1]-pts[i][1])/dx[i]; }
+  t[0]=m[0]; t[n-1]=m[n-2];
+  for(let i=1;i<n-1;i++) t[i] = (m[i-1]*m[i]<=0) ? 0 : (m[i-1]+m[i])/2;
+  for(let i=0;i<n-1;i++){
+    if(m[i]===0){ t[i]=0; t[i+1]=0; continue; }
+    const a=t[i]/m[i], b=t[i+1]/m[i], h=a*a+b*b;
+    if(h>9){ const k=3/Math.sqrt(h); t[i]=k*a*m[i]; t[i+1]=k*b*m[i]; }
+  }
+  let d = `M${f(pts[0][0])} ${f(pts[0][1])}`;
+  for(let i=0;i<n-1;i++){
+    const x0=pts[i][0], y0=pts[i][1], x1=pts[i+1][0], y1=pts[i+1][1], h=dx[i]/3;
+    d += ` C${f(x0+h)} ${f(y0+t[i]*h)} ${f(x1-h)} ${f(y1-t[i+1]*h)} ${f(x1)} ${f(y1)}`;
+  }
+  return d;
+}
+
+function pkScale(maxV, isCount){
+  const STEPS = 4;
+  if(!(maxV>0)) return { max:STEPS, step:1 };
+  const raw = maxV*1.04/STEPS;
+  const p = Math.pow(10, Math.floor(Math.log10(raw)));
+  const cands = [1,2,2.5,5,10].map(f=>f*p).filter(v=>!isCount || Number.isInteger(v));
+  let step = cands.find(v=>v>=raw) || 10*p;
+  if(isCount && step<1) step = 1;
+  return { max:step*STEPS, step };
+}
+
+/* Pareto chart batang: batang berwarna per kendala (urut terbesar) + garis Kumulatif % + batas 80% */
+function pkChartSvg(items, total, widthHint){
+  const n = items.length, isHours = pkMetric==='hours';
+  const W = Math.max(640, n*92+120, Math.round(widthHint||0)), H = 380;
+  const padL=58, padR=54, padT=26, padB=74;
+  const cw = W-padL-padR, ch = H-padT-padB;
+  const slot = cw/n, bw = Math.min(54, slot*0.6);
+  const yL = v => padT + ch - (total? v/total : 0)*ch;
+  const yR = pc => padT + ch - (pc/100)*ch;
+  const mono = "JetBrains Mono,monospace";
+  let grid='', bars='', pts=[], dots='', xl='';
+  for(let i=0;i<=5;i++){
+    const pc = i*20, y = yR(pc), lv = total*pc/100;
+    grid += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${padL+cw}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,.06)"/>`
+      + `<text x="${padL-8}" y="${(y+4).toFixed(1)}" text-anchor="end" font-size="10" fill="#8b95a1" font-family="${mono}">${isHours?lv.toFixed(lv%1?1:0):Math.round(lv)}</text>`
+      + `<text x="${padL+cw+8}" y="${(y+4).toFixed(1)}" font-size="10" fill="#8b95a1" font-family="${mono}">${pc}%</text>`;
+  }
+  items.forEach((d,i)=>{
+    const cx = padL + slot*i + slot/2, x = cx-bw/2;
+    const y = yL(d.value), h = padT+ch-y;
+    const col = pkMeta(d.key).color;
+    const py = yR(d.cumPct);
+    pts.push([cx,py]);
+    bars += `<g class="pk-pt">
+      <rect class="pk-bar" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(h,1).toFixed(1)}" rx="4" fill="${col}" opacity="${d.vital?1:0.35}"/>
+      <text x="${cx.toFixed(1)}" y="${(y-11).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="#f0f3f7" font-family="${mono}">${isHours?d.value.toFixed(1):d.value}</text>
+      <rect class="pk-hit" data-i="${i}" x="${(cx-slot/2).toFixed(1)}" y="${padT}" width="${slot.toFixed(1)}" height="${ch+padB-10}" fill="transparent"/>
+    </g>`;
+    dots += `<circle cx="${cx.toFixed(1)}" cy="${py.toFixed(1)}" r="4" fill="#6366F1" stroke="#0a0e14" stroke-width="1.5" pointer-events="none"/>`
+      + `<text x="${(cx+9).toFixed(1)}" y="${(py-7).toFixed(1)}" text-anchor="start" font-size="9.5" fill="#a5a8ff" font-family="${mono}" pointer-events="none">${d.cumPct.toFixed(0)}%</text>`;
+    xl += pkWrap(d.key, 12).map((t,li)=>`<text x="${cx.toFixed(1)}" y="${(padT+ch+16+li*12).toFixed(1)}" text-anchor="middle" font-size="10.5" fill="#c8d0d9" font-family="Inter,sans-serif">${escUH(t)}</text>`).join('');
+  });
+  const path = pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  const y80 = yR(80);
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" style="min-width:${Math.min(W,560)}px;overflow:visible;display:block;">
+    ${grid}
+    <line x1="${padL}" y1="${padT+ch}" x2="${padL+cw}" y2="${padT+ch}" stroke="var(--line)" stroke-width="1.5"/>
+    <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+ch}" stroke="var(--line)" stroke-width="1.5"/>
+    <line x1="${padL}" y1="${y80.toFixed(1)}" x2="${padL+cw}" y2="${y80.toFixed(1)}" stroke="var(--red)" stroke-width="1.5" stroke-dasharray="6 4" opacity="0.75"/>
+    <text x="${padL+cw-4}" y="${(y80-6).toFixed(1)}" text-anchor="end" font-size="10" font-weight="700" fill="#ff8a8d" font-family="${mono}">80%</text>
+    <text transform="translate(14 ${padT+ch/2}) rotate(-90)" text-anchor="middle" font-size="10" fill="#8b95a1">${isHours?'Jam Delay':'Jumlah Event'}</text>
+    <text transform="translate(${W-8} ${padT+ch/2}) rotate(90)" text-anchor="middle" font-size="10" fill="#8b95a1">Kumulatif %</text>
+    ${bars}
+    <path d="${path}" fill="none" stroke="#6366F1" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" pointer-events="none"/>
+    ${dots}${xl}
+  </svg>`;
+}
+
+function pkBindChartTooltip(wrap, items, total){
+  const old = wrap.querySelector('.pk-tip'); if(old) old.remove();
+  const tip = document.createElement('div'); tip.className = 'pk-tip'; wrap.appendChild(tip);
+  const svg = wrap.querySelector('svg'); if(!svg) return;
+  const hide = ()=>{ tip.style.opacity = 0; };
+  const show = (e)=>{
+    const hit = e.target.closest && e.target.closest('.pk-hit');
+    if(!hit){ hide(); return; }
+    const d = items[Number(hit.dataset.i)]; if(!d) return;
+    const col = pkMeta(d.key).color;
+    const val = pkMetric==='hours' ? d.value.toFixed(1)+' jam' : d.value+' event';
+    tip.innerHTML = `<div class="tt"><i style="background:${col}"></i>${escUH(d.key)}</div>
+      <div class="tr"><span>${pkMetric==='hours'?'Jam delay':'Jumlah event'}</span><b>${val}</b></div>
+      <div class="tr"><span>% dari total</span><b>${d.pct.toFixed(1)}%</b></div>
+      <div class="tr"><span>Kumulatif</span><b style="color:#a5b4fc;">${d.cumPct.toFixed(1)}%</b></div>
+      <div class="tr"><span>Klasifikasi</span><b style="color:${d.vital?'#ff8a8d':'#FFC72C'};">${d.vital?'Vital Few':'Trivial Many'}</b></div>
+      <div class="tr"><span>Unit terdampak</span><b>${d.units.size}</b></div>`;
+    const r = wrap.getBoundingClientRect();
+    let x = e.clientX - r.left + wrap.scrollLeft + 16, y = e.clientY - r.top + wrap.scrollTop + 14;
+    tip.style.opacity = 1;
+    const tw = tip.offsetWidth;
+    if(x + tw > wrap.scrollLeft + wrap.clientWidth - 6) x = x - tw - 32;
+    tip.style.left = Math.max(wrap.scrollLeft+4, x) + 'px'; tip.style.top = y + 'px';
+  };
+  svg.addEventListener('mousemove', show);
+  svg.addEventListener('click', show);
+  svg.addEventListener('mouseleave', hide);
+}
+
+function renderCbmConstraint(){
+  const kpis = document.getElementById('pk-kpis');
+  if(!kpis) return;
+  const _pn = document.getElementById('pk-edit-note'); if(_pn) _pn.style.display = pkCanEdit() ? 'none' : '';
+  const events = pkEvents();
+  const S = pkBuildStats(events);
+  const cover = S.events ? ((S.withCons+S.noCons)/S.events*100) : 0;
+  const top = S.items[0];
+  kpis.innerHTML = [
+    ['Total Event Breakdown', S.events, 'sesuai filter CBM', ''],
+    ['Ada Kendala', S.withCons, `${S.noCons} tanpa kendala`, S.withCons?'warn':''],
+    ['Belum Diisi', S.pending, 'perlu diinput', S.pending?'bad':'ok'],
+    ['Kelengkapan Input', cover.toFixed(0)+'%', 'sudah dicek / total event', cover>=90?'ok':cover>=60?'warn':'bad'],
+    ['Total Jam Delay', S.totalHours.toFixed(1), top?('Top: '+escUH(top.key)):'belum ada data', S.totalHours?'warn':'']
+  ].map(k=>`<div class="pk-kpi ${k[3]}"><div class="k-l">${k[0]}</div><div class="k-v">${k[1]}</div><div class="k-s">${k[2]}</div></div>`).join('');
+
+  const legend = document.getElementById('pk-legend');
+  if(legend) legend.innerHTML = PK_CATS.map(c=>`<span><i style="background:${c.color}"></i>${escUH(c.key)}</span>`).join('')
+    + `<span style="margin-left:auto;display:inline-flex;gap:14px;flex-wrap:wrap;"><span><i style="background:#6366F1;height:3px;width:16px;vertical-align:3px;"></i>Kumulatif %</span><span><i style="background:repeating-linear-gradient(90deg,#E5484D 0 5px,transparent 5px 8px);height:2px;width:16px;vertical-align:3px;"></i>Batas 80%</span><span style="opacity:.7;">Batang pudar = Trivial Many</span></span>`;
+
+  const chart = document.getElementById('pk-chart');
+  const insight = document.getElementById('pk-insight');
+  const rankBody = document.getElementById('pk-rank-tbody');
+  if(!S.items.length || !S.total){
+    if(chart) chart.innerHTML = `<div class="hint" style="padding:36px 16px;text-align:center;">Belum ada kendala yang diinput pada event breakdown di periode/filter ini.<br>Gunakan tombol <b>Input Kendala</b> pada tabel di bawah.</div>`;
+    if(insight) insight.innerHTML = S.pending ? `Ada <b>${S.pending}</b> event breakdown yang belum diisi kendalanya. Isi dulu agar Pareto kendala bisa dianalisis.` : 'Belum ada data kendala.';
+    if(rankBody) rankBody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--text-dim);padding:22px;">Belum ada data kendala.</td></tr>`;
+    const _tf = document.getElementById('pk-rank-tfoot'); if(_tf) _tf.innerHTML = '';
+  } else {
+    if(chart){
+      const drawChart = ()=>{ chart.innerHTML = pkChartSvg(S.items, S.total, (chart.clientWidth||0)-10); chart.dataset.pkw = String(chart.clientWidth||0); pkBindChartTooltip(chart, S.items, S.total); };
+      drawChart();
+      requestAnimationFrame(()=>{ const w = chart.clientWidth||0; if(w && Math.abs(w-Number(chart.dataset.pkw||0))>30) drawChart(); });
+    }
+    const vital = S.items.filter(d=>d.vital);
+    const vitalPct = vital.length ? vital[vital.length-1].cumPct : 0;
+    const metricTxt = pkMetric==='hours' ? 'jam delay' : 'event';
+    if(insight) insight.innerHTML = `<b>Vital Few kendala:</b> ${vital.map(d=>`<b>${escUH(d.key)}</b> (${d.pct.toFixed(0)}%)`).join(', ')} — bersama menyumbang <b>${vitalPct.toFixed(0)}%</b> dari total ${metricTxt} kendala. `
+      + `Prioritaskan perbaikan pada kendala ini (mis. ${pkAdvice(vital[0].key)}). `
+      + (S.pending ? `<br><span style="color:var(--yellow);">⚠ ${S.pending} event belum diisi kendalanya — hasil Pareto bisa berubah setelah semua terisi.</span>` : '');
+    if(rankBody) rankBody.innerHTML = pkRankRows(S);
+    pkRenderRankFoot(S);
+  }
+  const _thc = document.getElementById('pk-th-contrib'); if(_thc) _thc.textContent = pkMetric==='hours' ? 'Kontribusi (% jam)' : 'Kontribusi (% event)';
+  pkRenderGroupBar();
+  pkRenderEventTable(events);
+  pkSyncCatFilter();
+  pkUpdateBadge(S.pending);
+}
+
+/* Ringkasan keterangan kendala: catatan dari tiap event dikelompokkan (urut terbanyak); bila kosong tampil definisi jenis kendala. */
+function pkNoteList(d){
+  const map = new Map();
+  (d.notes||[]).forEach(n=>{
+    const t = String(n||'').trim(); if(!t) return;
+    const k = t.toLowerCase();
+    if(!map.has(k)) map.set(k, { text:t, n:0 });
+    map.get(k).n++;
+  });
+  return [...map.values()].sort((a,b)=>b.n-a.n || a.text.localeCompare(b.text));
+}
+function pkNoteSummary(d){
+  const list = pkNoteList(d);
+  if(!list.length) return `<span class="pk-keter-def">${escUH(pkMeta(d.key).hint||'—')}</span><span class="pk-keter-tag">definisi — belum ada catatan event</span>`;
+  const top = list.slice(0,3);
+  const rest = list.slice(3);
+  const li = top.map(x=>`<li>${escUH(x.text)}${x.n>1?` <b>×${x.n}</b>`:''}</li>`).join('');
+  const more = rest.length ? `<li class="pk-more" title="${escUH(rest.map(x=>x.text+(x.n>1?' ×'+x.n:'')).join('\n'))}">+${rest.length} keterangan lain</li>` : '';
+  return `<ul class="pk-keter-list">${li}${more}</ul>`;
+}
+function pkBarCell(pct, color, mark80){
+  return `<div class="pk-bar-wrap"><span class="pk-bar-val">${pct.toFixed(1)}%</span>`
+    + `<div class="pk-bar-track"><i style="width:${Math.max(0,Math.min(100,pct)).toFixed(1)}%;background:${color};"></i>${mark80?'<s></s>':''}</div></div>`;
+}
+function pkSplitCell(g){
+  const c1 = g.SEN.count, c2 = g.DTJ.count, t = c1 + c2;
+  if(!t) return '<span class="hint">—</span>';
+  return `<div class="pk-split"><span style="width:${(c1/t*100).toFixed(1)}%;background:${PK_GROUP_META.SEN.color};"></span><span style="width:${(c2/t*100).toFixed(1)}%;background:${PK_GROUP_META.DTJ.color};"></span></div>`
+    + `<div class="pk-split-l"><span class="sen">SEN <b>${c1}</b><em>${g.SEN.hours.toFixed(1)} j</em></span><span class="dtj">DTJ <b>${c2}</b><em>${g.DTJ.hours.toFixed(1)} j</em></span></div>`;
+}
+function pkUnitChips(units){
+  const arr = [...units].map(pkNormUnit).filter(Boolean).sort();
+  if(!arr.length) return '<span class="hint">—</span>';
+  return `<div class="pk-unit-list">${arr.map(u=>`<span class="pk-u ${pkGroupOf(u)==='SEN'?'sen':'dtj'}">${escUH(u)}</span>`).join('')}</div>`;
+}
+/* Unit Terdampak: tiap unit dipisah di barisnya sendiri; angka event & jam hanya milik unit itu untuk kendala tsb. */
+function pkUnitRows(uStat){
+  const arr = Object.keys(uStat||{}).map(u=>({ u, c:uStat[u].count, h:uStat[u].hours }))
+    .sort((a,b)=> b.c-a.c || b.h-a.h || a.u.localeCompare(b.u));
+  if(!arr.length) return '<span class="hint">—</span>';
+  return `<div class="pk-unit-rows">${arr.map(x=>`<div class="pk-unit-row"><span class="pk-u ${pkGroupOf(x.u)==='SEN'?'sen':'dtj'}">${escUH(x.u)}</span><span class="pk-ur-n"><b>${x.c}</b> event</span><span class="pk-ur-h">${x.h.toFixed(1)} jam</span></div>`).join('')}</div>`;
+}
+/* Satu baris = satu unit/event dengan SATU deskripsi; semua kendalanya digabung di dalam baris yang sama (x.cons). */
+function pkDetailRows(S){
+  const isH = pkMetric==='hours', list = [], g = new Map();
+  S.items.forEach((d,gi)=>{
+    (d.rows||[]).forEach(r=>{
+      const unit = pkNormUnit(r.ev.unitCode) || r.ev.unitCode || '—', tgl = r.ev.tanggal||'';
+      const k = r.ev.id!=null ? 'e'+r.ev.id : unit+'|'+tgl;
+      if(!g.has(k)) g.set(k, { unit, tanggal:tgl, ev:r.ev, gi, hours:0, evs:new Set(), descs:[], consMap:new Map() });
+      const x = g.get(k);
+      x.gi = Math.min(x.gi, gi);
+      x.evs.add(r.ev.id);
+      const ds = String(pkDescOf(r.ev)||'').trim(); if(ds && !x.descs.some(t=>t.toLowerCase()===ds.toLowerCase())) x.descs.push(ds);
+      if(isH && !(r.hours>0)) return;
+      if(!x.consMap.has(d.key)) x.consMap.set(d.key, { d, key:d.key, gi, hours:0, notes:[] });
+      const c = x.consMap.get(d.key);
+      c.hours += r.hours; x.hours += r.hours;
+      const nt = String(r.note||'').trim(); if(nt && !c.notes.some(t=>t.toLowerCase()===nt.toLowerCase())) c.notes.push(nt);
+    });
+  });
+  g.forEach(x=>{
+    x.cons = [...x.consMap.values()].sort((a,b)=> b.hours-a.hours || a.gi-b.gi);
+    if(!x.cons.length) return;
+    x.d = x.cons[0].d;                 /* kendala dominan → warna aksen baris */
+    x.notes = [].concat(...x.cons.map(c=>c.notes));
+    x.events = x.evs.size;
+    x.v = isH ? x.hours : x.cons.length; /* mode event: jumlah kejadian kendala pada unit tsb */
+    list.push(x);
+  });
+  list.sort((a,b)=> b.v-a.v || a.gi-b.gi || String(a.tanggal).localeCompare(String(b.tanggal)) || a.unit.localeCompare(b.unit));
+  const total = list.reduce((a,x)=>a+x.v,0);
+  let cum = 0;
+  list.forEach((x,i)=>{
+    x.rank = i+1;
+    x.pct = total ? x.v/total*100 : 0;
+    x.before = total ? cum/total*100 : 0;
+    cum += x.v;
+    x.cumPct = total ? cum/total*100 : 0;
+    x.vital = x.before < 80;
+  });
+  return { list, total };
+}
+function pkRankRows(S){
+  const { list } = pkDetailRows(S);
+  const lastVital = list.reduce((a,x,i)=> x.vital ? i : a, -1);
+  const out = [];
+  list.forEach((x,i)=>{
+    const d = x.d, ev = x.ev, m = pkMeta(d.key), unit = x.unit;
+    const multi = a=> a.length>1 ? '<ul class="pk-keter-list">'+a.map(t=>`<li>${escUH(t)}</li>`).join('')+'</ul>' : escUH(a[0]||'');
+    const consHtml = '<div class="pk-rc-list">'+x.cons.map(c=>{
+      const cm = pkMeta(c.key);
+      const share = x.hours>0 ? c.hours/x.hours*100 : 0;
+      return `<div class="pk-rc" style="--cat:${cm.color};"><div class="pk-rc-main"><span class="pk-rc-name"><i></i>${escUH(c.key)}</span>`
+        + `<div class="pk-rc-note">${c.notes.length?multi(c.notes):'<span class="hint">—</span>'}</div></div>`
+        + `<div class="pk-rc-dur"><b>${c.hours.toFixed(1)}</b><em>jam</em><div class="pk-rc-bar"><i style="width:${Math.min(100,share).toFixed(1)}%;"></i></div></div></div>`;
+    }).join('')+'</div>';
+    out.push(`<tr class="pk-rr ${x.vital?'vital':'trivial'}" style="--cat:${m.color};">
+      <td class="c pk-c-rank"><span class="pk-rank-badge">${x.rank}</span></td>
+      <td class="pk-c-date">${escUH(x.tanggal||'—')}</td>
+      <td><span class="pk-u ${pkGroupOf(ev.unitCode)==='SEN'?'sen':'dtj'}">${escUH(unit)}</span></td>
+      <td class="pk-c-desc">${x.descs.length?multi(x.descs):'—'}</td>
+      <td class="pk-c-cons">${consHtml}</td>
+      <td class="c num">${x.events}</td>
+      <td class="c num">${x.hours.toFixed(1)}</td>
+      <td class="pk-c-bar">${pkBarCell(x.pct, m.color, false)}</td>
+      <td class="pk-c-bar">${pkBarCell(x.cumPct, '#818cf8', true)}</td>
+      <td class="c"><span class="pk-class ${x.vital?'vital':'trivial'}">${x.vital?'Vital Few':'Trivial Many'}</span></td></tr>`);
+    if(i===lastVital && i<list.length-1)
+      out.push(`<tr class="pk-cut"><td colspan="10"><span>▼ Batas 80% terlewati — baris di bawah ini termasuk Trivial Many</span></td></tr>`);
+  });
+  return out.join('');
+}
+function pkRenderRankFoot(S){
+  const tf = document.getElementById('pk-rank-tfoot'); if(!tf) return;
+  const { list, total } = pkDetailRows(S);
+  tf.innerHTML = `<tr>
+    <td></td>
+    <td class="pk-ft-l" colspan="3">TOTAL</td>
+    <td class="pk-ft-s">${S.items.length} jenis kendala · ${list.length} unit/event ber-kendala</td>
+    <td class="c num">${list.reduce((a,x)=>a+x.events,0)}</td>
+    <td class="c num">${list.reduce((a,x)=>a+x.hours,0).toFixed(1)}</td>
+    <td class="pk-ft-s" colspan="2">100% = ${pkMetric==='hours' ? total.toFixed(1)+' jam delay' : total+' kejadian kendala'}</td>
+    <td></td>
+  </tr>`;
+}
+function pkGCell(g){
+  if(!g || (!g.count && !g.hours)) return '<span class="hint">—</span>';
+  return `<b>${g.count}</b> <span class="hint">event · ${g.hours.toFixed(1)} jam</span>`;
+}
+function pkAdvice(key){
+  return ({
+    'Manpower':'penambahan/rotasi mekanik & cross-training',
+    'Sparepart':'safety stock part kritis & percepatan PR/PO',
+    'Tools':'pengadaan / kalibrasi special tool & tool crib',
+    'Consumable':'min-max stock consumable',
+    'Akses Unit':'prosedur recovery unit & lokasi kerja standar',
+    'Alat Bantu':'jadwal alat bantu (crane/towing) siaga',
+    'Teknis & Approval':'jalur approval cepat & standar diagnosa',
+    'Vendor / Logistik':'SLA vendor & rute pengiriman part',
+    'Cuaca':'shelter / rencana kerja saat cuaca buruk'
+  })[key] || 'tindakan perbaikan terarah';
+}
+
+function pkRenderGroupBar(){
+  const tabs = document.getElementById('pk-group-tabs'), sel = document.getElementById('pk-filter-unit'), note = document.getElementById('pk-lock-note');
+  if(!tabs || !sel) return;
+  const savedGroup = pkGroup, savedUnit = pkUnit;
+  pkGroup = ''; pkUnit = '';
+  const globalBase = pkEventsBase();
+  pkGroup = savedGroup; pkUnit = savedUnit;
+  const cnt = { SEN:0, DTJ:0 };
+  const perUnit = {};
+  globalBase.forEach(r=>{ const g = pkGroupOf(r.unitCode); if(g==='SEN'||g==='DTJ') cnt[g]++; const u=pkNormUnit(r.unitCode); if(u) perUnit[u]=(perUnit[u]||0)+1; });
+  // Hanya SEN dan DTJ yang ditampilkan. Tombol SEMUA GRUP dihapus.
+  tabs.innerHTML = [['SEN','SEN'],['DTJ','DTJ']].map(([k,l])=>`<button type="button" class="chip ${pkGroup===k?'active':''}" data-pk-group="${k}">${l} <span class="pk-gc">${cnt[k]}</span></button>`).join('');
+  const opt = u => `<option value="${escUH(u)}" ${pkUnit===u?'selected':''}>${escUH(u)}${perUnit[u]?` (${perUnit[u]})`:''}</option>`;
+  const extras = [...new Set(globalBase.map(r=>pkNormUnit(r.unitCode)).filter(u=>u && !PK_UNIT_GROUPS.SEN.includes(u) && !PK_UNIT_GROUPS.DTJ.includes(u)))].sort();
+  const dtjUnits = PK_UNIT_GROUPS.DTJ.concat(extras);
+  if(pkGroup==='SEN') sel.innerHTML = `<option value="">Semua Unit SEN</option>` + PK_UNIT_GROUPS.SEN.map(opt).join('');
+  else sel.innerHTML = `<option value="">Semua Unit DTJ</option>` + dtjUnits.map(opt).join('');
+  if(note) note.innerHTML = `🔒 Nomor unit dikunci sesuai grup <b>${escUH((PK_GROUP_META[pkGroup]||{}).label||pkGroup)}</b>`;
+}
+
+
+function pkUpdateBadge(pending){
+  const el = document.getElementById('cbm-topbar-constraint-count');
+  if(!el) return;
+  if(pending==null){ try{ pending = pkBuildStats(pkEvents()).pending; }catch(_e){ pending = 0; } }
+  el.textContent = String(pending);
+  el.title = pending + ' event breakdown belum diisi kendalanya';
+}
+
+function pkSyncCatFilter(){
+  const sel = document.getElementById('pk-filter-cat');
+  if(!sel || sel.options.length>1) return;
+  PK_CATS.forEach(c=>{ const o=document.createElement('option'); o.value=c.key; o.textContent=c.key; sel.appendChild(o); });
+}
+
+function pkRenderEventTable(events){
+  const tb = document.getElementById('pk-event-tbody');
+  if(!tb) return;
+  const fs = (document.getElementById('pk-filter-status')||{}).value || '';
+  const fc = (document.getElementById('pk-filter-cat')||{}).value || '';
+  const q = String((document.getElementById('pk-filter-q')||{}).value||'').trim().toLowerCase();
+  const ro = pkReadonly();
+  const rows = events.filter(ev=>{
+    const en = pkEntry(ev.id); const st = pkStatusOf(en);
+    if(fs && st!==fs) return false;
+    if(fc && !(en && (en.items||[]).some(i=>i.cat===fc))) return false;
+    if(q){
+      const hay = [ev.unitCode, ev.codeBD, pkDescOf(ev), ev.repairAction, pkCompOf(ev)].join(' ').toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  if(!rows.length){
+    tb.innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--text-dim);padding:18px;">Tidak ada event breakdown yang sesuai filter.</td></tr>`;
+    return;
+  }
+  tb.innerHTML = rows.slice(0,400).map(ev=>{
+    const en = pkEntry(ev.id); const st = pkStatusOf(en);
+    const items = (en && en.items) || [];
+    const total = items.reduce((a,i)=>a+(Number(i.hours)||0),0);
+    const stLabel = st==='done' ? 'Ada kendala' : st==='clear' ? 'Tanpa kendala' : 'Belum diisi';
+    const act = ro ? '<span class="hint">—</span>'
+      : `<button type="button" class="btn small ${st==='none'?'':'secondary'}" data-pk-edit="${escUH(ev.id)}">${st==='none'?'＋ Input Kendala':'✎ Edit'}</button>`;
+    const cons = items.length
+      ? `<div class="pk-cons">${items.map(it=>{
+          const m = pkMeta(it.cat);
+          return `<div class="pk-cons-r"><span><span class="pk-chip" style="background:${m.color}22;color:${m.color};border-color:${m.color}55;">${escUH(it.cat)}</span></span>`
+            + `<span class="pk-dur">${Number(it.hours)||0}</span><span class="pk-notecell">${escUH(it.note||'—')}</span></div>`;
+        }).join('')}</div>`
+      : '<span class="hint">—</span>';
+    const compEdited = en && en.compEdit ? ` <span class="pk-edited" title="Data asli: ${escUH(pkCompOrig(ev)||'—')}">✎</span>` : '';
+    const descEdited = en && en.descEdit ? ` <span class="pk-edited" title="Data asli: ${escUH(ev.jobDesc||'—')}">✎</span>` : '';
+    return `<tr data-pk-id="${escUH(ev.id)}">
+      <td>${escUH(ev.tanggal||'—')}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11.5px;">${escUH(ev.codeBD||'—')}</td>
+      <td>${pkGroupPill(pkGroupOf(ev.unitCode))}</td>
+      <td><b>${escUH(ev.unitCode||'—')}</b></td>
+      <td>${escUH(pkCompOf(ev)||'—')}${compEdited}</td>
+      <td class="pk-desc">${escUH(pkDescOf(ev)||'—')}${descEdited}</td>
+      <td class="pk-dur">${ev.duration!=null && ev.duration!=='' ? escUH(ev.duration) : '—'}</td>
+      <td class="pk-td-cons">${cons}</td>
+      <td class="pk-dur pk-total">${items.length?total:'—'}</td>
+      <td><span class="pk-status ${st}">${stLabel}</span></td>
+      <td>${act}</td></tr>`;
+  }).join('');
+}
+
+/* ---------- Editor (modal) ---------- */
+function pkOpenEditor(eventId){
+  if(pkReadonly()) return;
+  const ev = (dailyRecords||[]).find(r=>r.id===eventId);
+  if(!ev) return;
+  pkCloseEditor();
+  const en = pkEntry(eventId);
+  pkEditorState = {
+    eventId,
+    items: (en && en.items ? en.items : []).map(i=>({ cat:i.cat, hours:i.hours||'', note:i.note||'' })),
+    noConstraint: !!(en && en.noConstraint && !(en.items||[]).length)
+  };
+  const ov = document.createElement('div');
+  ov.className = 'pk-overlay'; ov.id = 'pk-overlay';
+  ov.innerHTML = `<div class="pk-modal" role="dialog" aria-modal="true">
+    <h3>Breakdown Event Constraints</h3>
+    <div class="pk-ev">
+      <b>${escUH(ev.unitCode||'-')}</b> ${pkGroupPill(pkGroupOf(ev.unitCode))} · ${escUH(ev.tanggal||'-')} · <span style="font-family:'JetBrains Mono',monospace;">${escUH(ev.codeBD||'-')}</span><br>
+      Durasi BD: <b>${escUH(ev.duration!=null&&ev.duration!==''?ev.duration:'—')} jam</b>
+    </div>
+    <div class="pk-fields">
+      <div class="pk-fl"><span>Komponen</span><input type="text" id="pk-f-comp" list="pk-comp-list" maxlength="60" value="${escUH(pkCompOf(ev))}" placeholder="Pilih / ketik komponen">
+        <datalist id="pk-comp-list">${(typeof CBM_COMPONENTS!=='undefined'?CBM_COMPONENTS:[]).map(c=>`<option value="${escUH(c.key)}"></option>`).join('')}</datalist></div>
+      <div class="pk-fl"><span>Deskripsi</span><textarea id="pk-f-desc" rows="2" maxlength="240" placeholder="Deskripsi event breakdown">${escUH(pkDescOf(ev))}</textarea></div>
+    </div>
+    <div class="hint" style="margin-bottom:6px;">Pilih jenis kendala (bisa lebih dari satu), isi <b>durasi (jam)</b> masing-masing kendala, dan catatan singkat. Gunakan <b>＋ Tambah Kendala Lain</b> untuk kendala berikutnya.</div>
+    <div class="pk-quick" id="pk-quick">${PK_CATS.map(c=>`<button type="button" data-pk-add="${escUH(c.key)}" title="${escUH(c.hint)}" style="border-left:3px solid ${c.color};">＋ ${escUH(c.key)}</button>`).join('')}</div>
+    <div class="pk-colhead"><span>Kendala</span><span>Durasi (jam)</span><span>Catatan</span><span></span></div>
+    <div id="pk-rows"></div>
+    <button type="button" class="pk-addnext" id="pk-addnext">＋ Tambah Kendala Lain</button>
+    <div class="pk-totalbar" id="pk-totalbar"><span>Total durasi kendala: <b class="t" id="pk-total-val">0</b> jam</span><span>Durasi BD: <b>${escUH(ev.duration!=null&&ev.duration!==''?ev.duration:'—')}</b> jam</span></div>
+    <div class="pk-err" id="pk-err"></div>
+    <div class="pk-foot">
+      <label><input type="checkbox" id="pk-none"> Event ini tidak ada kendala</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        ${en?'<button type="button" class="btn small danger" id="pk-del">Hapus Isian</button>':''}
+        <button type="button" class="btn small secondary" id="pk-cancel">Batal</button>
+        <button type="button" class="btn small" id="pk-save">Simpan</button>
+      </div>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('mousedown', e=>{ if(e.target===ov) pkCloseEditor(); });
+  ov.addEventListener('click', e=>{
+    const add = e.target.closest('[data-pk-add]');
+    if(add){ pkCollectRows(); pkEditorState.noConstraint=false; pkEditorState.items.push({ cat:add.dataset.pkAdd, hours:'', note:'' }); pkRenderRows(); return; }
+    const rm = e.target.closest('[data-pk-rm]');
+    if(rm){ pkCollectRows(); pkEditorState.items.splice(Number(rm.dataset.pkRm),1); pkRenderRows(); return; }
+    if(e.target.id==='pk-addnext'){
+      pkCollectRows(); pkEditorState.noConstraint=false;
+      const used = new Set(pkEditorState.items.map(i=>i.cat));
+      const nx = (PK_CATS.find(c=>!used.has(c.key))||PK_CATS[0]).key;
+      pkEditorState.items.push({ cat:nx, hours:'', note:'' }); pkRenderRows(); return;
+    }
+    if(e.target.id==='pk-cancel') pkCloseEditor();
+    if(e.target.id==='pk-save') pkSaveEditor();
+    if(e.target.id==='pk-del') pkDeleteEditor();
+  });
+  ov.querySelector('#pk-none').addEventListener('change', e=>{
+    pkCollectRows();
+    pkEditorState.noConstraint = e.target.checked;
+    if(e.target.checked) pkEditorState.items = [];
+    pkRenderRows();
+  });
+  ov.addEventListener('input', e=>{ if(e.target.closest('#pk-rows')) pkUpdateTotal(); });
+  document.addEventListener('keydown', pkEscHandler);
+  pkRenderRows();
+}
+function pkEscHandler(e){ if(e.key==='Escape') pkCloseEditor(); }
+function pkCloseEditor(){
+  const ov = document.getElementById('pk-overlay');
+  if(ov) ov.remove();
+  document.removeEventListener('keydown', pkEscHandler);
+  pkEditorState = null;
+}
+function pkRenderRows(){
+  const wrap = document.getElementById('pk-rows'); if(!wrap || !pkEditorState) return;
+  const st = pkEditorState;
+  document.getElementById('pk-none').checked = st.noConstraint;
+  const an = document.getElementById('pk-addnext'); if(an){ an.disabled = st.noConstraint; an.style.opacity = st.noConstraint?.4:1; }
+  document.querySelectorAll('#pk-quick button').forEach(b=>{ b.disabled = st.noConstraint; b.style.opacity = st.noConstraint?.4:1; });
+  if(!st.items.length){
+    wrap.innerHTML = `<div class="hint" style="padding:10px 0;">${st.noConstraint?'Ditandai tanpa kendala.':'Belum ada kendala — klik salah satu tombol jenis kendala di atas.'}</div>`;
+    pkUpdateTotal();
+    return;
+  }
+  wrap.innerHTML = st.items.map((it,i)=>`<div class="pk-row" data-i="${i}">
+    <select class="pk-cat">${PK_CATS.map(c=>`<option value="${escUH(c.key)}" ${c.key===it.cat?'selected':''}>${escUH(c.key)}</option>`).join('')}</select>
+    <input type="number" class="pk-hours" min="0" step="0.5" placeholder="jam" value="${escUH(it.hours)}">
+    <input type="text" class="pk-note" maxlength="160" placeholder="${it.cat==='Lainnya'?'Wajib: jelaskan kendalanya':'Mis. part menunggu PR / mekanik cuti'}" value="${escUH(it.note)}">
+    <button type="button" class="pk-x" data-pk-rm="${i}" title="Hapus baris">✕</button>
+  </div>`).join('');
+  pkUpdateTotal();
+}
+function pkUpdateTotal(){
+  const out = document.getElementById('pk-total-val'); const bar = document.getElementById('pk-totalbar');
+  if(!out || !pkEditorState) return;
+  let t = 0;
+  document.querySelectorAll('#pk-rows .pk-hours').forEach(i=>{ t += Number(i.value)||0; });
+  out.textContent = String(Math.round(t*100)/100);
+  const ev = (dailyRecords||[]).find(r=>r.id===pkEditorState.eventId);
+  const d = Number(ev && ev.duration);
+  if(bar) bar.classList.toggle('over', !isNaN(d) && d>0 && t>d);
+}
+function pkCollectRows(){
+  if(!pkEditorState) return;
+  document.querySelectorAll('#pk-rows .pk-row').forEach(row=>{
+    const i = Number(row.dataset.i); const it = pkEditorState.items[i]; if(!it) return;
+    it.cat = row.querySelector('.pk-cat').value;
+    it.hours = row.querySelector('.pk-hours').value;
+    it.note = row.querySelector('.pk-note').value;
+  });
+}
+async function pkSaveEditor(){
+  if(!pkEditorState || !pkCanEdit()) return;
+  pkCollectRows();
+  const st = pkEditorState; const err = document.getElementById('pk-err');
+  const items = [];
+  for(const it of st.items){
+    const h = it.hours===''||it.hours==null ? 0 : Number(it.hours);
+    if(isNaN(h) || h<0){ err.textContent='Durasi kendala harus angka ≥ 0.'; return; }
+    if(it.cat==='Lainnya' && !String(it.note||'').trim()){ err.textContent='Kendala "Lainnya" wajib diberi catatan.'; return; }
+    items.push({ cat:it.cat, hours:h, note:String(it.note||'').replace(/[\r\n]+/g,' ').trim() });
+  }
+  const ev = (dailyRecords||[]).find(r=>r.id===st.eventId); if(!ev) return;
+  const cv = String((document.getElementById('pk-f-comp')||{}).value||'').replace(/[\r\n]+/g,' ').trim();
+  const dv = String((document.getElementById('pk-f-desc')||{}).value||'').replace(/[\r\n]+/g,' ').trim();
+  const compEdit = (cv && cv!==pkCompOrig(ev)) ? cv : '';
+  const descEdit = (dv && dv!==String(ev.jobDesc||'').trim()) ? dv : '';
+  if(!items.length && !st.noConstraint && !compEdit && !descEdit){ err.textContent='Tambahkan minimal satu kendala, centang "tidak ada kendala", atau ubah Komponen/Deskripsi.'; return; }
+  const now = new Date().toISOString();
+  let en = pkEntry(st.eventId);
+  if(!en){
+    en = { id:uid(), eventId:st.eventId, createdBy:currentUserName(), createdAt:now };
+    cbmConstraints.unshift(en);
+  }
+  Object.assign(en, {
+    codeBD: ev.codeBD||'', unitCode: ev.unitCode||'', group: pkGroupOf(ev.unitCode), tanggal: ev.tanggal||'',
+    compEdit, descEdit, items, noConstraint: !items.length && st.noConstraint, updatedBy: currentUserName(), updatedAt: now
+  });
+  en.component = compEdit || pkCompOrig(ev);
+  en.description = descEdit || String(ev.jobDesc||'');
+  await saveCbmConstraints();
+  pkCloseEditor();
+  renderCbmConstraint();
+}
+async function pkDeleteEditor(){
+  if(!pkEditorState || !pkCanEdit()) return;
+  if(!confirm('Hapus isian kendala untuk event ini?')) return;
+  cbmConstraints = cbmConstraints.filter(e=>e.eventId!==pkEditorState.eventId);
+  await saveCbmConstraints();
+  pkCloseEditor();
+  renderCbmConstraint();
+}
+
+function pkExportExcel(){
+  if(typeof XLSX==='undefined'){ alert('Library Excel belum termuat. Coba lagi sebentar.'); return; }
+  const events = pkEvents(); const S = pkBuildStats(events);
+  const evRows = events.map(ev=>{
+    const en = pkEntry(ev.id); const st = pkStatusOf(en);
+    return {
+      'Tanggal': ev.tanggal||'', 'Kode BD': ev.codeBD||'', 'Grup': PK_GROUP_META[pkGroupOf(ev.unitCode)].label, 'Unit': ev.unitCode||'', 'Komponen': pkCompOf(ev),
+      'Deskripsi': pkDescOf(ev), 'Durasi BD (jam)': ev.duration!=null?ev.duration:'',
+      'Status Isian': st==='done'?'Ada kendala':st==='clear'?'Tanpa kendala':'Belum diisi',
+      'Kendala': (en&&en.items||[]).map(i=>i.cat).join(', '),
+      'Total Jam Delay': (en&&en.items||[]).reduce((a,i)=>a+(Number(i.hours)||0),0),
+      'Catatan': (en&&en.items||[]).map(i=>i.cat+': '+(i.note||'-')).join(' | '),
+      'Diinput Oleh': en?en.updatedBy||'':''
+    };
+  });
+  const rk = S.items.map((d,i)=>({ 'Rank':i+1, 'Kendala':d.key, 'Jumlah Event':d.count, 'Total Jam Delay':Number(d.hours.toFixed(1)),
+    '% of Total':Number(d.pct.toFixed(1)), 'Kumulatif %':Number(d.cumPct.toFixed(1)), 'Klasifikasi':d.vital?'Vital Few':'Trivial Many',
+    'Keterangan Kendala': pkNoteList(d).map(x=>x.text+(x.n>1?' (x'+x.n+')':'')).join(' | ') || pkMeta(d.key).hint,
+    'Event SEN':d.g.SEN.count, 'Jam SEN':Number(d.g.SEN.hours.toFixed(1)), 'Event DTJ':d.g.DTJ.count, 'Jam DTJ':Number(d.g.DTJ.hours.toFixed(1)) }));
+  const dt = []; pkDetailRows(S).list.forEach(x=>{ dt.push({ 'Rank':x.rank, 'Tanggal':x.tanggal, 'Unit':x.unit, 'Deskripsi':x.descs.join(' | '), 'Kendala':x.cons.map(c=>c.key).join(', '), 'Duration per Kendala (jam)':x.cons.map(c=>c.key+': '+c.hours.toFixed(1)).join(' | '), 'Keterangan Kendala':x.cons.map(c=>c.key+': '+(c.notes.join('; ')||'-')+' ('+c.hours.toFixed(1)+' jam)').join(' | '), 'Event':x.events, 'Delay (jam)':Number(x.hours.toFixed(1)), 'Kontribusi %':Number(x.pct.toFixed(1)), 'Kumulatif %':Number(x.cumPct.toFixed(1)), 'Klasifikasi':x.vital?'Vital Few':'Trivial Many' }); });
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rk.length?rk:[{Info:'Belum ada data'}]), 'Ranking Kendala');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dt.length?dt:[{Info:'Belum ada data'}]), 'Detail Ranking');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(evRows.length?evRows:[{Info:'Belum ada data'}]), 'Event & Kendala');
+  XLSX.writeFile(wb, 'Pareto-Kendala-CBM-'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
+
+(function initPkResize(){
+  let tm=null;
+  window.addEventListener('resize', ()=>{
+    clearTimeout(tm);
+    tm = setTimeout(()=>{ try{ if(typeof cbmActiveTab!=='undefined' && cbmActiveTab==='constraint' && !pkEditorState) renderCbmConstraint(); }catch(_e){} }, 250);
+  });
+})();
+(function initPkGroupHandlers(){
+  document.getElementById('pk-group-tabs')?.addEventListener('click', e=>{
+    const b = e.target.closest('[data-pk-group]'); if(!b) return;
+    pkGroup = b.dataset.pkGroup || 'SEN';
+    pkUnit = '';
+    renderCbmConstraint();
+  });
+  document.getElementById('pk-filter-unit')?.addEventListener('change', e=>{
+    pkUnit = e.target.value || '';
+    renderCbmConstraint();
+  });
+})();
+(function initPkHandlers(){
+  document.getElementById('pk-metric-tabs')?.addEventListener('click', e=>{
+    const chip = e.target.closest('[data-pk-metric]'); if(!chip) return;
+    pkMetric = chip.dataset.pkMetric;
+    document.querySelectorAll('#pk-metric-tabs .chip[data-pk-metric]').forEach(c=>c.classList.toggle('active', c===chip));
+    renderCbmConstraint();
+  });
+  ['pk-filter-status','pk-filter-cat'].forEach(id=> document.getElementById(id)?.addEventListener('change', ()=>pkRenderEventTable(pkEvents())));
+  document.getElementById('pk-filter-q')?.addEventListener('input', ()=>pkRenderEventTable(pkEvents()));
+  document.getElementById('pk-clear-filter')?.addEventListener('click', ()=>{
+    ['pk-filter-status','pk-filter-cat','pk-filter-q'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+    renderCbmConstraint();
+  });
+  document.getElementById('pk-event-tbody')?.addEventListener('click', e=>{
+    const b = e.target.closest('[data-pk-edit]'); if(b) pkOpenEditor(b.dataset.pkEdit);
+  });
+  document.getElementById('pk-filter-export')?.addEventListener('click', pkExportExcel);
 })();
 
 function renderCBM(){
