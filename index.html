@@ -2392,6 +2392,19 @@ body.role-mechanic #history-filters{ display:none !important; }
 .notif-item.urgent .notif-title{ color:var(--red); }
 .notif-item .notif-desc{ font-size:11.5px; color:var(--text-dim); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .notif-panel-foot{ padding:8px 14px; text-align:center; font-size:10.5px; color:var(--text-faint); border-top:1px solid var(--line); font-family:'JetBrains Mono',monospace; }
+.notif-item.is-read{ opacity:0.55; }
+.notif-item.is-read .notif-title{ font-weight:500; }
+.notif-item{ cursor:pointer; }
+.notif-list{ overflow-y:auto; max-height:calc(70vh - 150px); -webkit-overflow-scrolling:touch; }
+.notif-tools{ padding:8px 12px; border-bottom:1px solid var(--line); display:flex; flex-direction:column; gap:6px; }
+.notif-tools-row{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+.notif-btn{ font-size:11px; padding:6px 9px; border-radius:6px; border:1px solid var(--line); background:var(--panel-2); color:var(--text); cursor:pointer; min-height:30px; }
+.notif-btn:hover:not(:disabled){ border-color:var(--yellow); }
+.notif-btn:disabled{ opacity:0.4; cursor:default; }
+.notif-btn.primary{ background:var(--yellow); color:#15171b; border-color:var(--yellow); font-weight:700; width:100%; }
+.notif-chip{ font-size:11px; padding:4px 8px; border-radius:20px; background:rgba(60,180,100,0.15); color:#5fd08a; }
+.notif-chip.warn{ background:rgba(229,72,77,0.15); color:var(--red); }
+.notif-hint{ font-size:11px; color:var(--text-dim); line-height:1.4; }
 
 /* MOBILE / RESPONSIVE ACCESS (HP & LAPTOP) */
 .menu-toggle{ display:none; }
@@ -3964,7 +3977,8 @@ button.wa-green:hover, button.wa-sync-only-fahmi:hover{
               <h4 id="notif-panel-title">Notifikasi</h4>
               <span class="hint" style="margin:0;" id="notif-panel-role">—</span>
             </div>
-            <div id="notif-panel-list"></div>
+            <div id="notif-panel-tools" class="notif-tools"></div>
+            <div id="notif-panel-list" class="notif-list"></div>
             <div class="notif-panel-foot">Klik notifikasi untuk membuka halaman terkait</div>
           </div>
         </div>
@@ -10014,7 +10028,7 @@ function setupPwaInstallSupport(){
     // tidak bisa didaftarkan dari blob: URL di browser manapun (selalu gagal & memicu
     // warning di console). Di preview sandbox (protokol blob-request:/blob:) registrasi
     // SW otomatis dilewati; fitur PWA tetap aktif normal saat web sudah di-host di http/https.
-    navigator.serviceWorker.register('sw.js?v=20260922-1457', { scope:'./' }).catch(err=> console.warn('SW register failed', err));
+    navigator.serviceWorker.register('sw.js?v=20261013-v68', { scope:'./' }).catch(err=> console.warn('SW register failed', err));
   }
 }
 function bindSiteQrUI(){
@@ -10432,6 +10446,8 @@ document.getElementById('form-recover')?.addEventListener('submit', async (e)=>{
 });
 
 document.getElementById('btn-logout').addEventListener('click', async ()=>{
+  try{ await pushUnsubscribeDevice(); }catch(_e){}
+  window.__pushSynced = false;
   loggedInUser = null;
   await clearActiveSession();
   loginForm.reset();
@@ -11964,6 +11980,7 @@ document.getElementById('form-daily').addEventListener('submit', async (e)=>{
       const res = await insertDailyRecordDb(rec);
       if(!res.ok){ dailyRecords = dailyRecords.filter(r=>r.id!==rec.id); saveFailed = true; lastErrDetail = res.error; }
     } else { await saveDaily(); }
+    if(!saveFailed){ try{ sendPush({roles:['Supervisor']}, 'Menunggu Approval — Daily Maintenance', `${rec.unitCode||'-'} — ${categoryLabel(rec.category)||'-'} · oleh ${rec.mechanic||rec.submittedBy||'-'}`, 'daily', 'daily-appr-'+rec.id); }catch(_e){} }
   }
 
   if(saveFailed){
@@ -13963,6 +13980,7 @@ window.approveDaily = async function(id){
     const res = await updateDailyRecordDb(r);
     if(!res.ok){ Object.assign(r, backup); alert(`⚠ Gagal menyimpan approval ke server: ${res.error?.message||'unknown error'}`); renderAll(); return; }
   } else { await saveDaily(); }
+  try{ sendPush({names:[r.mechanic,r.submittedBy], usernames:[r.submittedBy]}, 'Report Disetujui', `${r.unitCode||'-'} — ${categoryLabel(r.category)||'-'} · oleh ${r.approvedBy||'-'}`, 'daily', 'daily-ok-'+r.id); }catch(_e){}
   renderAll();
   syncDailyToSheets();
 }
@@ -13982,6 +14000,7 @@ window.rejectDaily = async function(id){
     const res = await updateDailyRecordDb(r);
     if(!res.ok){ Object.assign(r, backup); alert(`⚠ Gagal menyimpan penolakan ke server: ${res.error?.message||'unknown error'}`); renderAll(); return; }
   } else { await saveDaily(); }
+  try{ sendPush({names:[r.mechanic,r.submittedBy], usernames:[r.submittedBy]}, 'Report Ditolak — Perlu Diperbaiki', `${r.unitCode||'-'} · alasan: ${reason||'-'}`, 'daily', 'daily-rej-'+r.id); }catch(_e){}
   renderAll();
   syncDailyToSheets();
 }
@@ -17181,6 +17200,7 @@ document.getElementById('form-planningsystem').addEventListener('submit', async 
   };
   planningSystemRecords.unshift(rec);
   await savePlanningSystem();
+  try{ sendPush({usernames:[rec.picUsername,rec.pic2Username]}, 'Rencana Jadwal Maintenance Baru', `${rec.unitCode||'-'} — ${rec.component||'-'} · Due ${formatDateDMY(rec.dueDate)}`, 'planningsystem', 'planning-'+rec.id); }catch(_e){}
   document.getElementById('form-planningsystem').reset();
   fillPsUnitCodeDatalist();
   try{ refreshPsFilterUnitOptions(); }catch(_e){}
@@ -18343,6 +18363,7 @@ document.getElementById('form-preins-plan')?.addEventListener('submit', async (e
   };
   preInspectionPlans.unshift(rec);
   await savePreInspectionPlans();
+  try{ sendPush({usernames:[rec.mechanicUsername]}, 'Jadwal Pre Inspection Baru', `${rec.unitCode||'-'} · Tanggal ${formatDateDMY(rec.tanggal)}`, 'preinspection', 'preins-plan-'+rec.id); }catch(_e){}
   document.getElementById('form-preins-plan').reset();
   document.getElementById('preins-plan-status').value = 'Open';
   syncTypeFromUnit(preinsPlanUnitSelect, document.getElementById('preins-plan-typeunit'));
@@ -24440,6 +24461,8 @@ document.getElementById('unit-period-reset-btn')?.addEventListener('click', func
      Maintenance (Planning System) yang ditujukan ke dirinya.
    - Supervisor: dapat notifikasi saat ada pekerjaan yang menunggu approval (Daily Maintenance
      & Pre Inspection berstatus Pending) dan saat ada Plan Service yang akan/sudah jatuh tempo.
+   (v67) Status dibaca/belum, suara, badge, tombol aktifkan, notifikasi via Service Worker (HP),
+   notifikasi hasil approval & laporan Breakdown.
    Ditampilkan lewat lonceng notifikasi di topbar (bisa dibuka dari halaman manapun) DAN,
    kalau browser/HP mengizinkan, muncul sebagai notifikasi sistem (Web Notification API)
    supaya tetap terlihat walau tab sedang tidak difokuskan. */
@@ -24452,8 +24475,43 @@ function addDaysToStr(dateStr, n){
 
 function requestNotifPermission(){
   if('Notification' in window && Notification.permission==='default'){
-    Notification.requestPermission().catch(()=>{});
+    try{ const p = Notification.requestPermission(); if(p && p.catch) p.catch(()=>{}); }catch(e){}
   }
+}
+
+/* ---------- Preferensi & status baca (per user, disimpan di perangkat) ---------- */
+function notifUserKey(){ return loggedInUser ? loggedInUser.username : 'guest'; }
+function notifPrefs(){
+  try{ return Object.assign({ sound:true, system:true }, JSON.parse(localStorage.getItem('ucare_notif-prefs_'+notifUserKey())||'{}')); }
+  catch(e){ return { sound:true, system:true }; }
+}
+function saveNotifPrefs(p){ try{ localStorage.setItem('ucare_notif-prefs_'+notifUserKey(), JSON.stringify(p)); }catch(e){} }
+function getReadNotifSet(){
+  try{ return new Set(JSON.parse(localStorage.getItem('ucare_notif-read_'+notifUserKey())||'[]')); }
+  catch(e){ return new Set(); }
+}
+function saveReadNotifSet(s){ try{ localStorage.setItem('ucare_notif-read_'+notifUserKey(), JSON.stringify(Array.from(s))); }catch(e){} }
+
+function nameMatchesMe(v){
+  if(!v || !loggedInUser) return false;
+  const x = String(v).trim().toLowerCase();
+  return x===(loggedInUser.name||'').trim().toLowerCase() || x===(loggedInUser.username||'').trim().toLowerCase();
+}
+function daysAgoStr(n){ return addDaysToStr(toDateStr(new Date()), -n); }
+
+/* Notifikasi yang berlaku untuk SEMUA role: laporan Breakdown Unit terbaru (≤ 3 hari). */
+function computeCommonNotifications(){
+  const out = [];
+  const since = daysAgoStr(3);
+  (breakdownReports||[]).filter(r=> r.tanggal && r.tanggal>=since).forEach(r=>{
+    out.push({
+      id:'bdr-'+r.id, view:'bdreport', icon:'🚨', urgent:true,
+      title:'Laporan Breakdown Unit',
+      body:`${r.unitCode||'-'} · ${formatDateDMY(r.tanggal)} ${r.jamBreakdown||''}${r.keterangan?' · '+r.keterangan:''}`.trim(),
+      date: r.tanggal||''
+    });
+  });
+  return out;
 }
 
 function computeMechanicNotifications(){
@@ -24474,8 +24532,7 @@ function computeMechanicNotifications(){
       });
     });
 
-  // Plan Schedule Maintenance (Planning System) yang ditujukan ke mekanik ybs (sebagai PIC 1
-  // maupun PIC 2) & masih Open — dibuat oleh Supervisor.
+  // Plan Schedule Maintenance (Planning System) — PIC 1 maupun PIC 2, status Open.
   planningSystemRecords.filter(r=> r.status==='Open' &&
       (r.picUsername===loggedInUser.username || r.pic2Username===loggedInUser.username))
     .forEach(r=>{
@@ -24502,7 +24559,19 @@ function computeMechanicNotifications(){
       });
     });
 
-  notifs.sort((a,b)=> (b.urgent-a.urgent) || (a.date||'').localeCompare(b.date||''));
+  // Hasil approval atas report Daily Maintenance milik mekanik ybs.
+  const recent = new Date(Date.now()-2*864e5).toISOString();
+  dailyRecords.filter(r=> (nameMatchesMe(r.mechanic)||nameMatchesMe(r.submittedBy)) &&
+      (r.approvalStatus==='Rejected' || (r.approvalStatus==='Approved' && (r.updatedAt||'')>=recent)))
+    .forEach(r=>{
+      const rej = r.approvalStatus==='Rejected';
+      notifs.push({
+        id:(rej?'daily-rej-':'daily-ok-')+r.id+'-'+(r.updatedAt||''), view:'daily', icon:rej?'❌':'✅', urgent:rej,
+        title: rej ? 'Report Ditolak — Perlu Diperbaiki' : 'Report Disetujui',
+        body:`${r.unitCode||'-'} — ${categoryLabel(r.category)||'-'}${rej&&r.rejectNote?' · alasan: '+r.rejectNote:''}${r.approvedBy?' · oleh '+r.approvedBy:''}`,
+        date: r.tanggal||''
+      });
+    });
   return notifs;
 }
 
@@ -24512,7 +24581,6 @@ function computeSupervisorNotifications(){
   const today = toDateStr(new Date());
   const soon = addDaysToStr(today, 7);
 
-  // Daily Maintenance yang menunggu approval Supervisor.
   dailyRecords.filter(r=> (r.approvalStatus||'Pending')==='Pending').forEach(r=>{
     notifs.push({
       id:'daily-appr-'+r.id, view:'daily', icon:'✅', urgent:true,
@@ -24522,7 +24590,6 @@ function computeSupervisorNotifications(){
     });
   });
 
-  // Pre Inspection yang menunggu approval Supervisor.
   preInspectionRecords.filter(r=> (r.approvalStatus||'Pending')==='Pending').forEach(r=>{
     notifs.push({
       id:'preins-appr-'+r.id, view:'preinspection', icon:'✅', urgent:true,
@@ -24532,7 +24599,6 @@ function computeSupervisorNotifications(){
     });
   });
 
-  // Plan Service yang akan jatuh tempo (≤7 hari) atau sudah terlambat — untuk dipantau Supervisor.
   planRecords.filter(r=> r.status!=='Done' && r.planDate && r.planDate<=soon).forEach(r=>{
     const overdue = r.planDate < today;
     notifs.push({
@@ -24542,95 +24608,292 @@ function computeSupervisorNotifications(){
       date: r.planDate||''
     });
   });
-
-  notifs.sort((a,b)=> (b.urgent-a.urgent) || (a.date||'').localeCompare(b.date||''));
   return notifs;
 }
 
-function notifFiredKey(){ return 'ucare_notif-fired_'+(loggedInUser?loggedInUser.username:'guest'); }
+function computeAllNotifications(){
+  if(!loggedInUser) return [];
+  const base = currentRole()==='Supervisor' ? computeSupervisorNotifications() : computeMechanicNotifications();
+  const all = base.concat(computeCommonNotifications());
+  all.sort((a,b)=> (b.urgent-a.urgent) || (a.date||'').localeCompare(b.date||''));
+  return all;
+}
+
+function notifFiredKey(){ return 'ucare_notif-fired_'+notifUserKey(); }
 function getFiredNotifSet(){
   try{ return new Set(JSON.parse(localStorage.getItem(notifFiredKey())||'[]')); }
   catch(e){ return new Set(); }
 }
-function markNotifFired(ids){
-  if(!ids.length) return;
-  const s = getFiredNotifSet();
-  ids.forEach(id=>s.add(id));
-  try{ localStorage.setItem(notifFiredKey(), JSON.stringify(Array.from(s))); }catch(e){}
+function saveFiredNotifSet(s){ try{ localStorage.setItem(notifFiredKey(), JSON.stringify(Array.from(s))); }catch(e){} }
+
+/* ---------- Notifikasi sistem (HP & desktop) ----------
+   Chrome Android TIDAK mengizinkan `new Notification()` — wajib lewat ServiceWorkerRegistration
+   .showNotification(). Karena itu dipakai SW lebih dulu, `new Notification()` hanya cadangan desktop. */
+function notifSupport(){
+  if(!('Notification' in window)){
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    return { ok:false, reason: ios ? 'Di iPhone/iPad: buka lewat Safari → Bagikan → "Tambah ke Layar Utama", lalu buka aplikasinya dari layar utama.' : 'Browser ini tidak mendukung notifikasi sistem.' };
+  }
+  return { ok:true, perm:Notification.permission };
+}
+async function showSystemNotification(title, opts){
+  opts = Object.assign({ icon:'icon-192.png', badge:'icon-192.png', vibrate:[200,100,200], lang:'id' }, opts||{});
+  try{
+    if('serviceWorker' in navigator){
+      const reg = (await navigator.serviceWorker.getRegistration()) || (await navigator.serviceWorker.ready.catch(()=>null));
+      if(reg && reg.showNotification){ await reg.showNotification(title, opts); return true; }
+    }
+  }catch(e){ console.warn('SW showNotification gagal', e); }
+  try{
+    const n = new Notification(title, opts);
+    n.onclick = ()=>{ window.focus(); if(opts.data && opts.data.view) goToNotifView(opts.data.view); n.close(); };
+    return true;
+  }catch(e){ return false; }
+}
+function notifBeep(){
+  try{
+    const AC = window.AudioContext || window.webkitAudioContext; if(!AC) return;
+    const ctx = window.__notifAudioCtx || (window.__notifAudioCtx = new AC());
+    if(ctx.state==='suspended') ctx.resume();
+    const t = ctx.currentTime;
+    [880, 1175].forEach((f,i)=>{
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type='sine'; o.frequency.value=f; o.connect(g); g.connect(ctx.destination);
+      g.gain.setValueAtTime(0.0001, t+i*0.16); g.gain.exponentialRampToValueAtTime(0.18, t+i*0.16+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t+i*0.16+0.15);
+      o.start(t+i*0.16); o.stop(t+i*0.16+0.16);
+    });
+  }catch(e){}
 }
 
-/* Munculkan notifikasi sistem (Web Notification) di HP/laptop untuk item yang BELUM pernah
-   ditampilkan sebelumnya, supaya mekanik/supervisor tidak dibanjiri notifikasi berulang tiap
-   panel me-refresh data. */
+/* Tampilkan notifikasi sistem hanya untuk item yang BELUM pernah dimunculkan di perangkat ini. */
 function fireBrowserNotifications(notifs){
-  if(!('Notification' in window) || Notification.permission!=='granted') return;
+  const prefs = notifPrefs();
   const fired = getFiredNotifSet();
   const fresh = notifs.filter(n=>!fired.has(n.id));
+  // Bersihkan ID lama yang sudah tidak ada supaya penyimpanan tidak membengkak.
+  const keep = new Set(notifs.map(n=>n.id));
+  const next = new Set(Array.from(fired).filter(id=>keep.has(id)));
+  fresh.forEach(n=>next.add(n.id));
+  saveFiredNotifSet(next);
   if(!fresh.length) return;
-  fresh.slice(0,5).forEach(n=>{
-    try{
-      const notif = new Notification(n.title, { body:n.body, tag:n.id, icon: undefined });
-      notif.onclick = ()=>{ window.focus(); goToNotifView(n.view); notif.close(); };
-    }catch(e){}
-  });
-  markNotifFired(fresh.map(n=>n.id));
+
+  if(prefs.sound) notifBeep();
+  if(!prefs.system || !('Notification' in window) || Notification.permission!=='granted') return;
+  if(fresh.length>3){
+    const urgentN = fresh.filter(n=>n.urgent).length;
+    showSystemNotification(`${fresh.length} notifikasi baru`, {
+      body: urgentN ? `${urgentN} perlu perhatian segera. Buka SEN-FleetCare untuk melihat.` : 'Buka SEN-FleetCare untuk melihat.',
+      tag:'fleetcare-summary', renotify:true, data:{ view:fresh[0].view }
+    });
+    return;
+  }
+  fresh.forEach(n=> showSystemNotification(n.title, {
+    body:n.body, tag:n.id, data:{ view:n.view }, requireInteraction:!!n.urgent
+  }));
 }
 
-window.goToNotifView = function(view){
+window.goToNotifView = function(view, id){
+  if(id){ const s = getReadNotifSet(); s.add(id); saveReadNotifSet(s); }
   const item = document.querySelector(`#main-nav .nav-item[data-view="${view}"]`);
   if(item && !item.classList.contains('role-hidden')) item.click();
-  const panel = document.getElementById('notif-panel');
-  if(panel) panel.classList.remove('show');
+  closeNotifPanel();
+  renderNotificationCenter(true);
+};
+window.notifMarkAllRead = function(){
+  const s = getReadNotifSet();
+  computeAllNotifications().forEach(n=>s.add(n.id));
+  saveReadNotifSet(s);
+  renderNotificationCenter(true);
+};
+window.notifToggleSound = function(){
+  const p = notifPrefs(); p.sound = !p.sound; saveNotifPrefs(p);
+  if(p.sound) notifBeep();
+  renderNotificationCenter(true);
+};
+window.notifEnableSystem = async function(){
+  const sup = notifSupport();
+  if(!sup.ok){ alert(sup.reason); return; }
+  if(Notification.permission==='denied'){
+    alert('Notifikasi diblokir untuk situs ini. Buka pengaturan browser/HP → Izin situs / Notifikasi → izinkan, lalu muat ulang halaman.');
+    return;
+  }
+  if(Notification.permission==='default'){
+    try{ await Notification.requestPermission(); }catch(e){}
+  }
+  const p = notifPrefs(); p.system = true; saveNotifPrefs(p);
+  if(Notification.permission==='granted'){
+    pushSubscribeDevice();
+    await showSystemNotification('Notifikasi aktif ✓', { body:'Anda akan menerima pemberitahuan SEN-FleetCare di perangkat ini.', tag:'fleetcare-test', data:{ view:'' } });
+  }
+  renderNotificationCenter(true);
+};
+window.notifTest = async function(){
+  const sup = notifSupport();
+  if(!sup.ok){ alert(sup.reason); return; }
+  if(Notification.permission!=='granted'){ await window.notifEnableSystem(); return; }
+  notifBeep();
+  const ok = await showSystemNotification('Tes Notifikasi SEN-FleetCare', { body:'Jika Anda melihat ini, notifikasi sistem berfungsi.', tag:'fleetcare-test', data:{ view:'' } });
+  if(!ok) alert('Notifikasi sistem gagal ditampilkan di perangkat ini.');
 };
 
-function renderNotificationCenter(){
+function renderNotificationCenter(noFire){
   const bell = document.getElementById('notif-bell');
   const countEl = document.getElementById('notif-count');
   const listEl = document.getElementById('notif-panel-list');
   const titleEl = document.getElementById('notif-panel-title');
   const roleEl = document.getElementById('notif-panel-role');
+  const toolsEl = document.getElementById('notif-panel-tools');
   if(!bell || !countEl || !listEl) return;
+  if(!window.__notifBaseTitle) window.__notifBaseTitle = document.title;
 
   if(!loggedInUser){
     countEl.style.display = 'none';
     bell.classList.remove('has-urgent');
     listEl.innerHTML = '';
+    document.title = window.__notifBaseTitle;
+    try{ if(navigator.clearAppBadge) navigator.clearAppBadge(); }catch(e){}
     return;
   }
 
+  // Buka halaman tujuan dari klik notifikasi sistem (saat app dibuka dari notifikasi).
+  if(window.__pendingNotifView){
+    const v = window.__pendingNotifView; window.__pendingNotifView = null;
+    setTimeout(()=>window.goToNotifView(v), 0);
+  }
+
   const isSupervisor = currentRole()==='Supervisor';
-  const notifs = isSupervisor ? computeSupervisorNotifications() : computeMechanicNotifications();
-  const prevCount = Number(bell.dataset.prevCount||0);
+  const notifs = computeAllNotifications();
+  const read = getReadNotifSet();
+  // Buang status "dibaca" untuk item yang sudah tidak ada.
+  const ids = new Set(notifs.map(n=>n.id));
+  let pruned = false; Array.from(read).forEach(id=>{ if(!ids.has(id)){ read.delete(id); pruned = true; } });
+  if(pruned) saveReadNotifSet(read);
+  const unread = notifs.filter(n=>!read.has(n.id));
+  const prevUnread = Number(bell.dataset.prevCount||0);
+  const prefs = notifPrefs();
+  const sup = notifSupport();
 
   if(titleEl) titleEl.textContent = isSupervisor ? 'Notifikasi Supervisor' : 'Notifikasi Mekanik';
-  if(roleEl) roleEl.textContent = isSupervisor ? 'Approval & Plan Service' : 'Plan Service & Jadwal Maintenance';
+  if(roleEl) roleEl.textContent = unread.length ? `${unread.length} belum dibaca` : 'Semua sudah dibaca';
 
   if(!notifs.length){
-    countEl.style.display = 'none';
-    bell.classList.remove('has-urgent');
-    listEl.innerHTML = `<div class="notif-panel-empty">Tidak ada notifikasi baru saat ini.</div>`;
+    listEl.innerHTML = `<div class="notif-panel-empty">Tidak ada notifikasi saat ini.</div>`;
   } else {
-    countEl.textContent = notifs.length>99 ? '99+' : String(notifs.length);
-    countEl.style.display = 'flex';
-    bell.classList.toggle('has-urgent', notifs.some(n=>n.urgent));
     listEl.innerHTML = notifs.map(n=>`
-      <div class="notif-item ${n.urgent?'urgent':''}" onclick="goToNotifView('${n.view}')">
+      <div class="notif-item ${n.urgent?'urgent':''} ${read.has(n.id)?'is-read':''}" onclick="goToNotifView('${n.view}','${String(n.id).replace(/[^A-Za-z0-9_\-]/g,'')}')" data-nid="${escUH(n.id)}">
         <div class="notif-ico">${n.icon}</div>
         <div class="notif-body">
-          <div class="notif-title">${n.urgent?'<span class="dot"></span>':''}${escUH(n.title)}</div>
+          <div class="notif-title">${read.has(n.id)?'':'<span class="dot"></span>'}${escUH(n.title)}</div>
           <div class="notif-desc" title="${escUH(n.body)}">${escUH(n.body)}</div>
         </div>
       </div>`).join('');
   }
 
-  // Getarkan lonceng kalau jumlah notifikasi bertambah dibanding render sebelumnya.
-  if(notifs.length>prevCount){
+  if(toolsEl){
+    let perm = '';
+    if(!sup.ok) perm = `<div class="notif-hint">${escUH(sup.reason)}</div>`;
+    else if(sup.perm==='granted') perm = `<span class="notif-chip ok">🔔 Notifikasi sistem aktif${pushSupported()?' · push HP aktif':''}</span>`;
+    else if(sup.perm==='denied') perm = `<span class="notif-chip warn">🚫 Diblokir di browser</span>`;
+    else perm = `<button type="button" class="notif-btn primary" onclick="notifEnableSystem()">🔔 Aktifkan notifikasi HP/desktop</button>`;
+    toolsEl.innerHTML = `
+      <div class="notif-tools-row">${perm}</div>
+      <div class="notif-tools-row">
+        <button type="button" class="notif-btn" onclick="notifMarkAllRead()" ${unread.length?'':'disabled'}>✓ Tandai semua dibaca</button>
+        <button type="button" class="notif-btn" onclick="notifToggleSound()">${prefs.sound?'🔊 Suara: ON':'🔇 Suara: OFF'}</button>
+        <button type="button" class="notif-btn" onclick="notifTest()">Tes</button>
+      </div>`;
+  }
+
+  if(unread.length){
+    countEl.textContent = unread.length>99 ? '99+' : String(unread.length);
+    countEl.style.display = 'flex';
+  } else countEl.style.display = 'none';
+  bell.classList.toggle('has-urgent', unread.some(n=>n.urgent));
+
+  // Judul tab & badge ikon aplikasi (PWA) menampilkan jumlah belum dibaca.
+  document.title = unread.length ? `(${unread.length}) ${window.__notifBaseTitle}` : window.__notifBaseTitle;
+  try{
+    if(unread.length && navigator.setAppBadge) navigator.setAppBadge(unread.length);
+    else if(navigator.clearAppBadge) navigator.clearAppBadge();
+  }catch(e){}
+
+  if(unread.length>prevUnread){
     bell.classList.remove('ring'); void bell.offsetWidth; bell.classList.add('ring');
   }
-  bell.dataset.prevCount = notifs.length;
+  bell.dataset.prevCount = unread.length;
 
-  fireBrowserNotifications(notifs);
+  if(!noFire) fireBrowserNotifications(notifs);
+  if(!window.__pushSynced && sup.ok && sup.perm==='granted'){ window.__pushSynced = true; pushSubscribeDevice(); }
 }
+
+
+/* ---------- WEB PUSH (v68): notifikasi ke HP/desktop walau aplikasi TERTUTUP ----------
+   Perlu Supabase Edge Function 'send-push' (lihat SETUP-PUSH-SUPABASE.txt). Kunci publik VAPID
+   aman ditaruh di sini; kunci privat HANYA di secret Supabase. */
+const PUSH_CONFIG = {
+  vapidPublicKey: 'BG6mFNV4E2IdvZpLvrR5UIZkb8LR-bRi70fn7_1uOrDWpm7BREqUN9wxaX-sfjsGhrHEVMifmDpP63h6gqMSFOM',
+  functionUrl: BACKEND_CONFIG.supabaseUrl ? BACKEND_CONFIG.supabaseUrl.replace(/\/$/,'')+'/functions/v1/send-push' : ''
+};
+function pushSupported(){
+  return !!(PUSH_CONFIG.vapidPublicKey && PUSH_CONFIG.functionUrl && STORAGE_MODE==='supabase' &&
+    'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window);
+}
+function b64uToU8(b){
+  const pad='='.repeat((4-b.length%4)%4), raw=atob((b+pad).replace(/-/g,'+').replace(/_/g,'/'));
+  return Uint8Array.from(raw,c=>c.charCodeAt(0));
+}
+async function pushDeviceKey(sub){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(sub.endpoint));
+  return 'push-sub-'+Array.from(new Uint8Array(buf)).slice(0,12).map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+/* Daftarkan perangkat ini ke user yang sedang login (satu record per perangkat → ganti user = ditimpa). */
+async function pushSubscribeDevice(){
+  try{
+    if(!loggedInUser || !pushSupported() || Notification.permission!=='granted') return false;
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if(!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:b64uToU8(PUSH_CONFIG.vapidPublicKey) });
+    const rec = { username:loggedInUser.username, name:loggedInUser.name||'', role:currentRole(), position:currentPosition(),
+      sub:sub.toJSON(), ua:navigator.userAgent.slice(0,120), ts:new Date().toISOString() };
+    await appStorage.set(await pushDeviceKey(sub), JSON.stringify(rec));
+    return true;
+  }catch(e){ console.warn('Push subscribe gagal', e); return false; }
+}
+async function pushUnsubscribeDevice(){
+  try{
+    if(!('serviceWorker' in navigator)) return;
+    const reg = await navigator.serviceWorker.getRegistration(); if(!reg) return;
+    const sub = await reg.pushManager.getSubscription(); if(!sub) return;
+    await appStorage.delete(await pushDeviceKey(sub));
+  }catch(e){}
+}
+/* Kirim push ke user lain. target: {roles,usernames,names,all}. Gagal diam-diam (tidak mengganggu alur kerja). */
+function sendPush(target, title, body, view, tag){
+  try{
+    if(!pushSupported()) return;
+    fetch(PUSH_CONFIG.functionUrl, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'apikey':BACKEND_CONFIG.supabaseAnonKey, 'Authorization':'Bearer '+BACKEND_CONFIG.supabaseAnonKey },
+      body: JSON.stringify(Object.assign({}, target, { title, body, view, tag, exclude: loggedInUser ? loggedInUser.username : '' })),
+      keepalive:true
+    }).catch(()=>{});
+  }catch(e){}
+}
+
+/* Klik pada notifikasi sistem (SW) → buka halaman terkait. */
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.addEventListener('message', e=>{
+    if(e.data && e.data.type==='notif-click' && e.data.view){
+      if(loggedInUser) window.goToNotifView(e.data.view); else window.__pendingNotifView = e.data.view;
+    }
+  });
+}
+try{
+  const _nv = new URLSearchParams(location.search).get('notif');
+  if(_nv){ window.__pendingNotifView = _nv; history.replaceState(null,'',location.pathname+location.hash); }
+}catch(e){}
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden && loggedInUser) renderNotificationCenter(); });
 
 /** Posisikan panel notifikasi (position:fixed) tepat di bawah lonceng, tetap di viewport. */
 function positionNotifPanel(){
@@ -24747,6 +25010,7 @@ document.getElementById('form-bdreport').addEventListener('submit', async (e)=>{
   };
   breakdownReports.unshift(record);
   await saveBreakdownReports();
+  try{ sendPush({all:true}, '🚨 Laporan Breakdown Unit', `${record.unitCode||'-'} · ${record.jamBreakdown||''}${record.keterangan?' · '+record.keterangan:''}`, 'bdreport', 'bdr-'+record.id); }catch(_e){}
   renderBreakdownReportTable();
 
   const keepUnit = bdrUnitSelect.value;
@@ -30585,7 +30849,7 @@ function subscribeDailyRealtime(){
     }, 30000);
     // Cek ulang notifikasi (Plan Service jatuh tempo, approval baru, dll) tiap 1 menit —
     // supaya lonceng & notifikasi sistem tetap up-to-date walau tidak ada perubahan data lain.
-    setInterval(()=>{ if(loggedInUser && !document.hidden) renderNotificationCenter(); }, 60000);
+    setInterval(()=>{ if(loggedInUser) renderNotificationCenter(); }, 60000);
     // Render ulang tabel Daily Maintenance tiap 1 menit supaya tautan "Edit" milik mekanik
     // otomatis hilang begitu lewat batas 24 jam, walau tidak ada perubahan data lain.
     setInterval(()=>{ if(loggedInUser && !document.hidden && document.getElementById('daily-tbody')) renderDailyTable(); }, 60000);

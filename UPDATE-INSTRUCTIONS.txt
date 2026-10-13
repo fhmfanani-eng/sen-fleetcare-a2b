@@ -1,3 +1,15 @@
+v68: WEB PUSH — notifikasi masuk ke HP/desktop walau web TERTUTUP. Butuh setup Supabase Edge Function sekali: ikuti SETUP-PUSH-SUPABASE.txt (file itu JANGAN di-deploy). Tanpa setup, aplikasi tetap jalan seperti v67. Apps Script tidak berubah.
+
+v67: FITUR NOTIFIKASI (desktop & HP)
+     - Notifikasi sistem kini lewat Service Worker -> berfungsi di Chrome Android / PWA (sebelumnya new Notification() ditolak di HP). Klik notifikasi membuka aplikasi + halaman terkait.
+     - Lonceng: badge = jumlah BELUM DIBACA, item yang sudah diklik jadi pudar, tombol 'Tandai semua dibaca', suara ON/OFF, tombol 'Aktifkan notifikasi HP/desktop' dan 'Tes'.
+     - Jenis baru: Mekanik -> report Daily Maintenance DITOLAK (+alasan) / DISETUJUI; semua role -> Laporan Breakdown Unit (3 hari terakhir). Yang lama tetap (Plan Service, Planning, Pre Inspection, Approval).
+     - Jumlah belum dibaca juga tampil di judul tab & badge ikon aplikasi (PWA). Cek ulang tiap 1 menit, juga saat tab di background.
+     - File baru: icon-192.png, icon-512.png (ikon notifikasi).
+     Deploy: ganti index.html, sw.js, + tambahkan icon-192.png & icon-512.png, hard refresh Ctrl+Shift+R. Apps Script TIDAK berubah.
+     HP: Android Chrome -> buka web, login, tekan 'Aktifkan notifikasi', izinkan. iPhone (iOS 16.4+) -> Safari > Bagikan > Tambah ke Layar Utama, buka dari ikon, lalu aktifkan.
+     Batasan: tanpa server push, notifikasi muncul saat web/PWA terbuka atau masih berjalan di background; bila benar-benar tertutup belum ada pemberitahuan (handler 'push' sudah disiapkan di sw.js).
+
 v66o: Constraint Ranking -> kendala yang sama pada unit & tanggal yang sama digabung jadi satu baris (Event & Delay dijumlahkan, deskripsi/keterangan dirangkum bila beda). Unit/tanggal/kendala berbeda tetap terpisah. Export Excel 'Detail Ranking' ikut.
 
 v66n: Constraint Ranking -> tabel tanpa sel gabungan: satu baris = satu event/unit dengan kendala, keterangan, event, delay, kontribusi, kumulatif & klasifikasi miliknya sendiri (diurutkan per delay terbesar, batas 80% dihitung per baris). Tidak ada lagi angka/keterangan unit lain yang menumpuk. Chart Pareto per jenis kendala tidak berubah.
