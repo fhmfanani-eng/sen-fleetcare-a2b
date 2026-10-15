@@ -4703,7 +4703,7 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
         <div class="ps-subview active" id="ps-subview-schedule">
         <div class="panel">
           <div class="panel-head" id="plan-panel-head">
-            <h2>Plan Schedule Service <span class="tag">AUTO SYNC · 4 UNIT LOCK</span></h2>
+            <h2>Plan Schedule Service <span class="tag">AUTO SYNC · 10 UNIT</span></h2>
             <div class="toolbar">
               <button type="button" class="btn small sync-gold" id="btn-sync-plan-all"  title="Sync performance + HM + Jam Kerja Harian, lalu generate jadwal otomatis">☁ Sync & Generate Otomatis</button>
               <button type="button" class="btn small secondary sync-gold" id="btn-sync-daily-wh"  title="Sync WH harian dari sheet performance (T−S)/hari — tanpa sheet baru">☁ Sync Jam Kerja Harian</button>
@@ -4819,7 +4819,7 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
         <div class="ps-subview" id="ps-subview-livehm">
           <div class="panel">
             <div class="panel-head">
-              <h2>Live HM Movement <span class="tag">PER DAY · 4 UNIT</span></h2>
+              <h2>Live HM Movement <span class="tag">PER DAY · 10 UNIT</span></h2>
               <div class="toolbar">
                 <button type="button" class="btn small sync-gold" id="btn-live-hm-sync" title="Sync HM + Performance + Jam Kerja Harian sekarang" >☁ Sync Live HM</button>
               </div>
@@ -4833,6 +4833,12 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
                   <option value="SWA-102">SWA-102</option>
                   <option value="SBD-103">SBD-103</option>
                   <option value="SPC-104">SPC-104</option>
+                  <option value="DZ-04">DZ-04</option>
+                  <option value="DZ-09">DZ-09</option>
+                  <option value="WA-10">WA-10</option>
+                  <option value="PC-11">PC-11</option>
+                  <option value="PC-12">PC-12</option>
+                  <option value="PC-17">PC-17</option>
                 </select>
               </div>
               <div class="ps-live-field">
@@ -6001,6 +6007,12 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
                   <option value="SWA-102">SWA-102</option>
                   <option value="SBD-103">SBD-103</option>
                   <option value="SPC-104">SPC-104</option>
+                  <option value="DZ-04">DZ-04</option>
+                  <option value="DZ-09">DZ-09</option>
+                  <option value="WA-10">WA-10</option>
+                  <option value="PC-11">PC-11</option>
+                  <option value="PC-12">PC-12</option>
+                  <option value="PC-17">PC-17</option>
                 </select>
                 <button type="button" class="btn small" id="sp-budget-export-xlsx" title="Download Excel sesuai filter periode">⬇ Excel</button>
                 <button type="button" class="btn small secondary" id="sp-budget-export-csv" title="Download CSV sesuai filter periode">⬇ CSV</button>
@@ -6052,6 +6064,13 @@ const UNITS = [
   { type:'WA500-6R', code:'SWA-102', category:'Wheel Loader', serial:'WA500-6R-60536' },
   { type:'D85ESS-2A', code:'SBD-103', category:'Bulldozer', serial:'D85ESS-2A' },
   { type:'PC210-10MO', code:'SPC-104', category:'Excavator', serial:'PC210-10MO' },
+  /* Unit DTJ — Plan Schedule Service */
+  { type:'D85ESS-2A', code:'DZ-04', category:'Bulldozer', serial:'DZ-04' },
+  { type:'D85ESS-2A', code:'DZ-09', category:'Bulldozer', serial:'DZ-09' },
+  { type:'WA500-6R', code:'WA-10', category:'Wheel Loader', serial:'WA-10' },
+  { type:'PC210-10MO', code:'PC-11', category:'Excavator', serial:'PC-11' },
+  { type:'PC210-10MO', code:'PC-12', category:'Excavator', serial:'PC-12' },
+  { type:'PC210-10MO', code:'PC-17', category:'Excavator', serial:'PC-17' },
 ];
 /* Target KPI resmi — format skor mengikuti spreadsheet KEY PERFORMANCE INDICATOR Maintenance.
    Acv. = nilai aktual | Score = tier 60% / 80% / 100% dari bobot.
@@ -8182,10 +8201,12 @@ function updateStorageStatusUI(){
 let dailyRecords = [];
 let planRecords = [];
 
-/* PLAN SERVICE LOCK — hanya 4 unit yang diperbolehkan.
+/* PLAN SERVICE LOCK — unit SEN + DTJ yang diperbolehkan.
  * Semua generate, sync, render, dan penyimpanan Plan Service dibatasi ke unit ini.
+ * SEN: SWA-101, SWA-102, SBD-103, SPC-104
+ * DTJ: DZ-04, DZ-09, WA-10, PC-11, PC-12, PC-17
  */
-const PLAN_SERVICE_ALLOWED_UNITS = new Set(['SWA-101','SWA-102','SBD-103','SPC-104']);
+const PLAN_SERVICE_ALLOWED_UNITS = new Set(['SWA-101','SWA-102','SBD-103','SPC-104','DZ-04','DZ-09','WA-10','PC-11','PC-12','PC-17']);
 function isPlanServiceAllowedUnit(code){
   return PLAN_SERVICE_ALLOWED_UNITS.has(String(code||'').trim().toUpperCase());
 }
@@ -14845,13 +14866,16 @@ function getWhOnDate(unitCode, dateStr){
  * Return null jika tidak ada data harian sama sekali.
  */
 function getRecentActualWhPerDay(unitCode, lookbackDays){
-  const code = String(unitCode||'').trim().toUpperCase();
+  const code = (typeof _normPlanUnitCode==='function') ? _normPlanUnitCode(unitCode) : String(unitCode||'').trim().toUpperCase();
   const lb = lookbackDays!=null ? Number(lookbackDays) : 7;
   const today = new Date();
   const cutoff = new Date(today); cutoff.setDate(cutoff.getDate() - Math.max(1, lb*3)); // buffer
   const cutoffStr = cutoff.toISOString().slice(0,10);
   const rows = (dailyWhRecords||[])
-    .filter(r=> String(r.unitCode||'').trim().toUpperCase()===code && String(r.tanggal||'')>=cutoffStr)
+    .filter(r=>{
+      const u = (typeof _normPlanUnitCode==='function') ? _normPlanUnitCode(r.unitCode) : String(r.unitCode||'').trim().toUpperCase();
+      return u===code && String(r.tanggal||'')>=cutoffStr;
+    })
     .map(r=>{
       const v = r.actualWorkingHours!=null ? Number(r.actualWorkingHours) : Number(r.workingHours);
       return { d:String(r.tanggal).slice(0,10), v: isNaN(v)?null:v };
@@ -14900,6 +14924,99 @@ function getDailyWorkingHours(unitCode){
     }
   }catch(_e){}
   return 18;
+}
+
+/**
+ * Total Working Hours (W) untuk kolom Plan Schedule Service.
+ * Prioritas:
+ *  1) sheet performance (mapaData) — unit SEN
+ *  2) jumlah actualWorkingHours / workingHours dari dailyWhRecords
+ *     (sheet "Jam Kerja Harian" via action=getDailyWorkingHours) pada periode performance
+ *     atau 7 hari terakhir bila periode tidak ada
+ *  3) hmW yang tersimpan di record plan
+ * Normalisasi kode unit: "DZ-09 DTJ" → "DZ-09"
+ */
+function _normPlanUnitCode(code){
+  let u = String(code||'').trim().toUpperCase();
+  if(!u) return '';
+  // "DZ-09 DTJ" / "DZ-09-DTJ" → DZ-09
+  u = u.replace(/[\s_-]*DTJ$/i, '').trim();
+  return u;
+}
+function getWorkingHoursTotalForUnit(unitCode, opts){
+  opts = opts || {};
+  const code = _normPlanUnitCode(unitCode);
+  if(!code) return null;
+  // 1) performance sheet
+  try{
+    const perfMap = (typeof getPerformanceWByUnit==='function') ? getPerformanceWByUnit() : {};
+    const perf = perfMap[code] || perfMap[String(unitCode||'').trim().toUpperCase()];
+    if(perf && perf.w != null && !isNaN(Number(perf.w)) && Number(perf.w) > 0){
+      return { w: Number(perf.w), source: 'performance' };
+    }
+  }catch(_e){}
+  // 2) sum from dailyWhRecords (Jam Kerja Harian)
+  try{
+    let start = '', end = '';
+    if(typeof mapaData!=='undefined' && mapaData){
+      start = String(mapaData.periodStart||'').slice(0,10);
+      end = String(mapaData.periodEnd||'').slice(0,10);
+    }
+    if(!start || !end){
+      // fallback: 7 hari terakhir
+      const today = new Date();
+      const from = new Date(today); from.setDate(from.getDate()-6);
+      end = today.toISOString().slice(0,10);
+      start = from.toISOString().slice(0,10);
+    }
+    let total = 0, n = 0;
+    (dailyWhRecords||[]).forEach(r=>{
+      if(!r) return;
+      const u = _normPlanUnitCode(r.unitCode);
+      if(u !== code) return;
+      const d = String(r.tanggal||'').slice(0,10);
+      if(!d) return;
+      if(start && d < start) return;
+      if(end && d > end) return;
+      const v = r.actualWorkingHours!=null ? Number(r.actualWorkingHours)
+              : (r.workingHours!=null ? Number(r.workingHours) : NaN);
+      if(isNaN(v) || v < 0) return;
+      total += v;
+      n++;
+    });
+    if(n > 0 && total > 0){
+      return { w: Math.round(total * 10) / 10, source: 'jam-kerja-harian', days: n };
+    }
+    // 2b) jika tidak ada di periode, jumlahkan 7 hari terbaru unit tsb
+    const rows = (dailyWhRecords||[])
+      .filter(r=>{
+        const u = _normPlanUnitCode(r&&r.unitCode);
+        if(u !== code) return false;
+        const v = r.actualWorkingHours!=null ? Number(r.actualWorkingHours)
+                : (r.workingHours!=null ? Number(r.workingHours) : NaN);
+        return !isNaN(v) && v >= 0 && r.tanggal;
+      })
+      .sort((a,b)=> String(b.tanggal).localeCompare(String(a.tanggal)));
+    const seen = new Set();
+    let t2 = 0, n2 = 0;
+    for(const r of rows){
+      const d = String(r.tanggal).slice(0,10);
+      if(seen.has(d)) continue;
+      seen.add(d);
+      const v = r.actualWorkingHours!=null ? Number(r.actualWorkingHours)
+              : Number(r.workingHours);
+      t2 += v; n2++;
+      if(n2 >= 7) break;
+    }
+    if(n2 > 0 && t2 > 0){
+      return { w: Math.round(t2 * 10) / 10, source: 'jam-kerja-harian-recent', days: n2 };
+    }
+  }catch(_e){}
+  // 3) stored hmW
+  if(opts.hmW != null && !isNaN(Number(opts.hmW)) && Number(opts.hmW) > 0){
+    return { w: Number(opts.hmW), source: 'record' };
+  }
+  return null;
 }
 
 /**
@@ -15524,6 +15641,9 @@ function isPlanClosed(r){
  */
 function resolvePlanPic(unitCode, hmTarget){
   const code = String(unitCode||'').trim().toUpperCase();
+  // Unit DTJ → PIC = DTJ
+  const DTJ_UNITS = new Set(['DZ-04','DZ-09','WA-10','PC-11','PC-12','PC-17','EX-11','EX-12','EX-17']);
+  if(DTJ_UNITS.has(code) || code.endsWith(' DTJ') || code.includes('DTJ')) return 'DTJ';
   if(code === 'SPC-104'){
     const hm = (hmTarget===null || hmTarget===undefined || hmTarget==='') ? null : Number(hmTarget);
     if(hm!==null && !isNaN(hm) && hm > 6000) return 'SEN';
@@ -15890,8 +16010,12 @@ function updatePlanDailyWhStatusUI(){
     const exec = r.execStatus || 'Open';
     const baseLabel = hmBase!==null && hmBase!==undefined ? Number(hmBase).toFixed(1) : '—';
     const sourceNote = `<div style="color:var(--text-faint); font-size:10px; margin-top:2px;">W performance ${Number(hmW||0).toFixed(1)}${hmBase!==null && hmBase!==undefined ? ' · base '+baseLabel : ''}</div>`;
-    const perf = perfMap[String(r.unitCode||'').trim().toUpperCase()];
-    const wLabel = perf ? Number(perf.w).toFixed(1) : (hmW ? Number(hmW).toFixed(1) : '—');
+    const perf = perfMap[String(r.unitCode||'').trim().toUpperCase()]
+      || perfMap[_normPlanUnitCode ? _normPlanUnitCode(r.unitCode) : String(r.unitCode||'').trim().toUpperCase()];
+    const _whEarly = (typeof getWorkingHoursTotalForUnit==='function')
+      ? getWorkingHoursTotalForUnit(r.unitCode, { hmW: hmW }) : null;
+    const wLabel = (_whEarly && _whEarly.w) ? Number(_whEarly.w).toFixed(1)
+      : (perf ? Number(perf.w).toFixed(1) : (hmW ? Number(hmW).toFixed(1) : '—'));
     // Tgl rencana dari Est Sisa Hari
     const displayPlanDate = planDateAuto || r.planDate;
     // Sinkronkan ke record (OPEN) supaya filter bulan & save ikut
@@ -15915,11 +16039,17 @@ function updatePlanDailyWhStatusUI(){
       }
     }
 
-    // Working Hours = Waktu Operasi (W) live dari sheet performance (periode aktif)
-    const workingHoursVal = perf ? Number(perf.w)||0 : (Number(hmW)||0);
-    const workingHoursLabel = perf ? workingHoursVal.toFixed(1) : (hmW ? Number(hmW).toFixed(1) : '—');
-    // Simpan ke record OPEN supaya sync/save ikut nilai sheet terbaru
-    if(!isPlanClosed(r) && perf){
+    // Working Hours = Waktu Operasi (W): performance sheet (SEN) atau Jam Kerja Harian (DTJ)
+    const whInfo = (typeof getWorkingHoursTotalForUnit==='function')
+      ? getWorkingHoursTotalForUnit(r.unitCode, { hmW: hmW })
+      : null;
+    const workingHoursVal = (whInfo && whInfo.w != null) ? Number(whInfo.w)
+      : (perf ? Number(perf.w)||0 : (Number(hmW)||0));
+    const workingHoursLabel = (workingHoursVal && !isNaN(workingHoursVal) && workingHoursVal > 0)
+      ? Number(workingHoursVal).toFixed(1)
+      : (perf ? Number(perf.w||0).toFixed(1) : (hmW ? Number(hmW).toFixed(1) : '—'));
+    // Simpan ke record OPEN supaya sync/save ikut nilai terbaru (performance atau Jam Kerja Harian)
+    if(!isPlanClosed(r) && workingHoursVal && !isNaN(workingHoursVal) && workingHoursVal > 0){
       r.hmW = workingHoursVal;
     }
 
@@ -16275,7 +16405,7 @@ function nextPlanHmTarget(hmNow, unitCode){
   const code = String(unitCode||'').trim().toUpperCase();
   const unit = (UNITS||[]).find(u=>String(u.code||'').trim().toUpperCase()===code);
   const type = String(unit?.type||'').toUpperCase();
-  const isDozer = type.includes('D85ESS') || type.includes('D85') || code.startsWith('SBD-');
+  const isDozer = type.includes('D85ESS') || type.includes('D85') || code.startsWith('SBD-') || code.startsWith('DZ-');
   return nextHmMilestone(hmNow, isDozer ? 250 : 500);
 }
 
@@ -16475,7 +16605,7 @@ async function rebuildPlanServiceAuto(opts){
         execDate:'',
         hmBase:cur.lastHm!=null ? cur.lastHm : (calc ? calc.hmBase : null),
         hmBaseDate:cur.lastDate || (calc ? calc.hmBaseDate : '') || '',
-        hmW:perf ? Number(perf.w)||0 : (calc ? calc.w : 0),
+        hmW:(perf ? Number(perf.w)||0 : 0) || ((typeof getWorkingHoursTotalForUnit==='function' && getWorkingHoursTotalForUnit(code))||{}).w || (calc ? calc.w : 0),
         hmAktual:hmTotal,
         hmAktualDate:cur.lastDate || (calc ? calc.hmBaseDate : '') || today,
         hmAktualManual:false,
@@ -16663,7 +16793,7 @@ function ensureAugustPlanServiceRecords(perfMap){
       execDate:'',
       hmBase:cur && cur.lastHm!=null ? cur.lastHm : null,
       hmBaseDate:cur ? (cur.lastDate||'') : '',
-      hmW:perfRow ? Number(perfRow.w)||0 : 0,
+      hmW:(perfRow ? Number(perfRow.w)||0 : 0) || ((typeof getWorkingHoursTotalForUnit==='function' && getWorkingHoursTotalForUnit(code||req.unitCode||''))||{}).w || 0,
       hmAktual:hmAktual,
       hmAktualDate:new Date().toISOString().slice(0,10),
       hmAktualManual:false,
@@ -16692,7 +16822,7 @@ async function syncOpenPlanCoverage(perfMap){
       .map(code=>String(code).trim().toUpperCase())
   );
 
-  // Hanya 4 unit terkunci yang diproses.
+  // Hanya unit yang diizinkan di PLAN_SERVICE_ALLOWED_UNITS yang diproses.
   (planRecords||[]).forEach(r=>{ if(r && isPlanServiceAllowedUnit(r.unitCode)) unitCodes.add(String(r.unitCode).trim().toUpperCase()); });
   Object.keys(getPlanServiceHMBase()).forEach(u=>{ if(isPlanServiceAllowedUnit(u)) unitCodes.add(String(u).trim().toUpperCase()); });
   Object.keys(perf||{}).forEach(u=>{ if(isPlanServiceAllowedUnit(u)) unitCodes.add(String(u).trim().toUpperCase()); });
@@ -16774,7 +16904,7 @@ async function syncOpenPlanCoverage(perfMap){
         execDate:'',
         hmBase:cur.lastHm!=null ? cur.lastHm : null,
         hmBaseDate:cur.lastDate || '',
-        hmW:perfRow ? Number(perfRow.w)||0 : Number(cur.dailyWh)||0,
+        hmW:(perfRow ? Number(perfRow.w)||0 : 0) || ((typeof getWorkingHoursTotalForUnit==='function' && getWorkingHoursTotalForUnit(code))||{}).w || Number(cur.dailyWh)||0,
         hmAktual:cur.hmNow,
         hmAktualDate:new Date().toISOString().slice(0,10),
         hmAktualManual:false,
@@ -28346,7 +28476,7 @@ const PK_CATS = [
 /* Grup unit: SEN (unit milik SEN) & DTJ. Nomor unit dikunci otomatis sesuai grup. */
 const PK_UNIT_GROUPS = {
   SEN: ['SWA-101','SWA-102','SBD-103','SPC-104'],
-  DTJ: ['DZ-04','DZ-09','WA-10','EX-11','EX-12','EX-17']
+  DTJ: ['DZ-04','DZ-09','WA-10','PC-11','PC-12','PC-17','EX-11','EX-12','EX-17']
 };
 const PK_GROUP_META = {
   SEN:   { label:'SEN',     color:'#FFC72C' },
@@ -29350,7 +29480,7 @@ function renderPlanHmLiveChart(){
   const unitSel=document.getElementById('ps-live-hm-unit')?.value||'';
   const start=document.getElementById('ps-live-hm-start')?.value||'';
   const end=document.getElementById('ps-live-hm-end')?.value||'';
-  const codes=unitSel?[unitSel]:['SWA-101','SWA-102','SBD-103','SPC-104'];
+  const codes=unitSel?[unitSel]:['SWA-101','SWA-102','SBD-103','SPC-104','DZ-04','DZ-09','WA-10','PC-11','PC-12','PC-17'];
   const allSeries=codes.map(c=>({code:c,series:psGetLiveHmSeries(c,start,end),ops:psGetLiveOpsSeries(c,start,end)}));
   grid.innerHTML=allSeries.map(({code,series,ops})=>{
     const last=series[series.length-1], first=series[0];
@@ -30634,7 +30764,7 @@ function subscribeDailyRealtime(){
     // Sample HM for units
     try{
       if(typeof calcHmSekarang==='function'){
-        ['SWA-101','SWA-102','SBD-103','SPC-104'].forEach(u=>{
+        ['SWA-101','SWA-102','SBD-103','SPC-104','DZ-04','DZ-09','WA-10','PC-11','PC-12','PC-17'].forEach(u=>{
           const v = calcHmSekarang(u);
           log('HM Sekarang '+u+': '+(v!=null?v:'—'), v!=null?'ok':'warn');
         });
