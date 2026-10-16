@@ -8273,8 +8273,60 @@ let planRecords = [];
  * DTJ: DZ-04, DZ-09, WA-10, HEX-11, HEX-12, HEX-17
  */
 const PLAN_SERVICE_ALLOWED_UNITS = new Set(['SWA-101','SWA-102','SBD-103','SPC-104','DZ-04','DZ-09','WA-10','HEX-11','HEX-12','HEX-17']);
+/**
+ * Alias kode unit: sheet Monitoring HM memakai PC-11/PC-12/PC-17,
+ * sedangkan master UNITS & menu Performance memakai HEX-11/HEX-12/HEX-17.
+ * Canonical = kode di UNITS / Plan Service. Semua lookup WH/HM lewat resolveUnitCode.
+ */
+const UNIT_CODE_ALIASES = {
+  'PC-11': 'HEX-11',
+  'PC-12': 'HEX-12',
+  'PC-17': 'HEX-17',
+  'EX-11': 'HEX-11',
+  'EX-12': 'HEX-12',
+  'EX-17': 'HEX-17',
+  'XAZIS-12': 'HEX-12',
+  'XAZIS-11': 'HEX-11',
+  'XAZIS-17': 'HEX-17',
+  'HEX-11': 'HEX-11',
+  'HEX-12': 'HEX-12',
+  'HEX-17': 'HEX-17'
+};
+/** Kode kanonik (HEX-xx). Input PC-11 / "PC-11 DTJ" / HEX-11 → HEX-11. */
+function resolveUnitCode(code){
+  let u = String(code||'').trim().toUpperCase();
+  if(!u) return '';
+  u = u.replace(/[\s_-]*DTJ$/i, '').trim();
+  if(UNIT_CODE_ALIASES[u]) return UNIT_CODE_ALIASES[u];
+  const m = u.match(/^PC[\s_-]?(\d{1,2})$/i);
+  if(m){
+    const key = 'PC-' + m[1];
+    if(UNIT_CODE_ALIASES[key]) return UNIT_CODE_ALIASES[key];
+  }
+  const m2 = u.match(/^HEX[\s_-]?(\d{1,2})$/i);
+  if(m2) return 'HEX-' + m2[1];
+  return u;
+}
+/** Semua bentuk kode yang dianggap sama (untuk filter hmRecords). */
+function unitCodeMatchSet(code){
+  const canon = resolveUnitCode(code);
+  if(!canon) return new Set();
+  const set = new Set([canon, String(code||'').trim().toUpperCase()]);
+  Object.keys(UNIT_CODE_ALIASES).forEach(k=>{
+    if(UNIT_CODE_ALIASES[k] === canon) set.add(k);
+  });
+  set.forEach(c=>{
+    const bare = String(c).replace(/-/g, '');
+    if(bare !== c) set.add(bare);
+  });
+  return set;
+}
+function unitCodesEqual(a, b){
+  const ca = resolveUnitCode(a), cb = resolveUnitCode(b);
+  return !!(ca && cb && ca === cb);
+}
 function isPlanServiceAllowedUnit(code){
-  return PLAN_SERVICE_ALLOWED_UNITS.has(String(code||'').trim().toUpperCase());
+  return PLAN_SERVICE_ALLOWED_UNITS.has(resolveUnitCode(code) || String(code||'').trim().toUpperCase());
 }
 function sanitizePlanServiceUnits(){
   if(!Array.isArray(planRecords)) planRecords = [];
@@ -10748,7 +10800,16 @@ function daysBetweenInclusive(startStr, endStr){
   return Math.max(diff, 1);
 }
 function hmWSRForUnit(unitCode, startStr, endStr){
-  let recs = hmRecords.filter(r=>String(r.unitCode||'').trim().toUpperCase()===String(unitCode||'').trim().toUpperCase());
+  // Cocokkan PC-11 / HEX-11 / EX-11 sebagai unit yang sama
+  const matchSet = (typeof unitCodeMatchSet==='function')
+    ? unitCodeMatchSet(unitCode)
+    : new Set([String(unitCode||'').trim().toUpperCase()]);
+  let recs = (hmRecords||[]).filter(r=>{
+    const u = String(r.unitCode||'').trim().toUpperCase();
+    if(matchSet.has(u)) return true;
+    if(typeof resolveUnitCode==='function' && matchSet.has(resolveUnitCode(u))) return true;
+    return false;
+  });
   if(startStr) recs = recs.filter(r=>r.tanggal && r.tanggal>=startStr);
   if(endStr) recs = recs.filter(r=>r.tanggal && r.tanggal<=endStr);
   if(!recs.length) return null;
@@ -10760,9 +10821,13 @@ function hmWSRForUnit(unitCode, startStr, endStr){
     rangeEnd = rangeEnd || dates[dates.length-1];
   }
   const T = daysBetweenInclusive(rangeStart, rangeEnd) * 24;
-  const R = dailyRecords
-    .filter(r=>r.unitCode===unitCode && r.category==='Breakdown' && r.approvalStatus==='Approved'
-      && r.tanggal && r.tanggal>=rangeStart && r.tanggal<=rangeEnd)
+  const R = (dailyRecords||[])
+    .filter(r=>{
+      const u = String(r.unitCode||'').trim().toUpperCase();
+      const match = matchSet.has(u) || (typeof resolveUnitCode==='function' && matchSet.has(resolveUnitCode(u)));
+      return match && r.category==='Breakdown' && r.approvalStatus==='Approved'
+        && r.tanggal && r.tanggal>=rangeStart && r.tanggal<=rangeEnd;
+    })
     .reduce((s,r)=>s+(Number(r.duration)||0),0);
   const S = Math.max(T - W - R, 0);
   return { W, S, R, T };
@@ -11227,12 +11292,22 @@ function unitIconSVG(category){
  * yang sama untuk semua periode.
  */
 function getUnitWorkingHours(unitCode, startStr, endStr){
-  // W/S/R/T untuk tampilan unit: dari Monitoring HM saja (tidak ikut filter periode sheet).
+  // Prioritas:
+  // 1) Monitoring HM (dengan alias PC↔HEX) — sumber utama untuk kartu Performance Unit
+  // 2) mapaData / sheet performance (termasuk baris HEX hasil enrich dari HM)
   const hmwsr = hmWSRForUnit(unitCode, startStr||null, endStr||null);
   if(hmwsr){
     const T = (hmwsr.T != null && hmwsr.T > 0) ? hmwsr.T : (hmwsr.W + hmwsr.S + hmwsr.R);
     return { w: hmwsr.W, s: hmwsr.S, r: hmwsr.R, t: T, source:'hm' };
   }
+  try{
+    const code = (typeof resolveUnitCode==='function') ? resolveUnitCode(unitCode) : String(unitCode||'').trim().toUpperCase();
+    const perfMap = (typeof getPerformanceWByUnit==='function') ? getPerformanceWByUnit() : {};
+    const perf = perfMap[code] || perfMap[String(unitCode||'').trim().toUpperCase()];
+    if(perf && (Number(perf.w)>0 || Number(perf.t)>0)){
+      return { w: Number(perf.w)||0, s: Number(perf.s)||0, r: Number(perf.r)||0, t: Number(perf.t)||0, source:'performance' };
+    }
+  }catch(_e){}
   return { w:null, s:null, r:null, t:null, source:null };
 }
 
@@ -15006,8 +15081,10 @@ function getPerformanceWByUnit(){
   if(!mapaData || !mapaData.rows) return map;
   const periodDays = getPerformancePeriodDays();
   mapaData.rows.forEach(r=>{
-    const u = String(r.unit||'').trim().toUpperCase();
-    if(!u) return;
+    const raw = String(r.unit||'').trim().toUpperCase();
+    if(!raw) return;
+    // Canonical key (PC-11 → HEX-11) + raw supaya lookup dari mana pun cocok
+    const u = (typeof resolveUnitCode==='function') ? (resolveUnitCode(raw) || raw) : raw;
     const w = Number(r.w)||0;
     const s = Number(r.s)||0;
     const rr = Number(r.r)||0;
@@ -15044,8 +15121,11 @@ function getPerformanceWByUnit(){
  * Return null jika data performance unit/periode tidak ada (bukan 18).
  */
 function getPerformanceWorkingHoursPerDay(unitCode){
-  const code = String(unitCode||'').trim().toUpperCase();
-  const perf = getPerformanceWByUnit()[code];
+  const code = (typeof resolveUnitCode==='function')
+    ? (resolveUnitCode(unitCode) || String(unitCode||'').trim().toUpperCase())
+    : String(unitCode||'').trim().toUpperCase();
+  const perfMap = getPerformanceWByUnit();
+  const perf = perfMap[code] || perfMap[String(unitCode||'').trim().toUpperCase()];
   if(!perf) return null;
   if(perf.whPerDay != null && !isNaN(Number(perf.whPerDay))){
     return Math.round(Math.min(24, Math.max(0, Number(perf.whPerDay))) * 10) / 10;
@@ -15285,9 +15365,13 @@ function getDailyWorkingHours(unitCode){
  * Normalisasi kode unit: "DZ-09 DTJ" → "DZ-09"
  */
 function _normPlanUnitCode(code){
+  // Canonical: PC-11 → HEX-11, "DZ-09 DTJ" → DZ-09
+  if(typeof resolveUnitCode==='function'){
+    const r = resolveUnitCode(code);
+    if(r) return r;
+  }
   let u = String(code||'').trim().toUpperCase();
   if(!u) return '';
-  // "DZ-09 DTJ" / "DZ-09-DTJ" → DZ-09
   u = u.replace(/[\s_-]*DTJ$/i, '').trim();
   return u;
 }
@@ -15295,10 +15379,12 @@ function getWorkingHoursTotalForUnit(unitCode, opts){
   opts = opts || {};
   const code = _normPlanUnitCode(unitCode);
   if(!code) return null;
-  // 1) performance sheet
+  // 1) performance sheet (termasuk baris HEX yang di-enrich dari Monitoring HM)
   try{
     const perfMap = (typeof getPerformanceWByUnit==='function') ? getPerformanceWByUnit() : {};
-    const perf = perfMap[code] || perfMap[String(unitCode||'').trim().toUpperCase()];
+    const perf = perfMap[code]
+      || perfMap[String(unitCode||'').trim().toUpperCase()]
+      || (typeof resolveUnitCode==='function' ? perfMap[resolveUnitCode(unitCode)] : null);
     if(perf && perf.w != null && !isNaN(Number(perf.w)) && Number(perf.w) > 0){
       return { w: Number(perf.w), source: 'performance' };
     }
@@ -23725,6 +23811,75 @@ let _perfLastFetchAt = 0;
 let _perfAutoTimer = null;
 
 /**
+ * Enrich mapaData.rows dengan unit DTJ HEX (HEX-11/12/17) dari Monitoring HM.
+ * Sheet performance SEN hanya berisi SWA/SBD/SPC — unit HEX tidak ada di sheet itu.
+ * Working Hours dihitung dari hmRecords (kode PC-xx sudah di-canonical ke HEX-xx
+ * saat normalizeHmSheetRow / alias match).
+ * Tidak menimpa baris unit yang sudah ada dari sheet performance.
+ */
+function enrichMapaDataFromHm(periodStart, periodEnd){
+  if(!mapaData || !Array.isArray(mapaData.rows)) return 0;
+  const hexUnits = ['HEX-11','HEX-12','HEX-17'];
+  const existing = new Set(mapaData.rows.map(r=>String(r.unit||'').trim().toUpperCase()));
+  // juga tandai alias yang sudah ada sebagai "ada"
+  existing.forEach(u=>{
+    if(typeof resolveUnitCode==='function') existing.add(resolveUnitCode(u));
+  });
+  const ps = periodStart || mapaData.periodStart || null;
+  const pe = periodEnd || mapaData.periodEnd || null;
+  let added = 0;
+  hexUnits.forEach(code=>{
+    if(existing.has(code)) return;
+    const wsr = (typeof hmWSRForUnit==='function') ? hmWSRForUnit(code, ps, pe) : null;
+    if(!wsr || !(Number(wsr.W)>0)) return;
+    const w = Number(wsr.W)||0;
+    const s = Number(wsr.S)||0;
+    const rv = Number(wsr.R)||0;
+    let t = Number(wsr.T);
+    if(isNaN(t) || t <= 0) t = w + s + rv;
+    let periodDays = 0;
+    if(ps && pe){
+      try{
+        periodDays = Math.max(1, Math.round((new Date(pe+'T00:00:00') - new Date(ps+'T00:00:00'))/86400000)+1);
+      }catch(_e){ periodDays = 0; }
+    }
+    if(periodDays <= 0 && Array.isArray(hmRecords)){
+      // fallback: rentang tanggal record HM unit tsb
+      const matchSet = (typeof unitCodeMatchSet==='function') ? unitCodeMatchSet(code) : new Set([code]);
+      const dates = hmRecords.filter(r=>matchSet.has(String(r.unitCode||'').trim().toUpperCase()) || (typeof resolveUnitCode==='function' && resolveUnitCode(r.unitCode)===code))
+        .map(r=>String(r.tanggal||'').slice(0,10)).filter(Boolean).sort();
+      if(dates.length){
+        try{
+          periodDays = Math.max(1, Math.round((new Date(dates[dates.length-1]+'T00:00:00') - new Date(dates[0]+'T00:00:00'))/86400000)+1);
+        }catch(_e){ periodDays = 1; }
+      }
+    }
+    const workHours = Math.max(0, t - s);
+    const whPerDay = periodDays > 0 && workHours > 0
+      ? Math.round(Math.min(24, workHours / periodDays) * 10) / 10
+      : null;
+    mapaData.rows.push({
+      unit: code,
+      w, s, r: rv, t,
+      workingHours: w,
+      totalWorkingHours: t,
+      workingHoursPerDay: whPerDay,
+      fromHmEnrich: true
+    });
+    existing.add(code);
+    added++;
+  });
+  if(added > 0){
+    mapaData.totalW = mapaData.rows.reduce((a,x)=>a+(Number(x.w)||0), 0);
+    mapaData.totalS = mapaData.rows.reduce((a,x)=>a+(Number(x.s)||0), 0);
+    mapaData.totalR = mapaData.rows.reduce((a,x)=>a+(Number(x.r)||0), 0);
+    mapaData.totalT = mapaData.rows.reduce((a,x)=>a+(Number(x.t)||0), 0);
+    mapaData.hmEnrichAt = new Date().toISOString();
+  }
+  return added;
+}
+
+/**
  * Ambil data W/S/R/T dari sheet "performance" lewat Apps Script (action=getPerformance).
  * Dipakai manual (tombol) maupun otomatis (filter periode / interval live).
  */
@@ -23804,6 +23959,18 @@ async function fetchPerformanceFromSheets(opts){
       periodStart: psN,
       periodEnd: peN
     };
+    // Tambah unit HEX-11/12/17 dari Monitoring HM (PC-xx di sheet) bila belum ada di performance
+    try{
+      // Pastikan HM sudah di-load (async soft — tidak blocking jika gagal)
+      if(typeof ensureHmSynced==='function' && (!hmRecords || !hmRecords.length || (Date.now()-(_hmLastFetchAt||0))>HM_AUTO_SYNC_TTL_MS)){
+        try{ await ensureHmSynced({ force:false }); }catch(_hmE){}
+      }
+      const nHex = enrichMapaDataFromHm(psN, peN);
+      if(nHex > 0){
+        // hitung ulang total setelah enrich
+        totalW = mapaData.totalW; totalS = mapaData.totalS; totalR = mapaData.totalR; totalT = mapaData.totalT;
+      }
+    }catch(_enr){ console.warn('enrichMapaDataFromHm', _enr); }
     // Simpan snapshot per bulan yang tercakup periode sheet → history stabil untuk tabel Monthly KPI
     try{
       if(psN && peN && rows.length){
@@ -23818,10 +23985,13 @@ async function fetchPerformanceFromSheets(opts){
             // (hari 1 bulan >= ps-tolerance TIDAK; syarat: awal bulan >= ps? tidak —
             //  syarat longgar: bulan key berada di antara bulan ps dan pe)
             mapaHistory[key] = {
-              rows: rows.map(r=>({...r})),
+              rows: (mapaData.rows||rows).map(r=>({...r})),
               periodStart: psN,
               periodEnd: peN,
-              totalW, totalS, totalR, totalT,
+              totalW: mapaData.totalW != null ? mapaData.totalW : totalW,
+              totalS: mapaData.totalS != null ? mapaData.totalS : totalS,
+              totalR: mapaData.totalR != null ? mapaData.totalR : totalR,
+              totalT: mapaData.totalT != null ? mapaData.totalT : totalT,
               fileName: label,
               updatedAt: mapaData.updatedAt,
               fromPerformance: true
@@ -23836,15 +24006,23 @@ async function fetchPerformanceFromSheets(opts){
     await saveMapaData();
     try{ await appStorage.set('mapa-performance-seeded-v2', JSON.stringify(true)); }catch(_e){}
 
+    const finalRows = (mapaData && mapaData.rows) ? mapaData.rows : rows;
+    const finalW = (mapaData && mapaData.totalW != null) ? mapaData.totalW : totalW;
+    const finalS = (mapaData && mapaData.totalS != null) ? mapaData.totalS : totalS;
+    const finalR = (mapaData && mapaData.totalR != null) ? mapaData.totalR : totalR;
+    const finalT = (mapaData && mapaData.totalT != null) ? mapaData.totalT : totalT;
+    const hexN = finalRows.filter(r=>/^HEX-/.test(String(r.unit||'').toUpperCase()) && r.fromHmEnrich).length;
+
     if(opts.manual){
       alert('✓ Sync sheet performance berhasil.\n' +
-        rows.length + ' unit · W: ' + totalW.toFixed(1) +
-        ' · S: ' + totalS.toFixed(1) +
-        ' · R: ' + totalR.toFixed(1) + ' jam');
+        finalRows.length + ' unit · W: ' + Number(finalW).toFixed(1) +
+        ' · S: ' + Number(finalS).toFixed(1) +
+        ' · R: ' + Number(finalR).toFixed(1) + ' jam' +
+        (hexN ? ('\n(+'+hexN+' unit HEX dari Monitoring HM / PC-xx)') : ''));
     }
     // TIDAK push ke sheet Maintenance di sini.
     // Hanya tombol Auto Sync KPI yang boleh menulis, dan hanya periode yang sudah jatuh tempo.
-    return { ok:true, rows: rows.length, totalW, totalS, totalR, totalT, changed:true };
+    return { ok:true, rows: finalRows.length, totalW: finalW, totalS: finalS, totalR: finalR, totalT: finalT, changed:true, hexFromHm: hexN };
   }catch(e){
     console.error('fetchPerformanceFromSheets gagal', e);
     if(opts.manual) alert('⚠ Sync sheet performance gagal: ' + (e.message||e) +
@@ -24217,7 +24395,12 @@ function normalizeHmSheetRow(r){
   // Object form
   if(r && typeof r === 'object' && !Array.isArray(r)){
     const tanggal = parseHmSheetDate(r.tanggal || r.date || r.Tanggal || r.Date);
-    const unitCode = String(r.unitCode || r.unit || r.kodeUnit || r['Kode Unit'] || '').trim();
+    let unitCode = String(r.unitCode || r.unit || r.kodeUnit || r['Kode Unit'] || '').trim();
+    // PC-11 → HEX-11 (canonical) supaya kartu Performance & Plan Service langsung cocok
+    if(typeof resolveUnitCode==='function'){
+      const canon = resolveUnitCode(unitCode);
+      if(canon) unitCode = canon;
+    }
     const hmAkhir = Number(r.hmAkhir != null ? r.hmAkhir : (r.hm_akhir != null ? r.hm_akhir : r['HM Akhir']));
     if(!tanggal || !unitCode || isNaN(hmAkhir) || hmAkhir <= 0) return null;
     const shift = String(r.shift || r.Shift || '').trim();
@@ -24243,7 +24426,11 @@ function normalizeHmSheetRow(r){
   // Array form: [tanggal,user,category,nama,shift,unitCode,pekerjaan,hmAwal,hmAkhir,hmTotal,fuel,keterangan]
   if(Array.isArray(r) && r.length >= 9){
     const tanggal = parseHmSheetDate(r[0]);
-    const unitCode = String(r[5]||'').trim();
+    let unitCode = String(r[5]||'').trim();
+    if(typeof resolveUnitCode==='function'){
+      const canon = resolveUnitCode(unitCode);
+      if(canon) unitCode = canon;
+    }
     const hmAkhir = Number(r[8]);
     if(!tanggal || !unitCode || isNaN(hmAkhir) || hmAkhir <= 0) return null;
     const shift = String(r[4]||'').trim();
@@ -24339,8 +24526,25 @@ async function fetchHMFromSheets(opts){
       }
     });
     hmRecords = Array.from(byKey.values());
+    // Canonicalize unitCode lama (PC-11 → HEX-11) pada record yang sudah tersimpan
+    try{
+      if(typeof resolveUnitCode==='function'){
+        hmRecords.forEach(r=>{
+          if(!r) return;
+          const c = resolveUnitCode(r.unitCode);
+          if(c && c !== String(r.unitCode||'').trim().toUpperCase()) r.unitCode = c;
+        });
+      }
+    }catch(_c){}
     _hmLastFetchAt = Date.now();
     try{ await appStorage.set('hm-records', JSON.stringify(hmRecords)); }catch(_e){}
+    // Setelah HM masuk, enrich performance (HEX) bila mapaData sudah ada
+    try{
+      if(mapaData && mapaData.rows && typeof enrichMapaDataFromHm==='function'){
+        const n = enrichMapaDataFromHm(mapaData.periodStart, mapaData.periodEnd);
+        if(n > 0 && typeof saveMapaData==='function') await saveMapaData();
+      }
+    }catch(_e){}
     if(opts.manual){
       alert('✓ Sync Monitoring HM berhasil.\n'+incoming.length+' baris sheet · +'+added+' baru · '+updated+' diperbarui.');
     }
