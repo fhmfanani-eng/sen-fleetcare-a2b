@@ -1,5 +1,5 @@
 /* SEN-FleetCare SW v68 — Native views + Notifikasi + Web Push (HP & desktop) */
-const SW_VERSION='sen-fleetcare-v68-20261013-push';
+const SW_VERSION='sen-fleetcare-v68-20261016-ui';
 const CACHE_NAME=SW_VERSION;
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(['./','./index.html'])).catch(()=>{}));});
 self.addEventListener('activate',e=>{e.waitUntil((async()=>{const keys=await caches.keys();await Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)));await self.clients.claim();})());});

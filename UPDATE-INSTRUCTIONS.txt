@@ -24,7 +24,7 @@ v66j: Constraint Ranking -> kolom baru 'Keterangan Kendala' (catatan dari event 
 
 v66i: Constraint Pareto -> tombol grup 'Lainnya' dihapus; unit di luar daftar SEN otomatis masuk grup DTJ (muncul di dropdown Nomor Unit DTJ).
 
-v66h: Constraint Pareto -> pemisahan grup unit. SEN = SWA-101, SWA-102, SBD-103, SPC-104. DTJ = DZ-04, DZ-09, WA-10, EX-11, EX-12, EX-17. Ada tombol Grup (Semua/SEN/DTJ/Lainnya), dropdown Nomor Unit yang DIKUNCI otomatis sesuai grup (pilih unit -> grup ikut terkunci), kolom Grup di tabel event, kolom SEN & DTJ di Constraint Ranking, kolom Grup di Export Excel & sheet backup. Daftar unit ada di konstanta PK_UNIT_GROUPS (index.html) bila perlu ditambah.
+v66h: Constraint Pareto -> pemisahan grup unit. SEN = SWA-101, SWA-102, SBD-103, SPC-104. DTJ = DZ-04, DZ-09, WA-10, HEX-11, HEX-12, HEX-17. Ada tombol Grup (Semua/SEN/DTJ/Lainnya), dropdown Nomor Unit yang DIKUNCI otomatis sesuai grup (pilih unit -> grup ikut terkunci), kolom Grup di tabel event, kolom SEN & DTJ di Constraint Ranking, kolom Grup di Export Excel & sheet backup. Daftar unit ada di konstanta PK_UNIT_GROUPS (index.html) bila perlu ditambah.
 
 v66g: Constraint Pareto -> chart dikembalikan ke GRAFIK BATANG (Pareto klasik): batang berwarna per kendala, garis Kumulatif %, batas 80%, batang pudar = Trivial Many, plus tooltip hover & lebar otomatis. Tombol toggle Kumulatif dihapus (kumulatif selalu tampil).
 

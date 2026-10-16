@@ -1462,9 +1462,10 @@ select.exec-close{ background:rgba(76,175,109,0.15); color:var(--green); }
   width:100%; height:100%; object-fit:contain; object-position:center; padding:14px 24px; box-sizing:border-box;
   position:relative; z-index:1; filter:drop-shadow(0 3px 6px rgba(0,0,0,0.5));
 }
-.unit-card .type{ font-family:'Oswald',sans-serif; font-size:17px; font-weight:600; letter-spacing:0.4px; margin-bottom:2px;}
+.unit-card .code{ font-family:'Oswald',sans-serif; font-size:17px; font-weight:600; letter-spacing:0.4px; margin-bottom:2px; color:var(--yellow);}
 .unit-card .cat-label{ font-size:10px; color:var(--text-faint); letter-spacing:1px; text-transform:uppercase; margin-bottom:12px; }
-.unit-card .code{ font-family:'JetBrains Mono',monospace; font-size:13px; background:#15171b; display:inline-block; padding:4px 9px; border-radius:2px; color:var(--yellow); border:1px solid var(--line); margin-bottom:10px;}
+.unit-card .type{ font-family:'Oswald',sans-serif; font-size:17px; font-weight:600; letter-spacing:0.4px; margin-bottom:2px;}
+.unit-card .code + .type{ font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:500; color:var(--text-dim); margin-bottom:10px; letter-spacing:0.3px;}
 .unit-card .stats{ display:flex; flex-wrap:wrap; gap:12px 14px; margin-top:10px; font-size:11px; color:var(--text-dim); }
 .unit-card .stats b{ color:var(--text); display:block; font-size:14px; font-family:'JetBrains Mono',monospace; font-weight:500;}
 .unit-card .stats .stat-wh b{ color:var(--yellow); }
@@ -3603,6 +3604,70 @@ button.wa-green:hover, button.wa-sync-only-fahmi:hover{
 .pk-foot label{font-size:12px;color:var(--text-dim);display:flex;align-items:center;gap:8px;cursor:pointer;text-transform:none;letter-spacing:0;font-family:Inter,sans-serif;font-weight:500;margin:0;}
 .pk-foot input[type=checkbox]{width:16px;height:16px;flex:none;margin:0;padding:0;accent-color:#FFC72C;}
 .pk-err{color:var(--red);font-size:11.5px;margin-top:6px;min-height:14px;}
+
+/* ===== NAVY GLOW CARD DESIGN — semua kolom grafik/chart/kartu KPI di SEMUA menu top bar Dashboard
+   memakai background biru navy dengan efek glow ===== */
+#view-dashboard .kpi-card,
+#view-dashboard .kpi-dash-card,
+#view-dashboard .chart-panel,
+#view-dashboard .quarter-chart-shell,
+#view-dashboard .panel,
+#view-dashboard .period-panel,
+#view-dashboard .dash-panel{
+  background:linear-gradient(160deg, rgba(22,46,104,0.62), rgba(7,15,38,0.92)), #0b1630 !important;
+  border:1px solid rgba(90,150,255,0.30) !important;
+  border-radius:12px !important;
+  box-shadow:inset 0 0 0 1px rgba(30,70,160,0.14), 0 10px 30px rgba(0,0,0,0.35), 0 0 26px rgba(40,110,255,0.07) !important;
+}
+#view-dashboard .kpi-card::before,
+#view-dashboard .kpi-dash-card::before,
+#view-dashboard .chart-panel::before,
+#view-dashboard .quarter-chart-shell::before{ display:none !important; }
+#view-dashboard .kpi-card:hover,
+#view-dashboard .kpi-dash-card:hover{
+  border-color:rgba(110,170,255,0.55) !important;
+  box-shadow:inset 0 0 0 1px rgba(30,70,160,0.2), 0 10px 30px rgba(0,0,0,0.35), 0 0 32px rgba(60,130,255,0.22) !important;
+}
+#view-dashboard .kpi-dash-card.active{
+  border-color:var(--yellow) !important;
+  box-shadow:0 0 0 1px rgba(255,199,44,0.25) inset, 0 8px 28px rgba(0,0,0,0.4), 0 0 26px rgba(255,199,44,0.12) !important;
+}
+
+/* ===== NAVY GLOW — menu Performance Unit (view-database) ===== */
+#view-database .unit-card,
+#view-database .panel,
+#view-database .period-panel{
+  background:linear-gradient(160deg, rgba(22,46,104,0.62), rgba(7,15,38,0.92)), #0b1630 !important;
+  border:1px solid rgba(90,150,255,0.30) !important;
+  border-radius:12px !important;
+  box-shadow:inset 0 0 0 1px rgba(30,70,160,0.14), 0 10px 30px rgba(0,0,0,0.35), 0 0 26px rgba(40,110,255,0.07) !important;
+}
+#view-database .unit-card:hover{
+  border-color:rgba(110,170,255,0.55) !important;
+  box-shadow:inset 0 0 0 1px rgba(30,70,160,0.2), 0 10px 30px rgba(0,0,0,0.35), 0 0 32px rgba(60,130,255,0.22) !important;
+}
+#view-database .unit-card .code{ /* code is now the main title — no badge box */ }
+#view-database .period-panel input,
+#view-database .period-panel select{ background:rgba(5,12,32,0.7) !important; border-color:rgba(90,150,255,0.25) !important; }
+
+/* ===== CBM Asset Analysis — Select Unit: grid TERKUNCI 5 kolom (2 baris x 5 untuk 10 unit) di semua level zoom/lebar layar — tanpa media query ===== */
+#cbm-unit-cards.cbm-unit-grid{
+  grid-template-columns:repeat(5, minmax(0,1fr)) !important;
+  gap:14px !important; align-items:stretch;
+}
+#cbm-unit-cards .cbm-asset-card{ display:flex; flex-direction:column; height:100%; }
+#cbm-unit-cards .cbm-asset-body{ padding:12px 12px 12px; flex:1; display:flex; flex-direction:column; min-width:0; }
+#cbm-unit-cards .cbm-asset-code{ font-size:17px; }
+#cbm-unit-cards .cbm-asset-meta{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+#cbm-unit-cards .cbm-asset-hm{ font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+#cbm-unit-cards .cbm-health-row{
+  display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"n p" "b b";
+  gap:3px 8px; align-items:center; margin-top:8px; font-size:10px;
+}
+#cbm-unit-cards .cbm-health-row .hn{ grid-area:n; flex:none; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#cbm-unit-cards .cbm-health-row .hp{ grid-area:p; flex:none; }
+#cbm-unit-cards .cbm-health-row .cbm-health-bar{ grid-area:b; }
+#cbm-unit-cards .cbm-asset-body .hint{ margin-top:auto !important; padding-top:8px; }
 </style>
 
 </head>
@@ -4181,6 +4246,7 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
           <button type="button" class="dash-menu-tab" data-dashtab="service" onclick="setDashboardTab('service')">🛠 Dashboard Service</button>
           <button type="button" class="dash-menu-tab" data-dashtab="kpi" onclick="setDashboardTab('kpi')">📊 KPI Maintenance</button>
           <button type="button" class="dash-menu-tab" data-dashtab="monthlykpi" onclick="setDashboardTab('monthlykpi')">🧮 Monthly KPI Achievement</button>
+          <button type="button" class="dash-menu-tab" data-dashtab="kpiunit" onclick="setDashboardTab('kpiunit')">🏭 KPI Unit</button>
           <button type="button" class="dash-menu-tab" data-dashtab="trend" onclick="setDashboardTab('trend')">📈 Trend &amp; Comparison</button>
           <button type="button" class="dash-menu-tab" data-dashtab="quarter" onclick="setDashboardTab('quarter')">🗓 Quarter Summary</button>
           <span id="dash-menu-topbar-sync-slot" style="margin-left:auto;display:flex;align-items:center;"></span>
@@ -4225,7 +4291,7 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
       <!-- DATABASE UNIT -->
       <section class="view" id="view-database">
         <div class="panel-head" style="margin-bottom:16px; flex-wrap:wrap; gap:10px;">
-          <h2>Performance Unit A2B</h2>
+          <h2>Performance Unit — SEN &amp; DTJ</h2>
           <div class="toolbar" style="align-items:center; gap:8px;">
             <button type="button" class="btn small sync-gold" id="unit-sync-perf-btn"  title="Fetch W/S/R & Total Working Hours from performance sheet">☁ Sync from Performance Sheet</button>
           </div>
@@ -4836,9 +4902,9 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
                   <option value="DZ-04">DZ-04</option>
                   <option value="DZ-09">DZ-09</option>
                   <option value="WA-10">WA-10</option>
-                  <option value="PC-11">PC-11</option>
-                  <option value="PC-12">PC-12</option>
-                  <option value="PC-17">PC-17</option>
+                  <option value="HEX-11">HEX-11</option>
+                  <option value="HEX-12">HEX-12</option>
+                  <option value="HEX-17">HEX-17</option>
                 </select>
               </div>
               <div class="ps-live-field">
@@ -6010,9 +6076,9 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
                   <option value="DZ-04">DZ-04</option>
                   <option value="DZ-09">DZ-09</option>
                   <option value="WA-10">WA-10</option>
-                  <option value="PC-11">PC-11</option>
-                  <option value="PC-12">PC-12</option>
-                  <option value="PC-17">PC-17</option>
+                  <option value="HEX-11">HEX-11</option>
+                  <option value="HEX-12">HEX-12</option>
+                  <option value="HEX-17">HEX-17</option>
                 </select>
                 <button type="button" class="btn small" id="sp-budget-export-xlsx" title="Download Excel sesuai filter periode">⬇ Excel</button>
                 <button type="button" class="btn small secondary" id="sp-budget-export-csv" title="Download CSV sesuai filter periode">⬇ CSV</button>
@@ -6060,17 +6126,17 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
 <script>
 /* ================= MASTER DATA ================= */
 const UNITS = [
-  { type:'WA500-6R', code:'SWA-101', category:'Wheel Loader', serial:'WA500-6R-60535' },
-  { type:'WA500-6R', code:'SWA-102', category:'Wheel Loader', serial:'WA500-6R-60536' },
-  { type:'D85ESS-2A', code:'SBD-103', category:'Bulldozer', serial:'D85ESS-2A' },
-  { type:'PC210-10MO', code:'SPC-104', category:'Excavator', serial:'PC210-10MO' },
+  { type:'WA500-6R', code:'SWA-101', category:'KOMATSU Wheel Loader', serial:'WA500-6R-60535' },
+  { type:'WA500-6R', code:'SWA-102', category:'KOMATSU Wheel Loader', serial:'WA500-6R-60536' },
+  { type:'D85ESS-2A', code:'SBD-103', category:'KOMATSU Bulldozer', serial:'D85ESS-2A' },
+  { type:'PC210-10MO', code:'SPC-104', category:'KOMATSU Excavator', serial:'PC210-10MO' },
   /* Unit DTJ — Plan Schedule Service */
-  { type:'D85ESS-2A', code:'DZ-04', category:'Bulldozer', serial:'DZ-04' },
-  { type:'D85ESS-2A', code:'DZ-09', category:'Bulldozer', serial:'DZ-09' },
-  { type:'WA500-6R', code:'WA-10', category:'Wheel Loader', serial:'WA-10' },
-  { type:'PC210-10MO', code:'PC-11', category:'Excavator', serial:'PC-11' },
-  { type:'PC210-10MO', code:'PC-12', category:'Excavator', serial:'PC-12' },
-  { type:'PC210-10MO', code:'PC-17', category:'Excavator', serial:'PC-17' },
+  { type:'D85ESS-2', code:'DZ-04', category:'KOMATSU Bulldozer', serial:'DZ-04' },
+  { type:'D85ESS-2A', code:'DZ-09', category:'KOMATSU Bulldozer', serial:'DZ-09' },
+  { type:'WA380-6', code:'WA-10', category:'KOMATSU Wheel Loader', serial:'WA-10' },
+  { type:'Zaxis ZX200-5G', code:'HEX-11', category:'HITACHI Excavator', serial:'HEX-11' },
+  { type:'Zaxis ZX200-5G', code:'HEX-12', category:'HITACHI Excavator', serial:'HEX-12' },
+  { type:'Zaxis ZX200-5G', code:'HEX-17', category:'HITACHI Excavator', serial:'HEX-17' },
 ];
 /* Target KPI resmi — format skor mengikuti spreadsheet KEY PERFORMANCE INDICATOR Maintenance.
    Acv. = nilai aktual | Score = tier 60% / 80% / 100% dari bobot.
@@ -8204,9 +8270,9 @@ let planRecords = [];
 /* PLAN SERVICE LOCK — unit SEN + DTJ yang diperbolehkan.
  * Semua generate, sync, render, dan penyimpanan Plan Service dibatasi ke unit ini.
  * SEN: SWA-101, SWA-102, SBD-103, SPC-104
- * DTJ: DZ-04, DZ-09, WA-10, PC-11, PC-12, PC-17
+ * DTJ: DZ-04, DZ-09, WA-10, HEX-11, HEX-12, HEX-17
  */
-const PLAN_SERVICE_ALLOWED_UNITS = new Set(['SWA-101','SWA-102','SBD-103','SPC-104','DZ-04','DZ-09','WA-10','PC-11','PC-12','PC-17']);
+const PLAN_SERVICE_ALLOWED_UNITS = new Set(['SWA-101','SWA-102','SBD-103','SPC-104','DZ-04','DZ-09','WA-10','HEX-11','HEX-12','HEX-17']);
 function isPlanServiceAllowedUnit(code){
   return PLAN_SERVICE_ALLOWED_UNITS.has(String(code||'').trim().toUpperCase());
 }
@@ -10049,7 +10115,7 @@ function setupPwaInstallSupport(){
     // tidak bisa didaftarkan dari blob: URL di browser manapun (selalu gagal & memicu
     // warning di console). Di preview sandbox (protokol blob-request:/blob:) registrasi
     // SW otomatis dilewati; fitur PWA tetap aktif normal saat web sudah di-host di http/https.
-    navigator.serviceWorker.register('sw.js?v=20261013-v68', { scope:'./' }).catch(err=> console.warn('SW register failed', err));
+    navigator.serviceWorker.register('sw.js?v=20261016-ui', { scope:'./' }).catch(err=> console.warn('SW register failed', err));
   }
 }
 function bindSiteQrUI(){
@@ -11189,7 +11255,12 @@ function fmtHours(v){
  * ============================================================================ */
 
 /** Warna garis per unit di grafik trend (konsisten selama unit sama). */
-const UNIT_TREND_COLORS = { 'SWA-101':'#FFC72C', 'SWA-102':'#4CAF6D', 'SBD-103':'#3B82F6', 'SPC-104':'#A78BFA' };
+const UNIT_TREND_COLORS = {
+  'SWA-101':'#FFC72C', 'SWA-102':'#4CAF6D', 'SBD-103':'#3B82F6', 'SPC-104':'#A78BFA',
+  'DZ-04':'#F97316', 'DZ-09':'#EC4899', 'WA-10':'#14B8A6',
+  'HEX-11':'#8B5CF6', 'HEX-12':'#06B6D4', 'HEX-17':'#84CC16',
+  'EX-11':'#8B5CF6', 'EX-12':'#06B6D4', 'EX-17':'#84CC16'
+};
 function unitTrendColor(code){ return UNIT_TREND_COLORS[code] || '#9AA0A8'; }
 
 /** Daftar `count` bulan terakhir (termasuk bulan berjalan), otomatis dari tanggal hari ini. */
@@ -11272,33 +11343,309 @@ function unitMonthlyTrendSVG(months){
   </svg>`;
 }
 
-/** Tabel summary: baris = unit, kolom = bulan (auto 6 bulan terakhir), sel = % Achievement
- *  (hover untuk lihat rincian MTBS/MTTR/PMR/SA/MA/PA bulan tsb). Baris terakhir = rata-rata semua unit. */
-function unitMonthlySummaryTableHTML(months){
+/** Chart profesional KPI Unit untuk SATU periode bulan (ikut filter topbar).
+ *  Layout: (1) grouped column MA/PA/PMR/SA + target 90%  (2) ranking bar Avg Achievement
+ *  (3) dual metric MTBS / MTTR per unit. Warna konsisten unitTrendColor + series KPI. */
+function unitKpiPeriodChartSVG(monthObj){
+  if(!monthObj || !UNITS || !UNITS.length){
+    return `<div style="padding:28px;text-align:center;color:var(--text-faint);font-size:12px">Belum ada data unit / periode.</div>`;
+  }
+  const uid = 'ukd' + Math.floor(Math.random()*1e6);
+  const FONT = 'Inter, system-ui, -apple-system, Segoe UI, sans-serif';
+  const catShort = { 'KOMATSU Wheel Loader':'WL', 'KOMATSU Bulldozer':'BD', 'KOMATSU Excavator':'EX', 'HITACHI Excavator':'EX', 'Wheel Loader':'WL', 'Bulldozer':'BD', 'Excavator':'EX' };
+  const KPIS = [
+    { key:'ma',   label:'MA',   name:'Mechanical Availability',  color:'#22C55E', c2:'#16A34A', glow:'#4ADE80', unit:'%',   dir:1,  icon:'⚙️' },
+    { key:'pa',   label:'PA',   name:'Physical Availability',    color:'#3B82F6', c2:'#1D4ED8', glow:'#60A5FA', unit:'%',   dir:1,  icon:'🔧' },
+    { key:'mtbs', label:'MTBS', name:'Mean Time Between Stops',  color:'#F59E0B', c2:'#B45309', glow:'#FBBF24', unit:' Jam',dir:1,  icon:'⏱️' },
+    { key:'mttr', label:'MTTR', name:'Mean Time To Repair',      color:'#EF4444', c2:'#B91C1C', glow:'#F87171', unit:' Jam',dir:-1, icon:'⏲️' },
+    { key:'pmr',  label:'PMR',  name:'Planned Maintenance Ratio',color:'#8B5CF6', c2:'#6D28D9', glow:'#A78BFA', unit:'%',   dir:1,  icon:'📋' },
+    { key:'sa',   label:'SA',   name:'Service Accuracy',         color:'#06B6D4', c2:'#0E7490', glow:'#22D3EE', unit:'%',   dir:1,  icon:'🛡️' }
+  ];
+  KPIS.forEach(k => { k.tgt = (KPI_TARGET && KPI_TARGET[k.key]) || 90; });
+  const isJam = k => k.unit.trim() === 'Jam';
+  const fmt = (k,v) => (isJam(k) ? (Number(v)||0).toFixed(1) : (Number(v)||0).toFixed(1)) + k.unit;
+  const achOf = (k,v) => { v = Number(v)||0; if(k.dir>0) return k.tgt>0 ? v/k.tgt*100 : 0; return v<=k.tgt ? 100 : (v>0 ? k.tgt/v*100 : 100); };
+  const isOk = (k,v) => k.dir>0 ? (Number(v)||0) >= k.tgt : (Number(v)||0) <= k.tgt;
+  const statusOf = (k,v) => { if(isOk(k,v)) return 'ok'; return achOf(k,v) >= 90 ? 'warn' : 'bad'; };
+  const STAT = {
+    ok:   { txt:'On Target',      bg:'linear-gradient(180deg,#22C55E,#15803D)', fg:'#fff',    ic:'✔' },
+    warn: { txt:'Slightly Below', bg:'linear-gradient(180deg,#FBBF24,#D97706)', fg:'#1F1300', ic:'▲' },
+    bad:  { txt:'Below Target',   bg:'linear-gradient(180deg,#F87171,#B91C1C)', fg:'#fff',    ic:'✖' }
+  };
+  const pill = (st, small) => `<span style="display:inline-flex;align-items:center;justify-content:center;gap:5px;width:100%;box-sizing:border-box;padding:${small?'3px 8px':'5px 8px'};border-radius:6px;background:${STAT[st].bg};color:${STAT[st].fg};font-size:${small?10:11}px;font-weight:700;font-family:${FONT};white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.25)">${STAT[st].ic} ${STAT[st].txt}</span>`;
+
+  /* ---- data: unit rows (bulan terpilih) + rata-rata armada ---- */
+  const rows = UNITS.map(u=>{
+    const r = computeUnitMonthlyAchievement(u.code, monthObj);
+    return { code:u.code, cat:catShort[u.category]||(u.category||'').slice(0,3), ...r };
+  });
+  const n = rows.length;
+  const mean = (arr) => arr.length ? arr.reduce((s,x)=>s+(Number(x)||0),0)/arr.length : 0;
+  const fleet = {}; KPIS.forEach(k => { fleet[k.key] = mean(rows.map(r=>r[k.key])); });
+  const overall = mean(KPIS.map(k => Math.min(100, achOf(k, fleet[k.key]))));
+
+  /* ---- UI helpers ---- */
+  const card = 'background:linear-gradient(160deg,rgba(22,46,104,0.62),rgba(7,15,38,0.92));border:1px solid rgba(90,150,255,0.30);border-radius:12px;padding:14px 14px 12px;box-shadow:inset 0 0 0 1px rgba(30,70,160,0.14),0 10px 30px rgba(0,0,0,0.35),0 0 26px rgba(40,110,255,0.07);min-width:0';
+  const title = (t, sub) => `<div style="display:flex;align-items:center;gap:9px;margin-bottom:10px;font-family:${FONT}"><i style="width:4px;height:17px;border-radius:2px;background:linear-gradient(#60A5FA,#2563EB);box-shadow:0 0 9px rgba(59,130,246,.8);display:inline-block"></i><span style="font-weight:800;font-size:13px;letter-spacing:.5px;color:#EAF1FF;text-transform:uppercase">${t}</span>${sub?`<span style="font-weight:500;font-size:11px;color:#8FA6D6">${sub}</span>`:''}</div>`;
+  const legendPills = (list) => list.map(k=>`<span style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:#DCE7FF;font-family:${FONT}"><i style="width:10px;height:10px;border-radius:50%;background:${k.color};box-shadow:0 0 8px ${k.color};display:inline-block"></i>${k.label}${isJam(k)?' (Jam)':''}</span>`).join('');
+
+  /* ========== 6. PASANGAN KPI per unit: MA & PA | PMR & SA ========== */
+  const pairsHtml = (() => {
+    const W=640, H=326, pL=40, pR=62, pT=24, pB=56;
+    const cw=W-pL-pR, ch=H-pT-pB, gw=cw/Math.max(1,n);
+    const yP = v => pT + ch*(1-Math.max(0,Math.min(105,v))/105);
+    const build = (keys, sub, pid) => {
+      const ks = keys.map(key => KPIS.find(k=>k.key===key));
+      const bw = Math.max(9, Math.min(17, (gw*0.82 - 3)/2)), gap = 3;
+      const defs = `<defs>${ks.map(k=>`<linearGradient id="${uid}-${pid}-${k.key}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${k.glow}"/><stop offset="55%" stop-color="${k.color}"/><stop offset="100%" stop-color="${k.c2}"/></linearGradient>`).join('')}
+        <linearGradient id="${uid}-${pid}-zone" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#22C55E" stop-opacity="0.20"/><stop offset="100%" stop-color="#22C55E" stop-opacity="0.03"/></linearGradient>
+        <filter id="${uid}-${pid}-f" x="-40%" y="-10%" width="180%" height="120%"><feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#60A5FA" flood-opacity="0.4"/></filter></defs>`;
+      const zone = `<rect x="${pL}" y="${yP(100).toFixed(1)}" width="${cw}" height="${(yP(90)-yP(100)).toFixed(1)}" fill="url(#${uid}-${pid}-zone)"/>`;
+      const grid = [0,20,40,60,80,100].map(v=>`<line x1="${pL}" y1="${yP(v).toFixed(1)}" x2="${pL+cw}" y2="${yP(v).toFixed(1)}" stroke="rgba(120,160,255,0.10)"/><text x="${pL-8}" y="${(yP(v)+3.5).toFixed(1)}" text-anchor="end" font-size="10.5" fill="#A9BCE6" font-family="${FONT}">${v}</text>`).join('');
+      const tY = yP(90);
+      const tLine = `<line x1="${pL}" y1="${tY.toFixed(1)}" x2="${pL+cw}" y2="${tY.toFixed(1)}" stroke="#FBBF24" stroke-width="1.2" stroke-dasharray="5 4" opacity="0.85"/>
+        <text x="${pL+cw+8}" y="${(tY-1).toFixed(1)}" font-size="9.5" font-weight="800" fill="#FBBF24" font-family="${FONT}" letter-spacing="0.4">TARGET</text><text x="${pL+cw+8}" y="${(tY+11).toFixed(1)}" font-size="9.5" font-weight="800" fill="#FBBF24" font-family="${FONT}">90%</text>`;
+      const bars = rows.map((r,i)=>{
+        const cluster = 2*bw + gap;
+        const x0 = pL + i*gw + (gw-cluster)/2;
+        const lane = i%2===0 ? `<rect x="${(pL+i*gw).toFixed(1)}" y="${pT}" width="${gw.toFixed(1)}" height="${ch}" fill="rgba(120,160,255,0.035)"/>` : '';
+        const bs = ks.map((k,ki)=>{
+          const v = Number(r[k.key])||0;
+          const x = x0 + ki*(bw+gap), y = yP(v), h = Math.max(0, pT+ch-y), rr = Math.min(3.5, bw/2);
+          const ok = v >= k.tgt;
+          const body = h>0.4 ? `<path d="M${x.toFixed(1)} ${pT+ch} L${x.toFixed(1)} ${(y+rr).toFixed(1)} Q${x.toFixed(1)} ${y.toFixed(1)} ${(x+rr).toFixed(1)} ${y.toFixed(1)} L${(x+bw-rr).toFixed(1)} ${y.toFixed(1)} Q${(x+bw).toFixed(1)} ${y.toFixed(1)} ${(x+bw).toFixed(1)} ${(y+rr).toFixed(1)} L${(x+bw).toFixed(1)} ${pT+ch} Z" fill="url(#${uid}-${pid}-${k.key})" filter="url(#${uid}-${pid}-f)"><title>${r.code} · ${k.label}: ${v.toFixed(1)}% (target ${k.tgt}%)</title></path>
+            ${h>6?`<rect x="${(x+1.6).toFixed(1)}" y="${(y+2).toFixed(1)}" width="2" height="${Math.max(0,h-4).toFixed(1)}" rx="1" fill="rgba(255,255,255,0.32)"/>`:''}` : '';
+          const t = String(Math.round(v)), pw = t.length>=3 ? 22 : 17, cx = x+bw/2;
+          const py = Math.max(pT-2, y-15);
+          const lbl = `<rect x="${(cx-pw/2).toFixed(1)}" y="${py.toFixed(1)}" width="${pw}" height="12" rx="6" fill="rgba(5,12,32,0.92)" stroke="${ok?k.color:'#F87171'}" stroke-width="1"/>
+            <text x="${cx.toFixed(1)}" y="${(py+8.8).toFixed(1)}" text-anchor="middle" font-size="8.5" font-weight="800" fill="${ok?'#fff':'#FCA5A5'}" font-family="${FONT}">${t}</text>`;
+          return body + lbl;
+        }).join('');
+        const cx = pL + i*gw + gw/2;
+        return `${lane}${bs}<text transform="translate(${(cx+4).toFixed(1)} ${pT+ch+14}) rotate(-38)" text-anchor="end" font-size="9.5" font-weight="700" fill="#DCE7FF" font-family="${FONT}">${r.code}<tspan fill="#8FA6D6" font-size="8" font-weight="500"> ${r.cat}</tspan></text>`;
+      }).join('');
+      const axes = `<line x1="${pL}" y1="${pT}" x2="${pL}" y2="${pT+ch}" stroke="rgba(150,180,255,.25)"/><line x1="${pL}" y1="${pT+ch}" x2="${pL+cw}" y2="${pT+ch}" stroke="rgba(150,180,255,.3)"/>`;
+      const chips = ks.map(k=>{
+        const v = fleet[k.key], st = statusOf(k, v);
+        const low = rows.reduce((a,b)=> (Number(b[k.key])||0) < (Number(a[k.key])||0) ? b : a, rows[0]);
+        const okCount = rows.filter(r=>(Number(r[k.key])||0) >= k.tgt).length;
+        return `<div style="flex:1 1 150px;min-width:0;display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:rgba(10,24,60,.65);border:1px solid ${k.color}55;box-shadow:inset 0 0 14px ${k.color}1f">
+          <span style="width:34px;height:34px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;font-size:17px;background:linear-gradient(160deg,${k.color},${k.c2});box-shadow:0 0 12px ${k.color}88;flex:none">${k.icon}</span>
+          <div style="min-width:0;font-family:${FONT}"><div style="font-size:10px;color:#A9BCE6;font-weight:600">${k.label} · rata-rata</div>
+            <div style="font-size:18px;font-weight:800;color:#fff;line-height:1.15">${v.toFixed(1)}%</div>
+            <div style="font-size:9px;color:#8FA6D6;line-height:1.35;word-break:break-word">${okCount}/${n} unit ≥ target · terendah ${low.code} ${Math.round(Number(low[k.key])||0)}%</div></div>
+          <span style="margin-left:auto;width:9px;height:9px;border-radius:50%;background:${st==='ok'?'#22C55E':st==='warn'?'#FBBF24':'#EF4444'};box-shadow:0 0 8px ${st==='ok'?'#22C55E':st==='warn'?'#FBBF24':'#EF4444'};flex:none"></span></div>`;
+      }).join('');
+      const legend = ks.map(k=>`<span style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:#DCE7FF;font-family:${FONT}"><i style="width:10px;height:10px;border-radius:3px;background:${k.color};box-shadow:0 0 8px ${k.color};display:inline-block"></i>${k.label} · ${k.name}</span>`).join('');
+      return `<div style="${card};height:100%;box-sizing:border-box">${title(ks.map(k=>k.label).join(' &amp; '), sub)}
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">${chips}</div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:4px">${legend}</div>
+        <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">${defs}${zone}${grid}${axes}${tLine}${bars}</svg></div>`;
+    };
+    return `<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:stretch">
+      <div style="flex:1 1 460px;min-width:0">${build(['ma','pa'], 'availability per unit', 'p1')}</div>
+      <div style="flex:1 1 460px;min-width:0">${build(['pmr','sa'], 'planned &amp; accuracy per unit', 'p2')}</div>
+    </div>`;
+  })();
+
+  /* ========== 7. MTBS & MTTR per unit | AVG ACHIEVEMENT RANKING ========== */
+  const row2Html = (() => {
+    const W=640, H=326;
+    const chip = (icon, color, c2, label, big, small, dot) => `<div style="flex:1 1 140px;min-width:0;display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:rgba(10,24,60,.65);border:1px solid ${color}55;box-shadow:inset 0 0 14px ${color}1f">
+      <span style="width:34px;height:34px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;font-size:17px;background:linear-gradient(160deg,${color},${c2});box-shadow:0 0 12px ${color}88;flex:none">${icon}</span>
+      <div style="min-width:0;font-family:${FONT}"><div style="font-size:10px;color:#A9BCE6;font-weight:600">${label}</div><div style="font-size:18px;font-weight:800;color:#fff;line-height:1.15">${big}</div>
+        <div style="font-size:9px;color:#8FA6D6;line-height:1.35;word-break:break-word">${small}</div></div>
+      ${dot?`<span style="margin-left:auto;width:9px;height:9px;border-radius:50%;background:${dot};box-shadow:0 0 8px ${dot};flex:none"></span>`:''}</div>`;
+    const stDot = st => st==='ok'?'#22C55E':st==='warn'?'#FBBF24':'#EF4444';
+
+    /* ---- MTBS & MTTR ---- */
+    const mtbsK = KPIS.find(k=>k.key==='mtbs'), mttrK = KPIS.find(k=>k.key==='mttr');
+    const mtbsC = (() => {
+      const pL=44, pR=44, pT=24, pB=56, cw=W-pL-pR, ch=H-pT-pB, gw=cw/Math.max(1,n);
+      const bw = Math.max(9, Math.min(17, (gw*0.82 - 3)/2)), gap=3;
+      const mMax = Math.max(20, Math.ceil(Math.max(mtbsK.tgt*1.25, ...rows.map(r=>Number(r.mtbs)||0))/20)*20);
+      const tMax = Math.max(10, Math.ceil(Math.max(mttrK.tgt*1.3, ...rows.map(r=>Number(r.mttr)||0))/10)*10);
+      const yM = v => pT + ch*(1-Math.max(0,Math.min(mMax,v))/mMax);
+      const yT = v => pT + ch*(1-Math.max(0,Math.min(tMax,v))/tMax);
+      const defs = `<defs>${[mtbsK,mttrK].map(k=>`<linearGradient id="${uid}-m-${k.key}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${k.glow}"/><stop offset="55%" stop-color="${k.color}"/><stop offset="100%" stop-color="${k.c2}"/></linearGradient>`).join('')}
+        <filter id="${uid}-mf" x="-40%" y="-10%" width="180%" height="120%"><feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#60A5FA" flood-opacity="0.4"/></filter></defs>`;
+      const grid = [0,1,2,3,4,5].map(t=>{ const y = pT+ch*(1-t/5); return `<line x1="${pL}" y1="${y.toFixed(1)}" x2="${pL+cw}" y2="${y.toFixed(1)}" stroke="rgba(120,160,255,0.10)"/>
+        <text x="${pL-8}" y="${(y+3.5).toFixed(1)}" text-anchor="end" font-size="10.5" fill="#FCD34D" font-family="${FONT}">${Math.round(mMax*t/5)}</text>
+        <text x="${pL+cw+8}" y="${(y+3.5).toFixed(1)}" font-size="10.5" fill="#FCA5A5" font-family="${FONT}">${(tMax*t/5).toFixed(tMax<=20?1:0)}</text>`; }).join('')
+        + `<text x="${pL-8}" y="${pT-10}" text-anchor="end" font-size="9.5" font-weight="800" fill="#FBBF24" font-family="${FONT}">MTBS</text><text x="${pL+cw+8}" y="${pT-10}" font-size="9.5" font-weight="800" fill="#F87171" font-family="${FONT}">MTTR</text>`;
+      const tl = `<line x1="${pL}" y1="${yM(mtbsK.tgt).toFixed(1)}" x2="${pL+cw}" y2="${yM(mtbsK.tgt).toFixed(1)}" stroke="#FBBF24" stroke-width="1.2" stroke-dasharray="5 4" opacity="0.85"/>
+        <line x1="${pL}" y1="${yT(mttrK.tgt).toFixed(1)}" x2="${pL+cw}" y2="${yT(mttrK.tgt).toFixed(1)}" stroke="#F87171" stroke-width="1.2" stroke-dasharray="2 4" opacity="0.85"/>`;
+      const bars = rows.map((r,i)=>{
+        const x0 = pL + i*gw + (gw-(2*bw+gap))/2;
+        const lane = i%2===0 ? `<rect x="${(pL+i*gw).toFixed(1)}" y="${pT}" width="${gw.toFixed(1)}" height="${ch}" fill="rgba(120,160,255,0.035)"/>` : '';
+        const bs = [mtbsK,mttrK].map((k,ki)=>{
+          const v = Number(r[k.key])||0, yy = k.key==='mtbs'?yM:yT;
+          const x = x0+ki*(bw+gap), y = yy(v), h = Math.max(0,pT+ch-y), rr = Math.min(3.5,bw/2), ok = isOk(k,v);
+          const body = h>0.4 ? `<path d="M${x.toFixed(1)} ${pT+ch} L${x.toFixed(1)} ${(y+rr).toFixed(1)} Q${x.toFixed(1)} ${y.toFixed(1)} ${(x+rr).toFixed(1)} ${y.toFixed(1)} L${(x+bw-rr).toFixed(1)} ${y.toFixed(1)} Q${(x+bw).toFixed(1)} ${y.toFixed(1)} ${(x+bw).toFixed(1)} ${(y+rr).toFixed(1)} L${(x+bw).toFixed(1)} ${pT+ch} Z" fill="url(#${uid}-m-${k.key})" filter="url(#${uid}-mf)"><title>${r.code} · ${k.label}: ${v.toFixed(1)} Jam (target ${k.dir<0?'≤ ':'≥ '}${k.tgt})</title></path>${h>6?`<rect x="${(x+1.6).toFixed(1)}" y="${(y+2).toFixed(1)}" width="2" height="${Math.max(0,h-4).toFixed(1)}" rx="1" fill="rgba(255,255,255,0.32)"/>`:''}` : '';
+          const t = v>=100 ? String(Math.round(v)) : v.toFixed(v>=10?0:1), pw = Math.max(17, t.length*5.6+7), cx = x+bw/2, py = Math.max(pT-2, y-15);
+          const lbl = v>0 ? `<rect x="${(cx-pw/2).toFixed(1)}" y="${py.toFixed(1)}" width="${pw.toFixed(1)}" height="12" rx="6" fill="rgba(5,12,32,0.92)" stroke="${ok?k.color:'#F87171'}" stroke-width="1"/><text x="${cx.toFixed(1)}" y="${(py+8.8).toFixed(1)}" text-anchor="middle" font-size="8.5" font-weight="800" fill="${ok?'#fff':'#FCA5A5'}" font-family="${FONT}">${t}</text>` : '';
+          return body+lbl;
+        }).join('');
+        const cx = pL+i*gw+gw/2;
+        return `${lane}${bs}<text transform="translate(${(cx+4).toFixed(1)} ${pT+ch+14}) rotate(-38)" text-anchor="end" font-size="9.5" font-weight="700" fill="#DCE7FF" font-family="${FONT}">${r.code}<tspan fill="#8FA6D6" font-size="8" font-weight="500"> ${r.cat}</tspan></text>`;
+      }).join('');
+      const axes = `<line x1="${pL}" y1="${pT}" x2="${pL}" y2="${pT+ch}" stroke="rgba(251,191,36,.45)"/><line x1="${pL+cw}" y1="${pT}" x2="${pL+cw}" y2="${pT+ch}" stroke="rgba(248,113,113,.45)"/><line x1="${pL}" y1="${pT+ch}" x2="${pL+cw}" y2="${pT+ch}" stroke="rgba(150,180,255,.3)"/>`;
+      return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">${defs}${grid}${axes}${tl}${bars}</svg>`;
+    })();
+    const worstMtbs = rows.reduce((a,b)=> (Number(b.mtbs)||0) < (Number(a.mtbs)||0) ? b : a, rows[0]);
+    const worstMttr = rows.reduce((a,b)=> (Number(b.mttr)||0) > (Number(a.mttr)||0) ? b : a, rows[0]);
+    const mtbsOk = rows.filter(r=>isOk(mtbsK,r.mtbs)).length, mttrOk = rows.filter(r=>isOk(mttrK,r.mttr)).length;
+    const mtbsCard = `<div style="${card};height:100%;box-sizing:border-box">${title('MTBS &amp; MTTR', 'reliability per unit (Jam)')}
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+        ${chip(mtbsK.icon, mtbsK.color, mtbsK.c2, 'MTBS · rata-rata', fleet.mtbs.toFixed(1)+' Jam', `${mtbsOk}/${n} unit ≥ ${mtbsK.tgt} · terendah ${worstMtbs.code} ${(Number(worstMtbs.mtbs)||0).toFixed(1)}`, stDot(statusOf(mtbsK,fleet.mtbs)))}
+        ${chip(mttrK.icon, mttrK.color, mttrK.c2, 'MTTR · rata-rata', fleet.mttr.toFixed(1)+' Jam', `${mttrOk}/${n} unit ≤ ${mttrK.tgt} · tertinggi ${worstMttr.code} ${(Number(worstMttr.mttr)||0).toFixed(1)}`, stDot(statusOf(mttrK,fleet.mttr)))}
+      </div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:4px;font-family:${FONT};font-size:11px;font-weight:600;color:#DCE7FF">
+        <span style="display:inline-flex;align-items:center;gap:6px"><i style="width:10px;height:10px;border-radius:3px;background:${mtbsK.color};box-shadow:0 0 8px ${mtbsK.color};display:inline-block"></i>MTBS · skala kiri · target ≥ ${mtbsK.tgt} Jam</span>
+        <span style="display:inline-flex;align-items:center;gap:6px"><i style="width:10px;height:10px;border-radius:3px;background:${mttrK.color};box-shadow:0 0 8px ${mttrK.color};display:inline-block"></i>MTTR · skala kanan · target ≤ ${mttrK.tgt} Jam</span>
+      </div>${mtbsC}</div>`;
+
+    /* ---- Avg Achievement Ranking ---- */
+    const ranked = rows.slice().sort((a,b)=>(b.avgAch||0)-(a.avgAch||0));
+    const rankC = (() => {
+      const pL=96, pR=70, pT=26, pB=10, cw=W-pL-pR, ch=H-pT-pB, rh=ch/Math.max(1,ranked.length);
+      const bh = Math.max(8, Math.min(14, rh*0.58));
+      const xAt = v => pL + cw*Math.max(0,Math.min(110,v))/110;
+      const colOf = v => v>=90 ? ['#4ADE80','#16A34A'] : v>=75 ? ['#FCD34D','#D97706'] : ['#F87171','#B91C1C'];
+      const defs = `<defs>${['g','y','r'].map((c,i)=>{ const cc=[['#4ADE80','#16A34A'],['#FCD34D','#D97706'],['#F87171','#B91C1C']][i]; return `<linearGradient id="${uid}-rk-${c}" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="${cc[1]}"/><stop offset="100%" stop-color="${cc[0]}"/></linearGradient>`; }).join('')}
+        <filter id="${uid}-rkf" x="-10%" y="-40%" width="120%" height="180%"><feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#000" flood-opacity="0.4"/></filter></defs>`;
+      const grid = [0,25,50,75,100].map(v=>`<line x1="${xAt(v).toFixed(1)}" y1="${pT}" x2="${xAt(v).toFixed(1)}" y2="${pT+ch}" stroke="rgba(120,160,255,0.10)"/><text x="${xAt(v).toFixed(1)}" y="${pT-9}" text-anchor="middle" font-size="10.5" fill="#A9BCE6" font-family="${FONT}">${v}</text>`).join('');
+      const tx = xAt(90);
+      const tl = `<line x1="${tx.toFixed(1)}" y1="${pT-2}" x2="${tx.toFixed(1)}" y2="${pT+ch}" stroke="#FBBF24" stroke-width="1.3" stroke-dasharray="4 3" opacity="0.9"/>`;
+      const body = ranked.map((r,i)=>{
+        const v = r.avgAch||0, yy = pT + i*rh + (rh-bh)/2, w = Math.max(4, xAt(v)-pL);
+        const c = colOf(v), gid = v>=90?'g':v>=75?'y':'r';
+        const txt = v.toFixed(1)+'%', pw = Math.max(46, txt.length*7.2+8);
+        const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+        return (i%2===0?`<rect x="6" y="${(pT+i*rh).toFixed(1)}" width="${W-12}" height="${rh.toFixed(1)}" rx="4" fill="rgba(120,160,255,0.035)"/>`:'')
+          + `<text x="24" y="${(yy+bh/2+3.6).toFixed(1)}" text-anchor="middle" font-size="9.5" font-weight="800" fill="#8FA6D6" font-family="${FONT}">${medal||(i+1)}</text>`
+          + `<text x="${pL-8}" y="${(yy+bh/2+3.8).toFixed(1)}" text-anchor="end" font-size="10.5" font-weight="700" fill="#DCE7FF" font-family="${FONT}">${r.code}</text>`
+          + `<rect x="${pL}" y="${yy.toFixed(1)}" width="${cw}" height="${bh.toFixed(1)}" rx="${bh/2}" fill="rgba(255,255,255,0.05)"/>`
+          + `<rect x="${pL}" y="${yy.toFixed(1)}" width="${w.toFixed(1)}" height="${bh.toFixed(1)}" rx="${bh/2}" fill="url(#${uid}-rk-${gid})" filter="url(#${uid}-rkf)"><title>${r.code}: ${txt}</title></rect>`
+          + `<rect x="${(pL+w+2).toFixed(1)}" y="${(yy-1).toFixed(1)}" width="${pw.toFixed(1)}" height="${(bh+2).toFixed(1)}" rx="${(bh+2)/2}" fill="rgba(5,12,32,0.92)" stroke="${c[0]}" stroke-width="1"/><text x="${(pL+w+2+pw/2).toFixed(1)}" y="${(yy+bh/2+3.6).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="800" fill="${c[0]}" font-family="${FONT}">${txt}</text>`;
+      }).join('');
+      return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">${defs}${grid}${tl}${body}</svg>`;
+    })();
+    const best = ranked[0], low = ranked[ranked.length-1];
+    const avgAll = mean(ranked.map(r=>r.avgAch||0));
+    const ge90 = ranked.filter(r=>(r.avgAch||0)>=90).length;
+    const rankCard = `<div style="${card};height:100%;box-sizing:border-box">${title('Avg Achievement Ranking', 'peringkat unit · bulan ' + monthObj.label)}
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+        ${chip('🏆','#22C55E','#16A34A','Terbaik', (best.avgAch||0).toFixed(1)+'%', best.code, '#22C55E')}
+        ${chip('📊','#3B82F6','#1D4ED8','', avgAll.toFixed(1)+'%', `${ge90}/${n} unit ≥ 90%`, avgAll>=90?'#22C55E':avgAll>=75?'#FBBF24':'#EF4444')}
+        ${chip('⚠️','#EF4444','#B91C1C','Terendah', (low.avgAch||0).toFixed(1)+'%', low.code, '#EF4444')}
+      </div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:4px;font-family:${FONT};font-size:11px;font-weight:600;color:#DCE7FF">
+        <span style="display:inline-flex;align-items:center;gap:6px"><i style="width:10px;height:10px;border-radius:3px;background:#22C55E;display:inline-block"></i>≥ 90% target</span>
+        <span style="display:inline-flex;align-items:center;gap:6px"><i style="width:10px;height:10px;border-radius:3px;background:#FBBF24;display:inline-block"></i>75–89%</span>
+        <span style="display:inline-flex;align-items:center;gap:6px"><i style="width:10px;height:10px;border-radius:3px;background:#EF4444;display:inline-block"></i>&lt; 75%</span>
+      </div>${rankC}</div>`;
+    return `<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:stretch">
+      <div style="flex:1 1 460px;min-width:0">${mtbsCard}</div>
+      <div style="flex:1 1 460px;min-width:0">${rankCard}</div>
+    </div>`;
+  })();
+
+  const col = (flex, html) => `<div style="flex:${flex};min-width:0">${html}</div>`;
+  return `<div style="display:flex;flex-direction:column;gap:16px;font-family:${FONT}">
+    ${pairsHtml}
+    ${row2Html}
+  </div>`;
+}
+
+
+/** Tabel data KPI per unit: MTBS, MTTR, PMR, SA, MA, PA + Avg Achievement.
+ *  Satu blok tabel per bulan (6 bulan terakhir). Tanpa chart achievement. */
+function unitKpiDataTableHTML(months){
   function cellColor(pct){
-    if(pct>=100) return '#4CAF6D';
+    if(pct>=90) return '#4CAF6D';
     if(pct>=75) return '#FFC72C';
     return '#E5484D';
   }
-  const head = `<tr><th style="text-align:left;padding:8px 10px;white-space:nowrap;">Unit</th>${months.map(m=>`<th style="text-align:center;padding:8px 10px;white-space:nowrap;${m.isCurrent?'color:var(--yellow);':''}">${m.label}${m.isCurrent?' <span style="font-size:9px;">●berjalan</span>':''}</th>`).join('')}</tr>`;
-  const rows = UNITS.map(u=>{
-    const cells = months.map(m=>{
+  function fmtVal(key, v){
+    const n = Number(v)||0;
+    if(key==='mtbs' || key==='mttr') return n.toFixed(1);
+    return n.toFixed(1);
+  }
+  function kpiCell(key, v, unit){
+    const n = Number(v)||0;
+    let ok = false;
+    if(key==='mttr') ok = n>0 ? n < (KPI_TARGET.mttr||36) : true;
+    else if(key==='mtbs') ok = n >= (KPI_TARGET.mtbs||80);
+    else ok = n >= (KPI_TARGET[key]||90);
+    const col = ok ? '#4CAF6D' : (n>0 ? '#FFC72C' : 'var(--text-dim)');
+    return `<td style="text-align:center;padding:7px 8px;font-family:'JetBrains Mono',monospace;font-weight:600;color:${col};white-space:nowrap;">${fmtVal(key,n)}${unit||''}</td>`;
+  }
+  if(!months || !months.length){
+    return `<div style="padding:20px;text-align:center;color:var(--text-faint);font-size:12px">Belum ada periode bulan.</div>`;
+  }
+  return months.map(m=>{
+    const rows = UNITS.map(u=>{
       const r = computeUnitMonthlyAchievement(u.code, m);
-      const col = cellColor(r.avgAch);
-      const title = `MTBS ${(r.mtbs||0).toFixed(1)}j · MTTR ${(r.mttr||0).toFixed(1)}j · PMR ${(r.pmr||0).toFixed(0)}% · SA ${(r.sa||0).toFixed(0)}% · MA ${(r.ma||0).toFixed(0)}% · PA ${(r.pa||0).toFixed(0)}%`;
-      return `<td title="${escUH(title)}" style="text-align:center;padding:8px 10px;font-family:'JetBrains Mono',monospace;font-weight:700;color:${col};cursor:help;white-space:nowrap;">${r.avgAch.toFixed(1)}%</td>`;
+      const avgCol = cellColor(r.avgAch);
+      return `<tr style="border-top:1px solid rgba(255,255,255,.06)">
+        <td style="padding:7px 10px;font-family:'JetBrains Mono',monospace;color:var(--yellow);font-weight:700;white-space:nowrap;">${escUH(u.code)}</td>
+        <td style="padding:7px 8px;color:var(--text-dim);font-size:11px;white-space:nowrap;">${escUH(u.type||'')}</td>
+        <td style="padding:7px 8px;color:var(--text-faint);font-size:10px;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap;">${escUH(u.category||'')}</td>
+        ${kpiCell('mtbs', r.mtbs, '')}
+        ${kpiCell('mttr', r.mttr, '')}
+        ${kpiCell('pmr', r.pmr, '')}
+        ${kpiCell('sa', r.sa, '')}
+        ${kpiCell('ma', r.ma, '')}
+        ${kpiCell('pa', r.pa, '')}
+        <td style="text-align:center;padding:7px 10px;font-family:'JetBrains Mono',monospace;font-weight:700;color:${avgCol};white-space:nowrap;">${(r.avgAch||0).toFixed(1)}%</td>
+      </tr>`;
     }).join('');
-    return `<tr style="border-top:1px solid rgba(255,255,255,.06)"><td style="padding:8px 10px;font-family:'JetBrains Mono',monospace;color:var(--yellow);font-weight:700;white-space:nowrap;">${escUH(u.code)}</td>${cells}</tr>`;
+    // Rata-rata baris
+    const keys = ['mtbs','mttr','pmr','sa','ma','pa'];
+    const avgs = {};
+    keys.forEach(k=>{
+      const vals = UNITS.map(u=>Number(computeUnitMonthlyAchievement(u.code,m)[k])||0);
+      avgs[k] = vals.length ? vals.reduce((s,v)=>s+v,0)/vals.length : 0;
+    });
+    const avgAchVals = UNITS.map(u=>computeUnitMonthlyAchievement(u.code,m).avgAch);
+    const avgAch = avgAchVals.length ? avgAchVals.reduce((s,v)=>s+v,0)/avgAchVals.length : 0;
+    const avgRow = `<tr style="border-top:2px solid rgba(255,199,44,.35);background:rgba(255,199,44,.04)">
+      <td colspan="3" style="padding:7px 10px;font-weight:700;white-space:nowrap;"></td>
+      ${keys.map(k=>`<td style="text-align:center;padding:7px 8px;font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--text);white-space:nowrap;">${fmtVal(k,avgs[k])}</td>`).join('')}
+      <td style="text-align:center;padding:7px 10px;font-family:'JetBrains Mono',monospace;font-weight:700;color:${cellColor(avgAch)};white-space:nowrap;">${avgAch.toFixed(1)}%</td>
+    </tr>`;
+    const curBadge = '';
+    return `<div style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:6px 10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px">
+        <span style="font-family:Oswald,sans-serif;font-size:13px;font-weight:600;letter-spacing:.4px;color:var(--text)">${escUH(m.label)}</span>${curBadge}
+        <span style="font-size:10px;color:var(--text-faint);font-family:JetBrains Mono,monospace;margin-left:auto">${escUH(m.start)} s/d ${escUH(m.end)}</span>
+      </div>
+      <div style="overflow-x:auto;border:1px solid rgba(255,255,255,0.08);border-radius:10px">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:720px">
+          <thead style="background:rgba(255,255,255,.04)">
+            <tr>
+              <th style="text-align:left;padding:8px 10px;white-space:nowrap;">Unit</th>
+              <th style="text-align:left;padding:8px 8px;white-space:nowrap;">Type</th>
+              <th style="text-align:left;padding:8px 8px;white-space:nowrap;">Category</th>
+              <th style="text-align:center;padding:8px 8px;white-space:nowrap;" title="Mean Time Between Stoppages (target >80 jam)">MTBS (jam)</th>
+              <th style="text-align:center;padding:8px 8px;white-space:nowrap;" title="Mean Time To Repair (target <36 jam)">MTTR (jam)</th>
+              <th style="text-align:center;padding:8px 8px;white-space:nowrap;" title="Planned Maintenance Ratio (target >90%)">PMR (%)</th>
+              <th style="text-align:center;padding:8px 8px;white-space:nowrap;" title="Service Accuracy (target >90%)">SA (%)</th>
+              <th style="text-align:center;padding:8px 8px;white-space:nowrap;" title="Mechanical Availability (target ≥90%)">MA (%)</th>
+              <th style="text-align:center;padding:8px 8px;white-space:nowrap;" title="Physical Availability (target ≥90%)">PA (%)</th>
+              <th style="text-align:center;padding:8px 10px;white-space:nowrap;" title="Average Achievement berbobot">Avg Ach</th>
+            </tr>
+          </thead>
+          <tbody>${rows}${avgRow}</tbody>
+        </table>
+      </div>
+    </div>`;
   }).join('');
-  const avgRow = `<tr style="border-top:2px solid rgba(255,199,44,.35);background:rgba(255,199,44,.04)"><td style="padding:8px 10px;font-weight:700;white-space:nowrap;">Rata-rata</td>${months.map(m=>{
-    const vals = UNITS.map(u=>computeUnitMonthlyAchievement(u.code,m).avgAch);
-    const avg = vals.length ? vals.reduce((s,v)=>s+v,0)/vals.length : 0;
-    return `<td style="text-align:center;padding:8px 10px;font-family:'JetBrains Mono',monospace;font-weight:700;color:${cellColor(avg)};white-space:nowrap;">${avg.toFixed(1)}%</td>`;
-  }).join('')}</tr>`;
-  return `<table style="width:100%;border-collapse:collapse;font-size:12px;min-width:${360+months.length*100}px">
-    <thead style="background:rgba(255,255,255,.03)">${head}</thead>
-    <tbody>${rows}${avgRow}</tbody>
-  </table>`;
+}
+/** @deprecated — diganti unitKpiDataTableHTML (tabel data KPI penuh, tanpa chart). */
+function unitMonthlySummaryTableHTML(months){
+  return unitKpiDataTableHTML(months);
 }
 
 /** Render panel "AUTO — Trend & Summary KPI Per Unit & Bulan" di menu Performance.
@@ -11306,8 +11653,9 @@ function unitMonthlySummaryTableHTML(months){
  *  titik yang sudah memanggil renderUnitCards() (buka menu Performance, sync sheet,
  *  live-refresh berkala, dsb) — tanpa perlu hook baru & tanpa perlu di-generate manual. */
 function renderUnitMonthlySummary(){
-  /* Panel Trend & Summary KPI Per Unit & Bulan di menu Performance telah dihapus. */
-  return;
+  /* Tabel Data KPI Per Unit hanya di Dashboard tab KPI Unit (bukan di menu Performance). */
+  const host = document.getElementById('unit-monthly-summary-panel');
+  if(host) host.remove();
 }
 
 function renderUnitCards(){
@@ -11338,10 +11686,9 @@ function renderUnitCards(){
     const avgCol = avgAch>=90 ? 'var(--green)' : avgAch>=75 ? 'var(--yellow)' : 'var(--red)';
     const srcLabel = wh.source==='performance' ? 'sheet performance' : (wh.source==='hm' ? 'Monitoring HM' : '—');
     return `<div class="unit-card">
-      <div class="unit-visual">${(()=>{ const photo = getUnitPhoto(u.category, u.type); return photo ? `<img src="${photo}" alt="${u.type}" class="unit-photo">` : unitIconSVG(u.category); })()}</div>
       <div class="cat-label">${u.category}</div>
-      <div class="type">${u.type}</div>
       <div class="code">${u.code}</div>
+      <div class="type">${u.type}</div>
       <div class="stats">
         <div onclick="openUnitHistory('${u.code}','all','${weekPeriod}','${escUH(weekPeriodLabel)}')" title="Klik untuk lihat histori job">Total Job<b>${jobs.length}</b></div>
         <div class="stat-wh" title="Waktu Operasi dari ${srcLabel}">Waktu Operasi<b>${fmtHours(wh.w)}</b></div>
@@ -12542,6 +12889,7 @@ const _FB_DASH_TABS = {
   service:    'Dashboard - Service',
   kpi:        'Dashboard - KPI Maintenance',
   monthlykpi: 'Dashboard - Monthly KPI Achievement',
+  kpiunit:    'Dashboard - KPI Unit',
   trend:      'Dashboard - Trend & Comparison',
   quarter:    'Dashboard - Quarter Summary'
 };
@@ -15642,7 +15990,7 @@ function isPlanClosed(r){
 function resolvePlanPic(unitCode, hmTarget){
   const code = String(unitCode||'').trim().toUpperCase();
   // Unit DTJ → PIC = DTJ
-  const DTJ_UNITS = new Set(['DZ-04','DZ-09','WA-10','PC-11','PC-12','PC-17','EX-11','EX-12','EX-17']);
+  const DTJ_UNITS = new Set(['DZ-04','DZ-09','WA-10','HEX-11','HEX-12','HEX-17','EX-11','EX-12','EX-17']);
   if(DTJ_UNITS.has(code) || code.endsWith(' DTJ') || code.includes('DTJ')) return 'DTJ';
   if(code === 'SPC-104'){
     const hm = (hmTarget===null || hmTarget===undefined || hmTarget==='') ? null : Number(hmTarget);
@@ -18128,15 +18476,23 @@ p2hUnitSelect.addEventListener('change', ()=>{
 syncTypeFromUnit(p2hUnitSelect, document.getElementById('p2h-typeunit'));
 document.getElementById('p2h-tanggal').value = new Date().toISOString().slice(0,10);
 
+function p2hCategoryKey(cat){
+  const c = String(cat||'');
+  if(/bulldozer/i.test(c)) return 'Bulldozer';
+  if(/wheel\s*loader|loader/i.test(c)) return 'Wheel Loader';
+  if(/excavator/i.test(c)) return 'Excavator';
+  return c;
+}
 function renderP2HChecklist(){
   const unit = UNITS.find(u=>u.code===p2hUnitSelect.value);
   const tbody = document.getElementById('p2h-checklist-body');
-  if(!unit || !P2H_CHECKLIST[unit.category]){
+  const catKey = unit ? p2hCategoryKey(unit.category) : '';
+  if(!unit || !P2H_CHECKLIST[catKey]){
     tbody.innerHTML = `<tr class="empty-row"><td colspan="5">Pilih Unit Code untuk menampilkan checklist P2H sesuai tipe unit.</td></tr>`;
     attachTopScroll('p2h-checklist');
     return;
   }
-  const items = P2H_CHECKLIST[unit.category];
+  const items = P2H_CHECKLIST[catKey];
   tbody.innerHTML = items.map(it=>{
     if(it.section){
       return `<tr><td colspan="5" style="background:var(--panel-2); font-family:'Oswald',sans-serif; font-weight:700; letter-spacing:0.5px; color:var(--yellow); font-size:11.5px;">${it.section}</td></tr>`;
@@ -18621,12 +18977,12 @@ document.getElementById('preins-tanggal').value = new Date().toISOString().slice
 function renderPreInspectionChecklist(){
   const unit = UNITS.find(u=>u.code===preinsUnitSelect.value);
   const tbody = document.getElementById('preins-checklist-body');
-  if(!unit || !PRE_INSPECTION_CHECKLIST[unit.type]){
+  if(!unit || !(PRE_INSPECTION_CHECKLIST[unit.type] || PRE_INSPECTION_CHECKLIST['D85ESS-2A'])){
     tbody.innerHTML = `<tr class="empty-row"><td colspan="4">Pilih Unit No untuk menampilkan checklist Pre Inspection sesuai tipe unit.</td></tr>`;
     attachTopScroll('preins-checklist');
     return;
   }
-  const items = PRE_INSPECTION_CHECKLIST[unit.type];
+  const items = PRE_INSPECTION_CHECKLIST[unit.type] || PRE_INSPECTION_CHECKLIST['D85ESS-2A'];
   tbody.innerHTML = items.map(it=>{
     if(it.section){
       return `<tr><td colspan="4" style="background:var(--panel-2); font-family:'Oswald',sans-serif; font-weight:700; letter-spacing:0.5px; color:var(--yellow); font-size:11.5px;">${it.section}</td></tr>`;
@@ -20963,6 +21319,15 @@ function chartStatItem(num, lbl, color){
 
 /* ---- Filter periode bulan khusus untuk panel "KPI Report Monthly" ---- */
 let kpiMonthlyChartPeriodValue = ''; // '' = All Periods (default)
+let kpiUnitMonthValue = ''; // '' = bulan berjalan (default) — filter tab KPI Unit
+function onKpiUnitMonthChange(selectEl){
+  kpiUnitMonthValue = selectEl ? selectEl.value : '';
+  try{
+    if(typeof renderDashboard === 'function') renderDashboard();
+    if(typeof setDashboardTab === 'function') setDashboardTab('kpiunit');
+  }catch(e){ console.warn('onKpiUnitMonthChange', e); }
+}
+window.onKpiUnitMonthChange = onKpiUnitMonthChange;
 let kpiInspectionMonthValue = ''; // '' = bulan berjalan — filter chart Pre Inspection
 
 function onKpiMonthlyChartPeriodChange(selectEl){
@@ -21214,6 +21579,7 @@ const DASH_TAB_GROUPS = {
   service:     ['dashboard service', 'service achievement'],
   kpi:         ['kpi maintenance summary'],
   monthlykpi:  ['monthly kpi achievement'],
+  kpiunit:     ['kpi unit monthly summary', 'trend kpi per unit'],
   trend:       ['trend kpi maintenance', 'comparison vs target', 'mtbs', 'mttr', 'contribution to reliability'],
   quarter:     ['grafik quarter', 'kpi summary quarter']
 };
@@ -21280,6 +21646,11 @@ function applyDashboardTabFilter(){
       // .dash-panel-title), dikenali lewat wrapper .mkpi-exec.
       if(el.querySelector && el.querySelector('.mkpi-exec')){
         el.style.display = (tab === 'monthlykpi') ? '' : 'none';
+        return;
+      }
+      // Panel "KPI Unit" — monthly summary per unit (trend + tabel).
+      if(el.querySelector && el.querySelector('.kpi-unit-exec')){
+        el.style.display = (tab === 'kpiunit') ? '' : 'none';
         return;
       }
       const titleNodes = el.querySelectorAll ? el.querySelectorAll('.dash-panel-title') : [];
@@ -22875,6 +23246,48 @@ function renderKPIChartDashboard(k, globalStats){
         </div>
       </div>
     </div>
+    ${(() => {
+      const allMonths = (typeof getRecentMonthsList === 'function') ? getRecentMonthsList(12) : [];
+      let activeKey = (typeof kpiUnitMonthValue !== 'undefined' && kpiUnitMonthValue) ? kpiUnitMonthValue : '';
+      if(!activeKey && allMonths.length){
+        const cur = allMonths.find(m => m.isCurrent) || allMonths[allMonths.length - 1];
+        activeKey = cur ? cur.key : '';
+      }
+      if(activeKey && allMonths.length && !allMonths.some(m => m.key === activeKey)){
+        activeKey = (allMonths.find(m => m.isCurrent) || allMonths[allMonths.length - 1] || {}).key || '';
+      }
+      const months = allMonths.filter(m => m.key === activeKey);
+      const monthSelectHtml = `<select class="trend-quarter-select" style="width:200px;" onchange="onKpiUnitMonthChange(this)" title="Filter periode bulan">
+        ${allMonths.map(m => {
+          const lab = new Date(m.start + 'T00:00:00').toLocaleDateString('en-US',{month:'short',year:'numeric'}) + (m.isCurrent ? ' (current)' : '');
+          return `<option value="${m.key}" ${m.key===activeKey?'selected':''}>${lab}</option>`;
+        }).join('')}
+      </select>`;
+      const tableHtml = (typeof unitKpiDataTableHTML === 'function') ? unitKpiDataTableHTML(months)
+        : ((typeof unitMonthlySummaryTableHTML === 'function') ? unitMonthlySummaryTableHTML(months) : '');
+      return `
+    <div class="dash-panel kpi-unit-exec" style="margin-bottom:16px">
+      <div class="kpi-unit-exec">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid rgba(255,199,44,0.12)">
+          <div>
+            <div class="dash-panel-title" style="margin-bottom:0;display:flex;align-items:center;gap:8px">
+              <span style="width:3px;height:14px;border-radius:2px;background:linear-gradient(180deg,var(--yellow),#c99a10);box-shadow:0 0 8px rgba(255,199,44,.4)"></span>
+              KPI Unit — Monthly Summary
+            </div>
+            <div style="font-size:11px;color:var(--text-dim);margin-top:3px;font-family:JetBrains Mono,monospace">Data KPI per unit · SEN + DTJ</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px">Periode bulan</span>
+            ${monthSelectHtml}
+            <span style="font-size:9px;color:var(--green);text-transform:uppercase;letter-spacing:.5px;display:inline-flex;align-items:center;gap:4px"><span class="status-dot" style="margin-right:0"></span>Live</span>
+          </div>
+        </div>
+                <div style="margin-bottom:16px">${(typeof unitKpiPeriodChartSVG === 'function' && months[0]) ? unitKpiPeriodChartSVG(months[0]) : ''}</div>
+        <div class="dash-panel-title" style="margin-bottom:8px;font-size:12px">Data KPI per Unit </div>
+        ${tableHtml}
+      </div>
+    </div>`;
+    })()}
     ${kpiDetailOverlay}`;
   try{ placeMapaSourceAboveKpiCards(); applyDashboardTabFilter(); }catch(_e){}
   try{ requestAnimationFrame(function(){ placeMapaSourceAboveKpiCards(); applyDashboardTabFilter(); }); }catch(_e){}
@@ -25807,7 +26220,7 @@ const CBM_GROUP_TO_KEY = {
 function cbmMasterForUnit(unit){
   if(!unit) return [];
   const type = String(unit.type||'').trim();
-  return (CBM_MASTER_BY_TYPE[type] || []).map(c => ({
+  return (CBM_MASTER_BY_TYPE[type] || CBM_MASTER_BY_TYPE['D85ESS-2A'] || []).map(c => ({
     ...c,
     // key untuk tampilan tabel = nama sub-komponen Excel
     // cbmKey = high-level untuk icon/filter
@@ -25844,7 +26257,7 @@ function cbmIsCompKeyAllowedForUnit(compKey, unit){
   if(def) return cbmComponentAllowedForUnit(def, unit);
   // Sub-komponen master Excel
   const type = String(unit.type||'').trim();
-  const list = CBM_MASTER_BY_TYPE[type] || [];
+  const list = CBM_MASTER_BY_TYPE[type] || CBM_MASTER_BY_TYPE['D85ESS-2A'] || [];
   if(list.some(c=>c.key===compKey)) return true;
   // Sub-komponen dari tipe lain: cek group → high-level
   const any = Object.values(CBM_MASTER_BY_TYPE||{}).flat().find(c=>c.key===compKey);
@@ -26015,7 +26428,7 @@ function normalizeCBMComponent(bdCat, jobDesc){
   // 1) Match sub-komponen detail dari master Excel (nama terpanjang dulu)
   const allMaster = [];
   Object.keys(CBM_MASTER_BY_TYPE||{}).forEach(t=>{
-    (CBM_MASTER_BY_TYPE[t]||[]).forEach(c=> allMaster.push(c));
+    (CBM_MASTER_BY_TYPE[t] || CBM_MASTER_BY_TYPE['D85ESS-2A'] || []).forEach(c=> allMaster.push(c));
   });
   allMaster.sort((a,b)=> String(b.key).length - String(a.key).length);
   for(const c of allMaster){
@@ -26079,7 +26492,7 @@ function cbmPrimarySubKeyForGroup(groupOrCbmKey, unitType){
   const gk = String(groupOrCbmKey||'');
   const types = unitType ? [unitType] : Object.keys(CBM_MASTER_BY_TYPE||{});
   for(const t of types){
-    const list = CBM_MASTER_BY_TYPE[t] || [];
+    const list = CBM_MASTER_BY_TYPE[t] || CBM_MASTER_BY_TYPE['D85ESS-2A'] || [];
     const hit = list.find(c=>{
       const gKey = CBM_GROUP_TO_KEY[c.group] || c.group;
       return c.group === gk || gKey === gk;
@@ -26462,7 +26875,7 @@ function renderCBMSafety(){
   }
 
   const unitHm = cbmSafetyUnitCode ? cbmUnitCurrentHM(cbmSafetyUnitCode) : null;
-  const parts = CBM_SAFETY_PARTS[cbmSafetyModel] || [];
+  const parts = CBM_SAFETY_PARTS[cbmSafetyModel] || CBM_SAFETY_PARTS['D85ESS-2A'] || [];
 
   const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
   set('cbm-safety-kpi-model', cbmSafetyModel);
@@ -26725,7 +27138,6 @@ function renderCBMUnitCards(rows, stats){
         <span class="hp" style="color:${cbmHealthColor(h.health)}">${h.health}%</span>
       </div>`).join('');
     return `<div class="cbm-asset-card${active}" onclick="cbmSelectUnit('${u.code}')">
-      <div class="cbm-asset-visual">${photo?`<img src="${photo}" alt="${u.type}">`:(typeof unitIconSVG==='function'?unitIconSVG(u.category):'')}</div>
       <div class="cbm-asset-body">
         <div class="cbm-asset-code">${escUH(u.code)}</div>
         <div class="cbm-asset-meta">${escUH(u.type)} · ${escUH(u.category||'')}</div>
@@ -27068,7 +27480,7 @@ function cbmSubComponentsForCategory(catKey, unitTypeOnly){
   const types = unitTypeOnly ? [unitTypeOnly] : Object.keys(CBM_MASTER_BY_TYPE||{});
   const out = [];
   types.forEach(t=>{
-    const list = (CBM_MASTER_BY_TYPE[t]||[])
+    const list = (CBM_MASTER_BY_TYPE[t] || CBM_MASTER_BY_TYPE['D85ESS-2A'] || [])
       .filter(c=>(CBM_GROUP_TO_KEY[c.group]||c.group)===catKey)
       .map(c=>({ ...c, targetLife: cbmEffectiveTargetLife(t, c.key, c.targetLife) }));
     if(list.length) out.push({ type:t, items:list });
@@ -28476,7 +28888,7 @@ const PK_CATS = [
 /* Grup unit: SEN (unit milik SEN) & DTJ. Nomor unit dikunci otomatis sesuai grup. */
 const PK_UNIT_GROUPS = {
   SEN: ['SWA-101','SWA-102','SBD-103','SPC-104'],
-  DTJ: ['DZ-04','DZ-09','WA-10','PC-11','PC-12','PC-17','EX-11','EX-12','EX-17']
+  DTJ: ['DZ-04','DZ-09','WA-10','HEX-11','HEX-12','HEX-17','EX-11','EX-12','EX-17']
 };
 const PK_GROUP_META = {
   SEN:   { label:'SEN',     color:'#FFC72C' },
@@ -29480,7 +29892,7 @@ function renderPlanHmLiveChart(){
   const unitSel=document.getElementById('ps-live-hm-unit')?.value||'';
   const start=document.getElementById('ps-live-hm-start')?.value||'';
   const end=document.getElementById('ps-live-hm-end')?.value||'';
-  const codes=unitSel?[unitSel]:['SWA-101','SWA-102','SBD-103','SPC-104','DZ-04','DZ-09','WA-10','PC-11','PC-12','PC-17'];
+  const codes=unitSel?[unitSel]:['SWA-101','SWA-102','SBD-103','SPC-104','DZ-04','DZ-09','WA-10','HEX-11','HEX-12','HEX-17'];
   const allSeries=codes.map(c=>({code:c,series:psGetLiveHmSeries(c,start,end),ops:psGetLiveOpsSeries(c,start,end)}));
   grid.innerHTML=allSeries.map(({code,series,ops})=>{
     const last=series[series.length-1], first=series[0];
@@ -30764,7 +31176,7 @@ function subscribeDailyRealtime(){
     // Sample HM for units
     try{
       if(typeof calcHmSekarang==='function'){
-        ['SWA-101','SWA-102','SBD-103','SPC-104','DZ-04','DZ-09','WA-10','PC-11','PC-12','PC-17'].forEach(u=>{
+        ['SWA-101','SWA-102','SBD-103','SPC-104','DZ-04','DZ-09','WA-10','HEX-11','HEX-12','HEX-17'].forEach(u=>{
           const v = calcHmSekarang(u);
           log('HM Sekarang '+u+': '+(v!=null?v:'—'), v!=null?'ok':'warn');
         });
