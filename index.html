@@ -6147,6 +6147,16 @@ const UNITS = [
    MA/PA: ≥90% = 100% | 70–89% = 80% | <70% = 60%
    Perhitungan nilai: MTBS/MTTR/PMR/SA dari Daily Maintenance (Approved);
    MA/PA dari Monitoring HM (fallback file jam operasional manual). */
+/* Standar tambang: jam kerja terjadwal (Scheduled / Total Working Hours) = 18 jam per hari
+   (bukan 24 jam kalender). Dipakai sebagai T (total jam) pada MA/PA dan sebagai batas fisik
+   (cap) jam operasi pada MTBS:
+     T  = jumlah hari periode x 18 jam (x jumlah unit untuk agregat)
+     W  = Working/Operating hours (HM)      R = Repair hours (Breakdown Approved)
+     S  = Standby = T - W - R (min 0)
+     MA = W / (W + R) x 100%      PA = (W + S) / T x 100% = (T - R) / T x 100%
+     MTBS = W / jumlah Breakdown   MTTR = R / jumlah Repair
+     PMR = Planned Maint. Hours / Total Maint. Hours x 100%   SA = Periodical Plan / Total Periodical x 100% */
+const MINE_WORK_HOURS_PER_DAY = 18;
 const KPI_TARGET = { mtbs:80, mttr:36, pmr:90, sa:90, ma:90, pa:90 };
 /* Bobot resmi sesuai tabel KPI (screenshot):
    Site Unit Budget Spending 20% (tidak dihitung di dashboard ini),
@@ -6158,7 +6168,7 @@ const KPI_WEIGHT = { mtbs:10, mttr:10, pmr:10, sa:10, ma:15, pa:15 };
 const KPI_INFO = {
   mtbs: {
     full: 'Mean Time Between Stoppages (MTBS)',
-    formula: 'Total Working Hours (HM) ÷ Number of Breakdowns',
+    formula: 'Total Working Hours (HM, max 18 h/day) ÷ Number of Breakdowns',
     desc: 'Mean time between stoppage against target. Achievement % of weight: >80 hrs = 100%, 64–80 hrs = 80%, <64 hrs = 60%. Higher is better (target 80 hours). Calculated from Approved Daily Maintenance records in the selected period.',
     unit: ' hrs', higherBetter: true
   },
@@ -6182,14 +6192,14 @@ const KPI_INFO = {
   },
   ma: {
     full: 'Mechanical Availability (MA)',
-    formula: '(Working Hours ÷ (Working Hours + Repair Hours)) × 100%',
+    formula: 'MA = Working Hours ÷ (Working Hours + Repair Hours) × 100%  (scheduled time 18 h/day)',
     desc: 'Mechanical Availability against target. Achievement % of weight: ≥90% = 100%, 70–89% = 80%, <70% = 60%. Target ≥90%. Primary source: performance sheet (live sync) for the filter date range; fallback to HM Monitoring / manual data.',
     unit: '%', higherBetter: true
   },
   pa: {
     full: 'Physical Availability (PA)',
-    formula: 'PA = (Waktu Operasi + Standby) / Total Jam Kerja × 100%',
-    desc: 'Physical Availability against target. Formula: (Waktu Operasi + Standby) ÷ Total Jam Kerja × 100%. Achievement % of weight: ≥90% = 100%, 70–89% = 80%, <70% = 60%. Target ≥90%. Live sync dari sheet performance (W, S, Total Jam Kerja) tanpa mensyaratkan filter periode sheet; fallback Monitoring HM.',
+    formula: 'PA = (Working + Standby) ÷ Scheduled Hours × 100%  (Scheduled Hours = days × 18 h)',
+    desc: 'Physical Availability against target. Formula: (Working + Standby) ÷ Scheduled Hours × 100%, where Scheduled Hours = days × 18 h/day (mining standard). Achievement % of weight: ≥90% = 100%, 70–89% = 80%, <70% = 60%. Target ≥90%. Live sync dari sheet performance (W, S, Total Jam Kerja) tanpa mensyaratkan filter periode sheet; fallback Monitoring HM.',
     unit: '%', higherBetter: true
   }
 };
@@ -10788,7 +10798,7 @@ function pillClass(status){
      W (Jam Kerja)   = total HM Total pada baris Monitoring HM milik unit tsb (pada periode terkait)
      R (Jam Repair)  = total durasi record Daily Maintenance kategori "Breakdown" yang sudah Approved
                         milik unit tsb (pada periode terkait)
-     T (Total Jam)   = jumlah hari periode × 24 jam (kalender penuh, unit dianggap tersedia 24 jam/hari)
+     T (Total Jam)   = jumlah hari periode × 18 jam (jam kerja terjadwal standar tambang, MINE_WORK_HOURS_PER_DAY)
      S (Jam Standby) = T − W − R (tidak boleh negatif)
    MA = W / (W+R) × 100%      PA = (W+S) / (W+S+R) × 100%   →  otomatis sama dengan (T−R)/T × 100%
    Jika unit tsb belum ada data HM sama sekali, MA & PA jatuh kembali (fallback) ke file jam operasional
@@ -10813,15 +10823,15 @@ function hmWSRForUnit(unitCode, startStr, endStr){
   if(startStr) recs = recs.filter(r=>r.tanggal && r.tanggal>=startStr);
   if(endStr) recs = recs.filter(r=>r.tanggal && r.tanggal<=endStr);
   if(!recs.length) return null;
-  const W = recs.reduce((s,r)=>s+(Number(r.hmTotal)||0),0);
+  const Wraw = recs.reduce((s,r)=>s+(Number(r.hmTotal)||0),0);
   let rangeStart = startStr, rangeEnd = endStr;
   if(!rangeStart || !rangeEnd){
     const dates = recs.map(r=>r.tanggal).filter(Boolean).sort();
     rangeStart = rangeStart || dates[0];
     rangeEnd = rangeEnd || dates[dates.length-1];
   }
-  const T = daysBetweenInclusive(rangeStart, rangeEnd) * 24;
-  const R = (dailyRecords||[])
+  const T = daysBetweenInclusive(rangeStart, rangeEnd) * MINE_WORK_HOURS_PER_DAY;
+  const Rraw = (dailyRecords||[])
     .filter(r=>{
       const u = String(r.unitCode||'').trim().toUpperCase();
       const match = matchSet.has(u) || (typeof resolveUnitCode==='function' && matchSet.has(resolveUnitCode(u)));
@@ -10829,6 +10839,9 @@ function hmWSRForUnit(unitCode, startStr, endStr){
         && r.tanggal && r.tanggal>=rangeStart && r.tanggal<=rangeEnd;
     })
     .reduce((s,r)=>s+(Number(r.duration)||0),0);
+  // Standar 18 jam/hari: R tidak boleh melebihi T, dan W tidak boleh melebihi sisa jam terjadwal (T - R).
+  const R = Math.min(Rraw, T);
+  const W = Math.min(Wraw, Math.max(T - R, 0));
   const S = Math.max(T - W - R, 0);
   return { W, S, R, T };
 }
@@ -10839,14 +10852,14 @@ function hmWSRForUnit(unitCode, startStr, endStr){
 // pada unit tsb bisa jauh melebihi rentang tanggal record yang ada — sehingga MTBS (Total Working
 // Hours ÷ Jumlah Breakdown, atau langsung Total Working Hours kalau tidak ada breakdown sama sekali
 // pada periode itu) meledak jadi angka yang mustahil, walau tampil "100% ACHIEVED". Fungsi ini
-// membatasi (cap) selisih HM ke rentang kalender riil (jumlah hari tanggal pertama→terakhir × 24 jam)
-// dari record-record yang dipakai, supaya satu input yang salah tidak merusak MTBS di seluruh
+// membatasi (cap) selisih HM ke rentang kalender riil (jumlah hari tanggal pertama→terakhir × 18 jam kerja/hari)
+// dari record-record yang dipakai (kini 18 jam/hari kerja standar tambang), supaya satu input yang salah tidak merusak MTBS di seluruh
 // dashboard maupun saat disinkronkan ke spreadsheet KPI (sheet Maintenance).
 function capHMByCalendarSpan(totalHM, records){
   if(!(totalHM>0) || !records || !records.length) return totalHM;
   const dates = records.map(r=>r.tanggal).filter(Boolean).sort();
   if(dates.length < 2) return totalHM;
-  const calSpanHours = daysBetweenInclusive(dates[0], dates[dates.length-1]) * 24;
+  const calSpanHours = daysBetweenInclusive(dates[0], dates[dates.length-1]) * MINE_WORK_HOURS_PER_DAY;
   return Math.min(totalHM, calSpanHours);
 }
 // PERBAIKAN: hitung total jam HM (elapsed) secara BENAR untuk perhitungan gabungan banyak unit.
@@ -10888,12 +10901,14 @@ function hmWSRGlobal(startStr, endStr){
     rangeStart = rangeStart || dates[0];
     rangeEnd = rangeEnd || dates[dates.length-1];
   }
-  const W = recs.reduce((s,r)=>s+(Number(r.hmTotal)||0),0);
-  const T = daysBetweenInclusive(rangeStart, rangeEnd) * 24 * units.length;
-  const R = dailyRecords
+  const Wraw = recs.reduce((s,r)=>s+(Number(r.hmTotal)||0),0);
+  const T = daysBetweenInclusive(rangeStart, rangeEnd) * MINE_WORK_HOURS_PER_DAY * units.length;
+  const Rraw = dailyRecords
     .filter(r=>units.includes(r.unitCode) && r.category==='Breakdown' && r.approvalStatus==='Approved'
       && r.tanggal && r.tanggal>=rangeStart && r.tanggal<=rangeEnd)
     .reduce((s,r)=>s+(Number(r.duration)||0),0);
+  const R = Math.min(Rraw, T);
+  const W = Math.min(Wraw, Math.max(T - R, 0));
   const S = Math.max(T - W - R, 0);
   return { W, S, R, T, units };
 }
@@ -10906,8 +10921,8 @@ function maPaFromWSR(wsr){
   let T = Number(wsr.T);
   if(isNaN(T) || T <= 0) T = W + S + R;
   return {
-    ma: (W+R) > 0 ? (W/(W+R)*100) : 0,
-    pa: T > 0 ? ((W+S)/T*100) : 0,
+    ma: (W+R) > 0 ? Math.min(100, W/(W+R)*100) : 0,
+    pa: T > 0 ? Math.min(100, (W+S)/T*100) : 0,
     W, S, R, T
   };
 }
@@ -11423,7 +11438,7 @@ function unitMonthlyTrendSVG(months){
  *  (3) dual metric MTBS / MTTR per unit. Warna konsisten unitTrendColor + series KPI. */
 function unitKpiPeriodChartSVG(monthObj){
   if(!monthObj || !UNITS || !UNITS.length){
-    return `<div style="padding:28px;text-align:center;color:var(--text-faint);font-size:12px">Belum ada data unit / periode.</div>`;
+    return `<div style="padding:28px;text-align:center;color:var(--text-faint);font-size:12px">No unit / period data yet.</div>`;
   }
   const uid = 'ukd' + Math.floor(Math.random()*1e6);
   const FONT = 'Inter, system-ui, -apple-system, Segoe UI, sans-serif';
@@ -11431,13 +11446,13 @@ function unitKpiPeriodChartSVG(monthObj){
   const KPIS = [
     { key:'ma',   label:'MA',   name:'Mechanical Availability',  color:'#22C55E', c2:'#16A34A', glow:'#4ADE80', unit:'%',   dir:1,  icon:'⚙️' },
     { key:'pa',   label:'PA',   name:'Physical Availability',    color:'#3B82F6', c2:'#1D4ED8', glow:'#60A5FA', unit:'%',   dir:1,  icon:'🔧' },
-    { key:'mtbs', label:'MTBS', name:'Mean Time Between Stops',  color:'#F59E0B', c2:'#B45309', glow:'#FBBF24', unit:' Jam',dir:1,  icon:'⏱️' },
-    { key:'mttr', label:'MTTR', name:'Mean Time To Repair',      color:'#EF4444', c2:'#B91C1C', glow:'#F87171', unit:' Jam',dir:-1, icon:'⏲️' },
+    { key:'mtbs', label:'MTBS', name:'Mean Time Between Stops',  color:'#F59E0B', c2:'#B45309', glow:'#FBBF24', unit:' Hrs',dir:1,  icon:'⏱️' },
+    { key:'mttr', label:'MTTR', name:'Mean Time To Repair',      color:'#EF4444', c2:'#B91C1C', glow:'#F87171', unit:' Hrs',dir:-1, icon:'⏲️' },
     { key:'pmr',  label:'PMR',  name:'Planned Maintenance Ratio',color:'#8B5CF6', c2:'#6D28D9', glow:'#A78BFA', unit:'%',   dir:1,  icon:'📋' },
     { key:'sa',   label:'SA',   name:'Service Accuracy',         color:'#06B6D4', c2:'#0E7490', glow:'#22D3EE', unit:'%',   dir:1,  icon:'🛡️' }
   ];
   KPIS.forEach(k => { k.tgt = (KPI_TARGET && KPI_TARGET[k.key]) || 90; });
-  const isJam = k => k.unit.trim() === 'Jam';
+  const isJam = k => k.unit.trim() === 'Hrs';
   const fmt = (k,v) => (isJam(k) ? (Number(v)||0).toFixed(1) : (Number(v)||0).toFixed(1)) + k.unit;
   const achOf = (k,v) => { v = Number(v)||0; if(k.dir>0) return k.tgt>0 ? v/k.tgt*100 : 0; return v<=k.tgt ? 100 : (v>0 ? k.tgt/v*100 : 100); };
   const isOk = (k,v) => k.dir>0 ? (Number(v)||0) >= k.tgt : (Number(v)||0) <= k.tgt;
@@ -11462,7 +11477,7 @@ function unitKpiPeriodChartSVG(monthObj){
   /* ---- UI helpers ---- */
   const card = 'background:linear-gradient(160deg,rgba(22,46,104,0.62),rgba(7,15,38,0.92));border:1px solid rgba(90,150,255,0.30);border-radius:12px;padding:14px 14px 12px;box-shadow:inset 0 0 0 1px rgba(30,70,160,0.14),0 10px 30px rgba(0,0,0,0.35),0 0 26px rgba(40,110,255,0.07);min-width:0';
   const title = (t, sub) => `<div style="display:flex;align-items:center;gap:9px;margin-bottom:10px;font-family:${FONT}"><i style="width:4px;height:17px;border-radius:2px;background:linear-gradient(#60A5FA,#2563EB);box-shadow:0 0 9px rgba(59,130,246,.8);display:inline-block"></i><span style="font-weight:800;font-size:13px;letter-spacing:.5px;color:#EAF1FF;text-transform:uppercase">${t}</span>${sub?`<span style="font-weight:500;font-size:11px;color:#8FA6D6">${sub}</span>`:''}</div>`;
-  const legendPills = (list) => list.map(k=>`<span style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:#DCE7FF;font-family:${FONT}"><i style="width:10px;height:10px;border-radius:50%;background:${k.color};box-shadow:0 0 8px ${k.color};display:inline-block"></i>${k.label}${isJam(k)?' (Jam)':''}</span>`).join('');
+  const legendPills = (list) => list.map(k=>`<span style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:#DCE7FF;font-family:${FONT}"><i style="width:10px;height:10px;border-radius:50%;background:${k.color};box-shadow:0 0 8px ${k.color};display:inline-block"></i>${k.label}${isJam(k)?' (Hrs)':''}</span>`).join('');
 
   /* ========== 6. PASANGAN KPI per unit: MA & PA | PMR & SA ========== */
   const pairsHtml = (() => {
@@ -11506,9 +11521,9 @@ function unitKpiPeriodChartSVG(monthObj){
         const okCount = rows.filter(r=>(Number(r[k.key])||0) >= k.tgt).length;
         return `<div style="flex:1 1 150px;min-width:0;display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:rgba(10,24,60,.65);border:1px solid ${k.color}55;box-shadow:inset 0 0 14px ${k.color}1f">
           <span style="width:34px;height:34px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;font-size:17px;background:linear-gradient(160deg,${k.color},${k.c2});box-shadow:0 0 12px ${k.color}88;flex:none">${k.icon}</span>
-          <div style="min-width:0;font-family:${FONT}"><div style="font-size:10px;color:#A9BCE6;font-weight:600">${k.label} · rata-rata</div>
+          <div style="min-width:0;font-family:${FONT}"><div style="font-size:10px;color:#A9BCE6;font-weight:600">${k.label} · average</div>
             <div style="font-size:18px;font-weight:800;color:#fff;line-height:1.15">${v.toFixed(1)}%</div>
-            <div style="font-size:9px;color:#8FA6D6;line-height:1.35;word-break:break-word">${okCount}/${n} unit ≥ target · terendah ${low.code} ${Math.round(Number(low[k.key])||0)}%</div></div>
+            <div style="font-size:9px;color:#8FA6D6;line-height:1.35;word-break:break-word">${okCount}/${n} units ≥ target · lowest ${low.code} ${Math.round(Number(low[k.key])||0)}%</div></div>
           <span style="margin-left:auto;width:9px;height:9px;border-radius:50%;background:${st==='ok'?'#22C55E':st==='warn'?'#FBBF24':'#EF4444'};box-shadow:0 0 8px ${st==='ok'?'#22C55E':st==='warn'?'#FBBF24':'#EF4444'};flex:none"></span></div>`;
       }).join('');
       const legend = ks.map(k=>`<span style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:#DCE7FF;font-family:${FONT}"><i style="width:10px;height:10px;border-radius:3px;background:${k.color};box-shadow:0 0 8px ${k.color};display:inline-block"></i>${k.label} · ${k.name}</span>`).join('');
@@ -11556,7 +11571,7 @@ function unitKpiPeriodChartSVG(monthObj){
         const bs = [mtbsK,mttrK].map((k,ki)=>{
           const v = Number(r[k.key])||0, yy = k.key==='mtbs'?yM:yT;
           const x = x0+ki*(bw+gap), y = yy(v), h = Math.max(0,pT+ch-y), rr = Math.min(3.5,bw/2), ok = isOk(k,v);
-          const body = h>0.4 ? `<path d="M${x.toFixed(1)} ${pT+ch} L${x.toFixed(1)} ${(y+rr).toFixed(1)} Q${x.toFixed(1)} ${y.toFixed(1)} ${(x+rr).toFixed(1)} ${y.toFixed(1)} L${(x+bw-rr).toFixed(1)} ${y.toFixed(1)} Q${(x+bw).toFixed(1)} ${y.toFixed(1)} ${(x+bw).toFixed(1)} ${(y+rr).toFixed(1)} L${(x+bw).toFixed(1)} ${pT+ch} Z" fill="url(#${uid}-m-${k.key})" filter="url(#${uid}-mf)"><title>${r.code} · ${k.label}: ${v.toFixed(1)} Jam (target ${k.dir<0?'≤ ':'≥ '}${k.tgt})</title></path>${h>6?`<rect x="${(x+1.6).toFixed(1)}" y="${(y+2).toFixed(1)}" width="2" height="${Math.max(0,h-4).toFixed(1)}" rx="1" fill="rgba(255,255,255,0.32)"/>`:''}` : '';
+          const body = h>0.4 ? `<path d="M${x.toFixed(1)} ${pT+ch} L${x.toFixed(1)} ${(y+rr).toFixed(1)} Q${x.toFixed(1)} ${y.toFixed(1)} ${(x+rr).toFixed(1)} ${y.toFixed(1)} L${(x+bw-rr).toFixed(1)} ${y.toFixed(1)} Q${(x+bw).toFixed(1)} ${y.toFixed(1)} ${(x+bw).toFixed(1)} ${(y+rr).toFixed(1)} L${(x+bw).toFixed(1)} ${pT+ch} Z" fill="url(#${uid}-m-${k.key})" filter="url(#${uid}-mf)"><title>${r.code} · ${k.label}: ${v.toFixed(1)} Hrs (target ${k.dir<0?'≤ ':'≥ '}${k.tgt})</title></path>${h>6?`<rect x="${(x+1.6).toFixed(1)}" y="${(y+2).toFixed(1)}" width="2" height="${Math.max(0,h-4).toFixed(1)}" rx="1" fill="rgba(255,255,255,0.32)"/>`:''}` : '';
           const t = v>=100 ? String(Math.round(v)) : v.toFixed(v>=10?0:1), pw = Math.max(17, t.length*5.6+7), cx = x+bw/2, py = Math.max(pT-2, y-15);
           const lbl = v>0 ? `<rect x="${(cx-pw/2).toFixed(1)}" y="${py.toFixed(1)}" width="${pw.toFixed(1)}" height="12" rx="6" fill="rgba(5,12,32,0.92)" stroke="${ok?k.color:'#F87171'}" stroke-width="1"/><text x="${cx.toFixed(1)}" y="${(py+8.8).toFixed(1)}" text-anchor="middle" font-size="8.5" font-weight="800" fill="${ok?'#fff':'#FCA5A5'}" font-family="${FONT}">${t}</text>` : '';
           return body+lbl;
@@ -11570,14 +11585,14 @@ function unitKpiPeriodChartSVG(monthObj){
     const worstMtbs = rows.reduce((a,b)=> (Number(b.mtbs)||0) < (Number(a.mtbs)||0) ? b : a, rows[0]);
     const worstMttr = rows.reduce((a,b)=> (Number(b.mttr)||0) > (Number(a.mttr)||0) ? b : a, rows[0]);
     const mtbsOk = rows.filter(r=>isOk(mtbsK,r.mtbs)).length, mttrOk = rows.filter(r=>isOk(mttrK,r.mttr)).length;
-    const mtbsCard = `<div style="${card};height:100%;box-sizing:border-box">${title('MTBS &amp; MTTR', 'reliability per unit (Jam)')}
+    const mtbsCard = `<div style="${card};height:100%;box-sizing:border-box">${title('MTBS &amp; MTTR', 'reliability per unit (Hrs)')}
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
-        ${chip(mtbsK.icon, mtbsK.color, mtbsK.c2, 'MTBS · rata-rata', fleet.mtbs.toFixed(1)+' Jam', `${mtbsOk}/${n} unit ≥ ${mtbsK.tgt} · terendah ${worstMtbs.code} ${(Number(worstMtbs.mtbs)||0).toFixed(1)}`, stDot(statusOf(mtbsK,fleet.mtbs)))}
-        ${chip(mttrK.icon, mttrK.color, mttrK.c2, 'MTTR · rata-rata', fleet.mttr.toFixed(1)+' Jam', `${mttrOk}/${n} unit ≤ ${mttrK.tgt} · tertinggi ${worstMttr.code} ${(Number(worstMttr.mttr)||0).toFixed(1)}`, stDot(statusOf(mttrK,fleet.mttr)))}
+        ${chip(mtbsK.icon, mtbsK.color, mtbsK.c2, 'MTBS · average', fleet.mtbs.toFixed(1)+' Hrs', `${mtbsOk}/${n} units ≥ ${mtbsK.tgt} · lowest ${worstMtbs.code} ${(Number(worstMtbs.mtbs)||0).toFixed(1)}`, stDot(statusOf(mtbsK,fleet.mtbs)))}
+        ${chip(mttrK.icon, mttrK.color, mttrK.c2, 'MTTR · average', fleet.mttr.toFixed(1)+' Hrs', `${mttrOk}/${n} units ≤ ${mttrK.tgt} · highest ${worstMttr.code} ${(Number(worstMttr.mttr)||0).toFixed(1)}`, stDot(statusOf(mttrK,fleet.mttr)))}
       </div>
       <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:4px;font-family:${FONT};font-size:11px;font-weight:600;color:#DCE7FF">
-        <span style="display:inline-flex;align-items:center;gap:6px"><i style="width:10px;height:10px;border-radius:3px;background:${mtbsK.color};box-shadow:0 0 8px ${mtbsK.color};display:inline-block"></i>MTBS · skala kiri · target ≥ ${mtbsK.tgt} Jam</span>
-        <span style="display:inline-flex;align-items:center;gap:6px"><i style="width:10px;height:10px;border-radius:3px;background:${mttrK.color};box-shadow:0 0 8px ${mttrK.color};display:inline-block"></i>MTTR · skala kanan · target ≤ ${mttrK.tgt} Jam</span>
+        <span style="display:inline-flex;align-items:center;gap:6px"><i style="width:10px;height:10px;border-radius:3px;background:${mtbsK.color};box-shadow:0 0 8px ${mtbsK.color};display:inline-block"></i>MTBS · left scale · target ≥ ${mtbsK.tgt} Hrs</span>
+        <span style="display:inline-flex;align-items:center;gap:6px"><i style="width:10px;height:10px;border-radius:3px;background:${mttrK.color};box-shadow:0 0 8px ${mttrK.color};display:inline-block"></i>MTTR · right scale · target ≤ ${mttrK.tgt} Hrs</span>
       </div>${mtbsC}</div>`;
 
     /* ---- Avg Achievement Ranking ---- */
@@ -11609,11 +11624,11 @@ function unitKpiPeriodChartSVG(monthObj){
     const best = ranked[0], low = ranked[ranked.length-1];
     const avgAll = mean(ranked.map(r=>r.avgAch||0));
     const ge90 = ranked.filter(r=>(r.avgAch||0)>=90).length;
-    const rankCard = `<div style="${card};height:100%;box-sizing:border-box">${title('Avg Achievement Ranking', 'peringkat unit · bulan ' + monthObj.label)}
+    const rankCard = `<div style="${card};height:100%;box-sizing:border-box">${title('Avg Achievement Ranking', 'unit ranking · month ' + monthObj.label)}
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
-        ${chip('🏆','#22C55E','#16A34A','Terbaik', (best.avgAch||0).toFixed(1)+'%', best.code, '#22C55E')}
+        ${chip('🏆','#22C55E','#16A34A','Best', (best.avgAch||0).toFixed(1)+'%', best.code, '#22C55E')}
         ${chip('📊','#3B82F6','#1D4ED8','', avgAll.toFixed(1)+'%', `${ge90}/${n} unit ≥ 90%`, avgAll>=90?'#22C55E':avgAll>=75?'#FBBF24':'#EF4444')}
-        ${chip('⚠️','#EF4444','#B91C1C','Terendah', (low.avgAch||0).toFixed(1)+'%', low.code, '#EF4444')}
+        ${chip('⚠️','#EF4444','#B91C1C','Lowest', (low.avgAch||0).toFixed(1)+'%', low.code, '#EF4444')}
       </div>
       <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:4px;font-family:${FONT};font-size:11px;font-weight:600;color:#DCE7FF">
         <span style="display:inline-flex;align-items:center;gap:6px"><i style="width:10px;height:10px;border-radius:3px;background:#22C55E;display:inline-block"></i>≥ 90% target</span>
@@ -11657,7 +11672,7 @@ function unitKpiDataTableHTML(months){
     return `<td style="text-align:center;padding:7px 8px;font-family:'JetBrains Mono',monospace;font-weight:600;color:${col};white-space:nowrap;">${fmtVal(key,n)}${unit||''}</td>`;
   }
   if(!months || !months.length){
-    return `<div style="padding:20px;text-align:center;color:var(--text-faint);font-size:12px">Belum ada periode bulan.</div>`;
+    return `<div style="padding:20px;text-align:center;color:var(--text-faint);font-size:12px">No month period available.</div>`;
   }
   return months.map(m=>{
     const rows = UNITS.map(u=>{
@@ -11694,7 +11709,7 @@ function unitKpiDataTableHTML(months){
     return `<div style="margin-bottom:16px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:6px 10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px">
         <span style="font-family:Oswald,sans-serif;font-size:13px;font-weight:600;letter-spacing:.4px;color:var(--text)">${escUH(m.label)}</span>${curBadge}
-        <span style="font-size:10px;color:var(--text-faint);font-family:JetBrains Mono,monospace;margin-left:auto">${escUH(m.start)} s/d ${escUH(m.end)}</span>
+        <span style="font-size:10px;color:var(--text-faint);font-family:JetBrains Mono,monospace;margin-left:auto">${escUH(m.start)} to ${escUH(m.end)}</span>
       </div>
       <div style="overflow-x:auto;border:1px solid rgba(255,255,255,0.08);border-radius:10px">
         <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:720px">
@@ -11703,13 +11718,13 @@ function unitKpiDataTableHTML(months){
               <th style="text-align:left;padding:8px 10px;white-space:nowrap;">Unit</th>
               <th style="text-align:left;padding:8px 8px;white-space:nowrap;">Type</th>
               <th style="text-align:left;padding:8px 8px;white-space:nowrap;">Category</th>
-              <th style="text-align:center;padding:8px 8px;white-space:nowrap;" title="Mean Time Between Stoppages (target >80 jam)">MTBS (jam)</th>
-              <th style="text-align:center;padding:8px 8px;white-space:nowrap;" title="Mean Time To Repair (target <36 jam)">MTTR (jam)</th>
+              <th style="text-align:center;padding:8px 8px;white-space:nowrap;" title="Mean Time Between Stoppages (target >80 hrs)">MTBS (hrs)</th>
+              <th style="text-align:center;padding:8px 8px;white-space:nowrap;" title="Mean Time To Repair (target <36 hrs)">MTTR (hrs)</th>
               <th style="text-align:center;padding:8px 8px;white-space:nowrap;" title="Planned Maintenance Ratio (target >90%)">PMR (%)</th>
               <th style="text-align:center;padding:8px 8px;white-space:nowrap;" title="Service Accuracy (target >90%)">SA (%)</th>
               <th style="text-align:center;padding:8px 8px;white-space:nowrap;" title="Mechanical Availability (target ≥90%)">MA (%)</th>
               <th style="text-align:center;padding:8px 8px;white-space:nowrap;" title="Physical Availability (target ≥90%)">PA (%)</th>
-              <th style="text-align:center;padding:8px 10px;white-space:nowrap;" title="Average Achievement berbobot">Avg Ach</th>
+              <th style="text-align:center;padding:8px 10px;white-space:nowrap;" title="Weighted Average Achievement">Avg Ach</th>
             </tr>
           </thead>
           <tbody>${rows}${avgRow}</tbody>
@@ -11717,6 +11732,110 @@ function unitKpiDataTableHTML(months){
       </div>
     </div>`;
   }).join('');
+}
+/** Tabel SUMMARY KPI per unit untuk SEMUA bulan (last 12 months): baris = unit, kolom = bulan.
+ *  Metrik dipilih lewat dropdown (Avg Achievement, MA, PA, MTBS, MTTR, PMR, SA). Angka diambil dari
+ *  computeUnitMonthlyAchievement (sumber yang sama dgn tabel per-bulan & kartu unit) → selalu sinkron. */
+const KPI_UNIT_SUMMARY_METRICS = [
+  { key:'avgAch', label:'Avg Achievement', unit:'%',   tip:'Weighted Average Achievement' },
+  { key:'ma',     label:'MA',   unit:'%',   tip:'Mechanical Availability' },
+  { key:'pa',     label:'PA',   unit:'%',   tip:'Physical Availability' },
+  { key:'mtbs',   label:'MTBS', unit:'hrs', tip:'Mean Time Between Stoppages' },
+  { key:'mttr',   label:'MTTR', unit:'hrs', tip:'Mean Time To Repair' },
+  { key:'pmr',    label:'PMR',  unit:'%',   tip:'Planned Maintenance Ratio' },
+  { key:'sa',     label:'SA',   unit:'%',   tip:'Service Accuracy' }
+];
+let kpiUnitSummaryMetric = 'avgAch';
+function onKpiUnitSummaryMetricChange(selectEl){
+  kpiUnitSummaryMetric = selectEl ? selectEl.value : 'avgAch';
+  try{
+    if(typeof renderDashboard === 'function') renderDashboard();
+    if(typeof setDashboardTab === 'function') setDashboardTab('kpiunit');
+  }catch(e){ console.warn('onKpiUnitSummaryMetricChange', e); }
+}
+window.onKpiUnitSummaryMetricChange = onKpiUnitSummaryMetricChange;
+
+function unitKpiAllMonthsSummaryHTML(){
+  const months = (typeof getRecentMonthsList === 'function') ? getRecentMonthsList(12) : [];
+  if(!months.length || !UNITS || !UNITS.length){
+    return `<div style="padding:20px;text-align:center;color:var(--text-faint);font-size:12px">No unit / period data yet.</div>`;
+  }
+  const metric = KPI_UNIT_SUMMARY_METRICS.find(m=>m.key===kpiUnitSummaryMetric) || KPI_UNIT_SUMMARY_METRICS[0];
+  const mk = metric.key;
+  const data = {};
+  UNITS.forEach(u=>{ data[u.code] = months.map(m => computeUnitMonthlyAchievement(u.code, m)); });
+  const hasData = r => !!r && ['mtbs','mttr','pmr','sa','ma','pa'].some(k => (Number(r[k])||0) > 0);
+  function colorFor(v){
+    const n = Number(v)||0;
+    if(mk==='avgAch') return n>=90 ? '#4CAF6D' : n>=75 ? '#FFC72C' : '#E5484D';
+    if(mk==='mttr')   return n<=(KPI_TARGET.mttr||36) ? '#4CAF6D' : '#E5484D';
+    return n>=(KPI_TARGET[mk]||90) ? '#4CAF6D' : '#FFC72C';
+  }
+  const mean = arr => arr.length ? arr.reduce((s,v)=>s+v,0)/arr.length : 0;
+  const cell = (v, bold, extra) => {
+    const base = `text-align:center;padding:7px 8px;font-family:'JetBrains Mono',monospace;white-space:nowrap;${extra||''}`;
+    return (v===null || v===undefined)
+      ? `<td style="${base}color:var(--text-faint);">–</td>`
+      : `<td style="${base}font-weight:${bold?700:600};color:${colorFor(v)};">${(Number(v)||0).toFixed(1)}</td>`;
+  };
+  const stickyBg = 'position:sticky;left:0;background:#12171f;';
+  const sepL = 'border-left:1px solid rgba(255,199,44,.25);';
+
+  const body = UNITS.map(u=>{
+    const vals = data[u.code].map(r => hasData(r) ? (Number(r[mk])||0) : null);
+    const present = vals.filter(v=>v!==null);
+    return `<tr style="border-top:1px solid rgba(255,255,255,.06)">
+      <td style="padding:7px 10px;font-family:'JetBrains Mono',monospace;color:var(--yellow);font-weight:700;white-space:nowrap;${stickyBg}">${escUH(u.code)}</td>
+      <td style="padding:7px 8px;color:var(--text-dim);font-size:11px;white-space:nowrap;">${escUH(u.type||'')}</td>
+      ${vals.map(v => cell(v,false)).join('')}
+      ${cell(present.length ? mean(present) : null, true, sepL)}
+    </tr>`;
+  }).join('');
+
+  const fleetVals = months.map((m,i)=>{
+    const arr = UNITS.map(u=>data[u.code][i]).filter(hasData).map(r=>Number(r[mk])||0);
+    return arr.length ? mean(arr) : null;
+  });
+  const fleetPresent = fleetVals.filter(v=>v!==null);
+  const fleetRow = `<tr style="border-top:2px solid rgba(255,199,44,.35);background:rgba(255,199,44,.04)">
+    <td colspan="2" style="padding:7px 10px;font-weight:700;white-space:nowrap;${stickyBg}">Fleet average</td>
+    ${fleetVals.map(v => cell(v,true)).join('')}
+    ${cell(fleetPresent.length ? mean(fleetPresent) : null, true, sepL)}
+  </tr>`;
+
+  const head = months.map(m => {
+    const lab = new Date(m.start + 'T00:00:00').toLocaleDateString('en-US',{month:'short',year:'2-digit'});
+    return `<th style="text-align:center;padding:8px 8px;white-space:nowrap;${m.isCurrent?'color:var(--yellow);':''}" title="${escUH(m.start)} to ${escUH(m.end)}">${escUH(lab)}</th>`;
+  }).join('');
+  const isPct = metric.unit === '%';
+  const targetTxt = mk==='avgAch' ? 'Green ≥ 90% · Yellow 75–89% · Red &lt; 75%'
+    : mk==='mttr' ? `Target ≤ ${KPI_TARGET.mttr} hrs` : `Target ≥ ${KPI_TARGET[mk]}${isPct?'%':' hrs'}`;
+  const opts = KPI_UNIT_SUMMARY_METRICS.map(m=>`<option value="${m.key}" ${m.key===mk?'selected':''}>${m.label}${m.key!=='avgAch'?' — '+m.tip:''}</option>`).join('');
+  return `<div style="margin-bottom:18px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px">
+      <div>
+        <div class="dash-panel-title" style="margin-bottom:0;font-size:12px">KPI Summary per Unit — All Months</div>
+        <div style="font-size:10px;color:var(--text-faint);margin-top:3px;font-family:JetBrains Mono,monospace">${metric.label} (${metric.unit}) · last 12 months · ${targetTxt} · “–” = no data yet</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px">Metric</span>
+        <select class="trend-quarter-select" style="width:230px;" onchange="onKpiUnitSummaryMetricChange(this)" title="Choose the KPI to display">${opts}</select>
+      </div>
+    </div>
+    <div style="overflow-x:auto;border:1px solid rgba(255,255,255,0.08);border-radius:10px">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:${220 + months.length*64 + 70}px">
+        <thead style="background:rgba(255,255,255,.04)">
+          <tr>
+            <th style="text-align:left;padding:8px 10px;white-space:nowrap;${stickyBg}">Unit</th>
+            <th style="text-align:left;padding:8px 8px;white-space:nowrap;">Type</th>
+            ${head}
+            <th style="text-align:center;padding:8px 8px;white-space:nowrap;${sepL}" title="Average of months with data">Average</th>
+          </tr>
+        </thead>
+        <tbody>${body}${fleetRow}</tbody>
+      </table>
+    </div>
+  </div>`;
 }
 /** @deprecated — diganti unitKpiDataTableHTML (tabel data KPI penuh, tanpa chart). */
 function unitMonthlySummaryTableHTML(months){
@@ -21667,7 +21786,7 @@ const DASH_TAB_GROUPS = {
   monthlykpi:  ['monthly kpi achievement'],
   kpiunit:     ['kpi unit monthly summary', 'trend kpi per unit'],
   trend:       ['trend kpi maintenance', 'comparison vs target', 'mtbs', 'mttr', 'contribution to reliability'],
-  quarter:     ['grafik quarter', 'kpi summary quarter']
+  quarter:     ['grafik quarter', 'kpi summary quarter', 'quarter achievement detail']
 };
 function setDashboardTab(tab){
   if(!DASH_TAB_GROUPS[tab]) return;
@@ -23332,6 +23451,13 @@ function renderKPIChartDashboard(k, globalStats){
         </div>
       </div>
     </div>
+    <div class="dash-mid-grid">
+      <div class="dash-panel" style="grid-column:1/-1">
+        ${dashTopbar('Triwulan', quarterSelectHtml)}
+        <div class="dash-panel-title">QUARTER ACHIEVEMENT DETAIL <span>${escUH('Q'+String(activeQuarterVal).split('-Q')[1]+' '+String(activeQuarterVal).split('-Q')[0])}</span></div>
+        ${quarterAchievementDetailHTML(activeQuarterVal)}
+      </div>
+    </div>
     ${(() => {
       const allMonths = (typeof getRecentMonthsList === 'function') ? getRecentMonthsList(12) : [];
       let activeKey = (typeof kpiUnitMonthValue !== 'undefined' && kpiUnitMonthValue) ? kpiUnitMonthValue : '';
@@ -23343,7 +23469,7 @@ function renderKPIChartDashboard(k, globalStats){
         activeKey = (allMonths.find(m => m.isCurrent) || allMonths[allMonths.length - 1] || {}).key || '';
       }
       const months = allMonths.filter(m => m.key === activeKey);
-      const monthSelectHtml = `<select class="trend-quarter-select" style="width:200px;" onchange="onKpiUnitMonthChange(this)" title="Filter periode bulan">
+      const monthSelectHtml = `<select class="trend-quarter-select" style="width:200px;" onchange="onKpiUnitMonthChange(this)" title="Filter by month">
         ${allMonths.map(m => {
           const lab = new Date(m.start + 'T00:00:00').toLocaleDateString('en-US',{month:'short',year:'numeric'}) + (m.isCurrent ? ' (current)' : '');
           return `<option value="${m.key}" ${m.key===activeKey?'selected':''}>${lab}</option>`;
@@ -23360,17 +23486,18 @@ function renderKPIChartDashboard(k, globalStats){
               <span style="width:3px;height:14px;border-radius:2px;background:linear-gradient(180deg,var(--yellow),#c99a10);box-shadow:0 0 8px rgba(255,199,44,.4)"></span>
               KPI Unit — Monthly Summary
             </div>
-            <div style="font-size:11px;color:var(--text-dim);margin-top:3px;font-family:JetBrains Mono,monospace">Data KPI per unit · SEN + DTJ</div>
+            <div style="font-size:11px;color:var(--text-dim);margin-top:3px;font-family:JetBrains Mono,monospace">KPI data per unit · SEN + DTJ</div>
           </div>
           <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-            <span style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px">Periode bulan</span>
+            <span style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px">Month period</span>
             ${monthSelectHtml}
             <span style="font-size:9px;color:var(--green);text-transform:uppercase;letter-spacing:.5px;display:inline-flex;align-items:center;gap:4px"><span class="status-dot" style="margin-right:0"></span>Live</span>
           </div>
         </div>
                 <div style="margin-bottom:16px">${(typeof unitKpiPeriodChartSVG === 'function' && months[0]) ? unitKpiPeriodChartSVG(months[0]) : ''}</div>
-        <div class="dash-panel-title" style="margin-bottom:8px;font-size:12px">Data KPI per Unit </div>
+        <div class="dash-panel-title" style="margin-bottom:8px;font-size:12px">KPI Data per Unit</div>
         ${tableHtml}
+        ${(typeof unitKpiAllMonthsSummaryHTML === 'function') ? unitKpiAllMonthsSummaryHTML() : ''}
       </div>
     </div>`;
     })()}
@@ -23619,6 +23746,135 @@ function getQuarterRange(qVal){
   const start = new Date(year, startMonth, 1);
   const end = new Date(year, startMonth+3, 0);
   return { start, end, startStr: toDateStr(start), endStr: toDateStr(end) };
+}
+/** Detail pencapaian KPI untuk SATU triwulan (ikut filter Triwulan yang aktif: Q1, Q2, Q3, ...).
+ *  Tabel 1: per KPI x 3 bulan + nilai triwulan + achievement + status.
+ *  Tabel 2: per unit (ranking) — MA/PA/MTBS/MTTR/PMR/SA triwulan + Avg Achievement per bulan & triwulan.
+ *  Semua angka memakai fungsi yang sama dengan Monthly KPI / KPI Unit, jadi selalu sinkron. */
+function quarterAchievementDetailHTML(qVal){
+  if(!qVal || typeof getQuarterRange !== 'function'){
+    return `<div style="padding:20px;text-align:center;color:var(--text-faint);font-size:12px">No quarter selected.</div>`;
+  }
+  const { start, startStr, endStr } = getQuarterRange(qVal);
+  const FONT_M = "'JetBrains Mono',monospace";
+  const KEYS = ['ma','pa','mtbs','mttr','pmr','sa'];
+  const META = {
+    ma:{label:'MA',  name:'Mechanical Availability',    unit:'%',   tgt:'≥ 90%',  color:'#22C55E'},
+    pa:{label:'PA',  name:'Physical Availability',      unit:'%',   tgt:'≥ 90%',  color:'#3B82F6'},
+    mtbs:{label:'MTBS',name:'Mean Time Between Stoppages',unit:' hrs',tgt:'> 80 hrs',color:'#A78BFA'},
+    mttr:{label:'MTTR',name:'Mean Time To Repair',      unit:' hrs',tgt:'< 36 hrs',color:'#F97316'},
+    pmr:{label:'PMR',  name:'Planned Maintenance Ratio', unit:'%',   tgt:'> 90%',  color:'#A3E635'},
+    sa:{label:'SA',   name:'Service Accuracy',          unit:'%',   tgt:'> 90%',  color:'#38BDF8'}
+  };
+  const qLabel = 'Q' + String(qVal).split('-Q')[1] + ' ' + String(qVal).split('-Q')[0];
+  const fmtD = d => d.toLocaleDateString('en-US',{day:'numeric',month:'short',year:'numeric'});
+  const months = [];
+  for(let i=0;i<3;i++){
+    const d = new Date(start.getFullYear(), start.getMonth()+i, 1);
+    const key = d.getFullYear()+'-'+pad2(d.getMonth()+1);
+    const mStart = toDateStr(d), mEnd = toDateStr(new Date(d.getFullYear(), d.getMonth()+1, 0));
+    months.push({ key, start:mStart, end:mEnd, label:d.toLocaleDateString('en-US',{month:'long'}), kpis: computeKPIsFor(key)||{} });
+  }
+  const kQ = computeKPIsForQuarter(qVal) || {};
+  const hasData = k => !!k && KEYS.some(x => (Number(k[x])||0) > 0);
+  const isOk = (key,v) => { const n=Number(v)||0; return key==='mttr' ? (n>0 ? n<(KPI_TARGET.mttr||36) : true) : key==='mtbs' ? n>=(KPI_TARGET.mtbs||80) : n>=(KPI_TARGET[key]||90); };
+  const fmt = (key,v) => (Number(v)||0).toFixed(1) + (META[key].unit==='%' ? '%' : ' hrs');
+  const statusOf = pct => pct>=100 ? {cls:'ok',text:'ACHIEVED'} : pct>=80 ? {cls:'mid',text:'ON TRACK'} : {cls:'bad',text:'BELOW'};
+  const td = (html,extra) => `<td style="padding:7px 8px;text-align:center;white-space:nowrap;${extra||''}">${html}</td>`;
+  const dash = `<span style="color:var(--text-faint)">–</span>`;
+
+  // ---- Tabel 1: per KPI ----
+  const wAvg = k => { // weighted achievement % (sama dgn Monthly KPI Achievement)
+    let sc=0, w=0; KEYS.forEach(x=>{ const r=Number(k[x]); if(Number.isFinite(r)){ sc+=kpiWeightedScore(x,r); w+=(KPI_WEIGHT[x]||0); } });
+    return w>0 ? sc/w*100 : null;
+  };
+  const rows1 = KEYS.map(key=>{
+    const m = META[key];
+    const pct = kpiAchievePct(key, kQ[key]||0);
+    const st = statusOf(pct);
+    const mc = months.map(mo => hasData(mo.kpis)
+      ? td(`<span style="font-family:${FONT_M};font-weight:600;color:${isOk(key,mo.kpis[key])?'#4CAF6D':'#FFC72C'}">${fmt(key,mo.kpis[key])}</span>`)
+      : td(dash)).join('');
+    return `<tr style="border-top:1px solid rgba(255,255,255,.06)">
+      <td style="padding:7px 10px;white-space:nowrap"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${m.color};margin-right:6px"></span><b>${m.label}</b> <span style="color:var(--text-faint);font-size:10px">${m.name}</span></td>
+      ${td(`<span style="color:var(--text-dim)">${m.tgt}</span>`)}
+      ${td(`<span style="color:var(--text-dim)">${KPI_WEIGHT[key]}%</span>`)}
+      ${mc}
+      ${td(`<b style="font-family:${FONT_M};color:${isOk(key,kQ[key])?'#4CAF6D':'#FFC72C'}">${hasData(kQ)?fmt(key,kQ[key]):'–'}</b>`, 'border-left:1px solid rgba(255,199,44,.25);')}
+      ${td(hasData(kQ)?`<span style="font-family:${FONT_M}">${pct.toFixed(0)}%</span>`:dash)}
+      ${td(hasData(kQ)?`<span class="kpi-dash-status ${st.cls}">${st.text}</span>`:dash)}
+    </tr>`;
+  }).join('');
+  const mAvg = months.map(mo => hasData(mo.kpis) ? wAvg(mo.kpis) : null);
+  const qAvg = (typeof computeQuarterAvgFromMonthlyAchievements==='function') ? computeQuarterAvgFromMonthlyAchievements(qVal) : null;
+  const avgCell = v => Number.isFinite(v) ? td(`<b style="font-family:${FONT_M};color:${cellColor(v)}">${v.toFixed(1)}%</b>`) : td(dash);
+  const qSt = Number.isFinite(qAvg) ? statusOf(qAvg) : null;
+  const footer1 = `<tr style="border-top:2px solid rgba(255,199,44,.35);background:rgba(255,199,44,.05)">
+      <td colspan="3" style="padding:7px 10px;font-weight:700;color:var(--yellow)">Weighted Achievement</td>
+      ${mAvg.map(avgCell).join('')}
+      ${Number.isFinite(qAvg) ? td(`<b style="font-family:${FONT_M};color:${cellColor(qAvg)}">${qAvg.toFixed(1)}%</b>`,'border-left:1px solid rgba(255,199,44,.25);') : td(dash,'border-left:1px solid rgba(255,199,44,.25);')}
+      ${td(Number.isFinite(qAvg)?`<span style="font-family:${FONT_M}">${qAvg.toFixed(0)}%</span>`:dash)}
+      ${td(qSt?`<span class="kpi-dash-status ${qSt.cls}">${qSt.text}</span>`:dash)}
+    </tr>`;
+  const table1 = `<div style="overflow-x:auto;border:1px solid rgba(255,255,255,0.08);border-radius:10px">
+    <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:760px">
+      <thead style="background:rgba(255,255,255,.04)"><tr>
+        <th style="text-align:left;padding:8px 10px">KPI</th>
+        <th style="padding:8px">Target</th><th style="padding:8px">Weight</th>
+        ${months.map(mo=>`<th style="padding:8px;white-space:nowrap" title="${mo.start} to ${mo.end}">${mo.label}</th>`).join('')}
+        <th style="padding:8px;border-left:1px solid rgba(255,199,44,.25)">${qLabel}</th>
+        <th style="padding:8px">Achievement</th><th style="padding:8px">Status</th>
+      </tr></thead>
+      <tbody>${rows1}${footer1}</tbody>
+    </table></div>`;
+
+  // ---- Tabel 2: per unit ----
+  const qObj = { start:startStr, end:endStr };
+  const unitRows = (UNITS||[]).map(u=>{
+    const q = computeUnitMonthlyAchievement(u.code, qObj);
+    const ms = months.map(mo => computeUnitMonthlyAchievement(u.code, mo));
+    return { u, q, ms };
+  }).sort((a,b)=>(b.q.avgAch||0)-(a.q.avgAch||0));
+  const uCell = (key,v,ok) => ok ? td(`<span style="font-family:${FONT_M};font-weight:600;color:${isOk(key,v)?'#4CAF6D':'#FFC72C'}">${(Number(v)||0).toFixed(1)}</span>`) : td(dash);
+  const aCell = (v,ok,extra) => ok ? td(`<b style="font-family:${FONT_M};color:${cellColor(v)}">${(Number(v)||0).toFixed(1)}%</b>`, extra) : td(dash, extra);
+  const body2 = unitRows.map((r,i)=>{
+    const ok = hasData(r.q);
+    return `<tr style="border-top:1px solid rgba(255,255,255,.06)">
+      ${td(`<span style="color:var(--text-faint)">${i+1}</span>`)}
+      <td style="padding:7px 8px;font-family:${FONT_M};color:var(--yellow);font-weight:700;white-space:nowrap">${escUH(r.u.code)}</td>
+      <td style="padding:7px 8px;color:var(--text-dim);font-size:11px;white-space:nowrap">${escUH(r.u.type||'')}</td>
+      ${KEYS.map(k=>uCell(k, r.q[k], ok)).join('')}
+      ${r.ms.map(m=>aCell(m.avgAch, hasData(m))).join('')}
+      ${aCell(r.q.avgAch, ok, 'border-left:1px solid rgba(255,199,44,.25);')}
+    </tr>`;
+  }).join('');
+  const active = unitRows.filter(r=>hasData(r.q));
+  const mean = a => a.length ? a.reduce((x,y)=>x+y,0)/a.length : 0;
+  const foot2 = `<tr style="border-top:2px solid rgba(255,199,44,.35);background:rgba(255,199,44,.05)">
+      <td colspan="3" style="padding:7px 10px;font-weight:700;color:var(--yellow)">Fleet average</td>
+      ${KEYS.map(k=> active.length ? td(`<b style="font-family:${FONT_M}">${mean(active.map(r=>Number(r.q[k])||0)).toFixed(1)}</b>`) : td(dash)).join('')}
+      ${months.map((mo,i)=>{ const a=unitRows.filter(r=>hasData(r.ms[i])).map(r=>r.ms[i].avgAch||0); return a.length ? td(`<b style="font-family:${FONT_M};color:${cellColor(mean(a))}">${mean(a).toFixed(1)}%</b>`) : td(dash); }).join('')}
+      ${active.length ? td(`<b style="font-family:${FONT_M};color:${cellColor(mean(active.map(r=>r.q.avgAch||0)))}">${mean(active.map(r=>r.q.avgAch||0)).toFixed(1)}%</b>`,'border-left:1px solid rgba(255,199,44,.25);') : td(dash,'border-left:1px solid rgba(255,199,44,.25);')}
+    </tr>`;
+  const table2 = `<div style="overflow-x:auto;border:1px solid rgba(255,255,255,0.08);border-radius:10px">
+    <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:860px">
+      <thead style="background:rgba(255,255,255,.04)"><tr>
+        <th style="padding:8px">#</th><th style="text-align:left;padding:8px">Unit</th><th style="text-align:left;padding:8px">Type</th>
+        <th style="padding:8px" title="Mechanical Availability (%)">MA</th><th style="padding:8px" title="Physical Availability (%)">PA</th>
+        <th style="padding:8px" title="Mean Time Between Stoppages (hrs)">MTBS</th><th style="padding:8px" title="Mean Time To Repair (hrs)">MTTR</th>
+        <th style="padding:8px" title="Planned Maintenance Ratio (%)">PMR</th><th style="padding:8px" title="Service Accuracy (%)">SA</th>
+        ${months.map(mo=>`<th style="padding:8px;white-space:nowrap" title="Avg Achievement ${mo.label}">Ach ${mo.label.slice(0,3)}</th>`).join('')}
+        <th style="padding:8px;border-left:1px solid rgba(255,199,44,.25);white-space:nowrap" title="Weighted Avg Achievement for the whole quarter">Ach ${qLabel}</th>
+      </tr></thead>
+      <tbody>${body2}${foot2}</tbody>
+    </table></div>`;
+
+  const sub = `${fmtD(start)} – ${fmtD(getQuarterRange(qVal).end)} · follows the Quarter filter · “–” = no data yet`;
+  return `<div style="font-size:10px;color:var(--text-faint);font-family:JetBrains Mono,monospace;margin:-4px 0 12px">${sub}</div>
+    <div style="font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Achievement by KPI · ${qLabel}</div>
+    ${table1}
+    <div style="font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin:18px 0 6px">Achievement by Unit · ${qLabel} (ranked)</div>
+    ${table2}`;
 }
 function computeKPIsForQuarter(qVal){
   if(!qVal) return computeKPIs();

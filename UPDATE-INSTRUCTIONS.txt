@@ -1,3 +1,9 @@
+v71: Quarter Summary -> panel baru "QUARTER ACHIEVEMENT DETAIL" (mengikuti filter Triwulan Q1/Q2/Q3...): tabel pencapaian per KPI x 3 bulan + nilai triwulan + status, dan tabel pencapaian per unit (ranking, MA/PA/MTBS/MTTR/PMR/SA + Ach per bulan & triwulan). Hanya index.html.
+
+v70: Rumus KPI sesuai standar tambang, jam kerja 18 jam/hari (MINE_WORK_HOURS_PER_DAY): T = hari x 18; MA = W/(W+R); PA = (W+S)/T; MTBS = W/jumlah BD (cap 18 jam/hari); W dibatasi T-R, R dibatasi T. Hanya index.html.
+
+v69: KPI Unit -> urutan: grafik, KPI Data per Unit, lalu "KPI Summary per Unit — All Months" (unit x 12 bulan, dropdown metrik). Teks panel KPI Unit (top bar, grafik, tabel) kini berbahasa Inggris. Hanya index.html yang berubah.
+
 v68: WEB PUSH — notifikasi masuk ke HP/desktop walau web TERTUTUP. Butuh setup Supabase Edge Function sekali: ikuti SETUP-PUSH-SUPABASE.txt (file itu JANGAN di-deploy). Tanpa setup, aplikasi tetap jalan seperti v67. Apps Script tidak berubah.
 
 v67: FITUR NOTIFIKASI (desktop & HP)
