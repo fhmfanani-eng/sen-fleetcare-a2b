@@ -6179,10 +6179,12 @@ const UNITS = [
    (bukan 24 jam kalender). Dipakai sebagai T (total jam) pada MA/PA dan sebagai batas fisik
    (cap) jam operasi pada MTBS:
      T  = jumlah hari periode x 18 jam (x jumlah unit untuk agregat)
-     W  = Working/Operating hours (HM)      R = Repair hours (Breakdown Approved)
+     W  = Working/Operating hours (HM)
+     R  = Repair hours = SEMUA jam maintenance Approved (Plan + Unplan):
+          Breakdown + Periodical + Daily Maintenance, dll. (bukan hanya Breakdown)
      S  = Standby = T - W - R (min 0)
      MA = W / (W + R) x 100%      PA = (W + S) / T x 100% = (T - R) / T x 100%
-     MTBS = W / jumlah Breakdown   MTTR = R / jumlah Repair
+     MTBS = W / jumlah Breakdown   MTTR = R_breakdown / jumlah Repair Breakdown
      PMR = Planned Maint. Hours / Total Maint. Hours x 100%   SA = Periodical Plan / Total Periodical x 100% */
 const MINE_WORK_HOURS_PER_DAY = 18;
 const KPI_TARGET = { mtbs:80, mttr:36, pmr:90, sa:90, ma:90, pa:90 };
@@ -6220,14 +6222,14 @@ const KPI_INFO = {
   },
   ma: {
     full: 'Mechanical Availability (MA)',
-    formula: 'MA = Working Hours ÷ (Working Hours + Repair Hours) × 100%  (scheduled time 18 h/day)',
-    desc: 'Mechanical Availability against target. Achievement % of weight: ≥90% = 100%, 70–89% = 80%, <70% = 60%. Target ≥90%. Primary source: performance sheet (live sync) for the filter date range; fallback to HM Monitoring / manual data.',
+    formula: 'MA = Working Hours ÷ (Working Hours + Repair Hours) × 100%  (scheduled time 18 h/day). Repair Hours = Plan + Unplan (semua maintenance Approved).',
+    desc: 'Mechanical Availability against target. Achievement % of weight: ≥90% = 100%, 70–89% = 80%, <70% = 60%. Target ≥90%. R mencakup SEMUA jam maintenance Approved (Plan + Unplan: Breakdown, Periodical, Daily, dll.). Sumber: Monitoring HM + Daily Maintenance Approved.',
     unit: '%', higherBetter: true
   },
   pa: {
     full: 'Physical Availability (PA)',
-    formula: 'PA = (Working + Standby) ÷ Scheduled Hours × 100%  (Scheduled Hours = days × 18 h)',
-    desc: 'Physical Availability against target. Formula: (Working + Standby) ÷ Scheduled Hours × 100%, where Scheduled Hours = days × 18 h/day (mining standard). Achievement % of weight: ≥90% = 100%, 70–89% = 80%, <70% = 60%. Target ≥90%. Live sync dari sheet performance (W, S, Total Jam Kerja) tanpa mensyaratkan filter periode sheet; fallback Monitoring HM.',
+    formula: 'PA = (Working + Standby) ÷ Scheduled Hours × 100%  (Scheduled Hours = days × 18 h). Repair Hours (R) = Plan + Unplan.',
+    desc: 'Physical Availability against target. Formula: (Working + Standby) ÷ Scheduled Hours × 100%, where Scheduled Hours = days × 18 h/day (mining standard). R mencakup SEMUA jam maintenance Approved (Plan + Unplan). Achievement % of weight: ≥90% = 100%, 70–89% = 80%, <70% = 60%. Target ≥90%. Sumber: Monitoring HM + Daily Maintenance Approved.',
     unit: '%', higherBetter: true
   }
 };
@@ -8530,7 +8532,8 @@ function performancePeriodMatches(startStr, endStr){
 
 function maPaFromRows(rows){
   /* PA resmi: (Waktu Operasi + Standby) / Total Jam Kerja × 100
-     MA resmi: Waktu Operasi / (Waktu Operasi + Breakdown) × 100
+     MA resmi: Waktu Operasi / (Waktu Operasi + Repair Hours) × 100
+     Repair Hours (R) = Plan + Unplan (semua maintenance Approved).
      Multi-unit: rata-rata SEDERHANA % per unit (= baris AVERAGE di sheet performance).
      Total Jam Kerja (T) diambil dari kolom sheet bila ada; fallback W+S+R. */
   if(!rows || !rows.length) return { ma:0, pa:0, W:0, S:0, R:0, T:0 };
@@ -10824,8 +10827,9 @@ function pillClass(status){
    Sejak data HM (Monitoring HM) tersedia, MA (Mechanical Availability) & PA (Physical Availability)
    dihitung OTOMATIS dari data tsb, tidak perlu upload file jam operasional terpisah lagi:
      W (Jam Kerja)   = total HM Total pada baris Monitoring HM milik unit tsb (pada periode terkait)
-     R (Jam Repair)  = total durasi record Daily Maintenance kategori "Breakdown" yang sudah Approved
-                        milik unit tsb (pada periode terkait)
+     R (Jam Repair)  = total durasi SEMUA record Daily Maintenance yang sudah Approved
+                        (Plan + Unplan: Breakdown + Periodical + Daily Maintenance, dll.)
+                        milik unit tsb (pada periode terkait) — bukan hanya kategori Breakdown
      T (Total Jam)   = jumlah hari periode × 18 jam (jam kerja terjadwal standar tambang, MINE_WORK_HOURS_PER_DAY)
      S (Jam Standby) = T − W − R (tidak boleh negatif)
    MA = W / (W+R) × 100%      PA = (W+S) / (W+S+R) × 100%   →  otomatis sama dengan (T−R)/T × 100%
@@ -10859,12 +10863,15 @@ function hmWSRForUnit(unitCode, startStr, endStr){
     rangeEnd = rangeEnd || dates[dates.length-1];
   }
   const T = daysBetweenInclusive(rangeStart, rangeEnd) * MINE_WORK_HOURS_PER_DAY;
+  // R = SEMUA jam maintenance Approved (Plan + Unplan): Breakdown, Periodical, Daily, dll.
+  // Sebelumnya hanya category==='Breakdown' — sekarang Plan ikut mempengaruhi MA & PA.
   const Rraw = (dailyRecords||[])
     .filter(r=>{
       const u = String(r.unitCode||'').trim().toUpperCase();
       const match = matchSet.has(u) || (typeof resolveUnitCode==='function' && matchSet.has(resolveUnitCode(u)));
-      return match && r.category==='Breakdown' && r.approvalStatus==='Approved'
-        && r.tanggal && r.tanggal>=rangeStart && r.tanggal<=rangeEnd;
+      return match && r.approvalStatus==='Approved'
+        && r.tanggal && r.tanggal>=rangeStart && r.tanggal<=rangeEnd
+        && (Number(r.duration)||0) > 0;
     })
     .reduce((s,r)=>s+(Number(r.duration)||0),0);
   // Standar 18 jam/hari: R tidak boleh melebihi T, dan W tidak boleh melebihi sisa jam terjadwal (T - R).
@@ -10931,9 +10938,11 @@ function hmWSRGlobal(startStr, endStr){
   }
   const Wraw = recs.reduce((s,r)=>s+(Number(r.hmTotal)||0),0);
   const T = daysBetweenInclusive(rangeStart, rangeEnd) * MINE_WORK_HOURS_PER_DAY * units.length;
+  // R = SEMUA jam maintenance Approved (Plan + Unplan), bukan hanya Breakdown
   const Rraw = dailyRecords
-    .filter(r=>units.includes(r.unitCode) && r.category==='Breakdown' && r.approvalStatus==='Approved'
-      && r.tanggal && r.tanggal>=rangeStart && r.tanggal<=rangeEnd)
+    .filter(r=>units.includes(r.unitCode) && r.approvalStatus==='Approved'
+      && r.tanggal && r.tanggal>=rangeStart && r.tanggal<=rangeEnd
+      && (Number(r.duration)||0) > 0)
     .reduce((s,r)=>s+(Number(r.duration)||0),0);
   const R = Math.min(Rraw, T);
   const W = Math.min(Wraw, Math.max(T - R, 0));

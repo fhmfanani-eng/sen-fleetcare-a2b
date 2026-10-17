@@ -1,3 +1,8 @@
+v76: MA & PA — Repair Hours (R) kini menghitung SEMUA maintenance Approved (Plan + Unplan:
+     Breakdown + Periodical + Daily, dll.), bukan hanya kategori Breakdown. Rumus tetap
+     MA = W/(W+R), PA = (W+S)/T dengan T = hari × 18 jam. Sumber: hmWSRForUnit & hmWSRGlobal.
+     Hanya index.html.
+
 v75: Kolom Unit/KPI isi rata kiri (header tetap center). Hanya index.html.
 
 v74: Kolom Unit (KPI Data per Unit, Summary All Months, Achievement by Unit) dan kolom KPI (Achievement by KPI) isi rata kanan; header tetap center. Hanya index.html.
