@@ -1709,6 +1709,34 @@ select.exec-close{ background:rgba(76,175,109,0.15); color:var(--green); }
 .dash-mid-grid{
   display:grid; grid-template-columns:1fr; gap:14px; margin-bottom:14px;
 }
+/* Header tabel tab KPI Unit & Quarter Summary: rapi, rata tengah (horizontal & vertikal), seragam. */
+.kpi-unit-exec table thead th,
+.quarter-summary-table thead th,
+.q-detail-panel table thead th{
+  text-align:center !important; vertical-align:middle !important;
+  padding:9px 10px !important; font-size:11px; font-weight:700; letter-spacing:.3px;
+  line-height:1.25; white-space:nowrap; color:var(--text-dim);
+}
+/* Isi kolom ikut rata tengah supaya sejajar persis di bawah header-nya. */
+.kpi-unit-exec table tbody td,
+.quarter-summary-table tbody td,
+.q-detail-panel table tbody td{
+  text-align:center !important; vertical-align:middle !important;
+}
+.kpi-unit-exec table thead th,
+.quarter-summary-table thead th,
+.q-detail-panel table thead th{
+  text-transform:uppercase; font-family:'JetBrains Mono',monospace;
+}
+/* Kolom Unit / KPI: teks isi rata kiri (header tetap center). */
+.kpi-unit-exec table tbody td:first-child,
+.q-detail-panel table.qd-kpi tbody td:first-child,
+.q-detail-panel table.qd-unit tbody td:nth-child(2),
+.q-detail-panel table.qd-unit tbody tr:last-child td:first-child{
+  text-align:left !important; padding-left:18px !important;
+}
+.kpi-unit-exec table thead th small, .q-detail-panel table thead th small{ font-size:9px; opacity:.7; }
+.quarter-summary-table thead th div{ text-align:center; margin-top:2px; font-size:9px !important; font-weight:400 !important; opacity:.75; }
 .dash-bot-grid{
   display:grid; grid-template-columns:1fr; gap:14px; margin-bottom:8px;
 }
@@ -11708,7 +11736,7 @@ function unitKpiDataTableHTML(months){
     const curBadge = '';
     return `<div style="margin-bottom:16px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:6px 10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px">
-        <span style="font-family:Oswald,sans-serif;font-size:13px;font-weight:600;letter-spacing:.4px;color:var(--text)">${escUH(m.label)}</span>${curBadge}
+        <span style="font-family:Oswald,sans-serif;font-size:13px;font-weight:600;letter-spacing:.4px;color:var(--text)">${escUH(new Date(m.start+'T00:00:00').toLocaleDateString('en-US',{month:'long',year:'numeric'}))}</span>${curBadge}
         <span style="font-size:10px;color:var(--text-faint);font-family:JetBrains Mono,monospace;margin-left:auto">${escUH(m.start)} to ${escUH(m.end)}</span>
       </div>
       <div style="overflow-x:auto;border:1px solid rgba(255,255,255,0.08);border-radius:10px">
@@ -23452,7 +23480,7 @@ function renderKPIChartDashboard(k, globalStats){
       </div>
     </div>
     <div class="dash-mid-grid">
-      <div class="dash-panel" style="grid-column:1/-1">
+      <div class="dash-panel q-detail-panel" style="grid-column:1/-1">
         ${dashTopbar('Triwulan', quarterSelectHtml)}
         <div class="dash-panel-title">QUARTER ACHIEVEMENT DETAIL <span>${escUH('Q'+String(activeQuarterVal).split('-Q')[1]+' '+String(activeQuarterVal).split('-Q')[0])}</span></div>
         ${quarterAchievementDetailHTML(activeQuarterVal)}
@@ -23796,11 +23824,11 @@ function quarterAchievementDetailHTML(qVal){
       ? td(`<span style="font-family:${FONT_M};font-weight:600;color:${isOk(key,mo.kpis[key])?'#4CAF6D':'#FFC72C'}">${fmt(key,mo.kpis[key])}</span>`)
       : td(dash)).join('');
     return `<tr style="border-top:1px solid rgba(255,255,255,.06)">
-      <td style="padding:7px 10px;white-space:nowrap"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${m.color};margin-right:6px"></span><b>${m.label}</b> <span style="color:var(--text-faint);font-size:10px">${m.name}</span></td>
+      <td style="padding:7px 10px;white-space:nowrap"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${m.color};margin-right:6px"></span><b>${m.label}</b><div style="color:var(--text-faint);font-size:10px;margin-top:1px">${m.name}</div></td>
       ${td(`<span style="color:var(--text-dim)">${m.tgt}</span>`)}
       ${td(`<span style="color:var(--text-dim)">${KPI_WEIGHT[key]}%</span>`)}
       ${mc}
-      ${td(`<b style="font-family:${FONT_M};color:${isOk(key,kQ[key])?'#4CAF6D':'#FFC72C'}">${hasData(kQ)?fmt(key,kQ[key]):'–'}</b>`, 'border-left:1px solid rgba(255,199,44,.25);')}
+      ${td(`<b style="font-family:${FONT_M};color:${!hasData(kQ)?'var(--text-faint)':isOk(key,kQ[key])?'#4CAF6D':'#FFC72C'}">${hasData(kQ)?fmt(key,kQ[key]):'–'}</b>`, 'border-left:1px solid rgba(255,199,44,.25);')}
       ${td(hasData(kQ)?`<span style="font-family:${FONT_M}">${pct.toFixed(0)}%</span>`:dash)}
       ${td(hasData(kQ)?`<span class="kpi-dash-status ${st.cls}">${st.text}</span>`:dash)}
     </tr>`;
@@ -23817,7 +23845,7 @@ function quarterAchievementDetailHTML(qVal){
       ${td(qSt?`<span class="kpi-dash-status ${qSt.cls}">${qSt.text}</span>`:dash)}
     </tr>`;
   const table1 = `<div style="overflow-x:auto;border:1px solid rgba(255,255,255,0.08);border-radius:10px">
-    <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:760px">
+    <table class="qd-kpi" style="width:100%;border-collapse:collapse;font-size:12px;min-width:760px">
       <thead style="background:rgba(255,255,255,.04)"><tr>
         <th style="text-align:left;padding:8px 10px">KPI</th>
         <th style="padding:8px">Target</th><th style="padding:8px">Weight</th>
@@ -23857,7 +23885,7 @@ function quarterAchievementDetailHTML(qVal){
       ${active.length ? td(`<b style="font-family:${FONT_M};color:${cellColor(mean(active.map(r=>r.q.avgAch||0)))}">${mean(active.map(r=>r.q.avgAch||0)).toFixed(1)}%</b>`,'border-left:1px solid rgba(255,199,44,.25);') : td(dash,'border-left:1px solid rgba(255,199,44,.25);')}
     </tr>`;
   const table2 = `<div style="overflow-x:auto;border:1px solid rgba(255,255,255,0.08);border-radius:10px">
-    <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:860px">
+    <table class="qd-unit" style="width:100%;border-collapse:collapse;font-size:12px;min-width:860px">
       <thead style="background:rgba(255,255,255,.04)"><tr>
         <th style="padding:8px">#</th><th style="text-align:left;padding:8px">Unit</th><th style="text-align:left;padding:8px">Type</th>
         <th style="padding:8px" title="Mechanical Availability (%)">MA</th><th style="padding:8px" title="Physical Availability (%)">PA</th>

@@ -1,3 +1,11 @@
+v75: Kolom Unit/KPI isi rata kiri (header tetap center). Hanya index.html.
+
+v74: Kolom Unit (KPI Data per Unit, Summary All Months, Achievement by Unit) dan kolom KPI (Achievement by KPI) isi rata kanan; header tetap center. Hanya index.html.
+
+v73: Perbaikan header & isi kolom tabel KPI Unit + Quarter Summary: header rata tengah, isi kolom ikut rata tengah (sejajar header), font seragam, nama bulan Inggris. Hanya index.html.
+
+v72: Header semua tabel di tab KPI Unit & Quarter Summary dirapikan: rata tengah, ukuran font/padding seragam. Hanya index.html.
+
 v71: Quarter Summary -> panel baru "QUARTER ACHIEVEMENT DETAIL" (mengikuti filter Triwulan Q1/Q2/Q3...): tabel pencapaian per KPI x 3 bulan + nilai triwulan + status, dan tabel pencapaian per unit (ranking, MA/PA/MTBS/MTTR/PMR/SA + Ach per bulan & triwulan). Hanya index.html.
 
 v70: Rumus KPI sesuai standar tambang, jam kerja 18 jam/hari (MINE_WORK_HOURS_PER_DAY): T = hari x 18; MA = W/(W+R); PA = (W+S)/T; MTBS = W/jumlah BD (cap 18 jam/hari); W dibatasi T-R, R dibatasi T. Hanya index.html.
