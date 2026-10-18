@@ -1,5 +1,5 @@
-/* SEN-FleetCare SW v68 — Native views + Notifikasi + Web Push (HP & desktop) */
-const SW_VERSION='sen-fleetcare-v68-20261016-ui';
+/* HEMC SW v68 — Native views + Notifikasi + Web Push (HP & desktop) */
+const SW_VERSION='hemc-v77-20261018b';
 const CACHE_NAME=SW_VERSION;
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(['./','./index.html'])).catch(()=>{}));});
 self.addEventListener('activate',e=>{e.waitUntil((async()=>{const keys=await caches.keys();await Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)));await self.clients.claim();})());});
@@ -34,8 +34,8 @@ self.addEventListener('notificationclick',event=>{
    payload JSON: {title, body, view, tag}. Tanpa server push, handler ini tidak pernah terpanggil. */
 self.addEventListener('push',event=>{
   let d={}; try{ d=event.data?event.data.json():{}; }catch(_){ d={body:event.data?event.data.text():''}; }
-  event.waitUntil(self.registration.showNotification(d.title||'SEN-FleetCare',{
-    body:d.body||'', tag:d.tag||'fleetcare-push', icon:'icon-192.png', badge:'icon-192.png',
+  event.waitUntil(self.registration.showNotification(d.title||'HEMC',{
+    body:d.body||'', tag:d.tag||'hemc-push', icon:'icon-192.png', badge:'icon-192.png',
     vibrate:[200,100,200], data:{view:d.view||''}
   }));
 });

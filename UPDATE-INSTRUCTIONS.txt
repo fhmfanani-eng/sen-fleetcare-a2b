@@ -88,7 +88,7 @@ SHEET DI SPREADSHEET BACKUP SETELAH UPDATE
 
 FILE DI ZIP
 - index.html                             -> deploy ke GitHub / hosting web
-- SEN-FleetCare-LiveBackup-Database.html -> salinan identik index.html (pakai salah satu saja, sudah berisi fitur Edit Oil)
+- HEMC-LiveBackup-Database.html -> salinan identik index.html (pakai salah satu saja, sudah berisi fitur Edit Oil)
 - AppsScript-DatabaseBackup.gs           -> WAJIB deploy di spreadsheet backup
 - manifest.json, sw.js                   -> PWA (deploy bersama index.html)
 - UPDATE-INSTRUCTIONS.txt                -> file ini

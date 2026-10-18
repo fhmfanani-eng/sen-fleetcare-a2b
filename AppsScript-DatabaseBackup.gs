@@ -1,10 +1,10 @@
 /**
- * ================= SEN-FleetCare — DATABASE BACKUP (Apps Script) v3.2 =================
+ * ================= HEMC — DATABASE BACKUP (Apps Script) v3.2 =================
  * Deploy script ini KHUSUS di spreadsheet backup:
  *   https://docs.google.com/spreadsheets/d/1ADSaUT1u1veuMCFhoMzxhWsmz0XBRJV1xjz-JD6iS0Q
  *
  * Fungsinya: menerima 1 payload besar dari tombol "☁ Sync Semua Database ke Spreadsheet"
- * (menu Database Akun di web SEN-FleetCare), berisi:
+ * (menu Database Akun di web HEMC), berisi:
  *   - tables    : data semua modul  → 1 tab per modul (tabel rapi, header + isi)
  *   - native    : data tampilan web -> ditulis sebagai TABEL + CHART NATIVE Google Sheets:
  *                 "Dashboard", "Dashboard Service", "Dashboard Quarter", "Mechanic Activity Report"
@@ -168,7 +168,7 @@ function doPost(e) {
 }
 
 function doGet(e) {
-  return jsonResponse({ ok: true, message: 'SEN-FleetCare Database Backup endpoint aktif (v3.2 — native views).' });
+  return jsonResponse({ ok: true, message: 'HEMC Database Backup endpoint aktif (v3.2 — native views).' });
 }
 
 function openTargetSpreadsheet(spreadsheetId) {
@@ -326,7 +326,7 @@ function ensureSize(sheet, rows, cols) {
 function lockSheet(sheet) {
   if (!LAYOUT.LOCK_SHEETS) return;
   try {
-    sheet.protect().setDescription('Layout otomatis SEN-FleetCare — ditulis ulang tiap sync').setWarningOnly(true);
+    sheet.protect().setDescription('Layout otomatis HEMC — ditulis ulang tiap sync').setWarningOnly(true);
   } catch (_e) {}
 }
 

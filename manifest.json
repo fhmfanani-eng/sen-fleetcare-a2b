@@ -1,6 +1,6 @@
 {
-  "name": "SEN-FleetCare — Heavy Equipment Maintenance Management Control System",
-  "short_name": "SEN-FleetCare",
+  "name": "HEMC — Heavy Equipment Maintenance Management Control System",
+  "short_name": "HEMC",
   "description": "Heavy Equipment Maintenance Management Control System",
   "start_url": "./",
   "scope": "./",
