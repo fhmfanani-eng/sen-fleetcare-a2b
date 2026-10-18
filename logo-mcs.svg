@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" fill="#15171b"/>
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd23f"/><stop offset="1" stop-color="#f59e0b"/></linearGradient></defs>
+<path fill-rule="evenodd" fill="url(#g)" d="M366.9,210.1 L373.8,233.1 L404.9,237.7 L404.9,274.3 L373.8,278.9 L366.9,301.9 L355.5,323.1 L374.2,348.3 L348.3,374.2 L323.1,355.5 L301.9,366.9 L278.9,373.8 L274.3,404.9 L237.7,404.9 L233.1,373.8 L210.1,366.9 L188.9,355.5 L163.7,374.2 L137.8,348.3 L156.5,323.1 L145.1,301.9 L138.2,278.9 L107.1,274.3 L107.1,237.7 L138.2,233.1 L145.1,210.1 L156.5,188.9 L137.8,163.7 L163.7,137.8 L188.9,156.5 L210.1,145.1 L233.1,138.2 L237.7,107.1 L274.3,107.1 L278.9,138.2 L301.9,145.1 L323.1,156.5 L348.3,137.8 L374.2,163.7 L355.5,188.9Z M334,256 A78,78 0 1 0 178,256 A78,78 0 1 0 334,256Z"/>
+<polyline points="196,262 228,262 244,214 268,306 284,262 316,262" fill="none" stroke="#15171b" stroke-width="0" />
+<polyline points="192,262 226,262 243,212 269,308 286,262 320,262" fill="none" stroke="#ffd23f" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
