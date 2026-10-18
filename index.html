@@ -4025,7 +4025,10 @@ button.wa-green:hover, button.wa-sync-only-fahmi:hover{
       <div class="login-switch"><a id="show-login-from-recover">Back to sign in</a></div>
     </div>
   </div>
-  <img class="login-brand-art" src="login-brand.png" alt="HEMC — Heavy Equipment Maintenance Control" draggable="false">
+  <div class="login-brand-art hemc-wordmark" role="img" aria-label="HEMC — Heavy Equipment Maintenance Control">
+    <div class="hw-mark"><span class="hw-y">HE</span><span class="hw-g">MC</span></div>
+    <div class="hw-sub"><i></i><b>Heavy Equipment Maintenance Control</b><i></i></div>
+  </div>
 </div>
 </div>
 
@@ -4120,13 +4123,33 @@ button.wa-green:hover, button.wa-sync-only-fahmi:hover{
       <div class="mh-foot">
         <div class="mh-userbar" id="mh-userbar"><span class="mh-user-lbl">USER</span><span class="mh-user-name" id="mh-user-name">-</span><button type="button" class="mh-logout" id="btn-logout-home">Logout</button></div>
         <div class="mh-maintbar" id="mh-maintbar"><button type="button" class="mh-maint" id="btn-maint-home" style="display:none;">&#128736; Maintenance Server</button></div>
-        <img class="mh-brand" src="brand-tagline.png" alt="" draggable="false" onerror="this.style.display='none';var f=this.nextElementSibling;if(f)f.style.display='flex';">
-        <div class="mh-brand mh-brand-fb" style="display:none;" aria-label="HEMC — Heavy Equipment Maintenance Control">
+        <div class="mh-brand mh-brand-fb" style="display:flex;" aria-label="HEMC — Heavy Equipment Maintenance Control">
           <div class="fb-mark"><span class="fb-y">HE</span><span class="fb-g">MC</span></div>
           <div class="fb-sub"><i></i><b>Heavy Equipment Maintenance Control</b><i></i></div>
         </div>
       </div>
     </div>
+<style id="hemc-wordmark">
+.hemc-wordmark{ display:flex; flex-direction:column; align-items:center; gap:10px; text-align:center; }
+.hemc-wordmark .hw-mark{ font-family:'Oswald','Arial Narrow',sans-serif; font-weight:700; line-height:1; font-size:clamp(54px,17vw,96px); letter-spacing:.01em; white-space:nowrap;
+  filter:drop-shadow(0 3px 6px rgba(0,0,0,.55)); }
+.hemc-wordmark .hw-y{ color:#f5b81c; background:linear-gradient(180deg,#ffd23f 0%,#f2a900 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+.hemc-wordmark .hw-g{ color:#c4c8ce; background:linear-gradient(180deg,#e6e8eb 0%,#8e949c 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+.hemc-wordmark .hw-sub{ display:flex; align-items:center; gap:3%; width:100%; }
+.hemc-wordmark .hw-sub i{ flex:1; height:2px; background:#d97b3a; border-radius:2px; }
+.hemc-wordmark .hw-sub b{ font-family:'Oswald',sans-serif; font-weight:500; color:#c4c8ce; font-size:clamp(11px,3.2vw,15px); letter-spacing:.06em; white-space:nowrap; flex:0 1 auto; }
+.hemc-wordmark .hw-sub i{ min-width:12px; }
+</style>
+<style id="hemc-login-transparent">
+/* Kartu login transparan: foto latar tetap terlihat */
+#login-overlay .login-card, #login-overlay .login-card.diamond-plate{
+  background:rgba(8,11,16,0.18) !important;
+  background-image:none !important;
+  border:1px solid rgba(255,255,255,0.16) !important;
+  box-shadow:0 10px 30px rgba(0,0,0,0.25) !important;
+}
+#login-overlay .login-card .input-wrap, #login-overlay .login-card input{ background:rgba(0,0,0,0.28) !important; }
+</style>
 <style id="sen-perf-v59">
 /* v59: performa - backdrop-filter/blur memaksa GPU render ulang tiap scroll (penyebab ngeframe di HP & desktop). */
 *,*::before,*::after{ -webkit-backdrop-filter:none !important; backdrop-filter:none !important; }
