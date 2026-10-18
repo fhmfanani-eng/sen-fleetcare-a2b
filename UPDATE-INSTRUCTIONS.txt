@@ -1,3 +1,23 @@
+v86: Perbaikan desktop/tablet: banner Maintenance Tips tidak lagi menumpuk logo & lonceng (ruang kanan dikunci, banner menyusut otomatis di layar sempit). Hanya index.html.
+
+v85: Banner Maintenance Tips versi HP diperkecil lagi (tinggi ~57px); teks tetap penuh. Hanya index.html.
+
+v84: Banner Maintenance Tips versi HP diperkecil (padding, ikon, huruf, tombol lebih ringkas); teks tetap tampil penuh. Hanya index.html.
+
+v83: Banner Maintenance Tips versi HP tidak terpotong lagi: teks tampil penuh (tanpa ...), tinggi banner dikunci mengikuti tips terpanjang sehingga daftar menu tidak melompat saat tips berganti. Hanya index.html.
+
+v82: Khusus HP/mobile (lebar <=860px): banner Maintenance Tips dipindah ke halaman Menu Utama, tepat di bawah teks 'Pilih menu untuk membuka halaman'. Di halaman isi menu, top bar hanya berisi tombol MENU, judul, logo & lonceng (satu baris). Desktop tidak berubah. Hanya index.html.
+
+v81: Banner Maintenance Tips didesain ulang: kartu glass gelap beraksen emas, ikon dalam tile, label pill, judul Oswald, tombol ‹ › + counter, progress bar emas bergradasi, transisi geser-pudar halus; mobile tersusun rapi (label di atas judul). Hanya index.html.
+
+v80: Sudut semua logo dibuat siku (tanpa rounded). Hanya index.html.
+
+v79: Semua logo (sidebar, login, topbar samping lonceng, Menu Utama) diganti dengan logo Surya Energi Niaga resolusi tinggi (tajam di layar HP/retina). Hanya index.html.
+
+v78: Logo topbar diperbesar (seimbang dengan judul halaman), logo ditambahkan di atas teks MENU UTAMA, dan bar tab di tiap menu (Plan Service, CBM, Spare Part) terkunci di atas seperti Dashboard. Hanya index.html.
+
+v77: Logo Surya Energi Niaga ditambahkan di samping ikon lonceng notifikasi (topbar). Logo tertanam di index.html. Hanya index.html.
+
 v76: MA & PA — Repair Hours (R) kini menghitung SEMUA maintenance Approved (Plan + Unplan:
      Breakdown + Periodical + Daily, dll.), bukan hanya kategori Breakdown. Rumus tetap
      MA = W/(W+R), PA = (W+S)/T dengan T = hari × 18 jam. Sumber: hmWSRForUnit & hmWSRGlobal.
