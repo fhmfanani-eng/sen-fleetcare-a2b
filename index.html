@@ -4454,6 +4454,7 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
 
       <!-- DATABASE UNIT -->
       <section class="view" id="view-database">
+        <div class="perf-sticky" id="unit-sticky-header">
         <div class="panel-head" style="margin-bottom:16px; flex-wrap:wrap; gap:10px;">
           <h2>Performance Unit — SEN &amp; DTJ</h2>
           <div class="toolbar" style="align-items:center; gap:8px;">
@@ -4475,6 +4476,20 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
             </div>
             <button type="button" class="btn secondary small" id="unit-period-reset-btn" title="Clear date filter and show all periods">✕ All Periods</button>
           </div>
+        </div>
+        </div><!-- /perf-sticky -->
+
+        <!-- TABEL REKAP PERFORMANCE — mengikuti isi filter periode di atas -->
+        <div class="panel perf-tbl-panel" id="unit-perf-table-panel">
+          <div class="perf-tbl-head">
+            <div class="perf-tbl-title"><span class="tag">TABEL</span><h2>Performance per Unit</h2></div>
+            <div class="perf-tbl-tools">
+              <span class="perf-tbl-period" id="unit-perf-table-period">All Periods</span>
+              <button type="button" class="btn small secondary" id="unit-perf-table-export" title="Unduh tabel (sesuai filter periode) sebagai Excel">⬇ Excel</button>
+            </div>
+          </div>
+          <div class="perf-tbl-wrap"><table class="perf-tbl" id="unit-perf-table"><tbody></tbody></table></div>
+          <div class="perf-tbl-note">Tabel mengikuti filter periode di atas. Jam dari Monitoring HM (T = hari × 18 jam). PA = (W+S)/T · MA = W/(W+R) · UA = W/(W+S) · EU = W/T. Warna: hijau ≥ 90%, kuning ≥ 75%, merah &lt; 75%.</div>
         </div>
 
         <div class="grid grid-2" id="unit-cards"></div>
@@ -5068,7 +5083,6 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
                   <option value="WA-10">WA-10</option>
                   <option value="HEX-11">HEX-11</option>
                   <option value="HEX-12">HEX-12</option>
-                  <option value="HEX-17">HEX-17</option>
                 </select>
               </div>
               <div class="ps-live-field">
@@ -6242,7 +6256,6 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
                   <option value="WA-10">WA-10</option>
                   <option value="HEX-11">HEX-11</option>
                   <option value="HEX-12">HEX-12</option>
-                  <option value="HEX-17">HEX-17</option>
                 </select>
                 <button type="button" class="btn small" id="sp-budget-export-xlsx" title="Download Excel sesuai filter periode">⬇ Excel</button>
                 <button type="button" class="btn small secondary" id="sp-budget-export-csv" title="Download CSV sesuai filter periode">⬇ CSV</button>
@@ -6289,6 +6302,36 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
 
 <script>
 /* ================= MASTER DATA ================= */
+/* ================= KPI EXCLUSION — unit HEX-17 =================
+   Unit HEX-17 (alias PC-17 / EX-17 / XAZIS-17) dikeluarkan dari database KPI.
+   Semua data yang masuk ke array di bawah (dari server, cache, realtime, upload) otomatis
+   dibersihkan dari unit ini, sehingga TIDAK mempengaruhi MTBS, MTTR, PMR, SA, MA, PA maupun
+   tabel/grafik KPI. Untuk mengaktifkan kembali: kosongkan KPI_EXCLUDED_UNITS. */
+const KPI_EXCLUDED_UNITS = ['HEX-17','PC-17','EX-17','XAZIS-17'];
+function kpiIsExcludedUnit(code){
+  const u = String(code==null?'':code).trim().toUpperCase().replace(/[\s_-]*DTJ$/i,'').trim();
+  return !!u && KPI_EXCLUDED_UNITS.indexOf(u)>=0;
+}
+function kpiStripExcluded(v){
+  if(Array.isArray(v)) return v.filter(r=>!(r && typeof r==='object' && kpiIsExcludedUnit(r.unitCode!=null?r.unitCode:(r.unit_code!=null?r.unit_code:r.unit))));
+  if(v && typeof v==='object' && Array.isArray(v.rows)){
+    const rows = v.rows.filter(r=>!(r && kpiIsExcludedUnit(r.unit!=null?r.unit:r.unitCode)));
+    if(rows.length!==v.rows.length) v = Object.assign({}, v, { rows });
+  }
+  return v;
+}
+(function(){
+  const store = {};
+  function guard(name, init){
+    store[name] = init;
+    Object.defineProperty(window, name, { configurable:true, enumerable:true,
+      get(){ return store[name]; },
+      set(val){ store[name] = kpiStripExcluded(val); } });
+  }
+  guard('dailyRecords', []); guard('planRecords', []); guard('hmRecords', []);
+  guard('dailyWhRecords', []); guard('hmTelemetryRecords', []); guard('mapaData', null);
+})();
+
 const UNITS = [
   { type:'WA500-6R', code:'SWA-101', category:'KOMATSU Wheel Loader', serial:'WA500-6R-60535' },
   { type:'WA500-6R', code:'SWA-102', category:'KOMATSU Wheel Loader', serial:'WA500-6R-60536' },
@@ -6300,7 +6343,6 @@ const UNITS = [
   { type:'WA380-6', code:'WA-10', category:'KOMATSU Wheel Loader', serial:'WA-10' },
   { type:'Zaxis ZX200-5G', code:'HEX-11', category:'HITACHI Excavator', serial:'HEX-11' },
   { type:'Zaxis ZX200-5G', code:'HEX-12', category:'HITACHI Excavator', serial:'HEX-12' },
-  { type:'Zaxis ZX200-5G', code:'HEX-17', category:'HITACHI Excavator', serial:'HEX-17' },
 ];
 /* Target KPI resmi — format skor mengikuti spreadsheet KEY PERFORMANCE INDICATOR Maintenance.
    Acv. = nilai aktual | Score = tier 60% / 80% / 100% dari bobot.
@@ -6736,7 +6778,7 @@ const HM_TELEMETRY_SEED = [
   ['2026-05-20','SWA-102','WA500-6R-60536',18.3,4108.6,10.4],
   ['2026-05-21','SWA-102','WA500-6R-60536',19.2,4127.8,8.3],
 ];
-let hmTelemetryRecords = []; // {id,tanggal,unitCode,serialNo,workingHours,smr,actualWorkingHours,idlingHours}
+/* hmTelemetryRecords: lihat blok KPI EXCLUSION */ // {id,tanggal,unitCode,serialNo,workingHours,smr,actualWorkingHours,idlingHours}
 
 const HM_SEED = [
   ['2026-01-01','BC','Langsir','Alief','Siang','SPC-104','Lambung batu',986.7,996.6,9.9,0,'Lambung batu'],
@@ -8440,15 +8482,15 @@ function updateStorageStatusUI(){
   }
 }
 
-let dailyRecords = [];
-let planRecords = [];
+/* dailyRecords: lihat blok KPI EXCLUSION */
+/* planRecords: lihat blok KPI EXCLUSION */
 
 /* PLAN SERVICE LOCK — unit SEN + DTJ yang diperbolehkan.
  * Semua generate, sync, render, dan penyimpanan Plan Service dibatasi ke unit ini.
  * SEN: SWA-101, SWA-102, SBD-103, SPC-104
  * DTJ: DZ-04, DZ-09, WA-10, HEX-11, HEX-12, HEX-17
  */
-const PLAN_SERVICE_ALLOWED_UNITS = new Set(['SWA-101','SWA-102','SBD-103','SPC-104','DZ-04','DZ-09','WA-10','HEX-11','HEX-12','HEX-17']);
+const PLAN_SERVICE_ALLOWED_UNITS = new Set(['SWA-101','SWA-102','SBD-103','SPC-104','DZ-04','DZ-09','WA-10','HEX-11','HEX-12']);
 /**
  * Alias kode unit: sheet Monitoring HM memakai PC-11/PC-12/PC-17,
  * sedangkan master UNITS & menu Performance memakai HEX-11/HEX-12/HEX-17.
@@ -8529,8 +8571,8 @@ let p2hRecords = [];
 let preInspectionRecords = [];
 let preInspectionPlans = []; // jadwal Pre Inspection (dibuat Supervisor, ditugaskan ke Mechanic)
 let breakdownReports = [];
-let hmRecords = [];
-let mapaData = null; // { rows:[{unit,w,s,r}], totalW, totalS, totalR, fileName, updatedAt }
+/* hmRecords: lihat blok KPI EXCLUSION */
+/* mapaData: lihat blok KPI EXCLUSION */ // { rows:[{unit,w,s,r}], totalW, totalS, totalR, fileName, updatedAt }
 /** Riwayat snapshot performance per bulan (YYYY-MM) — diisi saat live sync.
  *  Memungkinkan kolom Monthly KPI (mis. JUL) tetap menampilkan AVERAGE sheet 84.5%
  *  meski filter periode di sheet sudah diganti ke bulan lain. */
@@ -8539,7 +8581,7 @@ let mapaHistory = {}; // { '2026-07': { rows, periodStart, periodEnd, totalW, to
  *  { id, tanggal, unitCode, workingHours, actualWorkingHours, idlingHours, source }
  *  Sumber: sheet "Jam Kerja Harian" (Apps Script action=getDailyWorkingHours) + telemetri/HM.
  */
-let dailyWhRecords = [];
+/* dailyWhRecords: lihat blok KPI EXCLUSION */
 let _dailyWhMeta = { updatedAt:'', source:'', lastSyncOk:false };
 
 /* Data seed dari Google Sheet tab "performance" (SEN-MaintenanceA2B)
@@ -12025,6 +12067,88 @@ function renderUnitMonthlySummary(){
   if(host) host.remove();
 }
 
+/* ---- TABEL REKAP PERFORMANCE PER UNIT — selalu mengikuti filter periode menu Performance ---- */
+const PERF_SEN_UNITS = ['SWA-101','SWA-102','SBD-103','SPC-104'];
+let _perfTableData = null;
+function perfTblClass(key, val){
+  const p = kpiAchievePct(key, Number(val)||0);
+  return p>=100 ? 'g' : p>=80 ? 'y' : 'r';
+}
+function buildUnitPerfRows(weekPeriod, rangeStart, rangeEnd){
+  const keys = ['mtbs','mttr','pmr','sa','ma','pa'];
+  const totalW = keys.reduce((s,k)=> s + (KPI_WEIGHT[k]||0), 0);
+  return UNITS.map(u=>{
+    let jobs = dailyRecords.filter(r=>r.unitCode===u.code);
+    if(weekPeriod) jobs = jobs.filter(r=>r.tanggal && r.tanggal>=rangeStart && r.tanggal<=rangeEnd);
+    const wh = getUnitWorkingHours(u.code, rangeStart, rangeEnd);
+    const k = computeUnitKPIsFor(u.code, weekPeriod);
+    const sumSc = keys.reduce((s,key)=> s + kpiWeightedScore(key, k[key]||0), 0);
+    const avgAch = totalW>0 ? (sumSc/totalW*100) : 0;
+    const hasData = jobs.length>0 || (wh.t!=null && wh.t>0);
+    return { u, grp: PERF_SEN_UNITS.indexOf(u.code)>=0 ? 'SEN' : 'DTJ', jobs: jobs.length, wh, k, avgAch, hasData };
+  });
+}
+function renderUnitPerfTable(weekPeriod, rangeStart, rangeEnd, weekPeriodLabel){
+  const tbl = document.getElementById('unit-perf-table');
+  if(!tbl) return;
+  const lbl = document.getElementById('unit-perf-table-period');
+  if(lbl) lbl.textContent = weekPeriod ? ('PERIODE ' + weekPeriodLabel) : 'ALL PERIODS';
+  const rows = buildUnitPerfRows(weekPeriod, rangeStart, rangeEnd);
+  const n1 = v=> (v==null||isNaN(v)) ? '—' : fmtHours(v);
+  const pc = v=> (v==null||isNaN(v)) ? '—' : (Math.round(v*10)/10).toFixed(1)+'%';
+  /* Rumus (T = hari × 18 jam):  PA = (W+S)/T · MA = W/(W+R) · UA = W/(W+S) · EU = W/T */
+  const ratios = (w,s,r,t, k) => {
+    const ok = w!=null && t!=null && t>0;
+    const div = (n,d)=> (d>0 ? n/d*100 : null);
+    return {
+      pa: k && k.pa!=null ? Number(k.pa) : (ok ? div(w+s,t) : null),
+      ma: k && k.ma!=null ? Number(k.ma) : (ok ? div(w,w+r) : null),
+      ua: ok ? div(w,w+s) : null,
+      eu: ok ? div(w,t) : null
+    };
+  };
+  const colOf = (key,v)=> v==null ? 'dim' : (v>=90 ? 'g' : v>=75 ? 'y' : 'r');
+  rows.forEach(r=>{ r.ratio = r.hasData ? ratios(r.wh.w, r.wh.s, r.wh.r, r.wh.t, r.k) : {pa:null,ma:null,ua:null,eu:null}; });
+  const body = rows.map(r=>{
+    const dim = (r.hasData && r.wh.t!=null) ? '' : 'dim';
+    const rt = r.ratio;
+    return `<tr class="${r.hasData?'':'empty'}">
+      <td class="u"><b>${escUH(r.u.code)}</b><small>${escUH(r.u.type)}</small></td>
+      <td class="${dim}">${n1(r.wh.w)}</td><td class="${dim}">${n1(r.wh.s)}</td><td class="${dim}">${n1(r.wh.r)}</td><td class="${dim}">${n1(r.wh.t)}</td>
+      <td class="${colOf('pa',rt.pa)}">${pc(rt.pa)}</td><td class="${colOf('ma',rt.ma)}">${pc(rt.ma)}</td>
+      <td class="${colOf('ua',rt.ua)}">${pc(rt.ua)}</td><td class="${colOf('eu',rt.eu)}">${pc(rt.eu)}</td>
+    </tr>`;
+  }).join('');
+  const act = rows.filter(r=>r.hasData && r.wh.t!=null);
+  const sum = f => act.reduce((s,r)=> s + (Number(f(r))||0), 0);
+  const W = sum(r=>r.wh.w), S = sum(r=>r.wh.s), R = sum(r=>r.wh.r), T = sum(r=>r.wh.t);
+  const tot = act.length ? ratios(W,S,R,T,null) : {pa:null,ma:null,ua:null,eu:null};
+  const foot = `<tr>
+    <td class="u">TOTAL</td>
+    <td>${n1(act.length?W:null)}</td><td>${n1(act.length?S:null)}</td><td>${n1(act.length?R:null)}</td><td>${n1(act.length?T:null)}</td>
+    <td>${pc(tot.pa)}</td><td>${pc(tot.ma)}</td><td>${pc(tot.ua)}</td><td>${pc(tot.eu)}</td>
+  </tr>`;
+  tbl.innerHTML = `<thead>
+    <tr><th class="u">Unit / Waktu</th><th>Waktu Operasi</th><th>Standby</th><th>Breakdown</th><th>Total Jam Kerja</th><th>PA</th><th>MA</th><th>UA</th><th>EU</th></tr>
+  </thead><tbody>${body}</tbody><tfoot>${foot}</tfoot>`;
+  _perfTableData = { weekPeriod, weekPeriodLabel, rows, act, tot, W, S, R, T };
+}
+function exportUnitPerfTable(){
+  if(!_perfTableData || typeof XLSX==='undefined'){ alert('Tabel belum siap / library Excel belum termuat.'); return; }
+  const d = _perfTableData;
+  const head = ['Unit / Waktu','Waktu Operasi','Standby','Breakdown','Total Jam Kerja','PA (%)','MA (%)','UA (%)','EU (%)'];
+  const num = v => (v==null||isNaN(v)) ? '' : Math.round(Number(v)*10)/10;
+  const aoa = [['Performance per Unit'],[d.weekPeriod ? ('Periode: '+d.weekPeriodLabel) : 'Periode: All Periods'],[],head];
+  d.rows.forEach(r=> aoa.push([r.u.code,num(r.wh.w),num(r.wh.s),num(r.wh.r),num(r.wh.t),num(r.ratio.pa),num(r.ratio.ma),num(r.ratio.ua),num(r.ratio.eu)]));
+  aoa.push(['TOTAL',num(d.W),num(d.S),num(d.R),num(d.T),num(d.tot.pa),num(d.tot.ma),num(d.tot.ua),num(d.tot.eu)]);
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = [{wch:14},{wch:15},{wch:11},{wch:12},{wch:16},{wch:9},{wch:9},{wch:9},{wch:9}];
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Performance');
+  const tag = d.weekPeriod ? d.weekPeriod.replace('_','_sd_') : 'all';
+  XLSX.writeFile(wb, 'Performance_Unit_'+tag+'.xlsx');
+}
+document.getElementById('unit-perf-table-export')?.addEventListener('click', exportUnitPerfTable);
+
 function renderUnitCards(){
   populateUnitWeekPeriodSelect();
   const startEl = document.getElementById('unit-period-start');
@@ -12077,6 +12201,7 @@ function renderUnitCards(){
       </div>
     </div>`;
   }).join('');
+  try{ renderUnitPerfTable(weekPeriod, rangeStart, rangeEnd, weekPeriodLabel); }catch(e){ console.warn('renderUnitPerfTable', e); }
   renderUnitMonthlySummary();
 }
 
@@ -16368,7 +16493,7 @@ function isPlanClosed(r){
 function resolvePlanPic(unitCode, hmTarget){
   const code = String(unitCode||'').trim().toUpperCase();
   // Unit DTJ → PIC = DTJ
-  const DTJ_UNITS = new Set(['DZ-04','DZ-09','WA-10','HEX-11','HEX-12','HEX-17','EX-11','EX-12','EX-17']);
+  const DTJ_UNITS = new Set(['DZ-04','DZ-09','WA-10','HEX-11','HEX-12','EX-11','EX-12']);
   if(DTJ_UNITS.has(code) || code.endsWith(' DTJ') || code.includes('DTJ')) return 'DTJ';
   if(code === 'SPC-104'){
     const hm = (hmTarget===null || hmTarget===undefined || hmTarget==='') ? null : Number(hmTarget);
@@ -24248,7 +24373,7 @@ let _perfAutoTimer = null;
  */
 function enrichMapaDataFromHm(periodStart, periodEnd){
   if(!mapaData || !Array.isArray(mapaData.rows)) return 0;
-  const hexUnits = ['HEX-11','HEX-12','HEX-17'];
+  const hexUnits = ['HEX-11','HEX-12'];
   const existing = new Set(mapaData.rows.map(r=>String(r.unit||'').trim().toUpperCase()));
   // juga tandai alias yang sudah ada sebagai "ada"
   existing.forEach(u=>{
@@ -29521,7 +29646,7 @@ const PK_CATS = [
 /* Grup unit: SEN (unit milik SEN) & DTJ. Nomor unit dikunci otomatis sesuai grup. */
 const PK_UNIT_GROUPS = {
   SEN: ['SWA-101','SWA-102','SBD-103','SPC-104'],
-  DTJ: ['DZ-04','DZ-09','WA-10','HEX-11','HEX-12','HEX-17','EX-11','EX-12','EX-17']
+  DTJ: ['DZ-04','DZ-09','WA-10','HEX-11','HEX-12','EX-11','EX-12']
 };
 const PK_GROUP_META = {
   SEN:   { label:'SEN',     color:'#FFC72C' },
@@ -30525,7 +30650,7 @@ function renderPlanHmLiveChart(){
   const unitSel=document.getElementById('ps-live-hm-unit')?.value||'';
   const start=document.getElementById('ps-live-hm-start')?.value||'';
   const end=document.getElementById('ps-live-hm-end')?.value||'';
-  const codes=unitSel?[unitSel]:['SWA-101','SWA-102','SBD-103','SPC-104','DZ-04','DZ-09','WA-10','HEX-11','HEX-12','HEX-17'];
+  const codes=unitSel?[unitSel]:['SWA-101','SWA-102','SBD-103','SPC-104','DZ-04','DZ-09','WA-10','HEX-11','HEX-12'];
   const allSeries=codes.map(c=>({code:c,series:psGetLiveHmSeries(c,start,end),ops:psGetLiveOpsSeries(c,start,end)}));
   grid.innerHTML=allSeries.map(({code,series,ops})=>{
     const last=series[series.length-1], first=series[0];
@@ -31809,7 +31934,7 @@ function subscribeDailyRealtime(){
     // Sample HM for units
     try{
       if(typeof calcHmSekarang==='function'){
-        ['SWA-101','SWA-102','SBD-103','SPC-104','DZ-04','DZ-09','WA-10','HEX-11','HEX-12','HEX-17'].forEach(u=>{
+        ['SWA-101','SWA-102','SBD-103','SPC-104','DZ-04','DZ-09','WA-10','HEX-11','HEX-12'].forEach(u=>{
           const v = calcHmSekarang(u);
           log('HM Sekarang '+u+': '+(v!=null?v:'—'), v!=null?'ok':'warn');
         });
@@ -32189,8 +32314,7 @@ function subscribeDailyRealtime(){
     var rowsF=Math.ceil(n/best.c);
     var needH=rowsF*best.th+(rowsF-1)*gap;
     if(needH>H && H>0){
-      var thFit=Math.max(56, Math.floor((H-(rowsF-1)*gap)/rowsF));
-      if(thFit<best.th){ best.th=thFit; var nt3=neededTh(best.tw); best.ico=Math.min(best.ico,nt3.ico); best.fs=Math.min(best.fs,nt3.fs); }
+      /* v100: tinggi kartu TIDAK dipaksa lebih pendek dari isinya (teks tidak terpotong); kelebihan tinggi diatasi dengan zoom di bawah */
     }
     var st=grid.style;
     st.setProperty('--cols',best.c); st.setProperty('--tw',Math.floor(best.tw)+'px');
@@ -32200,7 +32324,8 @@ function subscribeDailyRealtime(){
     requestAnimationFrame(function(){
       grid.style.zoom=1;
       var gh=grid.scrollHeight, gw=grid.scrollWidth, z=1;
-      if(gh>H && H>0) z=Math.min(z,H/gh);
+      var Hr=H; if(grid.clientHeight>40) Hr=(H>0)?Math.min(H,grid.clientHeight-12):(grid.clientHeight-12); /* v100: pakai tinggi ruang yang benar-benar tersedia */
+      if(gh>Hr && Hr>0) z=Math.min(z,Hr/gh);
       if(gw>W && W>0) z=Math.min(z,W/gw);
       if(z<0.995) grid.style.zoom=Math.max(0.55,z*0.98);
     });
@@ -32713,6 +32838,98 @@ function subscribeDailyRealtime(){
   .topbar .sen-maint-tips .sen-tip-body{ font-size:10.5px; -webkit-line-clamp:3; }
   .topbar .sen-maint-tips .sen-tip-kicker{ display:none; }
 }
+</style>
+<style id="hemc-perf-table-v88">
+.perf-tbl-panel{ padding:16px 16px 12px !important; }
+.perf-tbl-head{ display:flex; align-items:center; justify-content:space-between; gap:10px 14px; flex-wrap:wrap; margin-bottom:12px; }
+.perf-tbl-title{ display:flex; align-items:center; gap:10px; min-width:0; }
+.perf-tbl-title h2{ font-family:'Oswald',sans-serif; font-size:15px; letter-spacing:.6px; text-transform:uppercase; margin:0; }
+.perf-tbl-tools{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.perf-tbl-period{ font:600 10.5px 'JetBrains Mono',monospace; letter-spacing:.4px; color:#ffc72c; padding:5px 10px; border-radius:999px;
+  background:rgba(255,199,44,.10); border:1px solid rgba(255,199,44,.32); white-space:nowrap; }
+.perf-tbl-wrap{ overflow:auto; -webkit-overflow-scrolling:touch; border:1px solid rgba(255,255,255,.08); border-radius:12px; background:linear-gradient(180deg,rgba(255,255,255,.02),transparent); }
+.perf-tbl{ width:100%; min-width:1080px; border-collapse:separate; border-spacing:0; font-size:12px; }
+.perf-tbl thead th{ position:sticky; top:0; z-index:2; padding:10px 8px; text-align:center; font:600 9.5px 'JetBrains Mono',monospace; letter-spacing:.6px; text-transform:uppercase; color:#aab3c0;
+  background:#10151c; border-bottom:1px solid rgba(255,199,44,.25); white-space:nowrap; }
+.perf-tbl thead tr.grp th{ top:0; color:#ffc72c; letter-spacing:1px; font-size:9px; padding:7px 8px; border-bottom:1px solid rgba(255,255,255,.07); }
+.perf-tbl thead tr.grp th.sep, .perf-tbl td.sep, .perf-tbl thead th.sep{ border-left:1px solid rgba(255,255,255,.07); }
+.perf-tbl tbody td{ padding:9px 8px; text-align:center; color:#dfe4ea; border-bottom:1px solid rgba(255,255,255,.05); white-space:nowrap; font-variant-numeric:tabular-nums; }
+.perf-tbl tbody tr:hover td{ background:rgba(255,199,44,.045); }
+.perf-tbl td.u, .perf-tbl th.u{ text-align:left; position:sticky; left:0; z-index:1; background:#11171f; min-width:150px; }
+.perf-tbl thead th.u{ z-index:3; background:#10151c; }
+.perf-tbl tbody tr:hover td.u{ background:#161d27; }
+.perf-tbl td.u b{ display:block; font-family:'Oswald',sans-serif; font-size:13.5px; font-weight:600; letter-spacing:.4px; color:#fff; }
+.perf-tbl td.u small{ display:block; font-size:10px; color:#8b95a3; margin-top:1px; }
+.perf-tbl td.n{ color:#8b95a3; width:34px; }
+.perf-tbl .grpchip{ display:inline-block; font:700 9px 'JetBrains Mono',monospace; letter-spacing:.8px; padding:2px 7px; border-radius:999px; }
+.perf-tbl .grpchip.sen{ color:#ffc72c; background:rgba(255,199,44,.12); border:1px solid rgba(255,199,44,.35); }
+.perf-tbl .grpchip.dtj{ color:#7fb6ee; background:rgba(74,144,217,.12); border:1px solid rgba(74,144,217,.35); }
+.perf-tbl td.g{ color:#4cd48a; font-weight:600; } .perf-tbl td.y{ color:#ffc72c; font-weight:600; } .perf-tbl td.r{ color:#ff6b6f; font-weight:600; }
+.perf-tbl td.dim{ color:#5c6672; }
+.perf-tbl tr.empty td:not(.u){ color:#5c6672; }
+.perf-tbl .ach{ display:flex; align-items:center; gap:7px; justify-content:center; min-width:112px; }
+.perf-tbl .ach i{ flex:1; max-width:56px; height:5px; border-radius:3px; background:#232a34; overflow:hidden; display:block; }
+.perf-tbl .ach i s{ display:block; height:100%; border-radius:3px; }
+.perf-tbl .pill2{ display:inline-block; font:700 9px 'JetBrains Mono',monospace; letter-spacing:.5px; padding:3px 8px; border-radius:999px; }
+.perf-tbl .pill2.g{ color:#4cd48a; background:rgba(76,175,109,.14); border:1px solid rgba(76,175,109,.4); }
+.perf-tbl .pill2.y{ color:#ffc72c; background:rgba(255,199,44,.12); border:1px solid rgba(255,199,44,.38); }
+.perf-tbl .pill2.dim{ color:#6b7683; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.12); }
+.perf-tbl .pill2.r{ color:#ff6b6f; background:rgba(229,72,77,.13); border:1px solid rgba(229,72,77,.4); }
+.perf-tbl tfoot td{ padding:10px 8px; text-align:center; font-weight:700; color:#fff; background:linear-gradient(180deg,rgba(255,199,44,.10),rgba(255,199,44,.04)); border-top:1px solid rgba(255,199,44,.35); white-space:nowrap; font-variant-numeric:tabular-nums; }
+.perf-tbl tfoot td.u{ background:#1b1a12; font-family:'Oswald',sans-serif; letter-spacing:.8px; color:#ffc72c; }
+.perf-tbl-note{ margin-top:9px; font-size:10.5px; color:#8b95a3; line-height:1.45; }
+
+/* v89: header tabel mengikuti tema aplikasi (gelap + aksen emas) */
+.perf-tbl{ min-width:760px; }
+.perf-tbl thead th{ background:linear-gradient(180deg,#1b2431,#121922) !important; color:#ffc72c !important; font:700 12px 'Oswald',sans-serif !important; letter-spacing:.8px !important; text-transform:uppercase !important;
+  padding:12px 10px !important; border-bottom:2px solid rgba(255,199,44,.55) !important; border-right:1px solid rgba(255,255,255,.07) !important; }
+.perf-tbl thead th:last-child{ border-right:0 !important; }
+.perf-tbl thead th.u{ text-align:center !important; background:linear-gradient(180deg,#1b2431,#121922) !important; min-width:150px; }
+.perf-tbl tbody td, .perf-tbl tfoot td{ border-right:1px solid rgba(255,255,255,.06); }
+@media (max-width:860px){ .perf-tbl-panel{ padding:12px 10px 10px !important; } .perf-tbl{ font-size:11.5px; }
+  .perf-tbl .n, .perf-tbl .gc{ display:none; } .perf-tbl td.u, .perf-tbl th.u{ min-width:104px; } .perf-tbl td.u b{ font-size:12.5px; } }
+</style>
+<style id="hemc-desktop-v90">
+/* v95: sembunyikan tanda/scrollbar di sisi kanan Menu Utama (semua ukuran layar) */
+.app.launcher-mode .menu-home, .app.launcher-mode .menu-home .mh-grid{ scrollbar-width:none !important; -ms-overflow-style:none !important; }
+.app.launcher-mode .menu-home::-webkit-scrollbar, .app.launcher-mode .menu-home .mh-grid::-webkit-scrollbar,
+.app.launcher-mode .menu-home .mh-grid::-webkit-scrollbar-button, .app.launcher-mode .menu-home .mh-grid::-webkit-scrollbar-thumb,
+.app.launcher-mode .menu-home .mh-grid::-webkit-scrollbar-track{ display:none !important; width:0 !important; height:0 !important; background:transparent !important; }
+html:has(.app.launcher-mode:not([style*="display: none"])), body:has(.app.launcher-mode:not([style*="display: none"])){ scrollbar-width:none !important; }
+html:has(.app.launcher-mode:not([style*="display: none"]))::-webkit-scrollbar, body:has(.app.launcher-mode:not([style*="display: none"]))::-webkit-scrollbar{ display:none !important; width:0 !important; }
+</style>
+<style id="hemc-tabs-v93">
+/* v93: DESKTOP (>=861px) — bar menu tab di halaman Dashboard & CBM dipanjangkan memenuhi lebar & diperbesar. */
+@media (min-width:861px){
+  #dash-menu-topbar{ gap:8px; padding:10px; }
+  #dash-menu-topbar .dash-menu-tab{ flex:1 1 auto; min-width:0; text-align:center; font-size:clamp(9.5px,0.84vw,12px); letter-spacing:.2px; padding:13px clamp(6px,0.9vw,14px); border-radius:10px; white-space:nowrap; }
+  #cbm-tabs .blk-tab-group{ flex:1 1 auto; gap:6px; }
+  #cbm-tabs .blk-tab-group .chip{ flex:1 1 auto; justify-content:center; font-size:12.5px; padding:12px 14px 13px; }
+}
+@media (min-width:861px){ #dash-menu-topbar{ flex-wrap:nowrap; } }
+/* v97: kolom Auto Sync tidak menimpa tab lain — tab mengecil otomatis; di layar sempit tombol sync turun ke baris sendiri (rata kanan). */
+#dash-menu-topbar-sync-slot{ flex:0 0 auto; }
+#dash-menu-topbar-sync-slot .btn{ font-size:11px; padding:8px 12px; }
+@media (min-width:861px){
+  #dash-menu-topbar:has(#dash-menu-topbar-sync-slot button) .dash-menu-tab{ font-size:clamp(9px,0.68vw,11px); padding:13px clamp(4px,0.55vw,9px); letter-spacing:0; }
+}
+@media (min-width:861px) and (max-width:1399px){
+  #dash-menu-topbar:has(#dash-menu-topbar-sync-slot button){ flex-wrap:wrap; }
+  #dash-menu-topbar:has(#dash-menu-topbar-sync-slot button) .dash-menu-tab{ font-size:clamp(9.5px,0.84vw,12px); padding:13px clamp(6px,0.9vw,14px); }
+  #dash-menu-topbar:has(#dash-menu-topbar-sync-slot button) #dash-menu-topbar-sync-slot{ flex:1 1 100%; justify-content:flex-end; }
+}
+/* v101: tombol/perintah Auto Sync di bawah tab Dashboard disembunyikan */
+#dash-menu-topbar-sync-slot{ display:none !important; }
+</style>
+<style id="hemc-perf-sticky-v102">
+/* v102: judul + filter periode Performance Unit terkunci di atas (tidak ikut ter-scroll) */
+#view-database .perf-sticky{
+  position:sticky; top:0; z-index:60; background:#0c1118; margin:-18px 0 16px; padding:14px 0 0;
+  border-radius:0 0 14px 14px; box-shadow:0 10px 24px rgba(0,0,0,.35);
+}
+#view-database .perf-sticky .panel-head{ margin-bottom:10px !important; }
+#view-database .perf-sticky .period-panel{ margin-bottom:10px !important; }
+@media (max-width:860px){ #view-database .perf-sticky{ position:static; box-shadow:none; margin-top:0; padding-top:0; } }
 </style>
 </body>
 </html>

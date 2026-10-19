@@ -1,3 +1,33 @@
+v102: Performance Unit: judul + filter periode (tanggal) terkunci di atas, tidak ikut ter-scroll (desktop). Hanya index.html.
+
+v101: Dashboard: tombol Auto Sync di bawah menu tab disembunyikan. Hanya index.html.
+
+v100: Menu Utama: teks kartu tidak terpotong lagi saat nama user & tombol Maintenance Server tampil (kartu diskalakan, bukan dipendekkan). Hanya index.html.
+
+v99: Ukuran/tata letak Menu Utama dikembalikan seperti semula (v89); scrollbar sisi kanan Menu Utama tetap disembunyikan. Tab Dashboard/CBM tetap hasil perbaikan terakhir. Hanya index.html.
+
+v98: Menu Utama desktop: tinggi kartu dihitung dari isi sebenarnya (ikon + teks, sampai 3 baris) sehingga teks tidak terpotong; tetap 5 kolom & tanpa scroll. Hanya index.html.
+
+v97: Dashboard desktop: tombol Auto Sync tidak lagi menimpa tab lain (tab mengecil otomatis; di layar <1400px tombol sync turun ke baris sendiri). Hanya index.html.
+
+v96: Desktop: 7 tab Dashboard (termasuk Quarter Summary) selalu satu baris; ukuran tab menyesuaikan lebar layar. Hanya index.html.
+
+v95: Menu Utama: tanda/scrollbar di sisi kanan disembunyikan. Hanya index.html.
+
+v94: Desktop: Menu Utama 5 kolom otomatis menyesuaikan tinggi layar sehingga semua menu muat tanpa scroll. Hanya index.html.
+
+v93: Desktop (>=861px): bar menu tab di Dashboard & CBM dipanjangkan (tab melebar memenuhi lebar bar, huruf & padding lebih besar). Menu lain & HP tidak berubah. Hanya index.html.
+
+v92: Desktop (>=861px): Menu Utama 5 kolom (kartu ukuran sedang)
+
+v91: Desktop (>=861px): Menu Utama diperkecil (kartu ukuran sedang, 4 kolom) dan daftar menu bisa di-scroll; top bar dikembalikan ke ukuran awal (v89). HP tidak berubah. Hanya index.html.
+
+v89: Tabel Performance per Unit (menu Performance) didesain ulang mengikuti format baru: header mengikuti tema (gelap + emas), kolom Unit / Waktu, Waktu Operasi, Standby, Breakdown, Total Jam Kerja, PA, MA, UA, EU (+ baris TOTAL). UA = W/(W+S), EU = W/T. Export Excel ikut disesuaikan. Hanya index.html.
+
+v88: Menu Performance: tabel baru 'Rekap Performance per Unit' tepat di bawah filter periode. Isi tabel (Total Job, W/S/R/T, MTBS, MTTR, PMR, SA, MA, PA, Avg Achievement, Status + baris total/rata-rata) otomatis mengikuti filter periode; ada tombol unduh Excel. Hanya index.html.
+
+v87: Unit HEX-17 (alias PC-17/EX-17/XAZIS-17) dihapus dari database KPI: dikeluarkan dari master unit, semua dropdown & daftar unit, dan seluruh data Daily/HM/Plan/Performance milik unit ini otomatis disaring saat dimuat, sehingga tidak mempengaruhi MTBS, MTTR, PMR, SA, MA, PA. Data lama di server tidak dihapus. Untuk mengaktifkan kembali: kosongkan KPI_EXCLUDED_UNITS & tambah unit di UNITS. Hanya index.html.
+
 v86: Perbaikan desktop/tablet: banner Maintenance Tips tidak lagi menumpuk logo & lonceng (ruang kanan dikunci, banner menyusut otomatis di layar sempit). Hanya index.html.
 
 v85: Banner Maintenance Tips versi HP diperkecil lagi (tinggi ~57px); teks tetap penuh. Hanya index.html.
