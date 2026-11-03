@@ -1,0 +1,29 @@
+SETUP PUSH NOTIFIKASI (v68) — JANGAN di-deploy/upload ke GitHub (berisi kunci privat). Simpan lokal saja.
+
+Tujuan: notifikasi muncul di HP/desktop walau web/aplikasi TERTUTUP.
+Kunci VAPID sudah dibuat. Kunci PUBLIK sudah tertanam di index.html.
+
+VAPID_PUBLIC_KEY  = BG6mFNV4E2IdvZpLvrR5UIZkb8LR-bRi70fn7_1uOrDWpm7BREqUN9wxaX-sfjsGhrHEVMifmDpP63h6gqMSFOM
+VAPID_PRIVATE_KEY = dot89ckDWm7p2NJMDfqUm6gT9HhUn6ticAVMX97tfG0   <- RAHASIA
+
+LANGKAH (sekali saja, ~10 menit) — Supabase project: boabocernsqrqklvasjm
+1. Install Supabase CLI (https://supabase.com/docs/guides/cli), lalu di folder proyek ini:
+     supabase login
+     supabase link --project-ref boabocernsqrqklvasjm
+2. Simpan secret:
+     supabase secrets set VAPID_PUBLIC_KEY="BG6mFNV4E2IdvZpLvrR5UIZkb8LR-bRi70fn7_1uOrDWpm7BREqUN9wxaX-sfjsGhrHEVMifmDpP63h6gqMSFOM" VAPID_PRIVATE_KEY="dot89ckDWm7p2NJMDfqUm6gT9HhUn6ticAVMX97tfG0" VAPID_SUBJECT="mailto:EMAIL-ANDA"
+3. Deploy fungsi (WAJIB --no-verify-jwt karena memakai kunci publishable):
+     supabase functions deploy send-push --no-verify-jwt
+   (Alternatif tanpa CLI: Dashboard Supabase -> Edge Functions -> Create function 'send-push' -> tempel isi supabase/functions/send-push/index.ts -> set secret di menu Secrets -> matikan 'Verify JWT'.)
+4. Deploy web: ganti index.html, sw.js, + icon-192.png & icon-512.png. Hard refresh.
+5. Di tiap HP/laptop: login -> lonceng -> 'Aktifkan notifikasi' -> Izinkan. (iPhone: harus 'Tambah ke Layar Utama' dulu, iOS 16.4+.)
+6. Uji: login Mekanik di HP, minta Supervisor menyetujui/menolak report -> notifikasi masuk walau aplikasi ditutup.
+
+Kapan push terkirim:
+- Mekanik input Daily Maintenance -> Supervisor
+- Supervisor Approve / Reject -> Mekanik pembuat report
+- Laporan Breakdown Unit baru -> semua user
+- Rencana Jadwal Maintenance / Jadwal Pre Inspection baru -> mekanik PIC
+
+Catatan keamanan: fungsi bisa dipanggil siapa pun yang punya anon key (sama seperti akses database sekarang). Aman untuk pemakaian internal; bila perlu dibatasi, tambahkan token rahasia.
+Perangkat yang logout otomatis berhenti menerima push. Langganan kadaluarsa dibersihkan otomatis.

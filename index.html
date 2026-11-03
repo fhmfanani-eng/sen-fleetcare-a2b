@@ -390,6 +390,14 @@ body.role-backlog-sync-allowed .sync-backlog-allowed{
 .sp-ms-reset{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid rgba(255,255,255,0.08);color:var(--text-dim);font:inherit;font-size:12px;padding:6px 8px 8px;margin-bottom:4px;cursor:pointer;}
 .sp-ms-reset:hover{color:var(--yellow);}
 .sp-hint-line{margin:8px 2px 0;font-size:12px;color:var(--text-dim);}
+.kpi-unit-groups{display:inline-flex;gap:4px;padding:3px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);}
+.kpi-unit-group-btn{border:0;background:transparent;color:var(--text-dim);font:700 12px 'Inter',sans-serif;letter-spacing:.06em;padding:7px 16px;border-radius:8px;cursor:pointer;}
+.kpi-unit-group-btn span{font:600 10px 'JetBrains Mono',monospace;opacity:.7;margin-left:4px;}
+.kpi-unit-group-btn:hover{color:var(--text);}
+.kpi-maint-groupbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:2px 0 14px;}
+.kpi-maint-groupnote{font:500 11px 'JetBrains Mono',monospace;color:var(--text-dim);}
+.kpi-maint-groupnote b{color:var(--yellow);}
+.kpi-unit-group-btn.active{background:linear-gradient(180deg,#FFC72C,#e6ac10);color:#1a1d22;box-shadow:0 2px 10px rgba(255,199,44,.3);}
 /* ===== Plan Budgeting — header kolom seragam & rapi (semua tabel) ===== */
 #view-sparepart table thead th,
 #view-sparepart .sp-oil-type-table thead th,
@@ -11707,7 +11715,8 @@ function unitMonthlyTrendSVG(months){
  *  Layout: (1) grouped column MA/PA/PMR/SA + target 90%  (2) ranking bar Avg Achievement
  *  (3) dual metric MTBS / MTTR per unit. Warna konsisten unitTrendColor + series KPI. */
 function unitKpiPeriodChartSVG(monthObj){
-  if(!monthObj || !UNITS || !UNITS.length){
+  const UNITS_G = kpiUnitScope(); // hanya unit pada grup aktif (SEN / DTJ)
+  if(!monthObj || !UNITS_G || !UNITS_G.length){
     return `<div style="padding:28px;text-align:center;color:var(--text-faint);font-size:12px">No unit / period data yet.</div>`;
   }
   const uid = 'ukd' + Math.floor(Math.random()*1e6);
@@ -11735,7 +11744,7 @@ function unitKpiPeriodChartSVG(monthObj){
   const pill = (st, small) => `<span style="display:inline-flex;align-items:center;justify-content:center;gap:5px;width:100%;box-sizing:border-box;padding:${small?'3px 8px':'5px 8px'};border-radius:6px;background:${STAT[st].bg};color:${STAT[st].fg};font-size:${small?10:11}px;font-weight:700;font-family:${FONT};white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.25)">${STAT[st].ic} ${STAT[st].txt}</span>`;
 
   /* ---- data: unit rows (bulan terpilih) + rata-rata armada ---- */
-  const rows = UNITS.map(u=>{
+  const rows = UNITS_G.map(u=>{
     const r = computeUnitMonthlyAchievement(u.code, monthObj);
     return { code:u.code, cat:catShort[u.category]||(u.category||'').slice(0,3), ...r };
   });
@@ -11922,6 +11931,7 @@ function unitKpiPeriodChartSVG(monthObj){
 /** Tabel data KPI per unit: MTBS, MTTR, PMR, SA, MA, PA + Avg Achievement.
  *  Satu blok tabel per bulan (6 bulan terakhir). Tanpa chart achievement. */
 function unitKpiDataTableHTML(months){
+  const UNITS_G = kpiUnitScope(); // hanya unit pada grup aktif (SEN / DTJ)
   function cellColor(pct){
     if(pct>=90) return '#4CAF6D';
     if(pct>=75) return '#FFC72C';
@@ -11945,7 +11955,7 @@ function unitKpiDataTableHTML(months){
     return `<div style="padding:20px;text-align:center;color:var(--text-faint);font-size:12px">No month period available.</div>`;
   }
   return months.map(m=>{
-    const rows = UNITS.map(u=>{
+    const rows = UNITS_G.map(u=>{
       const r = computeUnitMonthlyAchievement(u.code, m);
       const avgCol = cellColor(r.avgAch);
       return `<tr style="border-top:1px solid rgba(255,255,255,.06)">
@@ -11965,10 +11975,10 @@ function unitKpiDataTableHTML(months){
     const keys = ['mtbs','mttr','pmr','sa','ma','pa'];
     const avgs = {};
     keys.forEach(k=>{
-      const vals = UNITS.map(u=>Number(computeUnitMonthlyAchievement(u.code,m)[k])||0);
+      const vals = UNITS_G.map(u=>Number(computeUnitMonthlyAchievement(u.code,m)[k])||0);
       avgs[k] = vals.length ? vals.reduce((s,v)=>s+v,0)/vals.length : 0;
     });
-    const avgAchVals = UNITS.map(u=>computeUnitMonthlyAchievement(u.code,m).avgAch);
+    const avgAchVals = UNITS_G.map(u=>computeUnitMonthlyAchievement(u.code,m).avgAch);
     const avgAch = avgAchVals.length ? avgAchVals.reduce((s,v)=>s+v,0)/avgAchVals.length : 0;
     const avgRow = `<tr style="border-top:2px solid rgba(255,199,44,.35);background:rgba(255,199,44,.04)">
       <td colspan="3" style="padding:7px 10px;font-weight:700;white-space:nowrap;"></td>
@@ -12026,14 +12036,15 @@ function onKpiUnitSummaryMetricChange(selectEl){
 window.onKpiUnitSummaryMetricChange = onKpiUnitSummaryMetricChange;
 
 function unitKpiAllMonthsSummaryHTML(){
+  const UNITS_G = kpiUnitScope(); // hanya unit pada grup aktif (SEN / DTJ)
   const months = (typeof getRecentMonthsList === 'function') ? getRecentMonthsList(12) : [];
-  if(!months.length || !UNITS || !UNITS.length){
+  if(!months.length || !UNITS_G || !UNITS_G.length){
     return `<div style="padding:20px;text-align:center;color:var(--text-faint);font-size:12px">No unit / period data yet.</div>`;
   }
   const metric = KPI_UNIT_SUMMARY_METRICS.find(m=>m.key===kpiUnitSummaryMetric) || KPI_UNIT_SUMMARY_METRICS[0];
   const mk = metric.key;
   const data = {};
-  UNITS.forEach(u=>{ data[u.code] = months.map(m => computeUnitMonthlyAchievement(u.code, m)); });
+  UNITS_G.forEach(u=>{ data[u.code] = months.map(m => computeUnitMonthlyAchievement(u.code, m)); });
   const hasData = r => !!r && ['mtbs','mttr','pmr','sa','ma','pa'].some(k => (Number(r[k])||0) > 0);
   function colorFor(v){
     const n = Number(v)||0;
@@ -12051,7 +12062,7 @@ function unitKpiAllMonthsSummaryHTML(){
   const stickyBg = 'position:sticky;left:0;background:#12171f;';
   const sepL = 'border-left:1px solid rgba(255,199,44,.25);';
 
-  const body = UNITS.map(u=>{
+  const body = UNITS_G.map(u=>{
     const vals = data[u.code].map(r => hasData(r) ? (Number(r[mk])||0) : null);
     const present = vals.filter(v=>v!==null);
     return `<tr style="border-top:1px solid rgba(255,255,255,.06)">
@@ -12063,7 +12074,7 @@ function unitKpiAllMonthsSummaryHTML(){
   }).join('');
 
   const fleetVals = months.map((m,i)=>{
-    const arr = UNITS.map(u=>data[u.code][i]).filter(hasData).map(r=>Number(r[mk])||0);
+    const arr = UNITS_G.map(u=>data[u.code][i]).filter(hasData).map(r=>Number(r[mk])||0);
     return arr.length ? mean(arr) : null;
   });
   const fleetPresent = fleetVals.filter(v=>v!==null);
@@ -21907,6 +21918,63 @@ function chartStatItem(num, lbl, color){
 /* ---- Filter periode bulan khusus untuk panel "KPI Report Monthly" ---- */
 let kpiMonthlyChartPeriodValue = ''; // '' = All Periods (default)
 let kpiUnitMonthValue = ''; // '' = bulan berjalan (default) — filter tab KPI Unit
+let kpiUnitGroup = 'SEN';   // 'SEN' | 'DTJ' — KPI Unit dipisah per grup unit
+let kpiMaintGroup = 'SEN';  // 'SEN' | 'DTJ' — kartu & ringkasan tab KPI Maintenance dipisah per grup unit
+let kpiQuarterGroup = 'SEN'; // 'SEN' | 'DTJ' — tab Quarter Summary dipisah per grup unit
+let kpiMonthlyGroup = 'SEN'; // 'SEN' | 'DTJ' — tab Monthly KPI Achievement dipisah per grup unit
+let kpiScope = null;        // null = semua unit; 'SEN' | 'DTJ' = hitung KPI hanya untuk grup tsb (dipakai sementara lewat kpiWithScope)
+/** Unit (kode apa pun: PC-11 / HEX-11 / "DZ-09 DTJ") termasuk scope aktif? */
+function kpiScopeOk(code){
+  if(!kpiScope) return true;
+  const u = (typeof resolveUnitCode==='function') ? resolveUnitCode(code) : String(code||'').trim().toUpperCase();
+  return kpiUnitIsSen(u) === (kpiScope === 'SEN');
+}
+function kpiScopeRows(rows){ return kpiScope ? (rows||[]).filter(r=>kpiScopeOk(r && r.unit)) : rows; }
+/** Jalankan fn dengan perhitungan KPI dibatasi ke satu grup unit, lalu kembalikan scope semula. */
+function kpiWithScope(group, fn){
+  const prev = kpiScope;
+  kpiScope = group || null;
+  try{ return fn(); } finally { kpiScope = prev; }
+}
+function onKpiMaintGroupChange(g){
+  kpiMaintGroup = (g==='DTJ') ? 'DTJ' : 'SEN';
+  try{
+    if(typeof renderDashboard === 'function') renderDashboard();
+    if(typeof setDashboardTab === 'function') setDashboardTab('kpi');
+  }catch(e){ console.warn('onKpiMaintGroupChange', e); }
+}
+window.onKpiMaintGroupChange = onKpiMaintGroupChange;
+function onKpiQuarterGroupChange(g){
+  kpiQuarterGroup = (g==='DTJ') ? 'DTJ' : 'SEN';
+  try{
+    if(typeof renderDashboard === 'function') renderDashboard();
+    if(typeof setDashboardTab === 'function') setDashboardTab('quarter');
+  }catch(e){ console.warn('onKpiQuarterGroupChange', e); }
+}
+window.onKpiQuarterGroupChange = onKpiQuarterGroupChange;
+function onKpiMonthlyGroupChange(g){
+  kpiMonthlyGroup = (g==='DTJ') ? 'DTJ' : 'SEN';
+  try{
+    if(typeof renderDashboard === 'function') renderDashboard();
+    if(typeof setDashboardTab === 'function') setDashboardTab('monthlykpi');
+  }catch(e){ console.warn('onKpiMonthlyGroupChange', e); }
+}
+window.onKpiMonthlyGroupChange = onKpiMonthlyGroupChange;
+/** Unit milik SEN = PERF_SEN_UNITS; unit lainnya masuk grup DTJ. */
+function kpiUnitIsSen(code){ return PERF_SEN_UNITS.indexOf(String(code||'').toUpperCase())>=0; }
+function kpiUnitScope(){
+  const all = (typeof UNITS!=='undefined' && Array.isArray(UNITS)) ? UNITS : [];
+  const wantSen = kpiUnitGroup !== 'DTJ';
+  return all.filter(u => kpiUnitIsSen(u.code) === wantSen);
+}
+function onKpiUnitGroupChange(g){
+  kpiUnitGroup = (g==='DTJ') ? 'DTJ' : 'SEN';
+  try{
+    if(typeof renderDashboard === 'function') renderDashboard();
+    if(typeof setDashboardTab === 'function') setDashboardTab('kpiunit');
+  }catch(e){ console.warn('onKpiUnitGroupChange', e); }
+}
+window.onKpiUnitGroupChange = onKpiUnitGroupChange;
 function onKpiUnitMonthChange(selectEl){
   kpiUnitMonthValue = selectEl ? selectEl.value : '';
   try{
@@ -22168,7 +22236,7 @@ const DASH_TAB_GROUPS = {
   monthlykpi:  ['monthly kpi achievement'],
   kpiunit:     ['kpi unit monthly summary', 'trend kpi per unit'],
   trend:       ['trend kpi maintenance', 'comparison vs target', 'mtbs', 'mttr', 'contribution to reliability'],
-  quarter:     ['grafik quarter', 'kpi summary quarter', 'quarter achievement detail']
+  quarter:     ['quarter summary — grup unit', 'grafik quarter', 'kpi summary quarter', 'quarter achievement detail']
 };
 function setDashboardTab(tab){
   if(!DASH_TAB_GROUPS[tab]) return;
@@ -22254,8 +22322,9 @@ function applyDashboardTabFilter(){
   }catch(e){ console.warn('applyDashboardTabFilter', e); }
 }
 window.setDashboardTab = setDashboardTab;
-function renderKPIChartDashboard(k, globalStats){
-  const wrap = document.getElementById('kpi-chart-dashboard');
+function renderKPIChartDashboardImpl(k, globalStats, _opts){
+  const _quiet = !!(_opts && _opts.quiet);   // pass kedua (scoped, ke container sementara): tanpa efek samping
+  const wrap = (_opts && _opts.wrap) || document.getElementById('kpi-chart-dashboard');
   if(!wrap) return;
 
   const monthlyChartOptions = getKPIPeriodOptions();
@@ -22393,11 +22462,11 @@ function renderKPIChartDashboard(k, globalStats){
   // blok terpisah dari Breakdown Category (dibatasi TTL, tidak memblokir render UI).
   // Sync selalu memakai data BULAN PENUH (trendMonthsAll), tidak ikut terpotong oleh filter
   // "top bar" tampilan (trendMonths di bawah), supaya sheet tetap lengkap apa pun filter UI-nya.
-  autoSyncMonthlyKpiAchievementDashboard(trendMonthsAll, monthlyKpiDefs);
+  if(!_quiet) autoSyncMonthlyKpiAchievementDashboard(trendMonthsAll, monthlyKpiDefs);
   // Disimpan di window supaya tombol "☁ Auto Sync" manual (onclick inline, scope global)
   // selalu bisa mengambil data trend/KPI TERBARU tanpa perlu re-render ulang.
-  window.__trendMonthsForSync = trendMonthsAll;
-  window.__monthlyKpiDefsForSync = monthlyKpiDefs;
+  if(!_quiet){ window.__trendMonthsForSync = trendMonthsAll;
+  window.__monthlyKpiDefsForSync = monthlyKpiDefs; }
 
   // --- Top bar "Rentang Trend" — filter tampilan (chart + tabel) untuk panel TREND KPI
   //     MAINTENANCE, MTBS Trend, MTTR Trend & tabel Monthly KPI Achievement. Data sinkronisasi
@@ -22410,6 +22479,20 @@ function renderKPIChartDashboard(k, globalStats){
   ];
   const activeTrendRange = (typeof cbmDashTrendRangeValue!=='undefined' && trendRangeOptions.some(o=>o.value===cbmDashTrendRangeValue)) ? cbmDashTrendRangeValue : '';
   const trendMonths = activeTrendRange ? trendMonthsAll.slice(-Number(activeTrendRange)) : trendMonthsAll;
+
+  // --- Tab "KPI Maintenance": perhitungan dipisah per grup unit (SEN / DTJ). Panel lain tetap semua unit. ---
+  const kpiGrp = (kpiMaintGroup==='DTJ') ? 'DTJ' : 'SEN';
+  const kpiGrpUnits = (typeof UNITS!=='undefined' ? UNITS : []).filter(u=>kpiUnitIsSen(u.code)===(kpiGrp==='SEN'));
+  const kMonthlyG = kpiWithScope(kpiGrp, ()=>computeKPIsFor(activeMonthlyChartPeriod));
+  const monthlyKpiDefsG = monthlyKpiDefs.map(d=>({ ...d, value: kMonthlyG[d.key]||0 }));
+  const trendMonthsAllG = trendMonthsAll.map(m=>{
+    const kk = kpiWithScope(kpiGrp, ()=>computeKPIsFor(m.key)) || {};
+    return { key:m.key, label:m.label, short:m.short,
+      mtbs:kk.mtbs||0, mttr:kk.mttr||0, pmr:kk.pmr||0, sa:kk.sa||0, ma:kk.ma||0, pa:kk.pa||0,
+      pct:{ mtbs:kpiAchievePct('mtbs',kk.mtbs||0), mttr:kpiAchievePct('mttr',kk.mttr||0), pmr:kpiAchievePct('pmr',kk.pmr||0),
+            sa:kpiAchievePct('sa',kk.sa||0), ma:kpiAchievePct('ma',kk.ma||0), pa:kpiAchievePct('pa',kk.pa||0) } };
+  });
+  const trendMonthsG = activeTrendRange ? trendMonthsAllG.slice(-Number(activeTrendRange)) : trendMonthsAllG;
   const trendRangeSelectHtml = `<select class="dash-topbar-select" onchange="onCbmDashTrendRangeChange(this)">${trendRangeOptions.map(o=>`<option value="${o.value}" ${o.value===activeTrendRange?'selected':''}>${o.label}</option>`).join('')}</select>`;
 
   function sparklineSVG(values, color){
@@ -22427,7 +22510,7 @@ function renderKPIChartDashboard(k, globalStats){
   }
 
   // Kartu gauge bulat + ikon di tengah + nilai di samping (gaya referensi)
-  const gaugeCardsHtml = monthlyKpiDefs.map(d=>{
+  const gaugeCardsHtml = monthlyKpiDefsG.map(d=>{
     const pct = (d.key==='mttr' && d.unit==='%') ? (Number(d.value)||0) : kpiAchievePct(d.key, d.value);
     const st = kpiStatusIdLabel(pct);
     const isActive = kpiMonthlyDetailKey===d.key;
@@ -22435,17 +22518,17 @@ function renderKPIChartDashboard(k, globalStats){
     const isMttrPct = d.key==='mttr' && d.unit==='%';
     const valTxt = isPct ? (Number(d.value)||0).toFixed(isMttrPct?0:1)+'%' : (d.value>=100 ? Math.round(d.value).toString() : d.value.toFixed(1));
     const unitTxt = isPct ? '' : 'HOURS';
-    const sparkVals = trendMonths.map(m=> isMttrPct ? kpiAchievePct('mttr', m.mttr||0) : (m[d.key]||0));
+    const sparkVals = trendMonthsG.map(m=> isMttrPct ? kpiAchievePct('mttr', m.mttr||0) : (m[d.key]||0));
     let deltaHtml = '';
-    if(trendMonths.length>=2){
-      let curIdx = trendMonths.length - 1;
+    if(trendMonthsG.length>=2){
+      let curIdx = trendMonthsG.length - 1;
       if(activeMonthlyChartPeriod){
-        const found = trendMonths.findIndex(m => m.key === activeMonthlyChartPeriod);
+        const found = trendMonthsG.findIndex(m => m.key === activeMonthlyChartPeriod);
         if(found >= 0) curIdx = found;
       }
       if(curIdx >= 1){
-        const curRaw = trendMonths[curIdx][d.key]==null ? 0 : trendMonths[curIdx][d.key];
-        const prevRaw = trendMonths[curIdx-1][d.key]==null ? 0 : trendMonths[curIdx-1][d.key];
+        const curRaw = trendMonthsG[curIdx][d.key]==null ? 0 : trendMonthsG[curIdx][d.key];
+        const prevRaw = trendMonthsG[curIdx-1][d.key]==null ? 0 : trendMonthsG[curIdx-1][d.key];
         const cur = isMttrPct ? kpiAchievePct('mttr', curRaw) : curRaw;
         const prev = isMttrPct ? kpiAchievePct('mttr', prevRaw) : prevRaw;
         const higherBetter = true;
@@ -22455,7 +22538,7 @@ function renderKPIChartDashboard(k, globalStats){
         const bad = higherBetter ? down : up;
         const arrow = up ? '▲' : (down ? '▼' : '●');
         const col = good ? '#22C55E' : (bad ? '#E5484D' : 'var(--text-dim)');
-        const prevLabel = trendMonths[curIdx-1].short || 'prev';
+        const prevLabel = trendMonthsG[curIdx-1].short || 'prev';
         const diffTxt = (isPct || isMttrPct) ? Math.abs(diff).toFixed(isMttrPct?0:1)+'%' : Math.abs(diff).toFixed(1)+' JAM';
         deltaHtml = `<div class="kpi-dash-delta" style="color:${col}">${arrow} ${diffTxt} vs ${prevLabel}</div>`;
       }
@@ -22858,7 +22941,7 @@ function renderKPIChartDashboard(k, globalStats){
           <div>
             <div style="font-family:Oswald,sans-serif;font-size:15px;font-weight:600;letter-spacing:.6px;color:var(--text);display:flex;align-items:center;gap:8px">
               <span style="width:3px;height:14px;border-radius:2px;background:linear-gradient(180deg,var(--yellow),#c99a10);box-shadow:0 0 8px rgba(255,199,44,.4)"></span>
-              Monthly KPI Achievement
+              Monthly KPI Achievement${kpiScope?` <span style="font:700 11px 'JetBrains Mono',monospace;color:var(--yellow);letter-spacing:.5px">· ${kpiScope}</span>`:''}
             </div>
             <div style="font-size:11px;color:var(--text-dim);margin-top:3px;font-family:JetBrains Mono,monospace">Annual Trend · Target 90%</div>
           </div>
@@ -23206,18 +23289,18 @@ function renderKPIChartDashboard(k, globalStats){
 
 
   // Ringkasan table
-  const sumRows = monthlyKpiDefs.map(d=>{
+  const sumRows = monthlyKpiDefsG.map(d=>{
     const pct = (d.key==='mttr' && d.unit==='%') ? (Number(d.value)||0) : kpiAchievePct(d.key, d.value);
     const st = kpiStatusIdLabel(pct);
     const isActive = kpiMonthlyDetailKey===d.key;
     const valTxt = d.unit==='%' ? ((d.key==='mttr' ? Math.round(d.value) : d.value.toFixed(1))+'%') : (Math.round(d.value)+' jam');
-    let _curT = trendMonths.length - 1;
+    let _curT = trendMonthsG.length - 1;
     if(activeMonthlyChartPeriod){
-      const _f = trendMonths.findIndex(m => m.key === activeMonthlyChartPeriod);
+      const _f = trendMonthsG.findIndex(m => m.key === activeMonthlyChartPeriod);
       if(_f >= 0) _curT = _f;
     }
     const _prevT = Math.max(0, _curT - 1);
-    const trendUp = (trendMonths[_curT]?.pct[d.key]||0) >= (trendMonths[_prevT]?.pct[d.key]||0);
+    const trendUp = (trendMonthsG[_curT]?.pct[d.key]||0) >= (trendMonthsG[_prevT]?.pct[d.key]||0);
     const achieveTxt = pct>=100 ? 'Achieved' : (pct>=80 ? 'On Track' : 'Below');
     return `<tr class="${isActive?'active':''}" onclick="onKpiMonthlyRowClick('${d.key}')">
       <td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${d.color};margin-right:6px;"></span><b>${d.label}</b></td>
@@ -23393,7 +23476,7 @@ function renderKPIChartDashboard(k, globalStats){
     _avgRow['Value'] = quarterAverageValueTxt;
     _avgRow['Status'] = (Number.isFinite(quarterOverallAvg) ? quarterOverallAvg.toFixed(0)+'% · ' : '') + quarterAverageStatus.text;
     _qTable.push(_avgRow);
-    window.__quarterSyncData = {
+    if(!_quiet) window.__quarterSyncData = {
       chart: quarterSummarySeries.map(q=>({ 'Quarter': q.label+' '+q.year, 'Avg Achievement (%)': Number((Number(q.pct)||0).toFixed(1)), 'Target (%)': 100 })),
       table: _qTable
     };
@@ -23616,14 +23699,21 @@ function renderKPIChartDashboard(k, globalStats){
   let kpiDetailOverlay = '';
   if(kpiMonthlyDetailKey && KPI_INFO[kpiMonthlyDetailKey]){
     const info = KPI_INFO[kpiMonthlyDetailKey];
-    const def = monthlyKpiDefs.find(d=>d.key===kpiMonthlyDetailKey);
+    const _ovTab = (typeof activeDashboardTab!=='undefined') ? activeDashboardTab : '';
+    const _ovGrp = _ovTab==='kpi' ? kpiGrp : (_ovTab==='monthlykpi' ? ((kpiMonthlyGroup==='DTJ')?'DTJ':'SEN') : null);
+    const _ovScoped = !!_ovGrp;
+    let def = monthlyKpiDefs.find(d=>d.key===kpiMonthlyDetailKey);
+    if(def && _ovGrp){
+      const _kk = (_ovGrp===kpiGrp) ? kMonthlyG : (kpiWithScope(_ovGrp, ()=>computeKPIsFor(activeMonthlyChartPeriod)) || {});
+      def = { ...def, value: _kk[def.key]||0 };
+    }
     let startStr=null, endStr=null, periodLabel='All Periods';
     if(activeMonthlyChartPeriod){
       const [y,m]=activeMonthlyChartPeriod.split('-').map(Number);
       startStr=toDateStr(new Date(y,m-1,1)); endStr=toDateStr(new Date(y,m,0));
       periodLabel=new Date(y,m-1,1).toLocaleDateString('en-US',{month:'long',year:'numeric'});
     }
-    const unitRows = (typeof UNITS!=='undefined'?UNITS:[]).map(u=>{
+    const unitRows = (typeof UNITS!=='undefined'?UNITS:[]).filter(u=>!_ovScoped || kpiUnitIsSen(u.code)===(_ovGrp==='SEN')).map(u=>{
       const uk = (startStr&&endStr)?computeUnitKPIsForRange(u.code,startStr,endStr):computeUnitKPIs(u.code);
       const val = uk[kpiMonthlyDetailKey]||0;
       const pct = kpiAchievePct(kpiMonthlyDetailKey,val);
@@ -23666,7 +23756,7 @@ function renderKPIChartDashboard(k, globalStats){
 
   const legendHtml = monthlyKpiDefs.map(d=>`<span><i style="background:${d.color}"></i>${d.label}</span>`).join('');
 
-    parkMapaSourceBlock();
+    if(!_quiet) parkMapaSourceBlock();
   wrap.innerHTML = `
     ${buildSummaryCategoryDashboardSectionHTML()}
     ${(() => {
@@ -23749,10 +23839,19 @@ function renderKPIChartDashboard(k, globalStats){
     })()}
     <div class="dash-panel" style="margin-bottom:14px">
       ${dashTopbar('Live Sync · Period', monthlyChartSelectHtml)}
+      <div class="kpi-maint-groupbar">
+        <div class="kpi-unit-groups" role="tablist" aria-label="Grup unit">
+          ${['SEN','DTJ'].map(g=>{
+            const n = (typeof UNITS!=='undefined' ? UNITS : []).filter(u=>kpiUnitIsSen(u.code)===(g==='SEN')).length;
+            return `<button type="button" role="tab" aria-selected="${kpiGrp===g}" class="kpi-unit-group-btn${kpiGrp===g?' active':''}" onclick="onKpiMaintGroupChange('${g}')">${g} <span>${n}</span></button>`;
+          }).join('')}
+        </div>
+        <span class="kpi-maint-groupnote">KPI Maintenance <b>${kpiGrp}</b> · ${kpiGrpUnits.map(u=>escUH(u.code)).join(', ')||'—'}</span>
+      </div>
       <div class="kpi-dash-grid">${gaugeCardsHtml}</div>
     </div>
     <div class="dash-panel" style="position:relative;margin-bottom:14px">
-        <div class="dash-panel-title">KPI MAINTENANCE SUMMARY</div>
+        <div class="dash-panel-title">KPI MAINTENANCE SUMMARY <span>· ${kpiGrp}</span></div>
         <div style="overflow-x:auto">
           <table class="dash-sum-table">
             <thead><tr><th>KPI</th><th>Target</th><th>Value</th><th>Status</th><th>Trend</th></tr></thead>
@@ -23793,6 +23892,20 @@ function renderKPIChartDashboard(k, globalStats){
       </div>
     </div>
     <div class="dash-mid-grid">
+      <div class="dash-panel kpi-mgroup-panel" style="grid-column:1/-1">
+        <div class="dash-panel-title" style="margin-bottom:10px">Monthly KPI Achievement — Grup Unit</div>
+        <div class="kpi-maint-groupbar" style="margin:0">
+          <div class="kpi-unit-groups" role="tablist" aria-label="Grup unit">
+            ${['SEN','DTJ'].map(g=>{
+              const n = (typeof UNITS!=='undefined' ? UNITS : []).filter(u=>kpiUnitIsSen(u.code)===(g==='SEN')).length;
+              return `<button type="button" role="tab" aria-selected="${kpiMonthlyGroup===g}" class="kpi-unit-group-btn${kpiMonthlyGroup===g?' active':''}" onclick="onKpiMonthlyGroupChange('${g}')">${g} <span>${n}</span></button>`;
+            }).join('')}
+          </div>
+          <span class="kpi-maint-groupnote">Monthly KPI Achievement <b>${kpiMonthlyGroup==='DTJ'?'DTJ':'SEN'}</b> · ${(typeof UNITS!=='undefined' ? UNITS : []).filter(u=>kpiUnitIsSen(u.code)===(kpiMonthlyGroup!=='DTJ')).map(u=>escUH(u.code)).join(', ')||'—'}</span>
+        </div>
+      </div>
+    </div>
+    <div class="dash-mid-grid">
       <div class="dash-panel">
         ${dashTopbar('Rentang Trend', trendRangeSelectHtml)}
         ${_trend.tableHtml}
@@ -23800,10 +23913,24 @@ function renderKPIChartDashboard(k, globalStats){
     </div>
     `; })()}
     <div class="dash-mid-grid">
+      <div class="dash-panel kpi-qgroup-panel" style="grid-column:1/-1">
+        <div class="dash-panel-title" style="margin-bottom:10px">Quarter Summary — Grup Unit</div>
+        <div class="kpi-maint-groupbar" style="margin:0">
+          <div class="kpi-unit-groups" role="tablist" aria-label="Grup unit">
+            ${['SEN','DTJ'].map(g=>{
+              const n = (typeof UNITS!=='undefined' ? UNITS : []).filter(u=>kpiUnitIsSen(u.code)===(g==='SEN')).length;
+              return `<button type="button" role="tab" aria-selected="${kpiQuarterGroup===g}" class="kpi-unit-group-btn${kpiQuarterGroup===g?' active':''}" onclick="onKpiQuarterGroupChange('${g}')">${g} <span>${n}</span></button>`;
+            }).join('')}
+          </div>
+          <span class="kpi-maint-groupnote">Quarter Summary <b>${kpiQuarterGroup==='DTJ'?'DTJ':'SEN'}</b> · ${(typeof UNITS!=='undefined' ? UNITS : []).filter(u=>kpiUnitIsSen(u.code)===(kpiQuarterGroup!=='DTJ')).map(u=>escUH(u.code)).join(', ')||'—'}</span>
+        </div>
+      </div>
+    </div>
+    <div class="dash-mid-grid">
       <div class="dash-panel">
         ${dashTopbar('Triwulan', quarterSelectHtml)}
         <div class="chart-panel-title-row">
-          <div class="dash-panel-title" style="margin-bottom:0">GRAFIK QUARTER</div>
+          <div class="dash-panel-title" style="margin-bottom:0">GRAFIK QUARTER ${kpiScope?`<span>· ${kpiScope}</span>`:''}</div>
         </div>
         <div class="quarter-chart-shell">
           ${quarterContinuousChartHtml}
@@ -23817,7 +23944,7 @@ function renderKPIChartDashboard(k, globalStats){
       </div>
       <div class="dash-panel">
         ${dashTopbar('Triwulan', quarterSelectHtml)}
-        <div class="dash-panel-title">KPI SUMMARY QUARTER</div>
+        <div class="dash-panel-title">KPI SUMMARY QUARTER ${kpiScope?`<span>· ${kpiScope}</span>`:''}</div>
         <div style="overflow-x:auto">
           <table class="dash-sum-table quarter-summary-table" style="width:100%;table-layout:fixed">
             <colgroup>
@@ -23868,7 +23995,13 @@ function renderKPIChartDashboard(k, globalStats){
               <span style="width:3px;height:14px;border-radius:2px;background:linear-gradient(180deg,var(--yellow),#c99a10);box-shadow:0 0 8px rgba(255,199,44,.4)"></span>
               KPI Unit — Monthly Summary
             </div>
-            <div style="font-size:11px;color:var(--text-dim);margin-top:3px;font-family:JetBrains Mono,monospace">KPI data per unit · SEN + DTJ</div>
+            <div style="font-size:11px;color:var(--text-dim);margin-top:3px;font-family:JetBrains Mono,monospace">KPI data per unit · ${kpiUnitGroup==='DTJ'?'DTJ':'SEN'} · ${kpiUnitScope().length} unit</div>
+          </div>
+          <div class="kpi-unit-groups" role="tablist" aria-label="Grup unit">
+            ${['SEN','DTJ'].map(g=>{
+              const n = (UNITS||[]).filter(u=>kpiUnitIsSen(u.code)===(g==='SEN')).length;
+              return `<button type="button" role="tab" aria-selected="${kpiUnitGroup===g}" class="kpi-unit-group-btn${kpiUnitGroup===g?' active':''}" onclick="onKpiUnitGroupChange('${g}')">${g} <span>${n}</span></button>`;
+            }).join('')}
           </div>
           <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
             <span style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px">Month period</span>
@@ -23884,9 +24017,47 @@ function renderKPIChartDashboard(k, globalStats){
     </div>`;
     })()}
     ${kpiDetailOverlay}`;
+  if(_quiet) return;
   try{ placeMapaSourceAboveKpiCards(); applyDashboardTabFilter(); }catch(_e){}
   try{ requestAnimationFrame(function(){ placeMapaSourceAboveKpiCards(); applyDashboardTabFilter(); }); }catch(_e){}
 }
+
+/** Render dashboard KPI. Panel tab "Quarter Summary" dihitung ulang khusus untuk grup unit terpilih (SEN / DTJ),
+ *  sedangkan panel lain & sinkron ke sheet tetap memakai semua unit. */
+function renderKPIChartDashboard(k, globalStats){
+  renderKPIChartDashboardImpl(k, globalStats, null);
+  try{
+    const wrap = document.getElementById('kpi-chart-dashboard');
+    if(!wrap) return;
+    const gQ = (kpiQuarterGroup==='DTJ') ? 'DTJ' : 'SEN';
+    const gM = (kpiMonthlyGroup==='DTJ') ? 'DTJ' : 'SEN';
+    const kindOf = el=>{
+      if(el.querySelector && el.querySelector('.mkpi-exec')) return 'monthly';
+      const t = Array.from(el.querySelectorAll('.dash-panel-title')).map(x=>(x.textContent||'').toLowerCase()).join('|');
+      if(t.indexOf('grup unit')>=0) return '';
+      if(t.indexOf('grafik quarter')>=0 || t.indexOf('kpi summary quarter')>=0) return 'summary';
+      if(t.indexOf('quarter achievement detail')>=0) return 'detail';
+      return '';
+    };
+    const groupOfKind = kd => kd==='monthly' ? gM : gQ;
+    // Render ulang (tanpa efek samping) untuk tiap grup yang dibutuhkan, lalu ambil panel yang relevan.
+    const fresh = {};   // { SEN:{kind:el}, DTJ:{kind:el} }
+    Array.from(new Set([gQ, gM])).forEach(g=>{
+      const tmp = document.createElement('div');
+      kpiWithScope(g, ()=> renderKPIChartDashboardImpl(k, globalStats, { wrap:tmp, quiet:true }));
+      fresh[g] = {};
+      Array.from(tmp.children).forEach(el=>{ const kd = kindOf(el); if(kd) fresh[g][kd] = el; });
+    });
+    Array.from(wrap.children).forEach(el=>{
+      const kd = kindOf(el);
+      if(!kd) return;
+      const f = fresh[groupOfKind(kd)] && fresh[groupOfKind(kd)][kd];
+      if(f) wrap.replaceChild(f, el);
+    });
+    applyDashboardTabFilter();
+  }catch(e){ console.warn('scoped render (quarter / monthly)', e); }
+}
+
 
 
 let gaugeUid = 0;
@@ -23929,7 +24100,7 @@ function gaugeSVG(pct, color){
   </svg>`;
 }
 function computeKPIs(){
-  const approvedRecords = dailyRecords.filter(r=>r.approvalStatus==='Approved');
+  const approvedRecords = dailyRecords.filter(r=>r.approvalStatus==='Approved' && kpiScopeOk(r.unitCode));
   const bdCount = approvedRecords.filter(r=>r.category==='Breakdown').length;
   // PERBAIKAN: totalHM dihitung PER UNIT (lihat totalHMByUnit) — bukan lagi Math.max/Math.min
   // dari HM yang tercampur lintas-unit, supaya MTBS tidak selalu mentok 100%.
@@ -24002,10 +24173,10 @@ function resolveMaPaFromHmOnly(unitCode, startStr, endStr){
     let recs = (typeof hmRecords!=='undefined' && Array.isArray(hmRecords)) ? hmRecords.slice() : [];
     if(startStr) recs = recs.filter(r=>r.tanggal && r.tanggal>=startStr);
     if(endStr) recs = recs.filter(r=>r.tanggal && r.tanggal<=endStr);
-    unitList = Array.from(new Set(recs.map(r=>r.unitCode).filter(Boolean)));
+    unitList = Array.from(new Set(recs.map(r=>r.unitCode).filter(Boolean))).filter(kpiScopeOk);
   }catch(e){}
   if(!unitList.length && typeof UNITS!=='undefined' && Array.isArray(UNITS)){
-    unitList = UNITS.map(u=>u.code).filter(Boolean);
+    unitList = UNITS.map(u=>u.code).filter(Boolean).filter(kpiScopeOk);
   }
   if(unitList.length){
     let sumMa=0, sumPa=0, n=0;
@@ -24020,13 +24191,14 @@ function resolveMaPaFromHmOnly(unitCode, startStr, endStr){
     });
     if(n>0) return { ma: sumMa/n, pa: sumPa/n };
   }
+  if(kpiScope) return { ma:0, pa:0 }; // scope grup: jangan jatuh ke agregat semua unit
   const hmwsr = hmWSRGlobal(startStr||null, endStr||null);
   if(hmwsr) return maPaFromWSR(hmwsr);
   return { ma:0, pa:0 };
 }
 
 function computeKPIsForRange(startStr, endStr){
-  const approvedRecords = dailyRecords.filter(r=>r.approvalStatus==='Approved' && r.tanggal && r.tanggal>=startStr && r.tanggal<=endStr);
+  const approvedRecords = dailyRecords.filter(r=>r.approvalStatus==='Approved' && r.tanggal && r.tanggal>=startStr && r.tanggal<=endStr && kpiScopeOk(r.unitCode));
   const bdCount = approvedRecords.filter(r=>r.category==='Breakdown').length;
   // PERBAIKAN: totalHM dihitung PER UNIT (lihat totalHMByUnit) — bukan lagi Math.max/Math.min
   // dari HM yang tercampur lintas-unit, supaya MTBS per bulan di "Rekap KPI Triwulan" tidak
@@ -24067,25 +24239,25 @@ function computeKPIsForRange(startStr, endStr){
     const monthKey = (startStr || '').slice(0, 7); // YYYY-MM
     // 1) Snapshot history bulan tsb — prioritas tertinggi (JUL = 84.5% sheet)
     if(monthKey && mapaHistory && mapaHistory[monthKey] && mapaHistory[monthKey].rows && mapaHistory[monthKey].rows.length){
-      mp = maPaFromRows(mapaHistory[monthKey].rows);
+      mp = maPaFromRows(kpiScopeRows(mapaHistory[monthKey].rows));
     }
     // 1b) Fallback seed resmi Juli 2026 jika history kosong
     else if(monthKey === '2026-07' && typeof PERFORMANCE_JULY_2026 !== 'undefined' && PERFORMANCE_JULY_2026.rows){
-      mp = maPaFromRows(PERFORMANCE_JULY_2026.rows);
+      mp = maPaFromRows(kpiScopeRows(PERFORMANCE_JULY_2026.rows));
     }
     // 2) Snapshot live saat ini jika periode sheet cocok penuh dengan bulan ini
     else if(startStr && endStr
       && mapaData && mapaData.fromPerformance && mapaData.rows && mapaData.rows.length
       && typeof performancePeriodMatches==='function'
       && performancePeriodMatches(startStr, endStr)){
-      mp = maPaFromRows(mapaData.rows);
+      mp = maPaFromRows(kpiScopeRows(mapaData.rows));
     }
     // 2b) Cocok longgar: bulan filter = bulan start/end periode sheet
     else if(monthKey && mapaData && mapaData.fromPerformance && mapaData.rows && mapaData.rows.length){
       const psM = (_normYmd(mapaData.periodStart)||'').slice(0,7);
       const peM = (_normYmd(mapaData.periodEnd)||'').slice(0,7);
       if(psM && peM && monthKey >= psM && monthKey <= peM){
-        mp = maPaFromRows(mapaData.rows);
+        mp = maPaFromRows(kpiScopeRows(mapaData.rows));
       }
     }
     // 3) Fallback Monitoring HM
@@ -24212,7 +24384,7 @@ function quarterAchievementDetailHTML(qVal){
 
   // ---- Tabel 2: per unit ----
   const qObj = { start:startStr, end:endStr };
-  const unitRows = (UNITS||[]).map(u=>{
+  const unitRows = (UNITS||[]).filter(u=>kpiScopeOk(u.code)).map(u=>{
     const q = computeUnitMonthlyAchievement(u.code, qObj);
     const ms = months.map(mo => computeUnitMonthlyAchievement(u.code, mo));
     return { u, q, ms };
