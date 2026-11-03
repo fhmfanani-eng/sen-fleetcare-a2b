@@ -1,3 +1,7 @@
+v121: Kode unit HEX-11 & HEX-12 diganti menjadi PC-11 & PC-12 (master unit, dropdown, Plan Service, Budget, filter, DTJ, interval PS). Kode kanonik kini PC-xx; HEX-xx / EX-xx / XAZIS-xx tetap dikenali sebagai alias. Data lama yang tersimpan dengan kode HEX otomatis dikonversi ke PC saat dimuat (Daily, Plan, HM, WH, dll) dan tersimpan permanen saat data disimpan berikutnya. Hanya index.html.
+
+v120: Daily Maintenance: record dengan Status Open / On Progress kini bisa disubmit tanpa Repair End (tanggal & jam). Repair End hanya wajib saat Status = Close; Total Repair/Total Breakdown kosong sampai Repair End diisi. Hanya index.html.
+
 v119: Dashboard > tab Monthly KPI Achievement: dipisah per grup unit lewat tombol SEN | DTJ. Chart % capaian, ring Average dan tabel heatmap per bulan (MA, PA, MTBS, MTTR, PMR, SA) dihitung hanya dari unit grup terpilih; detail per unit (klik baris KPI) ikut grup. Auto Sync ke sheet 'Dashboard' tetap semua unit. Hanya index.html (+ sw.js versi cache).
 
 v118: Dashboard > tab Quarter Summary: dipisah per grup unit lewat tombol SEN | DTJ. GRAFIK QUARTER, KPI SUMMARY QUARTER (kolom Q1..Qn + Average) dan QUARTER ACHIEVEMENT DETAIL (per KPI, per bulan, ranking unit) dihitung hanya dari unit grup terpilih. Sinkron ke sheet 'Dashboard Quarter' dan panel tab lain tetap semua unit. Hanya index.html (+ sw.js versi cache).
