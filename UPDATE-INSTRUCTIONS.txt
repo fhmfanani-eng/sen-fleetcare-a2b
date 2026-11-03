@@ -1,3 +1,29 @@
+v115: Plan Budgeting: header kolom semua tabel (Catalog, Oil Consumable, Rekap Oli per Bulan, Budget Plan Schedule, Rekap Bulanan + tabel rincian) diseragamkan: font Inter 11,5px tebal, huruf kapital dengan jarak huruf rapi, padding lebih lega, garis bawah emas; kolom angka (Qty, Harga, Total, Target HM, Biaya, kolom unit Rekap Bulanan) rata kanan sejajar dengan isinya; kolom No di tengah. Hanya index.html (+ sw.js versi cache).
+
+v114: Part Catalog unit Zaxis ZX200-5G (HEX-11 & HEX-12) ditambahkan (tab Catalog > ZX200-5G; PS 250/500/1000/1500/2000/3000/3500/4000 Hrs) dari 'Recommendation of Genuine Filter & Lubricants' Hexindo (Feb-21): filter, oli engine 25 L, pump transmission 1 L, hydraulic 200 L (4000), gear oil swing 6,2 L & travel 13,6 L, coolant 26 L (4000). Harga belum diisi (tampil '—', biaya budget HEX-11/12 = 0 sampai harga diisi di SPAREPART_DATA['ZX200-5G']). Air cleaner (ganti setelah 6x cleaning), suction strainer (dibersihkan) & grease (tanpa qty di tabel) tidak dimasukkan. Kolom HEX-11 & HEX-12 ditambahkan di Rekap Budget per Bulan. Hanya index.html (+ sw.js versi cache).
+
+v113: Plan Budgeting > Rekap Budget per Bulan: filter Periode (multi bulan) & Unit (multi unit) seperti Budget Plan Schedule; kolom unit mengikuti filter; klik baris bulan untuk rincian jadwal service + rincian sparepart (part number, qty, harga, subtotal/PPN); panel Rincian Sparepart total sesuai filter; ekspor Excel/CSV mengikuti filter + sheet rincian sparepart. Hanya index.html.
+
+v112: Katalog WA380-6 (WA-10): oli consumable mengikuti pola WA500-6R per interval (tidak semua oli di setiap interval): PS 500 = Engine 25 L; PS 1000 = Engine 25 L + Transmission TO-10 45 L; PS 2000 = Engine + Transmission + Oil Exel 40 L; PS 4000 = ditambah Hydraulic VG46 145 L. Paket PS 4000 Hrs WA380-6 dibuat (salinan isi PS 2000 + VG46) agar hydraulic oil punya tempat. Hanya index.html (+ sw.js versi cache).
+
+v111: Katalog WA380-6 (WA-10): Grease SYGA-16CNLI 1 pail (Rp 2.032.800) ditambahkan di PS 500/1000/2000 Hrs. DZ-04 & DZ-09 memakai katalog DOZER D85ESS-2 yang sudah memuat grease 1 pail dan oli consumable di tiap interval, jadi tidak ada perubahan. Hanya index.html (+ sw.js versi cache).
+
+v110: Katalog WA380-6 (WA-10) Plan Budgeting: PS 500 Hrs ditambah Fuel main filter 6754-79-6140 (1 pcs, Rp 296.560). Consumable oli ditambahkan di PS 500/1000/2000 Hrs: Engine 15W40-DH 25 L, Transmission TO-10 45 L, Hydraulic VG46 145 L, Oil Exel AXO80 40 L (harga/liter mengikuti katalog WA500: 90.000 / 57.000 / 77.000 / 61.055; PPN 11% otomatis). Hanya index.html (+ sw.js versi cache).
+
+v109: Plan Budgeting > Budget Plan Schedule: filter Periode (bulan) dan Unit kini multi-pilih (dropdown checkbox, tombol Reset). Total Budget, Service Events, tabel, dan ekspor Excel/CSV mengikuti pilihan. Hanya index.html.
+
+v108: Katalog WA380-6: harga Engine oil filter 6736-51-5142 diisi Rp 350.000 (input user, belum PPN). Hanya index.html.
+
+v107: Katalog WA380-6: Air cleaner 600-185-5100C (1 pcs, Rp 2.057.000 sesuai quotation UT) ditambahkan di PS 1000 & PS 2000 Hrs. Hanya index.html.
+
+v106: Katalog WA380-6: harga part diisi dari UT Quotation D.T.J (22/10/2026, harga AFTER DSC, belum PPN; PPN 11% dihitung otomatis). Part number mengikuti quotation: 6754-71-6130→6754-79-6140 (fuel main), 714-07-28712→714-07-28713 (transmission oil filter), 426-07-32441→426-07-32442 (AC filter), 600-319-3610→600-319-3610C. Engine oil filter 6736-51-5142 belum ada di quotation (harga kosong). Budget WA-10 otomatis terhitung. Hanya index.html.
+
+v105: Katalog Dozer D85ESS-2 (SBD-103, DZ-04, DZ-09): ditambah Belt Alternator 04121-22271 (2 pcs) dan Belt Compressor AC 04120-21754 (1 pcs) di PS 2000 Hrs. Paket PS 4000 Hrs Dozer dibuat (salinan isi PS 2000 + belt) sehingga 4000, 6000, 8000 dst ikut terhitung. Harga belt belum diisi (tidak mengubah subtotal). Hanya index.html.
+
+v104: Part Catalog unit loader WA380-6 ditambahkan (tab Catalog > WA380-6; PS 500/1000/2000 Hrs, kumulatif, dari Wear Parts List). Harga belum diisi (tampil '—'); WA-10 di Budget kini memakai katalog ini (biaya 0 sampai harga diisi di SPAREPART_DATA['WA380-6']). Hanya index.html.
+
+v103: (1) Plan Service HEX-11 & HEX-12: interval diubah ke paket PS 1000 / 2000 / 4000 Hrs (grid jadwal 1000 HM: 1000→PS 1000, 2000→PS 2000, 3000→PS 1000, 4000→PS 4000, 5000→PS 1000, 6000→PS 2000, dst). Unit lain tidak berubah. Atur di PLAN_UNIT_CUSTOM_PS_HRS. (2) Plan Budgeting: unit DZ-04, DZ-09 (katalog Dozer D85ESS-2) dan WA-10 ditambahkan ke Budget Plan Schedule (biaya terisi) dan kolom Rekap Budget per Bulan (+ export Excel/CSV).  Hanya index.html (+ sw.js versi cache).
+
 v102: Performance Unit: judul + filter periode (tanggal) terkunci di atas, tidak ikut ter-scroll (desktop). Hanya index.html.
 
 v101: Dashboard: tombol Auto Sync di bawah menu tab disembunyikan. Hanya index.html.

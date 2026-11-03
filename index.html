@@ -376,6 +376,76 @@ body.role-backlog-sync-allowed .sync-backlog-allowed{
 .sp-cost-badge{font-family:JetBrains Mono,monospace;font-weight:700;color:var(--yellow);}
 .sp-ppn-badge{font-family:JetBrains Mono,monospace;font-weight:700;color:var(--orange);}
 .sp-budget-month{font-family:Oswald,sans-serif;font-size:13px;color:var(--yellow);}
+/* Multi-select filter (periode & unit) — Budget Plan Schedule */
+.sp-ms{position:relative;display:inline-block;min-width:140px;}
+.sp-ms-btn{width:100%;text-align:left;background:var(--panel-2);border:1px solid rgba(255,255,255,0.1);color:var(--text);border-radius:8px;padding:8px 28px 8px 12px;font:inherit;font-size:13px;cursor:pointer;position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sp-ms-btn::after{content:'▾';position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--text-dim);}
+.sp-ms-btn:hover,.sp-ms.open .sp-ms-btn{border-color:rgba(255,199,44,0.45);}
+.sp-ms.has-sel .sp-ms-btn{color:var(--yellow);}
+.sp-ms-panel{display:none;position:absolute;z-index:200;top:calc(100% + 4px);left:0;min-width:100%;max-height:280px;overflow:auto;background:var(--panel);border:1px solid rgba(255,199,44,0.3);border-radius:8px;box-shadow:0 12px 28px rgba(0,0,0,.5);padding:6px;}
+.sp-ms.open .sp-ms-panel{display:block;}
+.sp-ms-opt{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;font-size:13px;color:var(--text);cursor:pointer;white-space:nowrap;}
+.sp-ms-opt:hover{background:rgba(255,199,44,0.08);}
+.sp-ms-opt input{accent-color:var(--yellow);margin:0;}
+.sp-ms-reset{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid rgba(255,255,255,0.08);color:var(--text-dim);font:inherit;font-size:12px;padding:6px 8px 8px;margin-bottom:4px;cursor:pointer;}
+.sp-ms-reset:hover{color:var(--yellow);}
+.sp-hint-line{margin:8px 2px 0;font-size:12px;color:var(--text-dim);}
+/* ===== Plan Budgeting — header kolom seragam & rapi (semua tabel) ===== */
+#view-sparepart table thead th,
+#view-sparepart .sp-oil-type-table thead th,
+#view-sparepart .sp-oil-monthly-table thead th{
+  font-family:'Inter',sans-serif !important;
+  font-size:11.5px !important;
+  font-weight:700 !important;
+  letter-spacing:.04em !important;
+  text-transform:uppercase;
+  line-height:1.3 !important;
+  padding:12px 12px !important;
+  vertical-align:middle !important;
+  color:#d3dae3 !important;
+  white-space:nowrap;
+  border-bottom:2px solid rgba(255,199,44,.28) !important;
+}
+#view-sparepart .sp-dtable th{
+  font-family:'Inter',sans-serif;font-size:11px;font-weight:700;letter-spacing:.04em;line-height:1.3;
+  padding:9px 8px;vertical-align:middle;color:#d3dae3;border-bottom:2px solid rgba(255,199,44,.22);
+}
+#view-sparepart .sp-oil-type-table thead th{padding:11px 8px !important;}
+#view-sparepart .sp-oil-monthly-table thead th{text-align:center;padding:11px 9px !important;}
+#view-sparepart .sp-oil-monthly-table thead th.col-month{text-align:left;}
+#view-sparepart .sp-oil-monthly-table thead th .pn{
+  display:block;margin-top:3px;font-family:'JetBrains Mono',monospace !important;font-size:10px !important;
+  font-weight:500 !important;letter-spacing:0 !important;text-transform:none;color:#b8c99a;
+}
+/* Kolom No: tengah. Kolom angka: rata kanan (header & isi sejajar). */
+#sp-tab-catalog table thead th:nth-child(1),#sp-tab-catalog table tbody td:nth-child(1){text-align:center;width:56px;}
+#sp-tab-catalog table thead th:nth-child(n+5):nth-child(-n+7),
+#sp-tab-catalog table tbody td:nth-child(n+5):nth-child(-n+7){text-align:right;}
+#sp-tab-budget table thead th:nth-child(4),#sp-tab-budget table tbody td:nth-child(4),
+#sp-tab-budget table thead th:nth-child(6),#sp-tab-budget table tbody td:nth-child(6){text-align:right;}
+#sp-tab-monthly #sp-monthly-thead th:not(:first-child),
+#sp-tab-monthly #sp-monthly-tbody > tr.sp-mrow > td:not(:first-child){text-align:right;}
+
+.sp-mrow{cursor:pointer;}
+.sp-mrow:hover{background:rgba(255,199,44,0.05);}
+.sp-mtoggle{display:inline-flex;align-items:center;gap:8px;background:none;border:0;color:inherit;font:inherit;cursor:pointer;padding:0;}
+.sp-mtoggle .sp-caret{display:inline-block;width:14px;color:var(--yellow);transition:transform .15s;}
+.sp-mrow.open .sp-caret{transform:rotate(90deg);}
+.sp-mdetail-row>td{padding:0 !important;background:rgba(255,199,44,0.04);border-left:3px solid var(--yellow);}
+.sp-mdetail{padding:14px 16px 16px;display:grid;gap:16px;text-align:left;}
+.sp-dtitle{font-family:Oswald,sans-serif;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--yellow);margin:0 0 6px;}
+.sp-dtable{width:100%;border-collapse:collapse;font-size:12.5px;}
+.sp-dtable th{background:rgba(255,255,255,0.05);color:var(--text-dim);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em;padding:7px 8px;text-align:right;white-space:nowrap;}
+.sp-dtable td{padding:6px 8px;border-top:1px solid rgba(255,255,255,0.06);text-align:right;vertical-align:top;}
+.sp-dtable th.l,.sp-dtable td.l{text-align:left;}
+.sp-dtable tr.sp-dgroup td{background:rgba(255,199,44,0.10);color:var(--yellow);font-weight:700;text-align:left;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;}
+.sp-dtable tr.sp-dsum td{border-top:1px solid rgba(255,199,44,0.35);font-weight:600;}
+.sp-dtable tr.sp-dsum.grand td{font-size:13.5px;color:var(--yellow);font-weight:700;}
+.sp-dtable code{font-family:JetBrains Mono,monospace;font-size:11px;color:var(--yellow);}
+.sp-uchip{display:inline-block;margin:0 4px 2px 0;padding:1px 7px;border-radius:999px;background:rgba(255,255,255,0.07);font-size:11px;white-space:nowrap;}
+.sp-dpanel{margin-top:18px;border-top:1px solid rgba(255,199,44,0.25);padding-top:14px;}
+.sp-dpanel-sub{font-size:12px;color:var(--text-dim);margin:0 0 8px;}
+.sp-dwrap{overflow-x:auto;}
 
 .cbm-comp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}
 @media(max-width:1100px){.cbm-comp-grid{grid-template-columns:repeat(3,1fr);}}
@@ -6236,27 +6306,8 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
             <div class="panel-head">
               <h2>Budget Plan Schedule Service <span class="tag">AUTO SYNC</span></h2>
               <div class="toolbar">
-                <select id="sp-budget-month-filter" style="min-width:120px;">
-                  <option value="">All Months</option>
-                  <option value="Jul">Jul</option>
-                  <option value="Aug">Aug</option>
-                  <option value="Sep">Sep</option>
-                  <option value="Okt">Okt</option>
-                  <option value="Nov">Nov</option>
-                  <option value="Dec">Dec</option>
-                </select>
-                <select id="sp-budget-unit-filter" style="min-width:120px;">
-                  <option value="">All Units</option>
-                  <option value="SWA-101">SWA-101</option>
-                  <option value="SWA-102">SWA-102</option>
-                  <option value="SBD-103">SBD-103</option>
-                  <option value="SPC-104">SPC-104</option>
-                  <option value="DZ-04">DZ-04</option>
-                  <option value="DZ-09">DZ-09</option>
-                  <option value="WA-10">WA-10</option>
-                  <option value="HEX-11">HEX-11</option>
-                  <option value="HEX-12">HEX-12</option>
-                </select>
+                <div class="sp-ms" id="sp-budget-month-filter" data-sp-ms="month"><button type="button" class="sp-ms-btn" aria-haspopup="true">All Months</button><div class="sp-ms-panel"></div></div>
+                <div class="sp-ms" id="sp-budget-unit-filter" data-sp-ms="unit"><button type="button" class="sp-ms-btn" aria-haspopup="true">All Units</button><div class="sp-ms-panel"></div></div>
                 <button type="button" class="btn small" id="sp-budget-export-xlsx" title="Download Excel sesuai filter periode">⬇ Excel</button>
                 <button type="button" class="btn small secondary" id="sp-budget-export-csv" title="Download CSV sesuai filter periode">⬇ CSV</button>
               </div>
@@ -6279,18 +6330,22 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
             <div class="panel-head">
               <h2>Rekap Budget Sparepart per Bulan <span class="tag">AUTO SYNC</span></h2>
               <div class="toolbar">
-                <button type="button" class="btn small" id="sp-monthly-export-xlsx" title="Download rekap bulanan Excel">⬇ Excel</button>
-                <button type="button" class="btn small secondary" id="sp-monthly-export-csv" title="Download rekap bulanan CSV">⬇ CSV</button>
+                <div class="sp-ms" id="sp-monthly-month-filter" data-sp-ms="month" data-sp-scope="monthly"><button type="button" class="sp-ms-btn" aria-haspopup="true">All Months</button><div class="sp-ms-panel"></div></div>
+                <div class="sp-ms" id="sp-monthly-unit-filter" data-sp-ms="unit" data-sp-scope="monthly"><button type="button" class="sp-ms-btn" aria-haspopup="true">All Units</button><div class="sp-ms-panel"></div></div>
+                <button type="button" class="btn small" id="sp-monthly-export-xlsx" title="Download rekap bulanan + rincian sparepart sesuai filter (Excel)">⬇ Excel</button>
+                <button type="button" class="btn small secondary" id="sp-monthly-export-csv" title="Download rekap bulanan + rincian sparepart sesuai filter (CSV)">⬇ CSV</button>
               </div>
             </div>
             <div class="table-wrap">
               <table>
-                <thead><tr>
-                  <th>Bulan</th><th>SWA-101</th><th>SWA-102</th><th>SBD-103</th><th>SPC-104</th><th>Total Biaya Sparepart</th>
+                <thead id="sp-monthly-thead"><tr>
+                  <th>Bulan</th><th>SWA-101</th><th>SWA-102</th><th>SBD-103</th><th>SPC-104</th><th>DZ-04</th><th>DZ-09</th><th>WA-10</th><th>HEX-11</th><th>HEX-12</th><th>Total Biaya Sparepart</th>
                 </tr></thead>
                 <tbody id="sp-monthly-tbody"></tbody>
               </table>
             </div>
+            <div class="sp-hint-line">Klik baris bulan (▸) untuk melihat jadwal service & rincian sparepart bulan tersebut.</div>
+            <div id="sp-monthly-detail"></div>
           </div>
         </div>
       </section>
@@ -8555,7 +8610,7 @@ function sanitizePlanServiceUnits(){
     const hm = Number(r.hmPlan)||0;
     if(hm<=0) return;
     const typeUnit = r.typeUnit || ((UNITS||[]).find(u=>String(u.code||'').toUpperCase()===String(r.unitCode||'').toUpperCase())||{}).type || '';
-    const ps = getPsTypeForTargetHm(typeUnit, hm);
+    const ps = getPsTypeForTargetHm(typeUnit, hm, isPlanClosed(r) ? null : r.unitCode);
     if(ps && ps.label && String(r.serviceType||'') !== ps.label){
       r.serviceType = ps.label;
     }
@@ -16544,7 +16599,7 @@ function enrichPlanRow(r){
     hmPlanLive=Number(r.hmPlan)||0;
     const typeUpper=String(typeUnit||'').toUpperCase();
     const isDozerType=typeUpper.includes('D85ESS') || typeUpper.includes('D85') || String(r.unitCode||'').toUpperCase().startsWith('SBD-');
-    const serviceStep=isDozerType ? 250 : 500;
+    const serviceStep=getCustomPlanStepForUnit(r.unitCode) || (isDozerType ? 250 : 500);
     if(!hmPlanLive){
       hmPlanLive=nextPlanHmTarget(hmSekarang, r.unitCode);
       r.hmPlan=hmPlanLive;
@@ -16559,7 +16614,7 @@ function enrichPlanRow(r){
   // Koreksi Service Type SEMUA status (Open & Close) dari HM Target + interval standar
   // (250/500/1000/2000/4000/5000) — berlaku semua unit di tabel Plan Service & Record Service.
   if(hmPlanLive > 0){
-    r.serviceType = getPsTypeForTargetHm(typeUnit, hmPlanLive).label;
+    r.serviceType = getPsTypeForTargetHm(typeUnit, hmPlanLive, isClosed ? null : r.unitCode).label;
   }
 
   // Hitung ulang sisa & hari dengan HM Interval
@@ -17086,7 +17141,7 @@ window.reopenPlanService = async function(id){
     if(cur && cur.hmNow!=null){
       r.hmPlan = nextPlanHmTarget(cur.hmNow, r.unitCode);
       const typeUnit=r.typeUnit || ((UNITS||[]).find(u=>String(u.code).toUpperCase()===String(r.unitCode).toUpperCase())||{}).type || '';
-      r.serviceType=getPsTypeForTargetHm(typeUnit,r.hmPlan).label;
+      r.serviceType=getPsTypeForTargetHm(typeUnit,r.hmPlan,r.unitCode).label;
       r.planDate=estimatePlanDateFromHm(r.unitCode,r.hmPlan,cur.hmNow);
       r.status=Number(cur.hmNow)>=(Number(r.hmPlan)+25) ? 'Overdue' : 'Planned';
     }else{
@@ -17219,8 +17274,36 @@ function getPlanServiceHMBase(){
  * Contoh: 5.000 → PS 5000 Hrs, 5.500 → PS 500 Hrs, 6.000 → PS 2000 Hrs,
  * 6.250 → PS 250 Hrs, 6.500 → PS 500 Hrs, 7.000 → PS 1000 Hrs.
  */
-function getPsTypeForTargetHm(typeUnit, hmTarget){
+/**
+ * Interval Plan Service KHUSUS per unit.
+ * HEX-11 & HEX-12: hanya paket PS 1000 / 2000 / 4000 Hrs (grid jadwal 1000 HM).
+ *   1000→PS 1000, 2000→PS 2000, 3000→PS 1000, 4000→PS 4000, 5000→PS 1000, 6000→PS 2000, 8000→PS 4000, dst.
+ * Tidak ada PS 250 / 500 / 5000 untuk unit ini. Unit lain tidak terpengaruh.
+ */
+const PLAN_UNIT_CUSTOM_PS_HRS = {
+  'HEX-11': [1000, 2000, 4000],
+  'HEX-12': [1000, 2000, 4000]
+};
+function getCustomPsHrsForUnit(unitCode){
+  if(!unitCode) return null;
+  const raw = String(unitCode).trim().toUpperCase();
+  const code = (typeof resolveUnitCode==='function' && resolveUnitCode(raw)) || raw;
+  return PLAN_UNIT_CUSTOM_PS_HRS[String(code).toUpperCase()] || null;
+}
+/** Grid HM jadwal untuk unit dengan interval khusus (= PS terkecil), atau null. */
+function getCustomPlanStepForUnit(unitCode){
+  const hrs = getCustomPsHrsForUnit(unitCode);
+  return hrs ? Math.min.apply(null, hrs) : null;
+}
+
+function getPsTypeForTargetHm(typeUnit, hmTarget, unitCode){
   const target=Number(hmTarget)||0;
+  const customHrs = getCustomPsHrsForUnit(unitCode);
+  if(customHrs){
+    const sorted = customHrs.slice().sort((a,b)=>b-a);
+    const hit = sorted.find(h=> target>0 && target % h === 0) || sorted[sorted.length-1];
+    return { hrs:hit, label:'PS '+hit+' Hrs' };
+  }
   if(target<=0) return { hrs:250, label:'PS 250 Hrs' };
 
   // Paket service standar (katalog sparepart + histori PM). Sama untuk semua type unit.
@@ -17257,7 +17340,8 @@ function nextPlanHmTarget(hmNow, unitCode){
   const unit = (UNITS||[]).find(u=>String(u.code||'').trim().toUpperCase()===code);
   const type = String(unit?.type||'').toUpperCase();
   const isDozer = type.includes('D85ESS') || type.includes('D85') || code.startsWith('SBD-') || code.startsWith('DZ-');
-  return nextHmMilestone(hmNow, isDozer ? 250 : 500);
+  const customStep = getCustomPlanStepForUnit(code);
+  return nextHmMilestone(hmNow, customStep || (isDozer ? 250 : 500));
 }
 
 /** Target plan dari HM sekarang sampai batas target dashboard. */
@@ -17301,7 +17385,7 @@ function buildFuturePlanTargets(hmNow, maxTarget, unitCode){
   const unit = (UNITS||[]).find(u=>String(u.code||'').trim().toUpperCase()===code);
   const type = String(unit?.type||'').toUpperCase();
   const isDozer = type.includes('D85ESS') || type.includes('D85') || code.startsWith('SBD-');
-  const step = isDozer ? 250 : 500;
+  const step = getCustomPlanStepForUnit(code) || (isDozer ? 250 : 500);
   const lastClosed = getLastClosedPlanHm(code);
   // Mulai dari Close terakhir jika ada; jika belum pernah Close, dari HM sekarang
   const baseHm = lastClosed > 0 ? lastClosed : (Number(hmNow)||0);
@@ -17440,7 +17524,7 @@ async function rebuildPlanServiceAuto(opts){
     const targets=buildFuturePlanTargets(hmTotal, 0, code);
 
     targets.forEach(hmPlan=>{
-      const ps=getPsTypeForTargetHm(typeUnit,hmPlan);
+      const ps=getPsTypeForTargetHm(typeUnit,hmPlan,code);
       const planDate=estimatePlanDateFromHm(code,hmPlan,hmTotal);
 
       planRecords.push({
@@ -17535,7 +17619,7 @@ function syncOpenPlanRecordLive(r, perfMap){
   // Hanya record tanpa target yang dibuatkan milestone baru.
   const typeUpper=String(typeUnit||'').toUpperCase();
   const isDozerType=typeUpper.includes('D85ESS') || typeUpper.includes('D85') || code.startsWith('SBD-');
-  const serviceStep=isDozerType ? 250 : 500;
+  const serviceStep=getCustomPlanStepForUnit(code) || (isDozerType ? 250 : 500);
   if(!hmPlan){
     hmPlan=nextPlanHmTarget(cur.hmNow, r.unitCode);
     r.hmPlan=hmPlan;
@@ -17548,7 +17632,7 @@ function syncOpenPlanRecordLive(r, perfMap){
     r.hmPlan=hmPlan;
   }
 
-  const ps=getPsTypeForTargetHm(typeUnit,hmPlan);
+  const ps=getPsTypeForTargetHm(typeUnit,hmPlan,code);
   r.serviceType=ps.label;
   // OVERDUE hanya jika HM sudah melewati target service.
   // Saat HM tepat sama dengan target, status tetap Planned/Jatuh Tempo.
@@ -17612,7 +17696,7 @@ function ensureAugustPlanServiceRecords(perfMap){
     const cur=calcHmSekarang(req.unitCode);
     const perfRow=perf[String(req.unitCode).toUpperCase()];
     const hmAktual=cur && cur.hmNow!=null ? Number(cur.hmNow) : null;
-    const ps=getPsTypeForTargetHm(unit?unit.type:'',req.hmPlan);
+    const ps=getPsTypeForTargetHm(unit?unit.type:'',req.hmPlan,req.unitCode);
 
     if(existing){
       // Restore the original August date/target if a previous sync moved it.
@@ -17738,7 +17822,7 @@ async function syncOpenPlanCoverage(perfMap){
       if(openByTarget.has(key)) return;
       if(closedHmForUnit.has(key)) return; // sudah dieksekusi Close
 
-      const ps=getPsTypeForTargetHm(typeUnit,hmPlan);
+      const ps=getPsTypeForTargetHm(typeUnit,hmPlan,code);
       const planDate=estimatePlanDateFromHm(code,hmPlan,cur.hmNow);
       const perfRow=perf[String(code||'').trim().toUpperCase()];
 
@@ -17909,7 +17993,7 @@ async function ensureNextPlanAfterClose(closedRec){
 
   const unit = (UNITS||[]).find(u=>String(u.code||'').trim().toUpperCase()===code);
   const typeUnit = closedRec.typeUnit || (unit?unit.type:'') || '';
-  const ps = getPsTypeForTargetHm(typeUnit, nextHm);
+  const ps = getPsTypeForTargetHm(typeUnit, nextHm, code);
   let planDate = '';
   try{
     planDate = estimatePlanDateFromHm(closedRec.unitCode, nextHm, hmExec) || '';
@@ -30710,10 +30794,16 @@ function renderPlanHmLiveChart(){
 /* ================= RENDER ALL ================= */
 
 /* ================= PLAN BUDGETING (Consumable Sparepart & Budget) ================= */
-const SPAREPART_DATA = {"WA500-6R": [{"title": "CONSUMABLE SPAREPART SERVICE 500 HOURS WA500-6R", "model": "WA500-6R", "hours": 500, "items": [{"desc": "Cartridge", "partNumber": "600-319-3550", "item": "Fuel main filter", "qty": 4.0, "price": 1166720.0, "total": 4666880.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-319-4540", "item": "Fuel Pre filter", "qty": 2.0, "price": 1965000.0, "total": 3930000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-211-1341", "item": "Filter oil engine", "qty": 2.0, "price": 848000.0, "total": 1696000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "424-16-1140", "item": "Filter Transmission", "qty": 2.0, "price": 120000.0, "total": 240000.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-B2125", "item": "Filter Transmission", "qty": 2.0, "price": 288000.0, "total": 576000.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-B2014", "item": "Filter Transmission", "qty": 2.0, "price": 64960.0, "total": 129920.0, "unit": "Pcs"}, {"desc": "Oli Engine", "partNumber": "15W40-DH", "item": "Engine", "qty": 45.0, "price": 90000.0, "total": 4050000.0, "unit": "Liter"}, {"desc": "Grease", "partNumber": "SYGA-16CNLIZ", "item": "Attachment", "qty": 1.0, "price": 2032800.0, "total": 2032800.0, "unit": "Pail"}], "subtotal": 17321600.0, "withPpn": 19226976.0}, {"title": "CONSUMABLE SPAREPART SERVICE 1000 HOURS WA500-6R", "model": "WA500-6R", "hours": 1000, "items": [{"desc": "Cartridge", "partNumber": "600-319-3550", "item": "Fuel main filter", "qty": 4.0, "price": 1166720.0, "total": 4666880.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-319-4540", "item": "Fuel Pre filter", "qty": 2.0, "price": 1965000.0, "total": 3930000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-211-1341", "item": "Filter oil engine", "qty": 2.0, "price": 848000.0, "total": 1696000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "424-16-1140", "item": "Filter Transmission", "qty": 2.0, "price": 120000.0, "total": 240000.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-B2125", "item": "", "qty": 2.0, "price": 288000.0, "total": 576000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "424-60-65230", "item": "Filter oil hyd", "qty": 1.0, "price": 5090160.0, "total": 5090160.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-B2014", "item": "", "qty": 2.0, "price": 64960.0, "total": 129920.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-B5180", "item": "", "qty": 2.0, "price": 578800.0, "total": 1157600.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "285-62-17320", "item": "Breather hyd tank", "qty": 1.0, "price": 284160.0, "total": 284160.0, "unit": "Pcs"}, {"desc": "Element ass'y", "partNumber": "600-185-6100", "item": "Air cleaner", "qty": 1.0, "price": 3009000.0, "total": 3009000.0, "unit": "Pcs"}, {"desc": "Oli Engine", "partNumber": "15W40-DH", "item": "", "qty": 45.0, "price": 90000.0, "total": 4050000.0, "unit": "Liter"}, {"desc": "Oil Transmission", "partNumber": "TO-10-CF/D209", "item": "", "qty": 80.0, "price": 57000.0, "total": 4560000.0, "unit": "Liter"}, {"desc": "Grease", "partNumber": "SYGA-16CNLI", "item": "", "qty": 1.0, "price": 2032800.0, "total": 2032800.0, "unit": "Pail"}], "subtotal": 31422520.0, "withPpn": 34878997.2}, {"title": "CONSUMABLE SPAREPART SERVICE 2000 HOURS WA500-6R", "model": "WA500-6R", "hours": 2000, "items": [{"desc": "Cartridge", "partNumber": "600-319-3550", "item": "Fuel main filter", "qty": 4.0, "price": 1166720.0, "total": 4666880.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-319-4540", "item": "Fuel Pre filter", "qty": 2.0, "price": 1965000.0, "total": 3930000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-211-1341", "item": "Filter oil engine", "qty": 2.0, "price": 848000.0, "total": 1696000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "424-16-1140", "item": "Filter Transmission", "qty": 2.0, "price": 120000.0, "total": 240000.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-B2125", "item": "", "qty": 2.0, "price": 288000.0, "total": 576000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "424-60-65230", "item": "Filter oil hyd", "qty": 1.0, "price": 5090160.0, "total": 5090160.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-B2014", "item": "", "qty": 2.0, "price": 64960.0, "total": 129920.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-B5180", "item": "", "qty": 2.0, "price": 578800.0, "total": 1157600.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "285-62-17320", "item": "Breather hyd tank", "qty": 1.0, "price": 284160.0, "total": 284160.0, "unit": "Pcs"}, {"desc": "Element ass'y", "partNumber": "600-185-6100", "item": "Air cleaner", "qty": 1.0, "price": 4303900.0, "total": 4303900.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "426-07-32441", "item": "Filter AC", "qty": 2.0, "price": 1521600.0, "total": 3043200.0, "unit": "Pcs"}, {"desc": "Vbelt ass'y", "partNumber": "621-081-6960", "item": "Vbelt altenator", "qty": 2.0, "price": 1536000.0, "total": 3072000.0, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "425-S05-2760", "item": "Hydraulic filter tank", "qty": 2.0, "price": 1109760.0, "total": 2219520.0, "unit": "Pcs"}, {"desc": "Vbelt ass'y", "partNumber": "04120-21735", "item": "Vbelt Compressor AC", "qty": 1.0, "price": 766800.0, "total": 766800.0, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "600-411-5110", "item": "Corossion Resistor", "qty": 1.0, "price": 1578080.0, "total": 1578080.0, "unit": "Pcs"}, {"desc": "Breather", "partNumber": "07030-00252", "item": "Breather Brake", "qty": 3.0, "price": 457040.0, "total": 1371120.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "421-60-35170", "item": "Breather fuel tank", "qty": 1.0, "price": 251600.0, "total": 251600.0, "unit": "Pcs"}, {"desc": "Oli Engine", "partNumber": "15W40-DH", "item": "", "qty": 45.0, "price": 90000.0, "total": 4050000.0, "unit": "Liter"}, {"desc": "Oil Transmission", "partNumber": "TO-10-CF/D209", "item": "", "qty": 80.0, "price": 57000.0, "total": 4560000.0, "unit": "Liter"}, {"desc": "Grease", "partNumber": "SYGA-16CNLI", "item": "", "qty": 1.0, "price": 2032800.0, "total": 2032800.0, "unit": "Pail"}, {"desc": "Oil Exel", "partNumber": "AXO80", "item": "", "qty": 200.0, "price": 61055.0, "total": 12211000.0, "unit": "Liter"}], "subtotal": 57230740.0, "withPpn": 63526121.400000006}, {"title": "CONSUMABLE SPAREPART SERVICE 4000 HOURS WA500-6R", "model": "WA500-6R", "hours": 4000, "items": [{"desc": "Cartridge", "partNumber": "600-319-3550", "item": "Fuel main filter", "qty": 4.0, "price": 1166720.0, "total": 4666880.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-319-4540", "item": "Fuel Pre filter", "qty": 2.0, "price": 1965000.0, "total": 3930000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-211-1341", "item": "Filter oil engine", "qty": 2.0, "price": 848000.0, "total": 1696000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "424-16-1140", "item": "Filter Transmission", "qty": 2.0, "price": 120000.0, "total": 240000.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-B2125", "item": "", "qty": 2.0, "price": 288000.0, "total": 576000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "424-60-65230", "item": "Filter oil hyd", "qty": 1.0, "price": 5090160.0, "total": 5090160.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-B2014", "item": "", "qty": 2.0, "price": 64960.0, "total": 129920.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-B5180", "item": "", "qty": 2.0, "price": 578800.0, "total": 1157600.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "285-62-17320", "item": "Breather hyd tank", "qty": 1.0, "price": 284160.0, "total": 284160.0, "unit": "Pcs"}, {"desc": "Element ass'y", "partNumber": "600-185-6101", "item": "Air cleaner", "qty": 1.0, "price": 4303900.0, "total": 4303900.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "426-07-32441", "item": "Filter AC", "qty": 2.0, "price": 1521600.0, "total": 3043200.0, "unit": "Pcs"}, {"desc": "Vbelt ass'y", "partNumber": "621-081-6960", "item": "Vbelt altenator", "qty": 2.0, "price": 1536000.0, "total": 3072000.0, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "425-S05-2760", "item": "Hydraulic filter tank", "qty": 2.0, "price": 1109760.0, "total": 2219520.0, "unit": "Pcs"}, {"desc": "Vbelt ass'y", "partNumber": "04120-21735", "item": "Vbelt Compressor AC", "qty": 1.0, "price": 697120.0, "total": 697120.0, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "600-411-5110", "item": "Corossion Resistor", "qty": 1.0, "price": 1578080.0, "total": 1578080.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "569-15-51732", "item": "Element Torque coventer", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-A2060", "item": "", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Breather", "partNumber": "07030-00252", "item": "Breather Brake", "qty": 3.0, "price": 457040.0, "total": 1371120.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "421-60-35170", "item": "Breather fuel tank", "qty": 1.0, "price": 251600.0, "total": 251600.0, "unit": "Pcs"}, {"desc": "Oli Engine", "partNumber": "15W40-DH", "item": "Engine", "qty": 45.0, "price": 90000.0, "total": 4050000.0, "unit": "Liter"}, {"desc": "Oil Transmission", "partNumber": "TO-10-CF", "item": "Transmission", "qty": 80.0, "price": 57000.0, "total": 4560000.0, "unit": "Liter"}, {"desc": "Grease", "partNumber": "SYGA-16CNLI", "item": "Grease", "qty": 1.0, "price": 2032800.0, "total": 2032800.0, "unit": "Pail"}, {"desc": "Oil Exel", "partNumber": "AXO80", "item": "Exel", "qty": 200.0, "price": 61055.0, "total": 12211000.0, "unit": "Liter"}, {"desc": "Hydraulic oil", "partNumber": "VG46", "item": "Hyrdaulic Oil", "qty": 350.0, "price": 77000.0, "total": 26950000.0, "unit": "Liter"}], "subtotal": null, "withPpn": null}], "DOZER D85ESS-2": [{"title": "CONSUMABLE SPAREPART SERVICE 250 HOURS DOZER D85ESS-2", "model": "DOZER D85ESS-2", "hours": 250, "items": [{"desc": "Cartridge", "partNumber": "600-211-1231", "item": "Engine oil filter", "qty": 1.0, "price": 172000.0, "total": 172000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-311-8321", "item": "Fuel filter", "qty": 1.0, "price": 110000.0, "total": 110000.0, "unit": "Pcs"}, {"desc": "Oli Engine", "partNumber": "15W40-DH", "item": "Engine", "qty": 45.0, "price": 90000.0, "total": 4050000.0, "unit": "Liter"}, {"desc": "Grease", "partNumber": "SYGA-16CNLI", "item": "Attachment", "qty": 1.0, "price": 2541000.0, "total": 2541000.0, "unit": "Pail"}], "subtotal": 6873000.0, "withPpn": 7629030.000000001}, {"title": "CONSUMABLE SPAREPART SERVICE 500 HOURS DOZER D85ESS-2", "model": "DOZER D85ESS-2", "hours": 500, "items": [{"desc": "Cartridge", "partNumber": "600-211-1231", "item": "Engine oil filter", "qty": 1.0, "price": 172000.0, "total": 172000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-311-8321", "item": "Fuel filter", "qty": 1.0, "price": 110000.0, "total": 110000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "07063-01054", "item": "Powertrain filter", "qty": 1.0, "price": 102000.0, "total": 102000.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-72110", "item": "", "qty": 1.0, "price": 225200.0, "total": 225200.0, "unit": "Pcs"}, {"desc": "Oli Engine", "partNumber": "15W40-DH", "item": "Engine", "qty": 45.0, "price": 90000.0, "total": 4050000.0, "unit": "Liter"}, {"desc": "Grease", "partNumber": "SYGA-16CNLIZ", "item": "Attachment", "qty": 1.0, "price": 2032800.0, "total": 2032800.0, "unit": "Pail"}], "subtotal": 6692000.0, "withPpn": 7428120.000000001}, {"title": "CONSUMABLE SPAREPART SERVICE 1000 HOURS DOZER D85ESS-2", "model": "DOZER D85ESS-2", "hours": 1000, "items": [{"desc": "Cartridge", "partNumber": "600-211-1231", "item": "Engine oil filter", "qty": 1.0, "price": 172000.0, "total": 172000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-311-8321", "item": "Fuel filter", "qty": 1.0, "price": 110000.0, "total": 110000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "07063-01054", "item": "Powertrain filter", "qty": 1.0, "price": 102000.0, "total": 102000.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-72110", "item": "", "qty": 1.0, "price": 225200.0, "total": 225200.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "07063-01100", "item": "Hydraulic oil filter", "qty": 1.0, "price": 125000.0, "total": 125000.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-12140", "item": "", "qty": 1.0, "price": 119280.0, "total": 119280.0, "unit": "Pcs"}, {"desc": "Element assembly", "partNumber": "6125-81-7032", "item": "Air cleaner", "qty": 1.0, "price": 900000.0, "total": 900000.0, "unit": "Pcs"}, {"desc": "Oil Engine", "partNumber": "15W40-DH", "item": "Engine", "qty": 45.0, "price": 90000.0, "total": 4050000.0, "unit": "Liter"}, {"desc": "Oil Transmission", "partNumber": "TO-30-DM/D209", "item": "Transmission", "qty": 50.0, "price": 90294.0, "total": 4514700.0, "unit": "Liter"}, {"desc": "Grease", "partNumber": "SYGA-16CNLIZ", "item": "Attachment", "qty": 1.0, "price": 2032800.0, "total": 2032800.0, "unit": "Pail"}], "subtotal": 12350980.0, "withPpn": 13709587.8}, {"title": "CONSUMABLE SPAREPART SERVICE 2000 HOURS DOZER D85ESS-2", "model": "DOZER D85ESS-2", "hours": 2000, "items": [{"desc": "Cartridge", "partNumber": "600-211-1231", "item": "Engine oil filter", "qty": 1.0, "price": 172000.0, "total": 172000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-311-8321", "item": "Fuel filter", "qty": 1.0, "price": 110000.0, "total": 110000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "07063-01054", "item": "Transmission oil filter", "qty": 1.0, "price": 102000.0, "total": 102000.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-72110", "item": "", "qty": 1.0, "price": 225200.0, "total": 225200.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "07063-01100", "item": "Hydraulic oil filter", "qty": 1.0, "price": 125000.0, "total": 125000.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-12140", "item": "", "qty": 1.0, "price": 119280.0, "total": 119280.0, "unit": "Pcs"}, {"desc": "Element assembly", "partNumber": "6125-81-7032", "item": "Air cleaner", "qty": 1.0, "price": 900000.0, "total": 900000.0, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "17M-911-3530", "item": "Filter AC", "qty": 2.0, "price": 742720.0, "total": 1485440.0, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "77Z-97-00010", "item": "Filter AC", "qty": 1.0, "price": 1174000.0, "total": 1174000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "20Y-60-21470", "item": "Breather hyd tank", "qty": 1.0, "price": 72640.0, "total": 72640.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-411-1151", "item": "Corrosion resistor", "qty": 1.0, "price": 234160.0, "total": 234160.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "07030-00252", "item": "Breather", "qty": 2.0, "price": 457040.0, "total": 914080.0, "unit": "Pcs"}, {"desc": "Oil Engine", "partNumber": "15W40-DH", "item": "Engine", "qty": 45.0, "price": 90000.0, "total": 4050000.0, "unit": "Liter"}, {"desc": "Oil Transmission", "partNumber": "TO-30-DM/D209", "item": "Transmission", "qty": 50.0, "price": 90294.0, "total": 4514700.0, "unit": "Liter"}, {"desc": "Grease", "partNumber": "SYGA-16CNLIZ", "item": "Attachment", "qty": 1.0, "price": 2032800.0, "total": 2032800.0, "unit": "Pail"}, {"desc": "Oil Final Drive", "partNumber": "TO-30-DM/D209", "item": "Final Drive", "qty": 60.0, "price": 90294.0, "total": 5417640.0, "unit": "Liter"}], "subtotal": 21648940.0, "withPpn": 24030323.400000002}], "EXCA PC210-10MO": [{"title": "CONSUMABLE SPAREPART SERVICE 500 HOURS EXCA PC210-10MO", "model": "EXCA PC210-10MO", "hours": 500, "items": [{"desc": "Cartridge", "partNumber": "6742-01-4540", "item": "Engine oil filter", "qty": 1.0, "price": 920000.0, "total": 920000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-319-3610", "item": "Fuel prefilter", "qty": 1.0, "price": 458000.0, "total": 458000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "20Y-04-J1130", "item": "Fuel Racor", "qty": 1.0, "price": 225000.0, "total": 225000.0, "unit": "Pcs"}, {"desc": "Oil Engine", "partNumber": "15W40-DH", "item": "Engine", "qty": 25.0, "price": 90000.0, "total": 2250000.0, "unit": "Liter"}, {"desc": "Grease", "partNumber": "SYGA-16CNLI", "item": "Attachment", "qty": 1.0, "price": 2032800.0, "total": 2032800.0, "unit": "Pail"}], "subtotal": 5885800.0, "withPpn": 6533238.000000001}, {"title": "CONSUMABLE SPAREPART SERVICE 1000 HOURS EXCA PC210-10MO", "model": "EXCA PC210-10MO", "hours": 1000, "items": [{"desc": "Cartridge", "partNumber": "6742-01-4540", "item": "Engine oil filter", "qty": 1.0, "price": 920000.0, "total": 920000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-319-3610", "item": "Fuel prefilter", "qty": 1.0, "price": 458000.0, "total": 458000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "20Y-04-J1130", "item": "Fuel additional prefilter", "qty": 1.0, "price": 225000.0, "total": 225000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-319-3750", "item": "Fuel main filter", "qty": 1.0, "price": 373000.0, "total": 373000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "421-60-35170", "item": "Hydraulic tank breather", "qty": 1.0, "price": 251600.0, "total": 251600.0, "unit": "Pcs"}, {"desc": "Element ass'y", "partNumber": "600-185-5100", "item": "Air cleaner", "qty": 1.0, "price": 3436560.0, "total": 3436560.0, "unit": "Pcs"}, {"desc": "Oil Engine", "partNumber": "15W40-DH", "item": "Engine", "qty": 25.0, "price": 90000.0, "total": 2250000.0, "unit": "Liter"}, {"desc": "Grease", "partNumber": "SYGA-16CNLI", "item": "Attachment", "qty": 1.0, "price": 2032800.0, "total": 2032800.0, "unit": "Pail"}, {"desc": "Oil Swing motor", "partNumber": "TO-30-DM/D209", "item": "Swing machinery", "qty": 5.0, "price": 90294.0, "total": 451470.0, "unit": "Liter"}], "subtotal": 10398430.0, "withPpn": 11542257.3}, {"title": "CONSUMABLE SPAREPART SERVICE 2000 HOURS EXCA PC210-10MO", "model": "EXCA PC210-10MO", "hours": 2000, "items": [{"desc": "Cartridge", "partNumber": "6742-01-4540", "item": "Engine oil filter", "qty": 1.0, "price": 920000.0, "total": 920000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-319-3610", "item": "Fuel prefilter", "qty": 1.0, "price": 458000.0, "total": 458000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "20Y-04-J1130", "item": "Fuel additional prefilter", "qty": 1.0, "price": 225000.0, "total": 225000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-319-3750", "item": "Fuel main filter", "qty": 1.0, "price": 373000.0, "total": 373000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "421-60-35170", "item": "Hydraulic tank breather", "qty": 1.0, "price": 251600.0, "total": 251600.0, "unit": "Pcs"}, {"desc": "Element ass'y", "partNumber": "600-185-5100", "item": "Air cleaner filter", "qty": 1.0, "price": 3436560.0, "total": 3436560.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "17M-911-3530", "item": "Filter AC", "qty": 1.0, "price": 742720.0, "total": 742720.0, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "2A5-979-1551", "item": "", "qty": 1.0, "price": 742720.0, "total": 742720.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "207-60-71183", "item": "Filter oil hydraulic", "qty": 1.0, "price": 1177000.0, "total": 1177000.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-15195", "item": "", "qty": 1.0, "price": 238720.0, "total": 238720.0, "unit": "Pcs"}, {"desc": "Oil Engine", "partNumber": "15W40-DH", "item": "Engine", "qty": 25.0, "price": 90000.0, "total": 2250000.0, "unit": "Liter"}, {"desc": "Grease", "partNumber": "SYGA-16CNLI", "item": "Attachment", "qty": 1.0, "price": 2032800.0, "total": 2032800.0, "unit": "Pail"}, {"desc": "Oil Swing motor", "partNumber": "TO-30-DM/D209", "item": "Swing machinery", "qty": 5.0, "price": 90294.0, "total": 451470.0, "unit": "Liter"}, {"desc": "Oil Final Drive", "partNumber": "TO-30-DM/D209", "item": "Final Drive", "qty": 8.0, "price": 90294.0, "total": 722352.0, "unit": "Liter"}], "subtotal": 14021942.0, "withPpn": 15564355.620000001}], "oil": [{"desc": "Engine Oil", "partNumber": "15W40-DH", "item": "Oil Engine", "qty": 209.0, "price": 90000.0, "total": 18810000.0, "unit": "Liter"}, {"desc": "Transmission Oil", "partNumber": "TO-10-CF/D209", "item": "Oil transmission", "qty": 209.0, "price": 57000.0, "total": 11913000.0, "unit": "Liter"}, {"desc": "Transmission Oil", "partNumber": "TO-30-DM/D209", "item": "Oil transmission", "qty": 209.0, "price": 90294.0, "total": 18871446.0, "unit": "Liter"}, {"desc": "Hydraulic Oil", "partNumber": "KGO HO46-DM/209", "item": "Oil Hydraulic", "qty": 209.0, "price": 77000.0, "total": 16093000.0, "unit": "Liter"}, {"desc": "Axel Oil", "partNumber": "SYZ-AXO80DM-YD209Z", "item": "Oil Axel/Differential", "qty": 209.0, "price": 61055.0, "total": 12760495.0, "unit": "Liter"}], "budgetPlan": [{"date": "09/07/2026", "month": "Jul", "unit": "SWA-102", "targetHm": 4750, "serviceType": "PS 250 Hrs", "cost": 0.0, "pic": "SEN"}, {"date": "10/07/2026", "month": "Jul", "unit": "SWA-101", "targetHm": 5000, "serviceType": "PS 5000 Hrs", "cost": 34878997.2, "pic": "SEN"}, {"date": "2026-07-15", "month": "Jul", "unit": "SBD-103", "targetHm": 4750, "serviceType": "PS 250 Hrs", "cost": 7629030.000000001, "pic": "SEN"}, {"date": "29/07/2026", "month": "Jul", "unit": "SWA-101", "targetHm": 5250, "serviceType": "PS 250 Hrs", "cost": 0.0, "pic": "SEN"}, {"date": "2026-07-18", "month": "Jul", "unit": "SWA-102", "targetHm": 5000, "serviceType": "PS 5000 Hrs", "cost": 34878997.2, "pic": "SEN"}, {"date": "01/08/2026", "month": "Aug", "unit": "SBD-103", "targetHm": 5000, "serviceType": "PS 5000 Hrs", "cost": 13709587.8, "pic": "SEN"}, {"date": "18/08/2026", "month": "Aug", "unit": "SWA-101", "targetHm": 5500, "serviceType": "PS 500 Hrs", "cost": 19226976.0, "pic": "SEN"}, {"date": "18/08/2026", "month": "Aug", "unit": "SWA-102", "targetHm": 5250, "serviceType": "PS 250 Hrs", "cost": 0.0, "pic": "SEN"}, {"date": "19/08/2026", "month": "Aug", "unit": "SBD-103", "targetHm": 5250, "serviceType": "PS 250 Hrs", "cost": 7629030.000000001, "pic": "SEN"}, {"date": "29/08/2026", "month": "Aug", "unit": "SPC-104", "targetHm": 3000, "serviceType": "PS 1000 Hrs", "cost": 11542257.3, "pic": "Team UT ( Warranty )"}, {"date": "06/09/2026", "month": "Sep", "unit": "SBD-103", "targetHm": 5500, "serviceType": "PS 500 Hrs", "cost": 7428120.000000001, "pic": "SEN"}, {"date": "06/09/2026", "month": "Sep", "unit": "SWA-101", "targetHm": 5750, "serviceType": "PS 250 Hrs", "cost": 0.0, "pic": "SEN"}, {"date": "07/09/2026", "month": "Sep", "unit": "SWA-102", "targetHm": 5500, "serviceType": "PS 500 Hrs", "cost": 19226976.0, "pic": "SEN"}, {"date": "24/09/2026", "month": "Sep", "unit": "SBD-103", "targetHm": 5750, "serviceType": "PS 250 Hrs", "cost": 7629030.000000001, "pic": "SEN"}, {"date": "26/09/2026", "month": "Sep", "unit": "SWA-101", "targetHm": 6000, "serviceType": "PS 2000 Hrs", "cost": 63526121.400000006, "pic": "SEN"}, {"date": "27/09/2026", "month": "Sep", "unit": "SWA-102", "targetHm": 5750, "serviceType": "PS 250 Hrs", "cost": 0.0, "pic": "SEN"}, {"date": "12/10/2026", "month": "Okt", "unit": "SBD-103", "targetHm": 6000, "serviceType": "PS 2000 Hrs", "cost": 24030323.400000002, "pic": "SEN"}, {"date": "17/10/2026", "month": "Okt", "unit": "SWA-102", "targetHm": 6000, "serviceType": "PS 2000 Hrs", "cost": 63526121.400000006, "pic": "SEN"}, {"date": "30/10/2026", "month": "Okt", "unit": "SPC-104", "targetHm": 3500, "serviceType": "PS 500 Hrs", "cost": 6533238.000000001, "pic": "Team UT ( Warranty )"}, {"date": "16/10/2026", "month": "Okt", "unit": "SWA-101", "targetHm": 6250, "serviceType": "PS 250 Hrs", "cost": 0.0, "pic": "SEN"}, {"date": "29/10/2026", "month": "Okt", "unit": "SBD-103", "targetHm": 6250, "serviceType": "PS 250 Hrs", "cost": 7629030.000000001, "pic": "SEN"}, {"date": "04/11/2026", "month": "Nov", "unit": "SWA-101", "targetHm": 6500, "serviceType": "PS 500 Hrs", "cost": 19226976.0, "pic": "SEN"}, {"date": "06/11/2026", "month": "Nov", "unit": "SWA-102", "targetHm": 6250, "serviceType": "PS 250 Hrs", "cost": 0.0, "pic": "SEN"}, {"date": "16/11/2026", "month": "Nov", "unit": "SBD-103", "targetHm": 6500, "serviceType": "PS 500 Hrs", "cost": 7428120.000000001, "pic": "SEN"}, {"date": "24/11/2026", "month": "Nov", "unit": "SWA-101", "targetHm": 6750, "serviceType": "PS 250 Hrs", "cost": 0.0, "pic": "SEN"}, {"date": "26/11/2026", "month": "Nov", "unit": "SWA-102", "targetHm": 6500, "serviceType": "PS 500 Hrs", "cost": 19226976.0, "pic": "SEN"}, {"date": "04/12/2026", "month": "Dec", "unit": "SBD-103", "targetHm": 6750, "serviceType": "PS 250 Hrs", "cost": 7629030.000000001, "pic": "SEN"}, {"date": "14/12/2026", "month": "Dec", "unit": "SWA-101", "targetHm": 7000, "serviceType": "PS 1000 Hrs", "cost": 34878997.2, "pic": "SEN"}, {"date": "16/12/2026", "month": "Dec", "unit": "SWA-102", "targetHm": 6750, "serviceType": "PS 250 Hrs", "cost": 0.0, "pic": "SEN"}, {"date": "22/12/2026", "month": "Dec", "unit": "SBD-103", "targetHm": 7000, "serviceType": "PS 1000 Hrs", "cost": 13709587.8, "pic": "SEN"}, {"date": "31/12/2026", "month": "Dec", "unit": "SPC-104", "targetHm": 4000, "serviceType": "PS 4000 Hrs", "cost": 15564355.620000001, "pic": "Team UT ( Warranty )"}], "monthlyBudget": [{"month": "Jul", "SWA-101": 34878997.2, "SWA-102": 34878997.2, "SBD-103": 7629030, "SPC-104": 0, "total": 77387024.4}, {"month": "Aug", "SWA-101": 19226976, "SWA-102": 0, "SBD-103": 21338617.8, "SPC-104": 11542257.3, "total": 52107851.099999994}, {"month": "Sep", "SWA-101": 63526121.4, "SWA-102": 19226976, "SBD-103": 15057150, "SPC-104": 0, "total": 97810247.4}, {"month": "Okt", "SWA-101": 0, "SWA-102": 63526121.4, "SBD-103": 31659353.4, "SPC-104": 6533238, "total": 101718712.8}, {"month": "Nov", "SWA-101": 19226976, "SWA-102": 19226976, "SBD-103": 7428120, "SPC-104": 0, "total": 45882072}, {"month": "Dec", "SWA-101": 34878997.2, "SWA-102": 0, "SBD-103": 21338617.8, "SPC-104": 15564355.62, "total": 71781970.62}], "unitModels": {"SWA-101": "WA500-6R", "SWA-102": "WA500-6R", "SBD-103": "DOZER D85ESS-2", "SPC-104": "EXCA PC210-10MO"}};
+const SPAREPART_DATA = {"WA500-6R": [{"title": "CONSUMABLE SPAREPART SERVICE 500 HOURS WA500-6R", "model": "WA500-6R", "hours": 500, "items": [{"desc": "Cartridge", "partNumber": "600-319-3550", "item": "Fuel main filter", "qty": 4.0, "price": 1166720.0, "total": 4666880.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-319-4540", "item": "Fuel Pre filter", "qty": 2.0, "price": 1965000.0, "total": 3930000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-211-1341", "item": "Filter oil engine", "qty": 2.0, "price": 848000.0, "total": 1696000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "424-16-1140", "item": "Filter Transmission", "qty": 2.0, "price": 120000.0, "total": 240000.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-B2125", "item": "Filter Transmission", "qty": 2.0, "price": 288000.0, "total": 576000.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-B2014", "item": "Filter Transmission", "qty": 2.0, "price": 64960.0, "total": 129920.0, "unit": "Pcs"}, {"desc": "Oli Engine", "partNumber": "15W40-DH", "item": "Engine", "qty": 45.0, "price": 90000.0, "total": 4050000.0, "unit": "Liter"}, {"desc": "Grease", "partNumber": "SYGA-16CNLIZ", "item": "Attachment", "qty": 1.0, "price": 2032800.0, "total": 2032800.0, "unit": "Pail"}], "subtotal": 17321600.0, "withPpn": 19226976.0}, {"title": "CONSUMABLE SPAREPART SERVICE 1000 HOURS WA500-6R", "model": "WA500-6R", "hours": 1000, "items": [{"desc": "Cartridge", "partNumber": "600-319-3550", "item": "Fuel main filter", "qty": 4.0, "price": 1166720.0, "total": 4666880.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-319-4540", "item": "Fuel Pre filter", "qty": 2.0, "price": 1965000.0, "total": 3930000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-211-1341", "item": "Filter oil engine", "qty": 2.0, "price": 848000.0, "total": 1696000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "424-16-1140", "item": "Filter Transmission", "qty": 2.0, "price": 120000.0, "total": 240000.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-B2125", "item": "", "qty": 2.0, "price": 288000.0, "total": 576000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "424-60-65230", "item": "Filter oil hyd", "qty": 1.0, "price": 5090160.0, "total": 5090160.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-B2014", "item": "", "qty": 2.0, "price": 64960.0, "total": 129920.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-B5180", "item": "", "qty": 2.0, "price": 578800.0, "total": 1157600.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "285-62-17320", "item": "Breather hyd tank", "qty": 1.0, "price": 284160.0, "total": 284160.0, "unit": "Pcs"}, {"desc": "Element ass'y", "partNumber": "600-185-6100", "item": "Air cleaner", "qty": 1.0, "price": 3009000.0, "total": 3009000.0, "unit": "Pcs"}, {"desc": "Oli Engine", "partNumber": "15W40-DH", "item": "", "qty": 45.0, "price": 90000.0, "total": 4050000.0, "unit": "Liter"}, {"desc": "Oil Transmission", "partNumber": "TO-10-CF/D209", "item": "", "qty": 80.0, "price": 57000.0, "total": 4560000.0, "unit": "Liter"}, {"desc": "Grease", "partNumber": "SYGA-16CNLI", "item": "", "qty": 1.0, "price": 2032800.0, "total": 2032800.0, "unit": "Pail"}], "subtotal": 31422520.0, "withPpn": 34878997.2}, {"title": "CONSUMABLE SPAREPART SERVICE 2000 HOURS WA500-6R", "model": "WA500-6R", "hours": 2000, "items": [{"desc": "Cartridge", "partNumber": "600-319-3550", "item": "Fuel main filter", "qty": 4.0, "price": 1166720.0, "total": 4666880.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-319-4540", "item": "Fuel Pre filter", "qty": 2.0, "price": 1965000.0, "total": 3930000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-211-1341", "item": "Filter oil engine", "qty": 2.0, "price": 848000.0, "total": 1696000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "424-16-1140", "item": "Filter Transmission", "qty": 2.0, "price": 120000.0, "total": 240000.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-B2125", "item": "", "qty": 2.0, "price": 288000.0, "total": 576000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "424-60-65230", "item": "Filter oil hyd", "qty": 1.0, "price": 5090160.0, "total": 5090160.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-B2014", "item": "", "qty": 2.0, "price": 64960.0, "total": 129920.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-B5180", "item": "", "qty": 2.0, "price": 578800.0, "total": 1157600.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "285-62-17320", "item": "Breather hyd tank", "qty": 1.0, "price": 284160.0, "total": 284160.0, "unit": "Pcs"}, {"desc": "Element ass'y", "partNumber": "600-185-6100", "item": "Air cleaner", "qty": 1.0, "price": 4303900.0, "total": 4303900.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "426-07-32441", "item": "Filter AC", "qty": 2.0, "price": 1521600.0, "total": 3043200.0, "unit": "Pcs"}, {"desc": "Vbelt ass'y", "partNumber": "621-081-6960", "item": "Vbelt altenator", "qty": 2.0, "price": 1536000.0, "total": 3072000.0, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "425-S05-2760", "item": "Hydraulic filter tank", "qty": 2.0, "price": 1109760.0, "total": 2219520.0, "unit": "Pcs"}, {"desc": "Vbelt ass'y", "partNumber": "04120-21735", "item": "Vbelt Compressor AC", "qty": 1.0, "price": 766800.0, "total": 766800.0, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "600-411-5110", "item": "Corossion Resistor", "qty": 1.0, "price": 1578080.0, "total": 1578080.0, "unit": "Pcs"}, {"desc": "Breather", "partNumber": "07030-00252", "item": "Breather Brake", "qty": 3.0, "price": 457040.0, "total": 1371120.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "421-60-35170", "item": "Breather fuel tank", "qty": 1.0, "price": 251600.0, "total": 251600.0, "unit": "Pcs"}, {"desc": "Oli Engine", "partNumber": "15W40-DH", "item": "", "qty": 45.0, "price": 90000.0, "total": 4050000.0, "unit": "Liter"}, {"desc": "Oil Transmission", "partNumber": "TO-10-CF/D209", "item": "", "qty": 80.0, "price": 57000.0, "total": 4560000.0, "unit": "Liter"}, {"desc": "Grease", "partNumber": "SYGA-16CNLI", "item": "", "qty": 1.0, "price": 2032800.0, "total": 2032800.0, "unit": "Pail"}, {"desc": "Oil Exel", "partNumber": "AXO80", "item": "", "qty": 200.0, "price": 61055.0, "total": 12211000.0, "unit": "Liter"}], "subtotal": 57230740.0, "withPpn": 63526121.400000006}, {"title": "CONSUMABLE SPAREPART SERVICE 4000 HOURS WA500-6R", "model": "WA500-6R", "hours": 4000, "items": [{"desc": "Cartridge", "partNumber": "600-319-3550", "item": "Fuel main filter", "qty": 4.0, "price": 1166720.0, "total": 4666880.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-319-4540", "item": "Fuel Pre filter", "qty": 2.0, "price": 1965000.0, "total": 3930000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-211-1341", "item": "Filter oil engine", "qty": 2.0, "price": 848000.0, "total": 1696000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "424-16-1140", "item": "Filter Transmission", "qty": 2.0, "price": 120000.0, "total": 240000.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-B2125", "item": "", "qty": 2.0, "price": 288000.0, "total": 576000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "424-60-65230", "item": "Filter oil hyd", "qty": 1.0, "price": 5090160.0, "total": 5090160.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-B2014", "item": "", "qty": 2.0, "price": 64960.0, "total": 129920.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-B5180", "item": "", "qty": 2.0, "price": 578800.0, "total": 1157600.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "285-62-17320", "item": "Breather hyd tank", "qty": 1.0, "price": 284160.0, "total": 284160.0, "unit": "Pcs"}, {"desc": "Element ass'y", "partNumber": "600-185-6101", "item": "Air cleaner", "qty": 1.0, "price": 4303900.0, "total": 4303900.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "426-07-32441", "item": "Filter AC", "qty": 2.0, "price": 1521600.0, "total": 3043200.0, "unit": "Pcs"}, {"desc": "Vbelt ass'y", "partNumber": "621-081-6960", "item": "Vbelt altenator", "qty": 2.0, "price": 1536000.0, "total": 3072000.0, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "425-S05-2760", "item": "Hydraulic filter tank", "qty": 2.0, "price": 1109760.0, "total": 2219520.0, "unit": "Pcs"}, {"desc": "Vbelt ass'y", "partNumber": "04120-21735", "item": "Vbelt Compressor AC", "qty": 1.0, "price": 697120.0, "total": 697120.0, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "600-411-5110", "item": "Corossion Resistor", "qty": 1.0, "price": 1578080.0, "total": 1578080.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "569-15-51732", "item": "Element Torque coventer", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-A2060", "item": "", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Breather", "partNumber": "07030-00252", "item": "Breather Brake", "qty": 3.0, "price": 457040.0, "total": 1371120.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "421-60-35170", "item": "Breather fuel tank", "qty": 1.0, "price": 251600.0, "total": 251600.0, "unit": "Pcs"}, {"desc": "Oli Engine", "partNumber": "15W40-DH", "item": "Engine", "qty": 45.0, "price": 90000.0, "total": 4050000.0, "unit": "Liter"}, {"desc": "Oil Transmission", "partNumber": "TO-10-CF", "item": "Transmission", "qty": 80.0, "price": 57000.0, "total": 4560000.0, "unit": "Liter"}, {"desc": "Grease", "partNumber": "SYGA-16CNLI", "item": "Grease", "qty": 1.0, "price": 2032800.0, "total": 2032800.0, "unit": "Pail"}, {"desc": "Oil Exel", "partNumber": "AXO80", "item": "Exel", "qty": 200.0, "price": 61055.0, "total": 12211000.0, "unit": "Liter"}, {"desc": "Hydraulic oil", "partNumber": "VG46", "item": "Hyrdaulic Oil", "qty": 350.0, "price": 77000.0, "total": 26950000.0, "unit": "Liter"}], "subtotal": null, "withPpn": null}], "DOZER D85ESS-2": [{"title": "CONSUMABLE SPAREPART SERVICE 250 HOURS DOZER D85ESS-2", "model": "DOZER D85ESS-2", "hours": 250, "items": [{"desc": "Cartridge", "partNumber": "600-211-1231", "item": "Engine oil filter", "qty": 1.0, "price": 172000.0, "total": 172000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-311-8321", "item": "Fuel filter", "qty": 1.0, "price": 110000.0, "total": 110000.0, "unit": "Pcs"}, {"desc": "Oli Engine", "partNumber": "15W40-DH", "item": "Engine", "qty": 45.0, "price": 90000.0, "total": 4050000.0, "unit": "Liter"}, {"desc": "Grease", "partNumber": "SYGA-16CNLI", "item": "Attachment", "qty": 1.0, "price": 2541000.0, "total": 2541000.0, "unit": "Pail"}], "subtotal": 6873000.0, "withPpn": 7629030.000000001}, {"title": "CONSUMABLE SPAREPART SERVICE 500 HOURS DOZER D85ESS-2", "model": "DOZER D85ESS-2", "hours": 500, "items": [{"desc": "Cartridge", "partNumber": "600-211-1231", "item": "Engine oil filter", "qty": 1.0, "price": 172000.0, "total": 172000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-311-8321", "item": "Fuel filter", "qty": 1.0, "price": 110000.0, "total": 110000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "07063-01054", "item": "Powertrain filter", "qty": 1.0, "price": 102000.0, "total": 102000.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-72110", "item": "", "qty": 1.0, "price": 225200.0, "total": 225200.0, "unit": "Pcs"}, {"desc": "Oli Engine", "partNumber": "15W40-DH", "item": "Engine", "qty": 45.0, "price": 90000.0, "total": 4050000.0, "unit": "Liter"}, {"desc": "Grease", "partNumber": "SYGA-16CNLIZ", "item": "Attachment", "qty": 1.0, "price": 2032800.0, "total": 2032800.0, "unit": "Pail"}], "subtotal": 6692000.0, "withPpn": 7428120.000000001}, {"title": "CONSUMABLE SPAREPART SERVICE 1000 HOURS DOZER D85ESS-2", "model": "DOZER D85ESS-2", "hours": 1000, "items": [{"desc": "Cartridge", "partNumber": "600-211-1231", "item": "Engine oil filter", "qty": 1.0, "price": 172000.0, "total": 172000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-311-8321", "item": "Fuel filter", "qty": 1.0, "price": 110000.0, "total": 110000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "07063-01054", "item": "Powertrain filter", "qty": 1.0, "price": 102000.0, "total": 102000.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-72110", "item": "", "qty": 1.0, "price": 225200.0, "total": 225200.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "07063-01100", "item": "Hydraulic oil filter", "qty": 1.0, "price": 125000.0, "total": 125000.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-12140", "item": "", "qty": 1.0, "price": 119280.0, "total": 119280.0, "unit": "Pcs"}, {"desc": "Element assembly", "partNumber": "6125-81-7032", "item": "Air cleaner", "qty": 1.0, "price": 900000.0, "total": 900000.0, "unit": "Pcs"}, {"desc": "Oil Engine", "partNumber": "15W40-DH", "item": "Engine", "qty": 45.0, "price": 90000.0, "total": 4050000.0, "unit": "Liter"}, {"desc": "Oil Transmission", "partNumber": "TO-30-DM/D209", "item": "Transmission", "qty": 50.0, "price": 90294.0, "total": 4514700.0, "unit": "Liter"}, {"desc": "Grease", "partNumber": "SYGA-16CNLIZ", "item": "Attachment", "qty": 1.0, "price": 2032800.0, "total": 2032800.0, "unit": "Pail"}], "subtotal": 12350980.0, "withPpn": 13709587.8}, {"title": "CONSUMABLE SPAREPART SERVICE 2000 HOURS DOZER D85ESS-2", "model": "DOZER D85ESS-2", "hours": 2000, "items": [{"desc": "Cartridge", "partNumber": "600-211-1231", "item": "Engine oil filter", "qty": 1.0, "price": 172000.0, "total": 172000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-311-8321", "item": "Fuel filter", "qty": 1.0, "price": 110000.0, "total": 110000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "07063-01054", "item": "Transmission oil filter", "qty": 1.0, "price": 102000.0, "total": 102000.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-72110", "item": "", "qty": 1.0, "price": 225200.0, "total": 225200.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "07063-01100", "item": "Hydraulic oil filter", "qty": 1.0, "price": 125000.0, "total": 125000.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-12140", "item": "", "qty": 1.0, "price": 119280.0, "total": 119280.0, "unit": "Pcs"}, {"desc": "Element assembly", "partNumber": "6125-81-7032", "item": "Air cleaner", "qty": 1.0, "price": 900000.0, "total": 900000.0, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "17M-911-3530", "item": "Filter AC", "qty": 2.0, "price": 742720.0, "total": 1485440.0, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "77Z-97-00010", "item": "Filter AC", "qty": 1.0, "price": 1174000.0, "total": 1174000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "20Y-60-21470", "item": "Breather hyd tank", "qty": 1.0, "price": 72640.0, "total": 72640.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-411-1151", "item": "Corrosion resistor", "qty": 1.0, "price": 234160.0, "total": 234160.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "07030-00252", "item": "Breather", "qty": 2.0, "price": 457040.0, "total": 914080.0, "unit": "Pcs"}, {"desc": "Belt", "partNumber": "04121-22271", "item": "Belt Alternator", "qty": 2.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Belt", "partNumber": "04120-21754", "item": "Belt Compressor AC", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Oil Engine", "partNumber": "15W40-DH", "item": "Engine", "qty": 45.0, "price": 90000.0, "total": 4050000.0, "unit": "Liter"}, {"desc": "Oil Transmission", "partNumber": "TO-30-DM/D209", "item": "Transmission", "qty": 50.0, "price": 90294.0, "total": 4514700.0, "unit": "Liter"}, {"desc": "Grease", "partNumber": "SYGA-16CNLIZ", "item": "Attachment", "qty": 1.0, "price": 2032800.0, "total": 2032800.0, "unit": "Pail"}, {"desc": "Oil Final Drive", "partNumber": "TO-30-DM/D209", "item": "Final Drive", "qty": 60.0, "price": 90294.0, "total": 5417640.0, "unit": "Liter"}], "subtotal": 21648940.0, "withPpn": 24030323.400000002}, {"title": "CONSUMABLE SPAREPART SERVICE 4000 HOURS DOZER D85ESS-2", "model": "DOZER D85ESS-2", "hours": 4000, "items": [{"desc": "Cartridge", "partNumber": "600-211-1231", "item": "Engine oil filter", "qty": 1.0, "price": 172000.0, "total": 172000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-311-8321", "item": "Fuel filter", "qty": 1.0, "price": 110000.0, "total": 110000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "07063-01054", "item": "Transmission oil filter", "qty": 1.0, "price": 102000.0, "total": 102000.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-72110", "item": "", "qty": 1.0, "price": 225200.0, "total": 225200.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "07063-01100", "item": "Hydraulic oil filter", "qty": 1.0, "price": 125000.0, "total": 125000.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-12140", "item": "", "qty": 1.0, "price": 119280.0, "total": 119280.0, "unit": "Pcs"}, {"desc": "Element assembly", "partNumber": "6125-81-7032", "item": "Air cleaner", "qty": 1.0, "price": 900000.0, "total": 900000.0, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "17M-911-3530", "item": "Filter AC", "qty": 2.0, "price": 742720.0, "total": 1485440.0, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "77Z-97-00010", "item": "Filter AC", "qty": 1.0, "price": 1174000.0, "total": 1174000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "20Y-60-21470", "item": "Breather hyd tank", "qty": 1.0, "price": 72640.0, "total": 72640.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-411-1151", "item": "Corrosion resistor", "qty": 1.0, "price": 234160.0, "total": 234160.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "07030-00252", "item": "Breather", "qty": 2.0, "price": 457040.0, "total": 914080.0, "unit": "Pcs"}, {"desc": "Belt", "partNumber": "04121-22271", "item": "Belt Alternator", "qty": 2.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Belt", "partNumber": "04120-21754", "item": "Belt Compressor AC", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Oil Engine", "partNumber": "15W40-DH", "item": "Engine", "qty": 45.0, "price": 90000.0, "total": 4050000.0, "unit": "Liter"}, {"desc": "Oil Transmission", "partNumber": "TO-30-DM/D209", "item": "Transmission", "qty": 50.0, "price": 90294.0, "total": 4514700.0, "unit": "Liter"}, {"desc": "Grease", "partNumber": "SYGA-16CNLIZ", "item": "Attachment", "qty": 1.0, "price": 2032800.0, "total": 2032800.0, "unit": "Pail"}, {"desc": "Oil Final Drive", "partNumber": "TO-30-DM/D209", "item": "Final Drive", "qty": 60.0, "price": 90294.0, "total": 5417640.0, "unit": "Liter"}], "subtotal": 21648940.0, "withPpn": 24030323.400000002}], "EXCA PC210-10MO": [{"title": "CONSUMABLE SPAREPART SERVICE 500 HOURS EXCA PC210-10MO", "model": "EXCA PC210-10MO", "hours": 500, "items": [{"desc": "Cartridge", "partNumber": "6742-01-4540", "item": "Engine oil filter", "qty": 1.0, "price": 920000.0, "total": 920000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-319-3610", "item": "Fuel prefilter", "qty": 1.0, "price": 458000.0, "total": 458000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "20Y-04-J1130", "item": "Fuel Racor", "qty": 1.0, "price": 225000.0, "total": 225000.0, "unit": "Pcs"}, {"desc": "Oil Engine", "partNumber": "15W40-DH", "item": "Engine", "qty": 25.0, "price": 90000.0, "total": 2250000.0, "unit": "Liter"}, {"desc": "Grease", "partNumber": "SYGA-16CNLI", "item": "Attachment", "qty": 1.0, "price": 2032800.0, "total": 2032800.0, "unit": "Pail"}], "subtotal": 5885800.0, "withPpn": 6533238.000000001}, {"title": "CONSUMABLE SPAREPART SERVICE 1000 HOURS EXCA PC210-10MO", "model": "EXCA PC210-10MO", "hours": 1000, "items": [{"desc": "Cartridge", "partNumber": "6742-01-4540", "item": "Engine oil filter", "qty": 1.0, "price": 920000.0, "total": 920000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-319-3610", "item": "Fuel prefilter", "qty": 1.0, "price": 458000.0, "total": 458000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "20Y-04-J1130", "item": "Fuel additional prefilter", "qty": 1.0, "price": 225000.0, "total": 225000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-319-3750", "item": "Fuel main filter", "qty": 1.0, "price": 373000.0, "total": 373000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "421-60-35170", "item": "Hydraulic tank breather", "qty": 1.0, "price": 251600.0, "total": 251600.0, "unit": "Pcs"}, {"desc": "Element ass'y", "partNumber": "600-185-5100", "item": "Air cleaner", "qty": 1.0, "price": 3436560.0, "total": 3436560.0, "unit": "Pcs"}, {"desc": "Oil Engine", "partNumber": "15W40-DH", "item": "Engine", "qty": 25.0, "price": 90000.0, "total": 2250000.0, "unit": "Liter"}, {"desc": "Grease", "partNumber": "SYGA-16CNLI", "item": "Attachment", "qty": 1.0, "price": 2032800.0, "total": 2032800.0, "unit": "Pail"}, {"desc": "Oil Swing motor", "partNumber": "TO-30-DM/D209", "item": "Swing machinery", "qty": 5.0, "price": 90294.0, "total": 451470.0, "unit": "Liter"}], "subtotal": 10398430.0, "withPpn": 11542257.3}, {"title": "CONSUMABLE SPAREPART SERVICE 2000 HOURS EXCA PC210-10MO", "model": "EXCA PC210-10MO", "hours": 2000, "items": [{"desc": "Cartridge", "partNumber": "6742-01-4540", "item": "Engine oil filter", "qty": 1.0, "price": 920000.0, "total": 920000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-319-3610", "item": "Fuel prefilter", "qty": 1.0, "price": 458000.0, "total": 458000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "20Y-04-J1130", "item": "Fuel additional prefilter", "qty": 1.0, "price": 225000.0, "total": 225000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-319-3750", "item": "Fuel main filter", "qty": 1.0, "price": 373000.0, "total": 373000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "421-60-35170", "item": "Hydraulic tank breather", "qty": 1.0, "price": 251600.0, "total": 251600.0, "unit": "Pcs"}, {"desc": "Element ass'y", "partNumber": "600-185-5100", "item": "Air cleaner filter", "qty": 1.0, "price": 3436560.0, "total": 3436560.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "17M-911-3530", "item": "Filter AC", "qty": 1.0, "price": 742720.0, "total": 742720.0, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "2A5-979-1551", "item": "", "qty": 1.0, "price": 742720.0, "total": 742720.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "207-60-71183", "item": "Filter oil hydraulic", "qty": 1.0, "price": 1177000.0, "total": 1177000.0, "unit": "Pcs"}, {"desc": "Oring", "partNumber": "07000-15195", "item": "", "qty": 1.0, "price": 238720.0, "total": 238720.0, "unit": "Pcs"}, {"desc": "Oil Engine", "partNumber": "15W40-DH", "item": "Engine", "qty": 25.0, "price": 90000.0, "total": 2250000.0, "unit": "Liter"}, {"desc": "Grease", "partNumber": "SYGA-16CNLI", "item": "Attachment", "qty": 1.0, "price": 2032800.0, "total": 2032800.0, "unit": "Pail"}, {"desc": "Oil Swing motor", "partNumber": "TO-30-DM/D209", "item": "Swing machinery", "qty": 5.0, "price": 90294.0, "total": 451470.0, "unit": "Liter"}, {"desc": "Oil Final Drive", "partNumber": "TO-30-DM/D209", "item": "Final Drive", "qty": 8.0, "price": 90294.0, "total": 722352.0, "unit": "Liter"}], "subtotal": 14021942.0, "withPpn": 15564355.620000001}], "WA380-6": [{"title": "CONSUMABLE SPAREPART SERVICE 500 HOURS WA380-6", "model": "WA380-6", "hours": 500, "items": [{"desc": "Cartridge", "partNumber": "6736-51-5142", "item": "Engine oil filter", "qty": 1.0, "price": 350000.0, "total": 350000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-319-3610C", "item": "Fuel pre-filter", "qty": 1.0, "price": 477000.0, "total": 477000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "6754-79-6140", "item": "Fuel main filter", "qty": 1.0, "price": 296560.0, "total": 296560.0, "unit": "Pcs"}, {"desc": "Oli Engine", "partNumber": "15W40-DH", "item": "Engine", "qty": 25.0, "price": 90000.0, "total": 2250000.0, "unit": "Liter"}, {"desc": "Grease", "partNumber": "SYGA-16CNLI", "item": "Attachment", "qty": 1.0, "price": 2032800.0, "total": 2032800.0, "unit": "Pail"}], "subtotal": null, "withPpn": null}, {"title": "CONSUMABLE SPAREPART SERVICE 1000 HOURS WA380-6", "model": "WA380-6", "hours": 1000, "items": [{"desc": "Cartridge", "partNumber": "6736-51-5142", "item": "Engine oil filter", "qty": 1.0, "price": 350000.0, "total": 350000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-319-3610C", "item": "Fuel pre-filter", "qty": 1.0, "price": 477000.0, "total": 477000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "6754-79-6140", "item": "Fuel main filter", "qty": 1.0, "price": 296560.0, "total": 296560.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "714-07-28713", "item": "Transmission oil filter", "qty": 1.0, "price": 1341040.0, "total": 1341040.0, "unit": "Pcs"}, {"desc": "Element ass'y", "partNumber": "600-185-5100C", "item": "Air cleaner", "qty": 1.0, "price": 2057000.0, "total": 2057000.0, "unit": "Pcs"}, {"desc": "Oli Engine", "partNumber": "15W40-DH", "item": "Engine", "qty": 25.0, "price": 90000.0, "total": 2250000.0, "unit": "Liter"}, {"desc": "Oil Transmission", "partNumber": "TO-10-CF/D209", "item": "Transmission", "qty": 45.0, "price": 57000.0, "total": 2565000.0, "unit": "Liter"}, {"desc": "Grease", "partNumber": "SYGA-16CNLI", "item": "Attachment", "qty": 1.0, "price": 2032800.0, "total": 2032800.0, "unit": "Pail"}], "subtotal": null, "withPpn": null}, {"title": "CONSUMABLE SPAREPART SERVICE 2000 HOURS WA380-6", "model": "WA380-6", "hours": 2000, "items": [{"desc": "Cartridge", "partNumber": "6736-51-5142", "item": "Engine oil filter", "qty": 1.0, "price": 350000.0, "total": 350000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-319-3610C", "item": "Fuel pre-filter", "qty": 1.0, "price": 477000.0, "total": 477000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "6754-79-6140", "item": "Fuel main filter", "qty": 1.0, "price": 296560.0, "total": 296560.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "714-07-28713", "item": "Transmission oil filter", "qty": 1.0, "price": 1341040.0, "total": 1341040.0, "unit": "Pcs"}, {"desc": "Element ass'y", "partNumber": "600-185-5100C", "item": "Air cleaner", "qty": 1.0, "price": 2057000.0, "total": 2057000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "14X-60-31150", "item": "Hydraulic filter", "qty": 1.0, "price": 1580880.0, "total": 1580880.0, "unit": "Pcs"}, {"desc": "O-ring", "partNumber": "07002-15234", "item": "Hydraulic filter", "qty": 1.0, "price": 73520.0, "total": 73520.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "423-60-35421", "item": "Hydraulic tank breather", "qty": 1.0, "price": 1828160.0, "total": 1828160.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "426-07-32442", "item": "Air conditioner filter (Fresh)", "qty": 1.0, "price": 1521600.0, "total": 1521600.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "426-07-32442", "item": "Air conditioner filter (Recirc)", "qty": 1.0, "price": 1521600.0, "total": 1521600.0, "unit": "Pcs"}, {"desc": "Oli Engine", "partNumber": "15W40-DH", "item": "Engine", "qty": 25.0, "price": 90000.0, "total": 2250000.0, "unit": "Liter"}, {"desc": "Oil Transmission", "partNumber": "TO-10-CF/D209", "item": "Transmission", "qty": 45.0, "price": 57000.0, "total": 2565000.0, "unit": "Liter"}, {"desc": "Oil Exel", "partNumber": "AXO80", "item": "Exel", "qty": 40.0, "price": 61055.0, "total": 2442200.0, "unit": "Liter"}, {"desc": "Grease", "partNumber": "SYGA-16CNLI", "item": "Attachment", "qty": 1.0, "price": 2032800.0, "total": 2032800.0, "unit": "Pail"}], "subtotal": null, "withPpn": null}, {"title": "CONSUMABLE SPAREPART SERVICE 4000 HOURS WA380-6", "model": "WA380-6", "hours": 4000, "items": [{"desc": "Cartridge", "partNumber": "6736-51-5142", "item": "Engine oil filter", "qty": 1.0, "price": 350000.0, "total": 350000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "600-319-3610C", "item": "Fuel pre-filter", "qty": 1.0, "price": 477000.0, "total": 477000.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "6754-79-6140", "item": "Fuel main filter", "qty": 1.0, "price": 296560.0, "total": 296560.0, "unit": "Pcs"}, {"desc": "Cartridge", "partNumber": "714-07-28713", "item": "Transmission oil filter", "qty": 1.0, "price": 1341040.0, "total": 1341040.0, "unit": "Pcs"}, {"desc": "Element ass'y", "partNumber": "600-185-5100C", "item": "Air cleaner", "qty": 1.0, "price": 2057000.0, "total": 2057000.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "14X-60-31150", "item": "Hydraulic filter", "qty": 1.0, "price": 1580880.0, "total": 1580880.0, "unit": "Pcs"}, {"desc": "O-ring", "partNumber": "07002-15234", "item": "Hydraulic filter", "qty": 1.0, "price": 73520.0, "total": 73520.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "423-60-35421", "item": "Hydraulic tank breather", "qty": 1.0, "price": 1828160.0, "total": 1828160.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "426-07-32442", "item": "Air conditioner filter (Fresh)", "qty": 1.0, "price": 1521600.0, "total": 1521600.0, "unit": "Pcs"}, {"desc": "Element", "partNumber": "426-07-32442", "item": "Air conditioner filter (Recirc)", "qty": 1.0, "price": 1521600.0, "total": 1521600.0, "unit": "Pcs"}, {"desc": "Oli Engine", "partNumber": "15W40-DH", "item": "Engine", "qty": 25.0, "price": 90000.0, "total": 2250000.0, "unit": "Liter"}, {"desc": "Oil Transmission", "partNumber": "TO-10-CF/D209", "item": "Transmission", "qty": 45.0, "price": 57000.0, "total": 2565000.0, "unit": "Liter"}, {"desc": "Oil Exel", "partNumber": "AXO80", "item": "Exel", "qty": 40.0, "price": 61055.0, "total": 2442200.0, "unit": "Liter"}, {"desc": "Hydraulic oil", "partNumber": "VG46", "item": "Hydraulic Oil", "qty": 145.0, "price": 77000.0, "total": 11165000.0, "unit": "Liter"}, {"desc": "Grease", "partNumber": "SYGA-16CNLI", "item": "Attachment", "qty": 1.0, "price": 2032800.0, "total": 2032800.0, "unit": "Pail"}], "subtotal": null, "withPpn": null}], "ZX200-5G": [{"title": "CONSUMABLE SPAREPART SERVICE 250 HOURS ZX200-5G", "model": "ZX200-5G", "hours": 250, "items": [{"desc": "Filter", "partNumber": "4616545", "item": "Primary Fuel Filter", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "4616544", "item": "Secondary Fuel Filter", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}], "subtotal": null, "withPpn": null}, {"title": "CONSUMABLE SPAREPART SERVICE 500 HOURS ZX200-5G", "model": "ZX200-5G", "hours": 500, "items": [{"desc": "Filter", "partNumber": "4658521", "item": "Engine Oil Filter", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "4616545", "item": "Primary Fuel Filter", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "4616544", "item": "Secondary Fuel Filter", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Oli Engine", "partNumber": "HTCDH1", "item": "Engine (Hitachi DH-1 15W40)", "qty": 25.0, "price": null, "total": null, "unit": "Liter"}], "subtotal": null, "withPpn": null}, {"title": "CONSUMABLE SPAREPART SERVICE 1000 HOURS ZX200-5G", "model": "ZX200-5G", "hours": 1000, "items": [{"desc": "Filter", "partNumber": "4658521", "item": "Engine Oil Filter", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "4616545", "item": "Primary Fuel Filter", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "4616544", "item": "Secondary Fuel Filter", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "YA00033065 / YA00033064", "item": "Hydraulic Return Filter / High Performance Filter", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "4630525", "item": "Hydraulic Pilot Filter", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Oli Engine", "partNumber": "HTCDH1", "item": "Engine (Hitachi DH-1 15W40)", "qty": 25.0, "price": null, "total": null, "unit": "Liter"}, {"desc": "Oli Engine", "partNumber": "HTCDH1", "item": "Pump Transmission (Hitachi DH-1 15W40)", "qty": 1.0, "price": null, "total": null, "unit": "Liter"}, {"desc": "Gear Oil", "partNumber": "HTCGL490", "item": "Swing Reduction Gear (Hitachi GL-4 90)", "qty": 6.2, "price": null, "total": null, "unit": "Liter"}, {"desc": "Gear Oil", "partNumber": "HTCGL490", "item": "Travel Reduction Gear (Hitachi GL-4 90)", "qty": 13.6, "price": null, "total": null, "unit": "Liter"}], "subtotal": null, "withPpn": null}, {"title": "CONSUMABLE SPAREPART SERVICE 1500 HOURS ZX200-5G", "model": "ZX200-5G", "hours": 1500, "items": [{"desc": "Filter", "partNumber": "4658521", "item": "Engine Oil Filter", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "4616545", "item": "Primary Fuel Filter", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "4616544", "item": "Secondary Fuel Filter", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Oli Engine", "partNumber": "HTCDH1", "item": "Engine (Hitachi DH-1 15W40)", "qty": 25.0, "price": null, "total": null, "unit": "Liter"}], "subtotal": null, "withPpn": null}, {"title": "CONSUMABLE SPAREPART SERVICE 2000 HOURS ZX200-5G", "model": "ZX200-5G", "hours": 2000, "items": [{"desc": "Filter", "partNumber": "4658521", "item": "Engine Oil Filter", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "4616545", "item": "Primary Fuel Filter", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "4616544", "item": "Secondary Fuel Filter", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "YA00033065 / YA00033064", "item": "Hydraulic Return Filter / High Performance Filter", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "4630525", "item": "Hydraulic Pilot Filter", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Oli Engine", "partNumber": "HTCDH1", "item": "Engine (Hitachi DH-1 15W40)", "qty": 25.0, "price": null, "total": null, "unit": "Liter"}, {"desc": "Oli Engine", "partNumber": "HTCDH1", "item": "Pump Transmission (Hitachi DH-1 15W40)", "qty": 1.0, "price": null, "total": null, "unit": "Liter"}, {"desc": "Gear Oil", "partNumber": "HTCGL490", "item": "Swing Reduction Gear (Hitachi GL-4 90)", "qty": 6.2, "price": null, "total": null, "unit": "Liter"}, {"desc": "Gear Oil", "partNumber": "HTCGL490", "item": "Travel Reduction Gear (Hitachi GL-4 90)", "qty": 13.6, "price": null, "total": null, "unit": "Liter"}], "subtotal": null, "withPpn": null}, {"title": "CONSUMABLE SPAREPART SERVICE 3000 HOURS ZX200-5G", "model": "ZX200-5G", "hours": 3000, "items": [{"desc": "Filter", "partNumber": "4658521", "item": "Engine Oil Filter", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "4616545", "item": "Primary Fuel Filter", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "4616544", "item": "Secondary Fuel Filter", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "YA00033065 / YA00033064", "item": "Hydraulic Return Filter / High Performance Filter", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "4630525", "item": "Hydraulic Pilot Filter", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Oli Engine", "partNumber": "HTCDH1", "item": "Engine (Hitachi DH-1 15W40)", "qty": 25.0, "price": null, "total": null, "unit": "Liter"}, {"desc": "Oli Engine", "partNumber": "HTCDH1", "item": "Pump Transmission (Hitachi DH-1 15W40)", "qty": 1.0, "price": null, "total": null, "unit": "Liter"}, {"desc": "Gear Oil", "partNumber": "HTCGL490", "item": "Swing Reduction Gear (Hitachi GL-4 90)", "qty": 6.2, "price": null, "total": null, "unit": "Liter"}, {"desc": "Gear Oil", "partNumber": "HTCGL490", "item": "Travel Reduction Gear (Hitachi GL-4 90)", "qty": 13.6, "price": null, "total": null, "unit": "Liter"}], "subtotal": null, "withPpn": null}, {"title": "CONSUMABLE SPAREPART SERVICE 3500 HOURS ZX200-5G", "model": "ZX200-5G", "hours": 3500, "items": [{"desc": "Filter", "partNumber": "4658521", "item": "Engine Oil Filter", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "4616545", "item": "Primary Fuel Filter", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "4616544", "item": "Secondary Fuel Filter", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Oli Engine", "partNumber": "HTCDH1", "item": "Engine (Hitachi DH-1 15W40)", "qty": 25.0, "price": null, "total": null, "unit": "Liter"}], "subtotal": null, "withPpn": null}, {"title": "CONSUMABLE SPAREPART SERVICE 4000 HOURS ZX200-5G", "model": "ZX200-5G", "hours": 4000, "items": [{"desc": "Filter", "partNumber": "4658521", "item": "Engine Oil Filter", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "4616545", "item": "Primary Fuel Filter", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "4616544", "item": "Secondary Fuel Filter", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "YA00033065 / YA00033064", "item": "Hydraulic Return Filter / High Performance Filter", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Filter", "partNumber": "4630525", "item": "Hydraulic Pilot Filter", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Element", "partNumber": "4437838", "item": "Air Breather Element", "qty": 1.0, "price": null, "total": null, "unit": "Pcs"}, {"desc": "Oli Engine", "partNumber": "HTCDH1", "item": "Engine (Hitachi DH-1 15W40)", "qty": 25.0, "price": null, "total": null, "unit": "Liter"}, {"desc": "Oli Engine", "partNumber": "HTCDH1", "item": "Pump Transmission (Hitachi DH-1 15W40)", "qty": 1.0, "price": null, "total": null, "unit": "Liter"}, {"desc": "Hydraulic oil", "partNumber": "HTC46TP", "item": "Hydraulic (Hitachi 46HN)", "qty": 200.0, "price": null, "total": null, "unit": "Liter"}, {"desc": "Gear Oil", "partNumber": "HTCGL490", "item": "Swing Reduction Gear (Hitachi GL-4 90)", "qty": 6.2, "price": null, "total": null, "unit": "Liter"}, {"desc": "Gear Oil", "partNumber": "HTCGL490", "item": "Travel Reduction Gear (Hitachi GL-4 90)", "qty": 13.6, "price": null, "total": null, "unit": "Liter"}, {"desc": "Coolant", "partNumber": "V74-15023", "item": "Coolant (Hitachi Long Life Coolant)", "qty": 26.0, "price": null, "total": null, "unit": "Liter"}], "subtotal": null, "withPpn": null}], "oil": [{"desc": "Engine Oil", "partNumber": "15W40-DH", "item": "Oil Engine", "qty": 209.0, "price": 90000.0, "total": 18810000.0, "unit": "Liter"}, {"desc": "Transmission Oil", "partNumber": "TO-10-CF/D209", "item": "Oil transmission", "qty": 209.0, "price": 57000.0, "total": 11913000.0, "unit": "Liter"}, {"desc": "Transmission Oil", "partNumber": "TO-30-DM/D209", "item": "Oil transmission", "qty": 209.0, "price": 90294.0, "total": 18871446.0, "unit": "Liter"}, {"desc": "Hydraulic Oil", "partNumber": "KGO HO46-DM/209", "item": "Oil Hydraulic", "qty": 209.0, "price": 77000.0, "total": 16093000.0, "unit": "Liter"}, {"desc": "Axel Oil", "partNumber": "SYZ-AXO80DM-YD209Z", "item": "Oil Axel/Differential", "qty": 209.0, "price": 61055.0, "total": 12760495.0, "unit": "Liter"}], "budgetPlan": [{"date": "09/07/2026", "month": "Jul", "unit": "SWA-102", "targetHm": 4750, "serviceType": "PS 250 Hrs", "cost": 0.0, "pic": "SEN"}, {"date": "10/07/2026", "month": "Jul", "unit": "SWA-101", "targetHm": 5000, "serviceType": "PS 5000 Hrs", "cost": 34878997.2, "pic": "SEN"}, {"date": "2026-07-15", "month": "Jul", "unit": "SBD-103", "targetHm": 4750, "serviceType": "PS 250 Hrs", "cost": 7629030.000000001, "pic": "SEN"}, {"date": "29/07/2026", "month": "Jul", "unit": "SWA-101", "targetHm": 5250, "serviceType": "PS 250 Hrs", "cost": 0.0, "pic": "SEN"}, {"date": "2026-07-18", "month": "Jul", "unit": "SWA-102", "targetHm": 5000, "serviceType": "PS 5000 Hrs", "cost": 34878997.2, "pic": "SEN"}, {"date": "01/08/2026", "month": "Aug", "unit": "SBD-103", "targetHm": 5000, "serviceType": "PS 5000 Hrs", "cost": 13709587.8, "pic": "SEN"}, {"date": "18/08/2026", "month": "Aug", "unit": "SWA-101", "targetHm": 5500, "serviceType": "PS 500 Hrs", "cost": 19226976.0, "pic": "SEN"}, {"date": "18/08/2026", "month": "Aug", "unit": "SWA-102", "targetHm": 5250, "serviceType": "PS 250 Hrs", "cost": 0.0, "pic": "SEN"}, {"date": "19/08/2026", "month": "Aug", "unit": "SBD-103", "targetHm": 5250, "serviceType": "PS 250 Hrs", "cost": 7629030.000000001, "pic": "SEN"}, {"date": "29/08/2026", "month": "Aug", "unit": "SPC-104", "targetHm": 3000, "serviceType": "PS 1000 Hrs", "cost": 11542257.3, "pic": "Team UT ( Warranty )"}, {"date": "06/09/2026", "month": "Sep", "unit": "SBD-103", "targetHm": 5500, "serviceType": "PS 500 Hrs", "cost": 7428120.000000001, "pic": "SEN"}, {"date": "06/09/2026", "month": "Sep", "unit": "SWA-101", "targetHm": 5750, "serviceType": "PS 250 Hrs", "cost": 0.0, "pic": "SEN"}, {"date": "07/09/2026", "month": "Sep", "unit": "SWA-102", "targetHm": 5500, "serviceType": "PS 500 Hrs", "cost": 19226976.0, "pic": "SEN"}, {"date": "24/09/2026", "month": "Sep", "unit": "SBD-103", "targetHm": 5750, "serviceType": "PS 250 Hrs", "cost": 7629030.000000001, "pic": "SEN"}, {"date": "26/09/2026", "month": "Sep", "unit": "SWA-101", "targetHm": 6000, "serviceType": "PS 2000 Hrs", "cost": 63526121.400000006, "pic": "SEN"}, {"date": "27/09/2026", "month": "Sep", "unit": "SWA-102", "targetHm": 5750, "serviceType": "PS 250 Hrs", "cost": 0.0, "pic": "SEN"}, {"date": "12/10/2026", "month": "Okt", "unit": "SBD-103", "targetHm": 6000, "serviceType": "PS 2000 Hrs", "cost": 24030323.400000002, "pic": "SEN"}, {"date": "17/10/2026", "month": "Okt", "unit": "SWA-102", "targetHm": 6000, "serviceType": "PS 2000 Hrs", "cost": 63526121.400000006, "pic": "SEN"}, {"date": "30/10/2026", "month": "Okt", "unit": "SPC-104", "targetHm": 3500, "serviceType": "PS 500 Hrs", "cost": 6533238.000000001, "pic": "Team UT ( Warranty )"}, {"date": "16/10/2026", "month": "Okt", "unit": "SWA-101", "targetHm": 6250, "serviceType": "PS 250 Hrs", "cost": 0.0, "pic": "SEN"}, {"date": "29/10/2026", "month": "Okt", "unit": "SBD-103", "targetHm": 6250, "serviceType": "PS 250 Hrs", "cost": 7629030.000000001, "pic": "SEN"}, {"date": "04/11/2026", "month": "Nov", "unit": "SWA-101", "targetHm": 6500, "serviceType": "PS 500 Hrs", "cost": 19226976.0, "pic": "SEN"}, {"date": "06/11/2026", "month": "Nov", "unit": "SWA-102", "targetHm": 6250, "serviceType": "PS 250 Hrs", "cost": 0.0, "pic": "SEN"}, {"date": "16/11/2026", "month": "Nov", "unit": "SBD-103", "targetHm": 6500, "serviceType": "PS 500 Hrs", "cost": 7428120.000000001, "pic": "SEN"}, {"date": "24/11/2026", "month": "Nov", "unit": "SWA-101", "targetHm": 6750, "serviceType": "PS 250 Hrs", "cost": 0.0, "pic": "SEN"}, {"date": "26/11/2026", "month": "Nov", "unit": "SWA-102", "targetHm": 6500, "serviceType": "PS 500 Hrs", "cost": 19226976.0, "pic": "SEN"}, {"date": "04/12/2026", "month": "Dec", "unit": "SBD-103", "targetHm": 6750, "serviceType": "PS 250 Hrs", "cost": 7629030.000000001, "pic": "SEN"}, {"date": "14/12/2026", "month": "Dec", "unit": "SWA-101", "targetHm": 7000, "serviceType": "PS 1000 Hrs", "cost": 34878997.2, "pic": "SEN"}, {"date": "16/12/2026", "month": "Dec", "unit": "SWA-102", "targetHm": 6750, "serviceType": "PS 250 Hrs", "cost": 0.0, "pic": "SEN"}, {"date": "22/12/2026", "month": "Dec", "unit": "SBD-103", "targetHm": 7000, "serviceType": "PS 1000 Hrs", "cost": 13709587.8, "pic": "SEN"}, {"date": "31/12/2026", "month": "Dec", "unit": "SPC-104", "targetHm": 4000, "serviceType": "PS 4000 Hrs", "cost": 15564355.620000001, "pic": "Team UT ( Warranty )"}], "monthlyBudget": [{"month": "Jul", "SWA-101": 34878997.2, "SWA-102": 34878997.2, "SBD-103": 7629030, "SPC-104": 0, "total": 77387024.4}, {"month": "Aug", "SWA-101": 19226976, "SWA-102": 0, "SBD-103": 21338617.8, "SPC-104": 11542257.3, "total": 52107851.099999994}, {"month": "Sep", "SWA-101": 63526121.4, "SWA-102": 19226976, "SBD-103": 15057150, "SPC-104": 0, "total": 97810247.4}, {"month": "Okt", "SWA-101": 0, "SWA-102": 63526121.4, "SBD-103": 31659353.4, "SPC-104": 6533238, "total": 101718712.8}, {"month": "Nov", "SWA-101": 19226976, "SWA-102": 19226976, "SBD-103": 7428120, "SPC-104": 0, "total": 45882072}, {"month": "Dec", "SWA-101": 34878997.2, "SWA-102": 0, "SBD-103": 21338617.8, "SPC-104": 15564355.62, "total": 71781970.62}], "unitModels": {"SWA-101": "WA500-6R", "SWA-102": "WA500-6R", "SBD-103": "DOZER D85ESS-2", "SPC-104": "EXCA PC210-10MO", "DZ-04": "DOZER D85ESS-2", "DZ-09": "DOZER D85ESS-2", "WA-10": "WA380-6", "HEX-11": "ZX200-5G", "HEX-12": "ZX200-5G"}};
 
 
 /* ---- AUTO SYNC Budget Plan & Rekap Bulanan dari Schedule Plan Service (planRecords) ---- */
+/* Unit yang tampil sebagai kolom di Rekap Budget Sparepart per Bulan.
+ * Katalog biaya per unit lewat SPAREPART_DATA.unitModels:
+ *  - DZ-04 / DZ-09 (D85ESS-2 / D85ESS-2A) memakai katalog DOZER D85ESS-2 (sama dgn SBD-103).
+ *  - WA-10 (WA380-6) memakai katalog 'WA380-6' (dari Wear Parts List). Harga part (price/total)
+ *    belum diisi → biaya budget WA-10 tampil '—' sampai harga dilengkapi di SPAREPART_DATA['WA380-6']. */
+const SP_BUDGET_UNITS = ['SWA-101','SWA-102','SBD-103','SPC-104','DZ-04','DZ-09','WA-10','HEX-11','HEX-12'];
 const SP_MONTH_ABBR = {1:'Jan',2:'Feb',3:'Mar',4:'Apr',5:'Mei',6:'Jun',7:'Jul',8:'Aug',9:'Sep',10:'Okt',11:'Nov',12:'Dec'};
 
 function spParseServiceHours(serviceType){
@@ -30762,7 +30852,7 @@ function spMonthAbbrFromDate(dateStr){
  * Termasuk plan Open maupun Close agar rekap anggaran tetap lengkap.
  */
 function spBuildBudgetFromPlanRecords(){
-  const unitsOrder = ['SWA-101','SWA-102','SBD-103','SPC-104'];
+  const unitsOrder = SP_BUDGET_UNITS;
   const list = (typeof planRecords!=='undefined' && Array.isArray(planRecords)) ? planRecords : [];
   const budgetPlan = [];
   list.forEach(r=>{
@@ -30866,7 +30956,7 @@ function renderSparepartActiveTab(){
 }
 
 function renderSpCatalog(){
-  const models = ['WA500-6R','DOZER D85ESS-2','EXCA PC210-10MO'];
+  const models = ['WA500-6R','WA380-6','DOZER D85ESS-2','EXCA PC210-10MO','ZX200-5G'];
   const tabs = document.getElementById('sp-model-tabs');
   if(tabs){
     tabs.innerHTML = models.map(m=>{
@@ -31411,10 +31501,8 @@ function renderSpBudget(){
   const tbody = document.getElementById('sp-budget-tbody');
   if(!tbody) return;
   const live = spGetLiveBudget();
-  // Isi filter bulan dinamis dari data Plan Service
-  const msel = document.getElementById('sp-budget-month-filter');
-  if(msel){
-    const prev = msel.value || '';
+  // Isi filter bulan dinamis dari data Plan Service (multi-select)
+  {
     const months = [];
     const seen = new Set();
     (live.budgetPlan||[]).forEach(r=>{
@@ -31423,15 +31511,11 @@ function renderSpBudget(){
       if(val && !seen.has(val)){ seen.add(val); months.push({val, label: label.trim()||val}); }
     });
     months.sort((a,b)=>String(a.val).localeCompare(String(b.val)));
-    msel.innerHTML = '<option value="">All Months</option>' +
-      months.map(m=>'<option value="'+m.val+'">'+m.label+'</option>').join('');
-    if(prev && (prev==='' || seen.has(prev) || months.some(m=>m.val===prev))) msel.value = prev;
+    // buang pilihan bulan yang sudah tidak ada
+    Array.from(spBudgetSel.month).forEach(v=>{ if(!seen.has(v) && !months.some(m=>m.label===v)) spBudgetSel.month.delete(v); });
+    spMsSetOptions('month', months);
   }
-  const mf = (document.getElementById('sp-budget-month-filter')||{}).value || '';
-  const uf = (document.getElementById('sp-budget-unit-filter')||{}).value || '';
-  let list = (live.budgetPlan||[]).slice();
-  if(mf) list = list.filter(r=> (r.monthKey||r.month)===mf || r.month===mf);
-  if(uf) list = list.filter(r=>r.unit===uf);
+  let list = spBudgetApplyFilter((live.budgetPlan||[]).slice());
   const total = list.reduce((s,r)=>s+(Number(r.cost)||0),0);
   const totEl = document.getElementById('sp-budget-filtered-total');
   if(totEl) totEl.textContent = 'Rp '+spFmtIDR(total);
@@ -31456,39 +31540,209 @@ function renderSpBudget(){
   try{ renderSparepartKPIs(); }catch(_e){}
 }
 
+/* ---- Rincian sparepart per service (dari katalog) ---- */
+function spFindService(unitCode, serviceType){
+  const models = (SPAREPART_DATA && SPAREPART_DATA.unitModels) || {};
+  const code = String(unitCode||'').trim().toUpperCase();
+  const model = models[code] || models[unitCode];
+  if(!model) return null;
+  const hours = spParseServiceHours(serviceType);
+  if(hours==null) return null;
+  const services = SPAREPART_DATA[model] || [];
+  let svc = services.find(s=>Number(s.hours)===hours);
+  if(!svc && hours===5000) svc = services.find(s=>Number(s.hours)===1000);
+  return svc || null;
+}
+const SP_CAT_ORDER = ['Filter & Part','Oli & Fluida','Grease'];
+function spPartCategory(it){
+  const u = String(it.unit||'').toLowerCase();
+  if(String(it.desc||'').toLowerCase()==='grease' || u==='pail') return 'Grease';
+  if(u==='liter') return 'Oli & Fluida';
+  return 'Filter & Part';
+}
+/** Gabungkan part dari semua event service (hanya event berbiaya > 0, warranty/tanpa katalog dilewati). */
+function spBuildPartDetail(events){
+  const map = new Map();
+  (events||[]).forEach(ev=>{
+    if(!(Number(ev.cost)>0)) return;
+    const svc = spFindService(ev.unit, ev.serviceType);
+    if(!svc) return;
+    (svc.items||[]).forEach(it=>{
+      const key = [it.partNumber||'', it.unit||'', it.price==null?'':it.price].join('|');
+      let row = map.get(key);
+      if(!row){
+        row = { category:spPartCategory(it), pn:it.partNumber||'', desc:it.desc||'', item:'', qty:0, unit:it.unit||'',
+                price:(it.price==null?null:Number(it.price)), total:0, byUnit:{}, order:map.size };
+        map.set(key,row);
+      }
+      if(!row.item && it.item) row.item = it.item;
+      const q = Number(it.qty)||0;
+      row.qty += q;
+      row.total += (it.price==null ? 0 : q*Number(it.price));
+      row.byUnit[ev.unit] = (row.byUnit[ev.unit]||0) + q;
+    });
+  });
+  const rows = Array.from(map.values()).sort((a,b)=>
+    SP_CAT_ORDER.indexOf(a.category)-SP_CAT_ORDER.indexOf(b.category) || a.order-b.order);
+  const subtotal = rows.reduce((s,r)=>s+r.total,0);
+  const ppn = Math.round(subtotal*0.11*100)/100;
+  return { rows, subtotal, ppn, total: Math.round((subtotal+ppn)*100)/100 };
+}
+function spPartDetailTableHtml(det){
+  if(!det.rows.length) return '<div class="sp-dpanel-sub">Tidak ada rincian sparepart (belum ada service berbiaya pada filter ini).</div>';
+  let html = '<div class="sp-dwrap"><table class="sp-dtable"><thead><tr>'
+    +'<th class="l">No</th><th class="l">Part Number</th><th class="l">Deskripsi</th><th class="l">Item</th><th class="l">Unit</th>'
+    +'<th>Qty</th><th class="l">Satuan</th><th>Harga Satuan</th><th>Total (ex PPN)</th></tr></thead><tbody>';
+  let cat = null, no = 0;
+  det.rows.forEach(r=>{
+    if(r.category!==cat){ cat=r.category; html += '<tr class="sp-dgroup"><td colspan="9">'+escUH(cat)+'</td></tr>'; }
+    no++;
+    const chips = Object.keys(r.byUnit).map(u=>'<span class="sp-uchip">'+escUH(u)+' ×'+spFmtNum(r.byUnit[u])+'</span>').join('');
+    html += '<tr><td class="l">'+no+'</td><td class="l"><code>'+escUH(r.pn)+'</code></td><td class="l">'+escUH(r.desc)+'</td>'
+      +'<td class="l">'+escUH(r.item)+'</td><td class="l">'+chips+'</td><td>'+spFmtNum(r.qty)+'</td><td class="l">'+escUH(r.unit)+'</td>'
+      +'<td>'+(r.price==null?'—':spFmtIDR(r.price))+'</td><td><b>'+(r.price==null?'—':spFmtIDR(r.total))+'</b></td></tr>';
+  });
+  html += '<tr class="sp-dsum"><td colspan="8" class="l" style="text-align:right">Subtotal (ex PPN)</td><td>Rp '+spFmtIDR(det.subtotal)+'</td></tr>'
+    +'<tr class="sp-dsum"><td colspan="8" class="l" style="text-align:right">PPN 11%</td><td>Rp '+spFmtIDR(det.ppn)+'</td></tr>'
+    +'<tr class="sp-dsum grand"><td colspan="8" class="l" style="text-align:right">Total (with PPN)</td><td>Rp '+spFmtIDR(det.total)+'</td></tr>'
+    +'</tbody></table></div>';
+  return html;
+}
+function spMonthOptionsFrom(live){
+  const months = [], seen = new Set();
+  (live.budgetPlan||[]).forEach(r=>{
+    const label = r.monthKey ? ((r.month||'') + (r.year?(' '+r.year):'')) : (r.month||'');
+    const val = r.monthKey || r.month || '';
+    if(val && !seen.has(val)){ seen.add(val); months.push({val, label: label.trim()||val}); }
+  });
+  months.sort((a,b)=>String(a.val).localeCompare(String(b.val)));
+  return { months, seen };
+}
+/** Data rekap bulanan sesuai filter Periode & Unit tab Rekap Bulanan. */
+function spMonthlyFiltered(){
+  const live = spGetLiveBudget();
+  const { months, seen } = spMonthOptionsFrom(live);
+  Array.from(spMonthlySel.month).forEach(v=>{ if(!seen.has(v) && !months.some(m=>m.label===v)) spMonthlySel.month.delete(v); });
+  spMsSetOptions('month', months, 'monthly');
+  const events = spBudgetApplyFilter((live.budgetPlan||[]).slice(), spMonthlySel);
+  const units = spMonthlySel.unit.size ? SP_FILTER_UNITS.filter(u=>spMonthlySel.unit.has(u)) : SP_BUDGET_UNITS.slice();
+  const map = new Map();
+  events.forEach(r=>{
+    const k = r.monthKey || ((r.year||'')+'-'+(r.month||''));
+    if(!map.has(k)){
+      const label = ((r.month||'')+(r.year?(' '+r.year):'')).trim();
+      map.set(k,{ key:k, label, events:[], total:0, byUnit:{} });
+    }
+    const m = map.get(k), c = Number(r.cost)||0;
+    m.events.push(r); m.total += c;
+    m.byUnit[r.unit] = (m.byUnit[r.unit]||0) + c;
+  });
+  const rows = Array.from(map.values()).sort((a,b)=>String(a.key).localeCompare(String(b.key)));
+  return { rows, units, events, grand: rows.reduce((s,r)=>s+r.total,0) };
+}
+function spMonthlyScopeText(){
+  const mf = Array.from(spMonthlySel.month).map(v=>spMsLabelOf('month',v));
+  const uf = Array.from(spMonthlySel.unit);
+  return (mf.length?mf.join(', '):'Semua Periode') + ' · ' + (uf.length?uf.join(', '):'Semua Unit');
+}
+
 function renderSpMonthly(){
   const tbody = document.getElementById('sp-monthly-tbody');
   if(!tbody) return;
-  const live = spGetLiveBudget();
-  const list = live.monthlyBudget || [];
-  const grand = list.reduce((s,r)=>s+(Number(r.total)||0),0);
-  if(!list.length){
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="6">Belum ada data. Rekap bulanan tersinkron otomatis dari Schedule Plan Service.</td></tr>';
+  const thead = document.getElementById('sp-monthly-thead');
+  const detailHost = document.getElementById('sp-monthly-detail');
+  const { rows, units, events, grand } = spMonthlyFiltered();
+  const ncol = units.length + 2;
+  if(thead) thead.innerHTML = '<tr><th>Bulan</th>'+units.map(u=>'<th>'+escUH(u)+'</th>').join('')+'<th>Total Biaya Sparepart</th></tr>';
+  if(!rows.length){
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="'+ncol+'">Belum ada data untuk filter ini. Rekap bulanan tersinkron otomatis dari Schedule Plan Service.</td></tr>';
+    if(detailHost) detailHost.innerHTML = '';
     return;
   }
-  tbody.innerHTML = list.map(r=>{
-    const label = (r.month||'') + (r.year?(' '+r.year):'');
-    return `<tr>
-    <td><span class="sp-budget-month">${escUH(label.trim())}</span></td>
-    <td>${spFmtIDR(r['SWA-101'])}</td>
-    <td>${spFmtIDR(r['SWA-102'])}</td>
-    <td>${spFmtIDR(r['SBD-103'])}</td>
-    <td>${spFmtIDR(r['SPC-104'])}</td>
-    <td><b style="color:var(--yellow)">Rp ${spFmtIDR(r.total)}</b></td>
-  </tr>`;
-  }).join('') + `<tr style="background:rgba(255,199,44,0.08)">
-    <td colspan="5" style="text-align:right;font-weight:700">GRAND TOTAL (auto dari Plan Service)</td>
-    <td><b style="color:var(--yellow);font-size:14px">Rp ${spFmtIDR(grand)}</b></td>
-  </tr>`;
+  const evSorted = list=>list.slice().sort((a,b)=>String(a.date).localeCompare(String(b.date))||String(a.unit).localeCompare(String(b.unit)));
+  tbody.innerHTML = rows.map(r=>{
+    const open = spMonthlyOpen.has(r.key);
+    let html = '<tr class="sp-mrow'+(open?' open':'')+'" data-sp-mkey="'+escUH(r.key)+'" title="Klik untuk rincian">'
+      +'<td><span class="sp-mtoggle"><span class="sp-caret">▸</span><span class="sp-budget-month">'+escUH(r.label)+'</span></span></td>'
+      +units.map(u=>'<td>'+spFmtIDR(r.byUnit[u]||0)+'</td>').join('')
+      +'<td><b style="color:var(--yellow)">Rp '+spFmtIDR(r.total)+'</b></td></tr>';
+    if(open){
+      const det = spBuildPartDetail(r.events);
+      const sched = evSorted(r.events).map(e=>{
+        const c = Number(e.cost)||0;
+        return '<tr><td class="l">'+escUH(String(e.date||'').slice(0,10))+'</td><td class="l"><b>'+escUH(e.unit||'')+'</b></td><td>'+spFmtNum(e.targetHm)+'</td>'
+          +'<td class="l">'+escUH(e.serviceType||'')+'</td><td>'+(c>0?('Rp '+spFmtIDR(c)):'—')+'</td><td class="l">'+escUH(e.pic||'')+'</td></tr>';
+      }).join('');
+      html += '<tr class="sp-mdetail-row"><td colspan="'+ncol+'"><div class="sp-mdetail">'
+        +'<div><div class="sp-dtitle">Jadwal Service · '+escUH(r.label)+'</div><div class="sp-dwrap"><table class="sp-dtable"><thead><tr>'
+        +'<th class="l">Tanggal</th><th class="l">Unit</th><th>Target HM</th><th class="l">Service Type</th><th>Biaya (PPN)</th><th class="l">PIC</th></tr></thead><tbody>'+sched+'</tbody></table></div></div>'
+        +'<div><div class="sp-dtitle">Rincian Sparepart · '+escUH(r.label)+'</div>'+spPartDetailTableHtml(det)+'</div>'
+        +'</div></td></tr>';
+    }
+    return html;
+  }).join('') + '<tr style="background:rgba(255,199,44,0.08)">'
+    +'<td colspan="'+(ncol-1)+'" style="text-align:right;font-weight:700">GRAND TOTAL (auto dari Plan Service)</td>'
+    +'<td><b style="color:var(--yellow);font-size:14px">Rp '+spFmtIDR(grand)+'</b></td></tr>';
+  if(detailHost){
+    detailHost.innerHTML = '<div class="sp-dpanel"><div class="sp-dtitle">Rincian Sparepart · Total Sesuai Filter</div>'
+      +'<p class="sp-dpanel-sub">'+escUH(spMonthlyScopeText())+' · '+events.filter(e=>Number(e.cost)>0).length+' service berbiaya</p>'
+      +spPartDetailTableHtml(spBuildPartDetail(events))+'</div>';
+  }
+}
+
+/* ---- Multi-select filter Periode & Unit (Budget Plan Schedule) ---- */
+const spBudgetSel = { month:new Set(), unit:new Set() };
+const spMonthlySel = { month:new Set(), unit:new Set() };
+const spMonthlyOpen = new Set();
+function spSelOf(scope){ return scope==='monthly' ? spMonthlySel : spBudgetSel; }
+const SP_FILTER_UNITS = ['SWA-101','SWA-102','SBD-103','SPC-104','DZ-04','DZ-09','WA-10','HEX-11','HEX-12'];
+const spMsOptions = { month:[], unit:SP_FILTER_UNITS.map(u=>({val:u,label:u})) };
+const SP_MS_ALL = { month:'All Months', unit:'All Units' };
+
+function spMsLabelOf(kind, val){
+  const o = (spMsOptions[kind]||[]).find(x=>x.val===val);
+  return o ? o.label : val;
+}
+function spMsUpdateButton(kind, scope){
+  scope = scope||'budget';
+  const host = document.getElementById('sp-'+scope+'-'+kind+'-filter');
+  if(!host) return;
+  const sel = Array.from(spSelOf(scope)[kind]);
+  const btn = host.querySelector('.sp-ms-btn');
+  let txt = SP_MS_ALL[kind];
+  if(sel.length===1) txt = spMsLabelOf(kind, sel[0]);
+  else if(sel.length>1) txt = sel.length<=2 ? sel.map(v=>spMsLabelOf(kind,v)).join(', ') : (sel.length+' '+(kind==='month'?'bulan':'unit')+' dipilih');
+  if(btn){ btn.textContent = txt; btn.title = sel.map(v=>spMsLabelOf(kind,v)).join(', '); }
+  host.classList.toggle('has-sel', sel.length>0);
+}
+function spMsSetOptions(kind, opts, scope){
+  scope = scope||'budget';
+  const key = JSON.stringify(opts);
+  const host = document.getElementById('sp-'+scope+'-'+kind+'-filter');
+  if(!host) return;
+  spMsOptions[kind] = opts;
+  const panel = host.querySelector('.sp-ms-panel');
+  if(panel && panel.dataset.key!==key){
+    panel.dataset.key = key;
+    panel.innerHTML = '<button type="button" class="sp-ms-reset" data-sp-ms-reset="'+kind+'" data-sp-scope="'+scope+'">✕ Reset (tampilkan semua)</button>' +
+      opts.map(o=>'<label class="sp-ms-opt"><input type="checkbox" value="'+escUH(o.val)+'"'+(spSelOf(scope)[kind].has(o.val)?' checked':'')+'><span>'+escUH(o.label)+'</span></label>').join('');
+  }
+  spMsUpdateButton(kind, scope);
+}
+function spBudgetApplyFilter(list, sel){
+  sel = sel || spBudgetSel;
+  const ms = sel.month, us = sel.unit;
+  return list.filter(r=>
+    (!ms.size || ms.has(r.monthKey||r.month) || ms.has(r.month)) &&
+    (!us.size || us.has(r.unit))
+  );
 }
 
 /** Filter periode/unit hanya dari tab Budget Plan Schedule Service. */
 function spGetBudgetKpiFilter(){
-  const mEl = document.getElementById('sp-budget-month-filter');
-  const buEl = document.getElementById('sp-budget-unit-filter');
   return {
-    mf: (mEl && mEl.value) || '',
-    uf: (buEl && buEl.value) || ''
+    mf: Array.from(spBudgetSel.month),
+    uf: Array.from(spBudgetSel.unit)
   };
 }
 
@@ -31496,9 +31750,7 @@ function spGetBudgetKpiFilter(){
 function renderSparepartKPIs(){
   const live = spGetLiveBudget();
   const { mf, uf } = spGetBudgetKpiFilter();
-  let list = (live.budgetPlan||[]).slice();
-  if(mf) list = list.filter(r=> (r.monthKey||r.month)===mf || r.month===mf);
-  if(uf) list = list.filter(r=>r.unit===uf);
+  let list = spBudgetApplyFilter((live.budgetPlan||[]).slice());
   const grand = list.reduce((s,r)=>s+(Number(r.cost)||0),0);
   const events = list.length;
   const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
@@ -31509,16 +31761,15 @@ function renderSparepartKPIs(){
   const sub = document.getElementById('sp-kpi-total-sub');
   if(sub){
     const parts = ['With PPN'];
-    if(mf){
-      const opt = document.querySelector('#sp-budget-month-filter option[value="'+String(mf).replace(/"/g,'')+'"]');
-      parts.push(opt ? opt.textContent : mf);
+    if(mf.length){
+      parts.push(mf.map(v=>spMsLabelOf('month', v)).join(', '));
     } else parts.push('Semua Periode');
-    if(uf) parts.push(uf);
+    if(uf.length) parts.push(uf.join(', '));
     sub.textContent = parts.join(' · ');
   }
   const evSub = document.getElementById('sp-kpi-events-sub');
   if(evSub){
-    evSub.textContent = mf || uf ? 'Filtered Plan Schedule' : 'Plan Schedule';
+    evSub.textContent = (mf.length || uf.length) ? 'Filtered Plan Schedule' : 'Plan Schedule';
   }
 }
 
@@ -31531,19 +31782,17 @@ function renderSparepart(){
 /** Ambil list budget terfilter sesuai select periode & unit di tab Budget Plan. */
 function spGetFilteredBudgetList(){
   const live = spGetLiveBudget();
-  const mf = (document.getElementById('sp-budget-month-filter')||{}).value || '';
-  const uf = (document.getElementById('sp-budget-unit-filter')||{}).value || '';
-  let list = (live.budgetPlan||[]).slice();
-  if(mf) list = list.filter(r=> (r.monthKey||r.month)===mf || r.month===mf);
-  if(uf) list = list.filter(r=>r.unit===uf);
+  const mf = Array.from(spBudgetSel.month);
+  const uf = Array.from(spBudgetSel.unit);
+  const list = spBudgetApplyFilter((live.budgetPlan||[]).slice());
   return { list, mf, uf, live };
 }
 
 function spBudgetPeriodSlug(mf, uf){
   const parts = [];
-  if(mf) parts.push(String(mf).replace(/\s+/g,'-'));
+  if(mf && mf.length) parts.push(mf.map(v=>String(v).replace(/\s+/g,'-')).join('+'));
   else parts.push('all-months');
-  if(uf) parts.push(String(uf));
+  if(uf && uf.length) parts.push(uf.join('+'));
   else parts.push('all-units');
   const d = new Date();
   const stamp = d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
@@ -31573,15 +31822,15 @@ function exportSpBudgetXlsx(){
   rows.push(['','','','','TOTAL', total, '', '']);
 
   // Sheet 2: rekap bulanan (full, not filtered by unit only — still useful)
-  const mHeader = ['Bulan','SWA-101','SWA-102','SBD-103','SPC-104','Total Biaya Sparepart'];
+  const mHeader = ['Bulan'].concat(SP_BUDGET_UNITS, ['Total Biaya Sparepart']);
   let monthly = live.monthlyBudget||[];
-  if(mf) monthly = monthly.filter(r=> (r.monthKey||r.month)===mf || r.month===mf);
+  if(mf.length) monthly = monthly.filter(r=> mf.indexOf(r.monthKey||r.month)>=0 || mf.indexOf(r.month)>=0);
   const mRows = monthly.map(r=>{
     const label = (r.month||'')+(r.year?(' '+r.year):'');
-    return [label.trim(), Number(r['SWA-101'])||0, Number(r['SWA-102'])||0, Number(r['SBD-103'])||0, Number(r['SPC-104'])||0, Number(r.total)||0];
+    return [label.trim()].concat(SP_BUDGET_UNITS.map(u=>Number(r[u])||0), [Number(r.total)||0]);
   });
-  const mGrand = mRows.reduce((s,row)=>s+(Number(row[5])||0),0);
-  if(mRows.length) mRows.push(['GRAND TOTAL','','','','', mGrand]);
+  const mGrand = mRows.reduce((s,row)=>s+(Number(row[row.length-1])||0),0);
+  if(mRows.length) mRows.push(['GRAND TOTAL'].concat(SP_BUDGET_UNITS.map(()=>''), [mGrand]));
 
   const wb = XLSX.utils.book_new();
   const ws1 = XLSX.utils.aoa_to_sheet([header].concat(rows));
@@ -31590,7 +31839,7 @@ function exportSpBudgetXlsx(){
   XLSX.utils.book_append_sheet(wb, ws1, 'Budget Plan Schedule');
   if(mRows.length){
     const ws2 = XLSX.utils.aoa_to_sheet([mHeader].concat(mRows));
-    ws2['!cols'] = [{wch:12},{wch:14},{wch:14},{wch:14},{wch:14},{wch:18}];
+    ws2['!cols'] = [{wch:12}].concat(SP_BUDGET_UNITS.map(()=>({wch:14})), [{wch:18}]);
     XLSX.utils.book_append_sheet(wb, ws2, 'Rekap Bulanan');
   }
   const fname = spBudgetPeriodSlug(mf, uf)+'.xlsx';
@@ -31627,55 +31876,85 @@ function exportSpBudgetCsv(){
   setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
 }
 
-/** Export Rekap Bulanan penuh ke Excel. */
+function spMonthlyPartRowsForExport(rows){
+  const header = ['Bulan','Kategori','Part Number','Deskripsi','Item','Unit Pemakai','Qty','Satuan','Harga Satuan','Total (ex PPN)'];
+  const out = [];
+  rows.forEach(m=>{
+    const det = spBuildPartDetail(m.events);
+    det.rows.forEach(r=>{
+      out.push([m.label, r.category, r.pn, r.desc, r.item,
+        Object.keys(r.byUnit).map(u=>u+' x'+r.byUnit[u]).join('; '),
+        r.qty, r.unit, r.price==null?'':r.price, r.price==null?'':r.total]);
+    });
+    if(det.rows.length) out.push([m.label+' TOTAL (with PPN)','','','','','','','','', det.total]);
+  });
+  return { header, rows: out };
+}
+function spMonthlyExportSlug(){
+  const mf = Array.from(spMonthlySel.month), uf = Array.from(spMonthlySel.unit);
+  const parts = [mf.length?mf.map(v=>String(v).replace(/\s+/g,'-')).join('+'):'all-months', uf.length?uf.join('+'):'all-units'];
+  const d = new Date();
+  const stamp = d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
+  return 'rekap-budget-bulanan_'+parts.join('_')+'_'+stamp;
+}
+function spMonthlySummaryRows(f){
+  const header = ['Bulan'].concat(f.units, ['Total Biaya Sparepart']);
+  const rows = f.rows.map(r=>[r.label].concat(f.units.map(u=>Number(r.byUnit[u])||0), [r.total]));
+  rows.push(['GRAND TOTAL'].concat(f.units.map(()=>''), [f.grand]));
+  return { header, rows };
+}
+
+/** Export Rekap Bulanan (sesuai filter periode & unit) + rincian sparepart ke Excel. */
 function exportSpMonthlyXlsx(){
   if(typeof XLSX==='undefined'){ alert('Library Excel belum termuat. Refresh halaman lalu coba lagi.'); return; }
-  const live = spGetLiveBudget();
-  const list = live.monthlyBudget||[];
-  if(!list.length){ alert('Belum ada data rekap bulanan.'); return; }
-  const header = ['Bulan','SWA-101','SWA-102','SBD-103','SPC-104','Total Biaya Sparepart'];
-  const rows = list.map(r=>{
-    const label = (r.month||'')+(r.year?(' '+r.year):'');
-    return [label.trim(), Number(r['SWA-101'])||0, Number(r['SWA-102'])||0, Number(r['SBD-103'])||0, Number(r['SPC-104'])||0, Number(r.total)||0];
-  });
-  const grand = rows.reduce((s,row)=>s+(Number(row[5])||0),0);
-  rows.push(['GRAND TOTAL','','','','', grand]);
-  // Detail schedule juga ikut
+  const f = spMonthlyFiltered();
+  if(!f.rows.length){ alert('Tidak ada data rekap bulanan untuk filter ini.'); return; }
+  const sm = spMonthlySummaryRows(f);
   const dHeader = ['Estimasi Tanggal','Bulan','Unit','Target HM','Service Type','Biaya Sparepart (PPN)','PIC','Status'];
-  const dRows = (live.budgetPlan||[]).map(r=>{
+  const dRows = f.events.map(r=>{
     const monthLabel = r.monthKey ? ((r.month||'')+(r.year?(' '+r.year):'')) : (r.month||'');
     return [String(r.date||'').slice(0,10), monthLabel.trim(), r.unit||'', Number(r.targetHm)||0, r.serviceType||'', Number(r.cost)||0, r.pic||'', r.status||''];
   });
+  const pd = spMonthlyPartRowsForExport(f.rows);
+  const all = spBuildPartDetail(f.events);
+  const allRows = all.rows.map(r=>[r.category, r.pn, r.desc, r.item, Object.keys(r.byUnit).map(u=>u+' x'+r.byUnit[u]).join('; '), r.qty, r.unit, r.price==null?'':r.price, r.price==null?'':r.total]);
+  if(all.rows.length){
+    allRows.push(['','','','','','','','Subtotal (ex PPN)', all.subtotal]);
+    allRows.push(['','','','','','','','PPN 11%', all.ppn]);
+    allRows.push(['','','','','','','','Total (with PPN)', all.total]);
+  }
   const wb = XLSX.utils.book_new();
-  const ws1 = XLSX.utils.aoa_to_sheet([header].concat(rows));
-  ws1['!cols'] = [{wch:12},{wch:14},{wch:14},{wch:14},{wch:14},{wch:18}];
+  const ws1 = XLSX.utils.aoa_to_sheet([sm.header].concat(sm.rows));
+  ws1['!cols'] = [{wch:12}].concat(f.units.map(()=>({wch:14})), [{wch:18}]);
   XLSX.utils.book_append_sheet(wb, ws1, 'Rekap Bulanan');
   const ws2 = XLSX.utils.aoa_to_sheet([dHeader].concat(dRows));
   ws2['!cols'] = [{wch:14},{wch:12},{wch:10},{wch:12},{wch:16},{wch:18},{wch:18},{wch:10}];
   XLSX.utils.book_append_sheet(wb, ws2, 'Budget Plan Schedule');
-  const d = new Date();
-  const stamp = d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
-  XLSX.writeFile(wb, 'rekap-budget-bulanan_'+stamp+'.xlsx');
+  const ws3 = XLSX.utils.aoa_to_sheet([pd.header].concat(pd.rows));
+  ws3['!cols'] = [{wch:20},{wch:14},{wch:16},{wch:20},{wch:22},{wch:30},{wch:8},{wch:8},{wch:14},{wch:16}];
+  XLSX.utils.book_append_sheet(wb, ws3, 'Rincian Sparepart per Bulan');
+  const ws4 = XLSX.utils.aoa_to_sheet([['Kategori','Part Number','Deskripsi','Item','Unit Pemakai','Qty','Satuan','Harga Satuan','Total (ex PPN)']].concat(allRows));
+  ws4['!cols'] = [{wch:14},{wch:16},{wch:20},{wch:22},{wch:30},{wch:8},{wch:8},{wch:16},{wch:16}];
+  XLSX.utils.book_append_sheet(wb, ws4, 'Rincian Total Filter');
+  XLSX.writeFile(wb, spMonthlyExportSlug()+'.xlsx');
 }
 
 function exportSpMonthlyCsv(){
-  const live = spGetLiveBudget();
-  const list = live.monthlyBudget||[];
-  if(!list.length){ alert('Belum ada data rekap bulanan.'); return; }
-  const header = ['Bulan','SWA-101','SWA-102','SBD-103','SPC-104','Total Biaya Sparepart'];
-  const lines = [header.join(',')];
-  list.forEach(r=>{
-    const label = (r.month||'')+(r.year?(' '+r.year):'');
-    lines.push([label.trim(), Number(r['SWA-101'])||0, Number(r['SWA-102'])||0, Number(r['SBD-103'])||0, Number(r['SPC-104'])||0, Number(r.total)||0].join(','));
-  });
-  const grand = list.reduce((s,r)=>s+(Number(r.total)||0),0);
-  lines.push(['GRAND TOTAL','','','','', grand].join(','));
-  const blob = new Blob(['\ufeff'+lines.join('\n')], { type:'text/csv;charset=utf-8;' });
+  const f = spMonthlyFiltered();
+  if(!f.rows.length){ alert('Tidak ada data rekap bulanan untuk filter ini.'); return; }
+  const q = v=>{ const t=String(v==null?'':v); return /[",\n]/.test(t)?('"'+t.replace(/"/g,'""')+'"'):t; };
+  const sm = spMonthlySummaryRows(f);
+  const lines = [sm.header.map(q).join(',')];
+  sm.rows.forEach(r=>lines.push(r.map(q).join(',')));
+  const pd = spMonthlyPartRowsForExport(f.rows);
+  lines.push('');
+  lines.push('RINCIAN SPAREPART PER BULAN');
+  lines.push(pd.header.map(q).join(','));
+  pd.rows.forEach(r=>lines.push(r.map(q).join(',')));
+  const blob = new Blob(['﻿'+lines.join('\n')], { type:'text/csv;charset=utf-8;' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  const d = new Date();
-  const stamp = d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
-  a.download = 'rekap-budget-bulanan_'+stamp+'.csv';
+  a.download = spMonthlyExportSlug()+'.csv';
   a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
 }
@@ -31770,11 +32049,46 @@ function exportSpMonthlyCsv(){
     spSelectedHours = Number(chip.dataset.spHours);
     renderSpCatalog();
   });
-  ['sp-budget-month-filter','sp-budget-unit-filter'].forEach(id=>{
-    document.getElementById(id)?.addEventListener('change', ()=>{
-      renderSpBudget();
-      renderSparepartKPIs();
-    });
+  /* Multi-select periode & unit */
+  spMsSetOptions('unit', spMsOptions.unit);
+  spMsSetOptions('unit', spMsOptions.unit, 'monthly');
+  const spMsRefresh = (scope)=>{
+    if(scope==='monthly'){ renderSpMonthly(); }
+    else { renderSpBudget(); renderSparepartKPIs(); }
+  };
+  document.addEventListener('click', (e)=>{
+    const reset = e.target.closest('[data-sp-ms-reset]');
+    if(reset){
+      const kind = reset.dataset.spMsReset;
+      const scope = reset.dataset.spScope || 'budget';
+      spSelOf(scope)[kind].clear();
+      const host = document.getElementById('sp-'+scope+'-'+kind+'-filter');
+      host?.querySelectorAll('input[type=checkbox]').forEach(c=>{ c.checked=false; });
+      spMsUpdateButton(kind, scope); spMsRefresh(scope);
+      return;
+    }
+    const btn = e.target.closest('.sp-ms-btn');
+    document.querySelectorAll('.sp-ms.open').forEach(h=>{ if(!btn || h!==btn.parentElement) h.classList.remove('open'); });
+    if(btn && btn.parentElement.classList.contains('sp-ms')){ btn.parentElement.classList.toggle('open'); return; }
+    if(!e.target.closest('.sp-ms')) document.querySelectorAll('.sp-ms.open').forEach(h=>h.classList.remove('open'));
+  });
+  document.addEventListener('change', (e)=>{
+    const cb = e.target.closest('.sp-ms-panel input[type=checkbox]');
+    if(!cb) return;
+    const host = cb.closest('.sp-ms');
+    const kind = host && host.dataset.spMs;
+    if(!kind) return;
+    const scope = host.dataset.spScope || 'budget';
+    const sel = spSelOf(scope);
+    if(cb.checked) sel[kind].add(cb.value); else sel[kind].delete(cb.value);
+    spMsUpdateButton(kind, scope); spMsRefresh(scope);
+  });
+  document.getElementById('sp-monthly-tbody')?.addEventListener('click', (e)=>{
+    const row = e.target.closest('tr[data-sp-mkey]');
+    if(!row) return;
+    const k = row.dataset.spMkey;
+    if(spMonthlyOpen.has(k)) spMonthlyOpen.delete(k); else spMonthlyOpen.add(k);
+    renderSpMonthly();
   });
   document.getElementById('sp-budget-export-xlsx')?.addEventListener('click', ()=> exportSpBudgetXlsx());
   document.getElementById('sp-budget-export-csv')?.addEventListener('click', ()=> exportSpBudgetCsv());
