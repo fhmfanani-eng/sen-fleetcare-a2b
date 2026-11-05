@@ -4570,6 +4570,19 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
           <div class="perf-tbl-note">Tabel mengikuti filter periode di atas. Jam dari Monitoring HM (T = hari × 18 jam). PA = (W+S)/T · MA = W/(W+R) · UA = W/(W+S) · EU = W/T. Warna: hijau ≥ 90%, kuning ≥ 75%, merah &lt; 75%.</div>
         </div>
 
+        <!-- TABEL KPI PERFORMANCE PER UNIT — mengikuti filter periode di atas -->
+        <div class="panel perf-tbl-panel" id="unit-kpi-table-panel">
+          <div class="perf-tbl-head">
+            <div class="perf-tbl-title"><span class="tag">KPI</span><h2>KPI Performance per Unit</h2></div>
+            <div class="perf-tbl-tools">
+              <span class="perf-tbl-period" id="unit-kpi-table-period">All Periods</span>
+              <button type="button" class="btn small secondary" id="unit-kpi-table-export" title="Unduh tabel KPI (sesuai filter periode) sebagai Excel">⬇ Excel</button>
+            </div>
+          </div>
+          <div class="perf-tbl-wrap"><table class="perf-tbl unit-kpi-tbl" id="unit-kpi-table"><tbody></tbody></table></div>
+          <div class="perf-tbl-note">Tabel mengikuti filter periode di atas. Warna nilai mengikuti tier KPI resmi: hijau = 100% bobot, kuning = 80%, merah = 60%. Average Achievement = Σ Score ÷ Σ Bobot × 100. Status: ACHIEVED ≥ 100% · ON TRACK ≥ 80% · BELOW &lt; 80%. “—” = belum ada data pada periode tsb.</div>
+        </div>
+
         <div class="grid grid-2" id="unit-cards"></div>
 
 
@@ -12233,6 +12246,75 @@ function exportUnitPerfTable(){
 }
 document.getElementById('unit-perf-table-export')?.addEventListener('click', exportUnitPerfTable);
 
+/* ============ TABEL KPI PERFORMANCE PER UNIT (menu Performance) — mengikuti filter periode ============ */
+let _unitKpiTableData = null;
+function renderUnitKpiTable(weekPeriod, weekPeriodLabel){
+  const tbl = document.getElementById('unit-kpi-table');
+  if(!tbl) return;
+  const lbl = document.getElementById('unit-kpi-table-period');
+  if(lbl) lbl.textContent = weekPeriod ? ('PERIODE ' + weekPeriodLabel) : 'ALL PERIODS';
+  const rows = (_perfTableData && _perfTableData.rows) ? _perfTableData.rows : buildUnitPerfRows(weekPeriod, null, null);
+  const KEYS = ['mtbs','mttr','pmr','sa','ma','pa'];
+  const UNIT = { mtbs:' jam', mttr:' jam', pmr:'%', sa:'%', ma:'%', pa:'%' };
+  const tierCls = (key,v) => { const t = kpiTierScore(key, v); return t>=100 ? 'g' : t>=80 ? 'y' : t>0 ? 'r' : 'dim'; };
+  const fmtV = (key,v) => {
+    const n = Number(v);
+    if(v==null || isNaN(n)) return '—';
+    return (Math.round(n*10)/10).toFixed(1) + (key==='mtbs'||key==='mttr' ? '' : '%');
+  };
+  const achCls = v => v>=100 ? 'g' : v>=80 ? 'y' : 'r';
+  const statusOf = v => v>=100 ? {c:'g',t:'ACHIEVED'} : v>=80 ? {c:'y',t:'ON TRACK'} : {c:'r',t:'BELOW'};
+  const achCell = (v, ok) => {
+    if(!ok) return '<td class="dim">—</td>';
+    const w = Math.max(0, Math.min(100, v));
+    const col = v>=100 ? '#4cd48a' : v>=80 ? '#ffc72c' : '#ff6b6f';
+    return `<td class="${achCls(v)}"><div class="ach"><b>${v.toFixed(1)}%</b><i><s style="width:${w}%;background:${col}"></s></i></div></td>`;
+  };
+  const stCell = (v, ok) => { if(!ok) return '<td><span class="pill2 dim">NO DATA</span></td>'; const st = statusOf(v); return `<td><span class="pill2 ${st.c}">${st.t}</span></td>`; };
+  const ordered = rows.slice().sort((a,b)=> (a.grp===b.grp ? 0 : (a.grp==='SEN' ? -1 : 1)));
+  const body = ordered.map(r=>{
+    const ok = !!r.hasData;
+    const cells = KEYS.map(key => ok ? `<td class="${tierCls(key, r.k[key])}">${fmtV(key, r.k[key])}</td>` : '<td class="dim">—</td>').join('');
+    return `<tr class="${ok?'':'empty'}">
+      <td class="u"><b>${escUH(r.u.code)}</b><small>${escUH(r.u.type)}</small></td>
+      <td><span class="grpchip ${r.grp==='SEN'?'sen':'dtj'}">${r.grp}</span></td>
+      ${cells}
+      ${achCell(r.avgAch, ok)}${stCell(r.avgAch, ok)}
+    </tr>`;
+  }).join('');
+  const mean = a => a.length ? a.reduce((x,y)=>x+y,0)/a.length : null;
+  const avgRow = (label, list) => {
+    const act = list.filter(r=>r.hasData);
+    const cells = KEYS.map(key => { const m = mean(act.map(r=>Number(r.k[key])||0)); return `<td>${m==null?'—':fmtV(key,m)}</td>`; }).join('');
+    const a = mean(act.map(r=>r.avgAch||0));
+    return `<tr><td class="u">${label}</td><td>${act.length}/${list.length}</td>${cells}<td>${a==null?'—':a.toFixed(1)+'%'}</td><td>${a==null?'—':statusOf(a).t}</td></tr>`;
+  };
+  const sen = rows.filter(r=>r.grp==='SEN'), dtj = rows.filter(r=>r.grp==='DTJ');
+  const th = (key, name, extra) => `<th title="${escUH(KPI_INFO && KPI_INFO[key] ? KPI_INFO[key].full : name)}">${name}</th>`;
+  const tgt = key => (key==='mttr' ? '&lt; ' : key==='mtbs' ? '&gt; ' : '≥ ') + KPI_TARGET[key] + (UNIT[key]===' jam' ? ' jam' : '%');
+  tbl.innerHTML = `<thead>
+    <tr><th class="u">Unit</th><th>Grup</th>${KEYS.map(k=>th(k,k.toUpperCase())).join('')}<th>Avg Achievement</th><th>Status</th></tr>
+    <tr class="grp"><th class="u">Target</th><th></th>${KEYS.map(k=>`<th>${tgt(k)}</th>`).join('')}<th></th><th></th></tr>
+    <tr class="grp"><th class="u">Bobot</th><th></th>${KEYS.map(k=>`<th>${KPI_WEIGHT[k]}%</th>`).join('')}<th>100%</th><th></th></tr>
+  </thead><tbody>${body}</tbody><tfoot>${avgRow('AVG SEN', sen)}${avgRow('AVG DTJ', dtj)}${avgRow('FLEET AVG', rows)}</tfoot>`;
+  _unitKpiTableData = { weekPeriod, weekPeriodLabel, rows: ordered, KEYS };
+}
+function exportUnitKpiTable(){
+  const d = _unitKpiTableData;
+  if(!d || typeof XLSX==='undefined'){ alert('Tabel belum siap / library Excel belum termuat.'); return; }
+  const num = v => (v==null||isNaN(v)) ? '' : Math.round(Number(v)*10)/10;
+  const head = ['Unit','Type','Grup','MTBS (jam)','MTTR (jam)','PMR (%)','SA (%)','MA (%)','PA (%)','Avg Achievement (%)'];
+  const aoa = [['KPI Performance per Unit'],[d.weekPeriod ? ('Periode: '+d.weekPeriodLabel) : 'Periode: All Periods'],
+    ['Target','','',KPI_TARGET.mtbs,KPI_TARGET.mttr,KPI_TARGET.pmr,KPI_TARGET.sa,KPI_TARGET.ma,KPI_TARGET.pa,''],[],head];
+  d.rows.forEach(r=> aoa.push([r.u.code, r.u.type||'', r.grp].concat(d.KEYS.map(k=> r.hasData ? num(r.k[k]) : '')).concat([r.hasData ? num(r.avgAch) : ''])));
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = [{wch:14},{wch:22},{wch:8},{wch:12},{wch:12},{wch:10},{wch:10},{wch:10},{wch:10},{wch:20}];
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'KPI per Unit');
+  const tag = d.weekPeriod ? d.weekPeriod.replace('_','_sd_') : 'all';
+  XLSX.writeFile(wb, 'KPI_Performance_Unit_'+tag+'.xlsx');
+}
+document.getElementById('unit-kpi-table-export')?.addEventListener('click', exportUnitKpiTable);
+
 function renderUnitCards(){
   populateUnitWeekPeriodSelect();
   const startEl = document.getElementById('unit-period-start');
@@ -12286,6 +12368,7 @@ function renderUnitCards(){
     </div>`;
   }).join('');
   try{ renderUnitPerfTable(weekPeriod, rangeStart, rangeEnd, weekPeriodLabel); }catch(e){ console.warn('renderUnitPerfTable', e); }
+  try{ renderUnitKpiTable(weekPeriod, weekPeriodLabel); }catch(e){ console.warn('renderUnitKpiTable', e); }
   renderUnitMonthlySummary();
 }
 
@@ -24938,17 +25021,14 @@ function buildMaintenanceKpiItems(startStr, endStr){
     ? computeKPIsForRange(startStr, endStr)
     : { ma:0, pa:0, mtbs:0, mttr:0, pmr:0, sa:0 };
 
-  // MA/PA: dari performance HANYA bila periodenya cocok, kalau tidak dihitung
-  // ulang per-minggu dari HM (lihat resolveMaPaForWeek) — bukan snapshot statis.
+  // MA/PA: dihitung KHUSUS untuk rentang minggu ini (lihat resolveMaPaForSyncWeek).
+  // Tidak lagi memakai snapshot periode bulanan sheet performance untuk semua minggu
+  // (penyebab nilai MA/PA sama di W1–W4 dan sama dgn filter periode web).
   try{
-    const mp = (typeof resolveMaPaForWeek==='function')
-      ? resolveMaPaForWeek(startStr, endStr)
-      : (typeof resolveMaPa==='function' ? resolveMaPa(null, startStr, endStr) : null);
-    if(mp && (Number(mp.ma)>0 || Number(mp.pa)>0)){
-      if(mp.ma != null && mp.ma !== '') k.ma = Number(mp.ma) || 0;
-      if(mp.pa != null && mp.pa !== '') k.pa = Number(mp.pa) || 0;
-    }
-  }catch(_e){}
+    const mp = resolveMaPaForSyncWeek(startStr, endStr);
+    k.ma = Number(mp && mp.ma) || 0;
+    k.pa = Number(mp && mp.pa) || 0;
+  }catch(_e){ k.ma = 0; k.pa = 0; }
 
   // Alias baris KPI di sheet Maintenance (SEN KPI PERFORMANCE)
   const KPI_SHEET_ALIASES = {
@@ -24960,7 +25040,7 @@ function buildMaintenanceKpiItems(startStr, endStr){
     sa:   ['Serviced Accuracy','Service Accuracy','SERVICED ACCURACY','SERVICE ACCURACY','Serviced Accuracy (SA)','Planned Maintenance Schedule Compliance']
   };
 
-  const keys = ['ma','pa','mtbs','mttr','pmr','sa'];
+  const keys = ['ma','pa','mtbs','mttr','pmr','sa'].filter(key => !((key==='ma' || key==='pa') && !(Number(k[key])>0)));
   return keys.map(key=>{
     const acu = Number(k[key])||0;
     // score = poin bobot (mis. 15 untuk MA full) — sesuai kontrak Apps Script
@@ -24974,6 +25054,28 @@ function buildMaintenanceKpiItems(startStr, endStr){
       name: (KPI_SHEET_ALIASES[key] && KPI_SHEET_ALIASES[key][0]) || key
     };
   });
+}
+
+/**
+ * MA/PA untuk SATU minggu (sync KPI → sheet Maintenance, hanya unit SEN).
+ * 1) Snapshot sheet performance dipakai HANYA bila periodenya PERSIS sama dengan minggu tsb
+ *    (start & end identik). Snapshot bulanan TIDAK boleh dipakai untuk tiap minggu.
+ * 2) Selain itu: dihitung dari Monitoring HM per unit SEN pada rentang minggu itu.
+ * 3) Tidak ada data → 0 (item MA/PA tidak dikirim, sel di sheet tidak ditimpa).
+ */
+function resolveMaPaForSyncWeek(startStr, endStr){
+  const run = ()=>{
+    try{
+      if(mapaData && mapaData.fromPerformance && mapaData.rows && mapaData.rows.length
+         && _normYmd(mapaData.periodStart) === _normYmd(startStr)
+         && _normYmd(mapaData.periodEnd) === _normYmd(endStr)){
+        const mp = maPaFromRows(kpiScopeRows(mapaData.rows));
+        if(mp && ((Number(mp.ma)||0) > 0 || (Number(mp.pa)||0) > 0)) return mp;
+      }
+    }catch(_e){}
+    try{ return resolveMaPaFromHmOnly(null, startStr||null, endStr||null) || { ma:0, pa:0 }; }catch(_e){ return { ma:0, pa:0 }; }
+  };
+  return kpiScope ? run() : kpiWithScope('SEN', run);
 }
 
 /**
@@ -25092,13 +25194,18 @@ async function syncMaintenanceKPIToSheet(opts){
       // LOCK periode: HANYA minggu yang sudah selesai (end < hari ini).
       // Contoh: W1 1–10 Sept → baru boleh sync mulai 11 Sept.
       const today = toDateStr(new Date());
+      // HANYA bulan aktif: bulan pada filter periode KPI di web (YYYY-MM) bila dipilih, kalau tidak bulan berjalan.
+      const _fv = (typeof kpiMonthlyChartPeriodValue === 'string') ? kpiMonthlyChartPeriodValue : '';
+      const activeYm = /^\d{4}-\d{2}$/.test(_fv) ? _fv : String(today).slice(0,7);
+      periods = periods.filter(p => String(p.start||'').slice(0,7) === activeYm);
       const toSync = periods.filter(p => p.end && String(p.end) < String(today));
       if(!toSync.length){
         const openOnes = periods.filter(p => p.start && (!p.end || String(p.end) >= String(today)))
           .map(p => (p.week||'') + ' ' + (p.month||'') + ' (sampai ' + (p.end||'?') + ')').join(', ');
         alert('ℹ Tidak ada periode yang sudah jatuh tempo.\n' +
           'Kolom Acv./Score hanya diisi setelah tanggal akhir minggu lewat.\n' +
-          (openOnes ? ('Masih berjalan: ' + openOnes) : 'Tidak ada periode terbuka di cache.'));
+          'Sync hanya untuk bulan aktif: ' + activeYm + '.\n' +
+          (openOnes ? ('Masih berjalan: ' + openOnes) : 'Tidak ada periode di bulan tsb pada sheet Maintenance.'));
         return { ok:true, synced:0, detail:[], lockedOpenPeriods:true };
       }
 
@@ -33417,6 +33524,12 @@ function subscribeDailyRealtime(){
 .perf-tbl .pill2.dim{ color:#6b7683; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.12); }
 .perf-tbl .pill2.r{ color:#ff6b6f; background:rgba(229,72,77,.13); border:1px solid rgba(229,72,77,.4); }
 .perf-tbl tfoot td{ padding:10px 8px; text-align:center; font-weight:700; color:#fff; background:linear-gradient(180deg,rgba(255,199,44,.10),rgba(255,199,44,.04)); border-top:1px solid rgba(255,199,44,.35); white-space:nowrap; font-variant-numeric:tabular-nums; }
+/* Tabel KPI Performance per Unit */
+.unit-kpi-tbl{ min-width:900px; }
+.unit-kpi-tbl thead tr.grp th{ font-weight:500; color:#8b95a3; letter-spacing:.3px; text-transform:none; }
+.unit-kpi-tbl thead tr.grp th.u{ color:#ffc72c; text-transform:uppercase; }
+.unit-kpi-tbl tfoot td{ border-top:1px solid rgba(255,199,44,.18); }
+.unit-kpi-tbl .ach b{ font-family:'JetBrains Mono',monospace; font-size:12px; min-width:48px; text-align:right; }
 .perf-tbl tfoot td.u{ background:#1b1a12; font-family:'Oswald',sans-serif; letter-spacing:.8px; color:#ffc72c; }
 .perf-tbl-note{ margin-top:9px; font-size:10.5px; color:#8b95a3; line-height:1.45; }
 
