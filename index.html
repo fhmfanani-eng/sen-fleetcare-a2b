@@ -22310,6 +22310,10 @@ function renderDashboardTopbarSync(){
   if(!slot) return;
   const cfg = DASH_TAB_SYNC[activeDashboardTab];
   if(!cfg){ slot.innerHTML = ''; return; }
+  // Grup DTJ: Auto Sync KPI → Maintenance hanya untuk SEN.
+  if(activeDashboardTab === 'kpi' && typeof kpiMaintGroup !== 'undefined' && kpiMaintGroup === 'DTJ'){ slot.innerHTML = ''; return; }
+  // Grup DTJ: perintah Auto Sync Monthly KPI Achievement disembunyikan (hanya tersedia untuk SEN).
+  if(activeDashboardTab === 'monthlykpi' && typeof kpiMonthlyGroup !== 'undefined' && kpiMonthlyGroup === 'DTJ'){ slot.innerHTML = ''; return; }
   slot.innerHTML = `<button type="button" class="btn small sync-only-fahmi" style="white-space:nowrap" title="${cfg.title}" onclick="if(typeof isFahmiFanani==='function' && isFahmiFanani()){ ${cfg.action}; } else { alert('Fitur Sync hanya tersedia untuk user Fahmi Fanani.'); }">${cfg.label}</button>`;
 }
 function applyDashboardTabFilter(){
@@ -22326,6 +22330,7 @@ function applyDashboardTabFilter(){
       // Panel "MA & PA Data Source" dipindah ke sini oleh placeMapaSourceAboveKpiCards(), tepat
       // sebelum kartu KPI — jadi ikut masuk grup topbar "KPI Maintenance".
       if(el.id === 'mapa-source-block'){
+        try{ const _sb = document.getElementById('mapa-sync-kpi-btn'); if(_sb) _sb.style.display = (kpiMaintGroup === 'DTJ') ? 'none' : ''; }catch(_e){}
         el.style.display = (tab === 'kpi') ? '' : 'none';
         return;
       }
@@ -22984,7 +22989,7 @@ function renderKPIChartDashboardImpl(k, globalStats, _opts){
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
             <span id="mkpi-sync-status" style="font-size:9px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.5px;"></span>
-            <button type="button" class="btn small sync-only-fahmi" onclick="if(typeof isFahmiFanani==='function' &amp;&amp; isFahmiFanani()){ syncMonthlyKpiAchievementToSheets(window.__trendMonthsForSync||[], window.__monthlyKpiDefsForSync||[], {manual:true}); } else { alert('Fitur Sync hanya tersedia untuk user Fahmi Fanani.'); }" title="Kirim chart &amp; tabel Monthly KPI Achievement ke sheet &quot;Dashboard&quot; di spreadsheet Maintenance">☁ Auto Sync</button>
+            ${kpiMonthlyGroup==='DTJ' ? '' : `<button type="button" class="btn small sync-only-fahmi" onclick="if(typeof isFahmiFanani==='function' &amp;&amp; isFahmiFanani()){ syncMonthlyKpiAchievementToSheets(window.__trendMonthsForSync||[], window.__monthlyKpiDefsForSync||[], {manual:true}); } else { alert('Fitur Sync hanya tersedia untuk user Fahmi Fanani.'); }" title="Kirim chart &amp; tabel Monthly KPI Achievement ke sheet &quot;Dashboard&quot; di spreadsheet Maintenance">☁ Auto Sync</button>`}
           </div>
         </div>
 
@@ -24995,7 +25000,7 @@ function resolveMaPaForWeek(startStr, endStr){
     if(performancePeriodMatches(startStr||null, endStr||null)
         && mapaData && mapaData.rows && mapaData.rows.length
         && typeof maPaFromRows === 'function'){
-      const mp = maPaFromRows(mapaData.rows);
+      const mp = maPaFromRows(kpiScopeRows(mapaData.rows));
       if(mp && ((Number(mp.ma)||0) > 0 || (Number(mp.pa)||0) > 0)) return mp;
     }
   }catch(_e){}
@@ -25009,6 +25014,10 @@ function resolveMaPaForWeek(startStr, endStr){
       return Math.round((b - a) / 86400000) + 1;
     }catch(_e){ return 999; }
   })();
+  if(kpiScope && typeof resolveMaPaFromHmOnly === 'function'){
+    // Scope grup (mis. SEN saja): hitung dari HM per unit dalam grup, bukan agregat semua unit.
+    try{ return resolveMaPaFromHmOnly(null, startStr||null, endStr||null); }catch(_e){ return { ma:0, pa:0 }; }
+  }
   if(spanDays <= 14 && typeof hmWSRGlobal === 'function'){
     try{
       const hm = hmWSRGlobal(startStr||null, endStr||null);
@@ -25139,7 +25148,8 @@ async function syncMaintenanceKPIToSheet(opts){
       }
 
       for(const p of toSync){
-        const items = buildMaintenanceKpiItems(p.start, p.end);
+        // Sheet Maintenance = SEN KPI Performance → hitung KPI HANYA dari unit grup SEN (unit DTJ tidak ikut).
+        const items = kpiWithScope('SEN', ()=>buildMaintenanceKpiItems(p.start, p.end));
         // Skip minggu tanpa data
         const hasData = items.some(it=>Number(it.acu)>0);
         if(!hasData){
