@@ -19,6 +19,10 @@
 </script>
 <script id="sen-errcap-v60">
 (function(){
+  /* Peringatan jinak browser "ResizeObserver loop ..." — bukan bug fungsional; jangan dicatat/ditampilkan sebagai error. */
+  window.addEventListener('error',function(e){
+    if(e && e.message && String(e.message).indexOf('ResizeObserver loop')===0){ e.stopImmediatePropagation(); e.preventDefault(); }
+  }, true);
   var L=window.__senErrs=[];
   function add(t,m){ try{ L.push({t:Date.now(),type:t,msg:String(m).slice(0,300)}); if(L.length>40) L.shift(); }catch(e){} }
   window.addEventListener('error',function(e){ add('error',(e.message||'error')+(e.filename?' @'+String(e.filename).split('/').pop()+':'+(e.lineno||''):'')); });
@@ -2255,6 +2259,16 @@ select.exec-close{ background:rgba(76,175,109,0.15); color:var(--green); }
   0%,100%{ opacity:0.5; }
   50%{ opacity:1; }
 }
+/* Tanpa foto latar: kartu di tengah + latar gradien industri (tidak tampak "ngeframe") */
+#login-overlay.no-photo{
+  align-items:center; justify-content:center; padding:14px;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 42%, rgba(255,199,44,0.10), transparent 70%),
+    repeating-linear-gradient(45deg, rgba(255,255,255,0.018) 0 2px, transparent 2px 14px),
+    linear-gradient(160deg, #0d1118 0%, #0a0c10 55%, #07080b 100%);
+}
+#login-overlay.no-photo #login-stack{ margin:0; }
+@media (min-aspect-ratio: 1/1){ #login-overlay.no-photo{ padding:14px; } }
 #login-overlay.hidden{ display:none; }
 .login-card{
   width:100%; max-width:320px;
@@ -3530,6 +3544,9 @@ button.wa-green:hover, button.wa-sync-only-fahmi:hover{
   cursor: pointer !important;
 }
 /* pastikan tidak tertutup overlay */
+/* Plan Service — pemisah grup unit SEN / DTJ */
+.ps-group-chips{ flex:0 0 auto; }
+.ps-group-chips .kpi-unit-group-btn{ padding:6px 14px; }
 #view-cbm #cbm-tabs, #view-plan #plan-service-subnav{
   pointer-events: auto !important;
   z-index: 90 !important;
@@ -5039,7 +5056,7 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
         <div class="ps-subview active" id="ps-subview-schedule">
         <div class="panel">
           <div class="panel-head" id="plan-panel-head">
-            <h2>Plan Schedule Service <span class="tag">AUTO SYNC · 10 UNIT</span></h2>
+            <h2>Plan Schedule Service <span class="tag" id="ps-tag-schedule">AUTO SYNC · 10 UNIT</span></h2>
             <div class="toolbar">
               <button type="button" class="btn small sync-gold" id="btn-sync-plan-all"  title="Sync performance + HM + Jam Kerja Harian, lalu generate jadwal otomatis">☁ Sync & Generate Otomatis</button>
               <button type="button" class="btn small secondary sync-gold" id="btn-sync-daily-wh"  title="Sync WH harian dari sheet performance (T−S)/hari — tanpa sheet baru">☁ Sync Jam Kerja Harian</button>
@@ -5049,6 +5066,10 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
           <div class="panel period-panel" id="plan-period-panel" style="margin-bottom:14px; padding:14px 16px;">
             <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
               <span class="period-range-label">Filter Periode (Open)</span>
+              <div class="kpi-unit-groups ps-group-chips" role="tablist" aria-label="Grup unit Plan Service" title="Pisahkan Plan Service per grup unit">
+                <button type="button" role="tab" class="kpi-unit-group-btn active" data-ps-group="SEN" onclick="onPsGroupChange('SEN')">SEN <span data-ps-count="SEN">4</span></button>
+                <button type="button" role="tab" class="kpi-unit-group-btn" data-ps-group="DTJ" onclick="onPsGroupChange('DTJ')">DTJ <span data-ps-count="DTJ">5</span></button>
+              </div>
               <div class="field period-input-group" style="margin-bottom:0; min-width:140px;">
                 <span class="period-input-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></span>
                 <select id="plan-period-year" title="Filter Tahun — hanya jadwal Open" style="min-width:100px;">
@@ -5122,6 +5143,10 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
           </div>
           <div class="ps-sync-status" id="plan-record-sync-status" style="margin:-4px 0 12px;">Record sync: <b>AUTO LIVE</b> · Continuous sync active</div>
           <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
+            <div class="kpi-unit-groups ps-group-chips" role="tablist" aria-label="Grup unit Plan Service" title="Pisahkan Plan Service per grup unit">
+                <button type="button" role="tab" class="kpi-unit-group-btn active" data-ps-group="SEN" onclick="onPsGroupChange('SEN')">SEN <span data-ps-count="SEN">4</span></button>
+                <button type="button" role="tab" class="kpi-unit-group-btn" data-ps-group="DTJ" onclick="onPsGroupChange('DTJ')">DTJ <span data-ps-count="DTJ">5</span></button>
+              </div>
             <label style="font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; margin:0;">Filter Unit Code</label>
             <select id="plan-record-filter-unit" style="min-width:160px; background:var(--panel-2); border:1px solid var(--line); color:var(--yellow); font-weight:600; padding:8px 10px; border-radius:var(--radius);">
               <option value="">Semua Unit</option>
@@ -5155,12 +5180,19 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
         <div class="ps-subview" id="ps-subview-livehm">
           <div class="panel">
             <div class="panel-head">
-              <h2>Live HM Movement <span class="tag">PER DAY · 10 UNIT</span></h2>
+              <h2>Live HM Movement <span class="tag" id="ps-tag-livehm">PER DAY · 10 UNIT</span></h2>
               <div class="toolbar">
                 <button type="button" class="btn small sync-gold" id="btn-live-hm-sync" title="Sync HM + Performance + Jam Kerja Harian sekarang" >☁ Sync Live HM</button>
               </div>
             </div>
             <div class="ps-live-toolbar">
+              <div class="ps-live-field">
+                <label>Grup Unit</label>
+                <div class="kpi-unit-groups ps-group-chips" role="tablist" aria-label="Grup unit Plan Service" title="Pisahkan Plan Service per grup unit">
+                <button type="button" role="tab" class="kpi-unit-group-btn active" data-ps-group="SEN" onclick="onPsGroupChange('SEN')">SEN <span data-ps-count="SEN">4</span></button>
+                <button type="button" role="tab" class="kpi-unit-group-btn" data-ps-group="DTJ" onclick="onPsGroupChange('DTJ')">DTJ <span data-ps-count="DTJ">5</span></button>
+              </div>
+              </div>
               <div class="ps-live-field">
                 <label>Unit</label>
                 <select id="ps-live-hm-unit">
@@ -16977,9 +17009,10 @@ function renderPlanTable(){
 
   // Hanya tampilkan plan yang BELUM Close di Schedule Plan Service.
   // Record Close masuk ke tabel Record Service Unit (bukan di sini).
-  const openPlans = planRecords.filter(r=>isPlanServiceAllowedUnit(r.unitCode) && !isPlanClosed(r));
+  const openPlans = planRecords.filter(r=>isPlanServiceAllowedUnit(r.unitCode) && !isPlanClosed(r) && psUnitInGroup(r.unitCode));
+  try{ psApplyGroupUI(); }catch(_e){}
   if(!openPlans.length){
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="14">Belum ada jadwal open. Klik <b>Sync &amp; Generate Otomatis</b> atau semua sudah Close (lihat Record Service Unit).</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="14">Belum ada jadwal open untuk grup <b>${psUnitGroup}</b>. Klik <b>Sync &amp; Generate Otomatis</b> atau semua sudah Close (lihat Record Service Unit).</td></tr>`;
     attachTopScroll('plan');
     renderRecordServiceTable();
     try{ if(typeof renderSparepart==='function') renderSparepart(); }catch(_e){}
@@ -17142,9 +17175,9 @@ function populatePlanRecordUnitFilter(){
   if(!sel) return;
   const prev = sel.value || '';
   const codes = new Set();
-  (UNITS||[]).forEach(u=>{ if(u && u.code) codes.add(String(u.code).trim()); });
+  (UNITS||[]).forEach(u=>{ if(u && u.code && psUnitInGroup(u.code)) codes.add(String(u.code).trim()); });
   (planRecords||[]).filter(isPlanClosed).forEach(r=>{
-    if(r && r.unitCode) codes.add(String(r.unitCode).trim());
+    if(r && r.unitCode && psUnitInGroup(r.unitCode)) codes.add(String(r.unitCode).trim());
   });
   const sorted = Array.from(codes).filter(Boolean).sort((a,b)=>a.localeCompare(b));
   sel.innerHTML = '<option value="">Semua Unit</option>' +
@@ -17198,6 +17231,7 @@ function renderRecordServiceTable(){
   const monthFilter = (document.getElementById('plan-record-filter-month')||{}).value || '';
   const closed = planRecords.filter(r=>{
     if(!isPlanClosed(r)) return false;
+    if(!psUnitInGroup(r.unitCode)) return false;
     if(unitFilter && String(r.unitCode||'').trim() !== unitFilter) return false;
     if(monthFilter){
       const ym = planYearMonthKey(r.execDate || r.planDate || '');
@@ -31057,10 +31091,11 @@ function renderPlanHmLiveChart(){
   const grid=document.getElementById('ps-hm-chart-grid');
   const summary=document.getElementById('ps-live-hm-summary');
   if(!grid) return;
-  const unitSel=document.getElementById('ps-live-hm-unit')?.value||'';
+  let unitSel=document.getElementById('ps-live-hm-unit')?.value||'';
+  if(unitSel && !psUnitInGroup(unitSel)) unitSel='';
   const start=document.getElementById('ps-live-hm-start')?.value||'';
   const end=document.getElementById('ps-live-hm-end')?.value||'';
-  const codes=unitSel?[unitSel]:['SWA-101','SWA-102','SBD-103','SPC-104','DZ-04','DZ-09','WA-10','PC-11','PC-12'];
+  const codes=unitSel?[unitSel]:psGroupUnitCodes();
   const allSeries=codes.map(c=>({code:c,series:psGetLiveHmSeries(c,start,end),ops:psGetLiveOpsSeries(c,start,end)}));
   grid.innerHTML=allSeries.map(({code,series,ops})=>{
     const last=series[series.length-1], first=series[0];
@@ -31081,7 +31116,7 @@ function renderPlanHmLiveChart(){
   const totalOps=allSeries.reduce((a,x)=>({w:a.w+x.ops.reduce((n,r)=>n+(Number(r.working)||0),0),s:a.s+x.ops.reduce((n,r)=>n+(Number(r.standby)||0),0),b:a.b+x.ops.reduce((n,r)=>n+(Number(r.breakdown)||0),0)}),{w:0,s:0,b:0});
   if(summary){
     summary.innerHTML=[
-      ['Unit','4 / '+codes.length,'Live HM scope'],
+      ['Unit',(psUnitGroup)+' · '+codes.length,'Live HM scope'],
       ['Daily Point',totalPoints,'HM readings'],
       ['Working Hours',psFmtHm(totalOps.w)+' h','daily total'],
       ['Standby',psFmtHm(totalOps.s)+' h','daily total'],
@@ -31093,11 +31128,55 @@ function renderPlanHmLiveChart(){
   if(st){ const t=new Date(); st.innerHTML='Source: <b>HM Monitoring / Telemetry + Jam Kerja Harian + Daily Maintenance</b> · Last sync: <b>'+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0')+'</b>'; }
 }
 
+/* ================= PEMISAHAN PLAN SERVICE: GRUP UNIT SEN & DTJ ================= */
+let psUnitGroup = 'SEN';
+try{ const _g = localStorage.getItem('ps-unit-group'); if(_g==='SEN'||_g==='DTJ') psUnitGroup = _g; }catch(_e){}
+function psUnitInGroup(code){
+  const c = (typeof resolveUnitCode==='function' ? resolveUnitCode(code) : '') || String(code||'').trim().toUpperCase();
+  return kpiUnitIsSen(c) === (psUnitGroup === 'SEN');
+}
+function psGroupUnitCodes(){
+  return (PLAN_SERVICE_UNIT_ORDER||[]).filter(c => PLAN_SERVICE_ALLOWED_UNITS.has(c) && psUnitInGroup(c));
+}
+const PLAN_SERVICE_UNIT_ORDER = ['SWA-101','SWA-102','SBD-103','SPC-104','DZ-04','DZ-09','WA-10','PC-11','PC-12'];
+/** Sinkronkan tampilan: tombol grup, jumlah unit, tag judul, opsi dropdown unit Live HM. */
+function psApplyGroupUI(){
+  document.querySelectorAll('[data-ps-group]').forEach(b=>{
+    const on = b.dataset.psGroup === psUnitGroup;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  const sen = PLAN_SERVICE_UNIT_ORDER.filter(c=>kpiUnitIsSen(c)), dtj = PLAN_SERVICE_UNIT_ORDER.filter(c=>!kpiUnitIsSen(c));
+  const set = (id,t)=>{ const e=document.getElementById(id); if(e) e.textContent=t; };
+  document.querySelectorAll('[data-ps-count="SEN"]').forEach(e=>e.textContent=sen.length);
+  document.querySelectorAll('[data-ps-count="DTJ"]').forEach(e=>e.textContent=dtj.length);
+  const codes = psGroupUnitCodes();
+  set('ps-tag-schedule', 'AUTO SYNC · '+codes.length+' UNIT '+psUnitGroup);
+  set('ps-tag-livehm', 'PER DAY · '+codes.length+' UNIT '+psUnitGroup);
+  const sel = document.getElementById('ps-live-hm-unit');
+  if(sel){
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">Semua Unit '+psUnitGroup+'</option>' + codes.map(c=>`<option value="${escUH(c)}">${escUH(c)}</option>`).join('');
+    sel.value = codes.indexOf(prev)>=0 ? prev : '';
+  }
+}
+function onPsGroupChange(g){
+  psUnitGroup = (g==='DTJ') ? 'DTJ' : 'SEN';
+  try{ localStorage.setItem('ps-unit-group', psUnitGroup); }catch(_e){}
+  const ru = document.getElementById('plan-record-filter-unit'); if(ru) ru.value = '';
+  try{ psApplyGroupUI(); }catch(_e){}
+  try{ renderPlanTable(); }catch(e){ console.warn('renderPlanTable', e); }
+  try{ renderRecordServiceTable(); }catch(e){ console.warn('renderRecordServiceTable', e); }
+  try{ renderPlanHmLiveChart(); }catch(e){ console.warn('renderPlanHmLiveChart', e); }
+}
+window.onPsGroupChange = onPsGroupChange;
+
 (function initPlanServiceWorkspace(){
   document.querySelectorAll('#plan-service-subnav .ps-subtab').forEach(b=>{
     b.addEventListener('click',function(ev){ ev.preventDefault(); setPlanServiceSubTab(b.dataset.psTab); });
   });
   try{ forceEnableAllNavTabs(); }catch(_e){}
+  try{ psApplyGroupUI(); }catch(_e){}
 
   ['ps-live-hm-unit','ps-live-hm-start','ps-live-hm-end'].forEach(id=>{
     document.getElementById(id)?.addEventListener('change',renderPlanHmLiveChart);
@@ -32859,24 +32938,47 @@ function subscribeDailyRealtime(){
 </div>
 
 <script>
-/* Login: kartu + teks HEMC diskalakan otomatis supaya selalu muat di layar (portrait & landscape) */
+/* Login: kartu + teks HEMC diskalakan otomatis supaya selalu muat di layar (portrait & landscape, termasuk dalam iframe/preview).
+   - Tanpa kunci "busy" berbasis rAF (bisa macet di iframe/tab tersembunyi sehingga skala tidak pernah diperbarui).
+   - Callback ResizeObserver ditunda ke frame berikutnya (hindari "ResizeObserver loop ..."). */
 (function(){
   var stack=document.getElementById('login-stack'); if(!stack) return;
-  var busy=false;
+  var overlay=document.getElementById('login-overlay');
+  var lastZ=-1, lastKey='';
   function fit(){
-    if(busy) return; busy=true;
+    var ih=window.innerHeight||document.documentElement.clientHeight, iw=window.innerWidth||document.documentElement.clientWidth;
+    if(!ih || !iw) return;
+    var key=iw+'x'+ih;
     stack.style.zoom=1;
-    var h=stack.offsetHeight, ih=window.innerHeight;
-    var land=window.innerWidth>ih;
-    var avail=ih*(land?0.94:0.60);
+    var h=stack.offsetHeight;
+    var land=iw>ih;
+    var avail=ih*(land?0.92:0.62);
     var z=h? Math.min(1, avail/h):1;
+    z=Math.max(0.45, Math.round(z*1000)/1000);
     stack.style.zoom=z;
-    requestAnimationFrame(function(){ busy=false; });
+    lastZ=z; lastKey=key;
   }
-  window.addEventListener('resize', fit);
+  var q=false;
+  function fitSoon(){ if(q) return; q=true; (window.requestAnimationFrame||setTimeout)(function(){ q=false; fit(); }); }
+  window.addEventListener('resize', fitSoon);
   window.addEventListener('orientationchange', function(){ setTimeout(fit,150); });
-  if(window.ResizeObserver){ new ResizeObserver(fit).observe(stack); }
-  fit();
+  window.addEventListener('load', fit);
+  if(window.ResizeObserver){
+    var lastH=0;
+    new ResizeObserver(function(){
+      var h=stack.offsetHeight*(parseFloat(stack.style.zoom)||1);
+      if(Math.abs(h-lastH)<1) return; lastH=h; fitSoon();
+    }).observe(stack);
+  }
+  fit(); setTimeout(fit,300); setTimeout(fit,1200);
+
+  /* Foto latar login (bg-login*.jpg) tidak selalu ikut ter-deploy / termuat. Bila gagal, kartu dipusatkan
+     dengan latar gradien sendiri supaya tidak tampak "melayang" di sisi kanan dengan area kosong. */
+  if(overlay){
+    var probe=new Image();
+    probe.onerror=function(){ overlay.classList.add('no-photo'); fitSoon(); };
+    probe.src=(window.innerWidth>window.innerHeight)?'bg-login.jpg':'bg-login-portrait.jpg';
+  }
 })();
 </script>
 <script>
