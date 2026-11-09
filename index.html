@@ -8731,6 +8731,26 @@ const PERFORMANCE_SEED = {
   periodEnd: '2026-08-10'
 };
 
+/* ANGKA RESMI MA/PA per bulan (AVERAGE sheet performance) — MENGALAHKAN snapshot/seed/history lama.
+   Juli 2026: MA 80.0% · PA 82.8% (seed lama 84.5%/84.5% salah dan tersimpan di mapa-history).
+   Berlaku untuk periode satu bulan penuh (grup SEN / semua unit); grup DTJ tetap dihitung dari HM. */
+const OFFICIAL_MAPA_BY_MONTH = {
+  '2026-07': { ma: 80.0, pa: 82.8 }
+};
+function officialMaPaForRange(startStr, endStr){
+  try{
+    if(kpiScope === 'DTJ') return null;
+    const s0 = _normYmd(startStr), e0 = _normYmd(endStr);
+    if(!s0 || !e0) return null;
+    const ym = s0.slice(0,7);
+    const o = OFFICIAL_MAPA_BY_MONTH[ym];
+    if(!o) return null;
+    const lastDay = new Date(Number(ym.slice(0,4)), Number(ym.slice(5,7)), 0).getDate();
+    if(s0 === ym+'-01' && e0 === ym+'-'+String(lastDay).padStart(2,'0')) return { ma:o.ma, pa:o.pa };
+  }catch(_e){}
+  return null;
+}
+
 /* Snapshot resmi Juli 2026 dari tab performance (AVERAGE MA 84.5% / PA 84.5%).
    Disimpan ke mapaHistory['2026-07'] saat init supaya kolom JUL di Monthly KPI
  *  selalu menampilkan angka sheet, tidak bergantung HM (~90/92). */
@@ -24394,10 +24414,11 @@ function computeKPIsForRange(startStr, endStr){
   //  dari monthly trend (setiap bulan punya start/end sendiri).
   let ma = 0, pa = 0;
   try{
-    let mp = null;
+    let mp = officialMaPaForRange(startStr, endStr);   // angka resmi per bulan (Juli 80.0 / 82.8) — prioritas tertinggi
     const monthKey = (startStr || '').slice(0, 7); // YYYY-MM
-    // 1) Snapshot history bulan tsb — prioritas tertinggi (JUL = 84.5% sheet)
-    if(monthKey && mapaHistory && mapaHistory[monthKey] && mapaHistory[monthKey].rows && mapaHistory[monthKey].rows.length){
+    // 1) Snapshot history bulan tsb
+    if(mp){ /* angka resmi dipakai */ }
+    else if(monthKey && mapaHistory && mapaHistory[monthKey] && mapaHistory[monthKey].rows && mapaHistory[monthKey].rows.length){
       mp = maPaFromRows(kpiScopeRows(mapaHistory[monthKey].rows));
     }
     // 1b) Fallback seed resmi Juli 2026 jika history kosong
@@ -25075,8 +25096,18 @@ function buildMaintenanceKpiItems(startStr, endStr){
     sa:   ['Serviced Accuracy','Service Accuracy','SERVICED ACCURACY','SERVICE ACCURACY','Serviced Accuracy (SA)','Planned Maintenance Schedule Compliance']
   };
 
-  const keys = ['ma','pa','mtbs','mttr','pmr','sa'].filter(key => !((key==='ma' || key==='pa') && !(Number(k[key])>0)));
-  return keys.map(key=>{
+  // SA: bila TIDAK ada satu pun record Periodical Approved (unit SEN) pada rentang minggu ini, nilainya bukan
+  // "0%" sungguhan melainkan "belum ada data" → jangan dikirim (sel sheet tidak ditimpa dengan 0).
+  let _saN = 0, _saPending = 0;
+  try{
+    const _inR = r => r.category==='Periodical' && r.tanggal && r.tanggal>=startStr && r.tanggal<=endStr && kpiScopeOk(r.unitCode);
+    _saN = dailyRecords.filter(r=>_inR(r) && r.approvalStatus==='Approved').length;
+    _saPending = dailyRecords.filter(r=>_inR(r) && r.approvalStatus!=='Approved').length;
+  }catch(_e){}
+  const keys = ['ma','pa','mtbs','mttr','pmr','sa'].filter(key =>
+    !((key==='ma' || key==='pa') && !(Number(k[key])>0)) &&
+    !(key==='sa' && _saN===0));
+  const _out = keys.map(key=>{
     const acu = Number(k[key])||0;
     // score = poin bobot (mis. 15 untuk MA full) — sesuai kontrak Apps Script
     const score = Math.round((kpiWeightedScore(key, acu) + Number.EPSILON) * 100) / 100;
@@ -25089,6 +25120,8 @@ function buildMaintenanceKpiItems(startStr, endStr){
       name: (KPI_SHEET_ALIASES[key] && KPI_SHEET_ALIASES[key][0]) || key
     };
   });
+  _out.saApproved = _saN; _out.saPending = _saPending;
+  return _out;
 }
 
 /**
@@ -25350,7 +25383,8 @@ async function syncMaintenanceKPIToSheet(opts){
           okCount++;
           maintKpiMarkSent(_pkey, _phash);
           const data = result.data || {};
-          detail.push({ month:p.month, week:p.week, start:p.start, end:p.end, ok:true, updated:(data.updated||[]).length, skipped:(data.skipped||[]).length });
+          detail.push({ month:p.month, week:p.week, start:p.start, end:p.end, ok:true, updated:(data.updated||[]).length, skipped:(data.skipped||[]).length,
+            saNote: items.saApproved===0 ? ('SA tidak dikirim: tidak ada record Periodical Approved unit SEN'+(items.saPending? (' ('+items.saPending+' record belum Approved)'):'')) : '' });
         } else {
           failCount++;
           detail.push({ month:p.month, week:p.week, ok:false, error: result.error });
@@ -25363,7 +25397,7 @@ async function syncMaintenanceKPIToSheet(opts){
         const lines = detail.map(d=>{
           if(d.skipped==='no_data') return `· ${d.month} ${d.week}: dilewati (belum ada data)`;
           if(d.skipped==='already_sent') return `· ${d.month} ${d.week}: sudah terkirim (tidak berubah)`;
-          if(d.ok) return `· ${d.month} ${d.week} (${d.start} s/d ${d.end}): ✓ ${d.updated} baris`;
+          if(d.ok) return `· ${d.month} ${d.week} (${d.start} s/d ${d.end}): ✓ ${d.updated} baris` + (d.saNote ? `\n    ⚠ ${d.saNote}` : '');
           return `· ${d.month} ${d.week}: ✗ ${d.error||'gagal'}`;
         });
         alert((failCount? '⚠ ' : '✓ ') + 'Sync KPI (unit SEN) → Sheet Maintenance · bulan ' + activeYm + '\n' +
