@@ -25019,7 +25019,8 @@ async function fetchMaintenancePeriods(force){
   try{
     const url = BACKEND_CONFIG.sheetsWebAppUrl +
       (BACKEND_CONFIG.sheetsWebAppUrl.indexOf('?')>=0 ? '&' : '?') +
-      'action=getMaintenancePeriods';
+      'action=getMaintenancePeriods' +
+      '&spreadsheetId=' + encodeURIComponent(BACKEND_CONFIG.sheetsKpiSpreadsheetId || BACKEND_CONFIG.sheetsSpreadsheetId || '');
     let data = null;
     try{
       const res = await fetch(url, { method:'GET', redirect:'follow', cache:'no-store' });
@@ -25194,6 +25195,15 @@ function fallbackMaintenancePeriodsForMonth(year, monthNum){
  * opts.manual = true → tampilkan alert hasil.
  * opts.force = true → abaikan TTL.
  */
+/* ---- Catatan minggu yang sudah terkirim (dipakai penjadwal otomatis agar tidak kirim ulang data yang sama) ---- */
+const MAINT_KPI_SENT_KEY = 'maint-kpi-sent-v1';
+function maintKpiSentMap(){ try{ return JSON.parse(localStorage.getItem(MAINT_KPI_SENT_KEY)||'{}') || {}; }catch(_e){ return {}; } }
+function maintKpiMarkSent(key, hash){ try{ const m = maintKpiSentMap(); m[key] = hash; localStorage.setItem(MAINT_KPI_SENT_KEY, JSON.stringify(m)); }catch(_e){} }
+function maintKpiPeriodKey(p){ return [p.month, p.week, p.start, p.end].join('|'); }
+function maintKpiItemsHash(items){
+  return (items||[]).map(i=>i.key+':'+i.acu+':'+i.score).join(';');
+}
+
 async function syncMaintenanceKPIToSheet(opts){
   opts = opts || {};
   if(!BACKEND_CONFIG.sheetsWebAppUrl){
@@ -25206,9 +25216,10 @@ async function syncMaintenanceKPIToSheet(opts){
   }
   if(_maintKpiInFlight && !opts.manual) return _maintKpiInFlight;
 
-  // LOCK: hanya perintah manual (tombol Auto Sync KPI) yang boleh menulis ke sheet Maintenance
-  if(!opts.manual){
-    return { ok:true, skipped:'auto_disabled', message:'Sync Maintenance hanya via Auto Sync KPI' };
+  // LOCK: hanya perintah manual (tombol Auto Sync KPI) ATAU penjadwal otomatis periode-selesai (opts.auto)
+  // yang boleh menulis ke sheet Maintenance. Pemanggil lain diabaikan.
+  if(!opts.manual && !opts.auto){
+    return { ok:true, skipped:'auto_disabled', message:'Sync Maintenance hanya via Auto Sync KPI / penjadwal periode selesai' };
   }
 
   const run = (async ()=>{
@@ -25216,27 +25227,38 @@ async function syncMaintenanceKPIToSheet(opts){
       // Pastikan MA/PA dari performance sudah segar sebelum hitung
       try{ await ensurePerformanceSynced({ force: !!opts.force }); }catch(_e){}
 
+      // Periode (W1..W4 + rentang tanggal) WAJIB dibaca langsung dari header sheet Maintenance — selalu baca ulang
+      // (tanpa cache) dan TANPA fallback tebakan, supaya nilai yang dikirim persis sesuai filter periode di sheet.
       let periods = [];
-      const perRes = await fetchMaintenancePeriods(!!opts.force);
-      if(perRes.ok && perRes.periods && perRes.periods.length){
-        periods = perRes.periods.filter(p=>p.week && p.week!=='TOTAL');
-      } else {
-        const now = new Date();
-        periods = fallbackMaintenancePeriodsForMonth(now.getFullYear(), now.getMonth()+1);
+      const perRes = await fetchMaintenancePeriods(!opts.auto);
+      if(perRes && perRes.ok && perRes.periods && perRes.periods.length){
+        periods = perRes.periods.filter(p=>p.week && p.week!=='TOTAL' && /^\d{4}-\d{2}-\d{2}$/.test(String(p.start||'')) && /^\d{4}-\d{2}-\d{2}$/.test(String(p.end||'')));
+      }
+      if(!periods.length){
+        if(opts.manual) alert('⚠ Periode minggu (W1–W4) tidak terbaca dari sheet Maintenance.\n' +
+          'Sync dibatalkan agar data tidak dikirim ke periode yang salah.\n' +
+          'Pastikan Apps Script sudah di-deploy ulang (action getMaintenancePeriods) dan header minggu di sheet berformat mis. "W1 (1-10 Nov)".' +
+          ((perRes && perRes.error) ? ('\n\nDetail: ' + perRes.error) : ''));
+        return { ok:false, error:'periods_unreadable' };
       }
 
       // LOCK periode: HANYA minggu yang sudah selesai (end < hari ini).
       // Contoh: W1 1–10 Sept → baru boleh sync mulai 11 Sept.
       const today = toDateStr(new Date());
-      // HANYA bulan aktif: bulan pada filter periode KPI di web (YYYY-MM) bila dipilih, kalau tidak bulan berjalan.
-      const _fv = (typeof kpiMonthlyChartPeriodValue === 'string') ? kpiMonthlyChartPeriodValue : '';
-      const activeYm = /^\d{4}-\d{2}$/.test(_fv) ? _fv : String(today).slice(0,7);
-      periods = periods.filter(p => String(p.start||'').slice(0,7) === activeYm);
+      // HANYA bulan aktif menurut sheet Maintenance: bulan berjalan; bila belum ada minggu yang selesai di bulan
+      // berjalan, pakai bulan dari minggu selesai terakhir di sheet. TIDAK dipengaruhi filter periode di web.
+      const _ym = x => String(x||'').slice(0,7);
+      let activeYm = _ym(today);
+      if(!periods.some(p => _ym(p.start) === activeYm && String(p.end) < String(today))){
+        const done = periods.filter(p => String(p.end) < String(today)).sort((a,b)=>String(a.end).localeCompare(String(b.end)));
+        if(done.length) activeYm = _ym(done[done.length-1].start);
+      }
+      periods = periods.filter(p => _ym(p.start) === activeYm);
       const toSync = periods.filter(p => p.end && String(p.end) < String(today));
       if(!toSync.length){
         const openOnes = periods.filter(p => p.start && (!p.end || String(p.end) >= String(today)))
           .map(p => (p.week||'') + ' ' + (p.month||'') + ' (sampai ' + (p.end||'?') + ')').join(', ');
-        alert('ℹ Tidak ada periode yang sudah jatuh tempo.\n' +
+        if(opts.manual) alert('ℹ Tidak ada periode yang sudah jatuh tempo.\n' +
           'Kolom Acv./Score hanya diisi setelah tanggal akhir minggu lewat.\n' +
           'Sync hanya untuk bulan aktif: ' + activeYm + '.\n' +
           (openOnes ? ('Masih berjalan: ' + openOnes) : 'Tidak ada periode di bulan tsb pada sheet Maintenance.'));
@@ -25297,19 +25319,28 @@ async function syncMaintenanceKPIToSheet(opts){
           detail.push({ month:p.month, week:p.week, skipped:'no_data', periodEnd:p.end });
           continue;
         }
+        const _pkey = maintKpiPeriodKey(p), _phash = maintKpiItemsHash(items);
+        if(opts.auto && maintKpiSentMap()[_pkey] === _phash){
+          detail.push({ month:p.month, week:p.week, skipped:'already_sent', periodEnd:p.end });
+          continue;
+        }
         const payload = {
           action: 'syncMaintenanceKPI',
           // Tulis ke spreadsheet KPI Achievement (terpisah). Fallback ke SEN Maintenance bila kosong.
           spreadsheetId: (BACKEND_CONFIG.sheetsKpiSpreadsheetId || BACKEND_CONFIG.sheetsSpreadsheetId || ''),
           month: p.month,
           week: p.week,
+          unitGroup: 'SEN',                 // hanya unit SEN
+          periodStart: p.start,             // rentang minggu menurut header sheet Maintenance
+          periodEnd: p.end,
           kpis: items
         };
         const result = await postMaintenanceKpiWithRetry(payload);
         if(result.ok){
           okCount++;
+          maintKpiMarkSent(_pkey, _phash);
           const data = result.data || {};
-          detail.push({ month:p.month, week:p.week, ok:true, updated:(data.updated||[]).length, skipped:(data.skipped||[]).length });
+          detail.push({ month:p.month, week:p.week, start:p.start, end:p.end, ok:true, updated:(data.updated||[]).length, skipped:(data.skipped||[]).length });
         } else {
           failCount++;
           detail.push({ month:p.month, week:p.week, ok:false, error: result.error });
@@ -25321,10 +25352,11 @@ async function syncMaintenanceKPIToSheet(opts){
       if(opts.manual){
         const lines = detail.map(d=>{
           if(d.skipped==='no_data') return `· ${d.month} ${d.week}: dilewati (belum ada data)`;
-          if(d.ok) return `· ${d.month} ${d.week}: ✓ ${d.updated} baris`;
+          if(d.skipped==='already_sent') return `· ${d.month} ${d.week}: sudah terkirim (tidak berubah)`;
+          if(d.ok) return `· ${d.month} ${d.week} (${d.start} s/d ${d.end}): ✓ ${d.updated} baris`;
           return `· ${d.month} ${d.week}: ✗ ${d.error||'gagal'}`;
         });
-        alert((failCount? '⚠ ' : '✓ ') + 'Sync KPI → Sheet Maintenance\n' +
+        alert((failCount? '⚠ ' : '✓ ') + 'Sync KPI (unit SEN) → Sheet Maintenance · bulan ' + activeYm + '\n' +
           okCount + ' minggu OK, ' + failCount + ' gagal.\n\n' + lines.join('\n') +
           (failCount ? '\n\nPastikan Apps Script sudah di-deploy ulang dengan action syncMaintenanceKPI,\ndan label kolom di sheet adalah "Acv." (bukan "Acu.").' : ''));
       }
@@ -26176,6 +26208,39 @@ document.getElementById('mapa-sync-kpi-btn')?.addEventListener('click', async fu
     if(btn){ btn.disabled = false; btn.textContent = '☁ Sync KPI → Sheet Maintenance'; }
   }
 });
+
+/* ===== AUTO KIRIM KPI → SHEET MAINTENANCE saat periode (header sheet) sudah habis =====
+ * Tanpa menekan tombol: begitu tanggal akhir minggu (W1–W4 menurut header sheet Maintenance) terlewati,
+ * KPI unit SEN untuk minggu itu dikirim otomatis. Data minggu yang sama tidak dikirim ulang kecuali nilainya berubah.
+ * Berjalan hanya saat web terbuka & login sebagai Fahmi Fanani (sama seperti tombol manual). */
+let _maintAutoRunning = false, _maintAutoLastAt = 0;
+async function autoSyncMaintenanceKpiIfDue(reason){
+  try{
+    if(_maintAutoRunning) return;
+    if(!BACKEND_CONFIG || !BACKEND_CONFIG.sheetsWebAppUrl) return;
+    if(typeof isFahmiFanani !== 'function' || !isFahmiFanani()) return;
+    if(Date.now() - _maintAutoLastAt < 4*60*1000 && reason !== 'startup') return;
+    _maintAutoRunning = true; _maintAutoLastAt = Date.now();
+    try{ await ensurePerformanceSynced({ force:false }); }catch(_e){}
+    const res = await syncMaintenanceKPIToSheet({ auto:true, force:true });
+    const sent = (res && res.detail || []).filter(d=>d.ok);
+    if(sent.length){
+      const txt = '☁ KPI Maintenance terkirim otomatis: ' + sent.map(d=>d.month+' '+d.week).join(', ');
+      try{
+        const t = document.createElement('div');
+        t.textContent = txt;
+        t.style.cssText = 'position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:100000;background:#1b1e23;color:#ffc72c;border:1px solid rgba(255,199,44,.5);padding:10px 16px;border-radius:12px;font:600 12px Inter,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.5);max-width:90vw;text-align:center';
+        document.body.appendChild(t); setTimeout(()=>t.remove(), 6000);
+      }catch(_e){ console.info(txt); }
+    }
+    if(res && res.failed) console.warn('[auto-sync KPI Maintenance] gagal:', res.detail);
+  }catch(e){ console.warn('autoSyncMaintenanceKpiIfDue', e); }
+  finally{ _maintAutoRunning = false; }
+}
+window.autoSyncMaintenanceKpiIfDue = autoSyncMaintenanceKpiIfDue;
+setTimeout(()=>autoSyncMaintenanceKpiIfDue('startup'), 20000);
+setInterval(()=>autoSyncMaintenanceKpiIfDue('interval'), 10*60*1000);
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') setTimeout(()=>autoSyncMaintenanceKpiIfDue('visible'), 1500); });
 
 document.getElementById('unit-sync-perf-btn')?.addEventListener('click', function(){
   if(!isFahmiFanani()){ alert('Fitur Sync hanya tersedia untuk user Fahmi Fanani.'); return; }
