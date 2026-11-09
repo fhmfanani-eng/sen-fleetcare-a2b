@@ -25245,15 +25245,25 @@ async function syncMaintenanceKPIToSheet(opts){
       // LOCK periode: HANYA minggu yang sudah selesai (end < hari ini).
       // Contoh: W1 1–10 Sept → baru boleh sync mulai 11 Sept.
       const today = toDateStr(new Date());
-      // HANYA bulan aktif menurut sheet Maintenance: bulan berjalan; bila belum ada minggu yang selesai di bulan
-      // berjalan, pakai bulan dari minggu selesai terakhir di sheet. TIDAK dipengaruhi filter periode di web.
+      // HANYA bulan berjalan (aktif). TIDAK lagi mundur ke bulan sebelumnya (dulu menyebabkan W1–W4 bulan lalu terkirim ulang).
+      // Satu-satunya pengecualian (mode otomatis): minggu bulan sebelumnya yang BELUM pernah terkirim (mis. W4 yang
+      // baru selesai tgl 1) dikirim sekali sebagai penutupan; yang sudah terkirim tidak disentuh lagi.
       const _ym = x => String(x||'').slice(0,7);
+      // Perintah MANUAL (tombol Auto Sync KPI): ikut bulan yang sedang dipilih di filter periode web
+      // (dropdown "Live Sync · Period", mis. September 2026) → kirim W1–W4 bulan itu. 'All Periods' → bulan berjalan.
+      // Penjadwal OTOMATIS: selalu bulan berjalan.
       let activeYm = _ym(today);
-      if(!periods.some(p => _ym(p.start) === activeYm && String(p.end) < String(today))){
-        const done = periods.filter(p => String(p.end) < String(today)).sort((a,b)=>String(a.end).localeCompare(String(b.end)));
-        if(done.length) activeYm = _ym(done[done.length-1].start);
+      if(opts.manual){
+        try{
+          const _sel = (typeof kpiMonthlyChartPeriodValue!=='undefined') ? String(kpiMonthlyChartPeriodValue||'') : '';
+          if(/^\d{4}-\d{2}$/.test(_sel)) activeYm = _sel;
+        }catch(_e){}
       }
-      periods = periods.filter(p => _ym(p.start) === activeYm);
+      const _prev = new Date(today.slice(0,4)+'-'+today.slice(5,7)+'-01T00:00:00'); _prev.setMonth(_prev.getMonth()-1);
+      const prevYm = toDateStr(_prev).slice(0,7);
+      const _sentMap = maintKpiSentMap();
+      periods = periods.filter(p => _ym(p.start) === activeYm ||
+        (opts.auto && !opts.manual && _ym(p.start) === prevYm && !_sentMap[maintKpiPeriodKey(p)]));
       const toSync = periods.filter(p => p.end && String(p.end) < String(today));
       if(!toSync.length){
         const openOnes = periods.filter(p => p.start && (!p.end || String(p.end) >= String(today)))
