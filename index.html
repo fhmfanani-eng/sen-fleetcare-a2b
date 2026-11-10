@@ -24354,21 +24354,25 @@ function resolveMaPaFromHmOnly(unitCode, startStr, endStr){
     if(endStr) recs = recs.filter(r=>r.tanggal && r.tanggal<=endStr);
     unitList = Array.from(new Set(recs.map(r=>r.unitCode).filter(Boolean))).filter(kpiScopeOk);
   }catch(e){}
-  if(!unitList.length && typeof UNITS!=='undefined' && Array.isArray(UNITS)){
-    unitList = UNITS.map(u=>u.code).filter(Boolean).filter(kpiScopeOk);
+  // SEMUA unit dalam scope ikut dirata-rata. Unit yang BELUM punya data HM pada rentang tsb dihitung 0%
+  // (bukan dilewati), supaya MA/PA mencerminkan seluruh unit grup (mis. 4 unit SEN).
+  if(typeof UNITS!=='undefined' && Array.isArray(UNITS)){
+    const all = UNITS.map(u=>u.code).filter(Boolean).filter(kpiScopeOk);
+    unitList = Array.from(new Set(all.concat(unitList)));
   }
   if(unitList.length){
-    let sumMa=0, sumPa=0, n=0;
+    let sumMa=0, sumPa=0, n=0, withData=0;
     unitList.forEach(uc=>{
       const wsr = hmWSRForUnit(uc, startStr||null, endStr||null);
       if(wsr){
         const mp = maPaFromWSR(wsr);
         sumMa += (mp.ma||0);
         sumPa += (mp.pa||0);
-        n++;
+        withData++;
       }
+      n++;   // unit tanpa HM = 0% (tetap dihitung di penyebut)
     });
-    if(n>0) return { ma: sumMa/n, pa: sumPa/n };
+    if(withData>0 && n>0) return { ma: sumMa/n, pa: sumPa/n };
   }
   if(kpiScope) return { ma:0, pa:0 }; // scope grup: jangan jatuh ke agregat semua unit
   const hmwsr = hmWSRGlobal(startStr||null, endStr||null);
