@@ -25388,6 +25388,7 @@ async function syncMaintenanceKPIToSheet(opts){
           maintKpiMarkSent(_pkey, _phash);
           const data = result.data || {};
           detail.push({ month:p.month, week:p.week, start:p.start, end:p.end, ok:true, updated:(data.updated||[]).length, skipped:(data.skipped||[]).length,
+            sent: items.map(it=>it.key.toUpperCase()+' '+it.acu).join(' · '),
             saNote: items.saApproved===0 ? ('SA tidak dikirim: tidak ada record Periodical Approved unit SEN'+(items.saPending? (' ('+items.saPending+' record belum Approved)'):'')) : '' });
         } else {
           failCount++;
@@ -25401,7 +25402,7 @@ async function syncMaintenanceKPIToSheet(opts){
         const lines = detail.map(d=>{
           if(d.skipped==='no_data') return `· ${d.month} ${d.week}: dilewati (belum ada data)`;
           if(d.skipped==='already_sent') return `· ${d.month} ${d.week}: sudah terkirim (tidak berubah)`;
-          if(d.ok) return `· ${d.month} ${d.week} (${d.start} s/d ${d.end}): ✓ ${d.updated} baris` + (d.saNote ? `\n    ⚠ ${d.saNote}` : '');
+          if(d.ok) return `· ${d.month} ${d.week} (${d.start} s/d ${d.end}): ✓ ${d.updated} baris` + (d.sent ? `\n    dikirim: ${d.sent}` : '') + (d.saNote ? `\n    ⚠ ${d.saNote}` : '');
           return `· ${d.month} ${d.week}: ✗ ${d.error||'gagal'}`;
         });
         alert((failCount? '⚠ ' : '✓ ') + 'Sync KPI (unit SEN) → Sheet Maintenance · bulan ' + activeYm + '\n' +
