@@ -8869,8 +8869,11 @@ function maPaFromRows(rows){
     let t = Number(r.t != null ? r.t : r.totalWorkingHours);
     if(isNaN(t) || t <= 0) t = w + s + rr;
     W += w; S += s; R += rr; T += t;
-    const maU = (w+rr)>0 ? (w/(w+rr)*100) : 0;
-    const paU = t>0 ? ((w+s)/t*100) : 0;
+    // Unit tanpa jam operasi (W=0, mis. SBD-103 standby penuh) = belum ada data operasi → MA & PA dihitung 0%
+    // (bukan PA 100% dari standby saja), konsisten dengan tabel Performance per Unit.
+    const noOps = w <= 0;
+    const maU = (!noOps && (w+rr)>0) ? (w/(w+rr)*100) : 0;
+    const paU = (!noOps && t>0) ? ((w+s)/t*100) : 0;
     sumMa += maU; sumPa += paU; n++;
   });
   return {
@@ -24364,13 +24367,15 @@ function resolveMaPaFromHmOnly(unitCode, startStr, endStr){
     let sumMa=0, sumPa=0, n=0, withData=0;
     unitList.forEach(uc=>{
       const wsr = hmWSRForUnit(uc, startStr||null, endStr||null);
-      if(wsr){
+      // Unit tanpa HM ATAU tanpa jam operasi sama sekali (W=0, mis. SBD-103 standby penuh) = belum ada data operasi
+      // → MA dan PA dihitung 0% (konsisten dengan tabel Performance per Unit), bukan PA 100% dari standby saja.
+      if(wsr && (Number(wsr.W)||0) > 0){
         const mp = maPaFromWSR(wsr);
         sumMa += (mp.ma||0);
         sumPa += (mp.pa||0);
         withData++;
       }
-      n++;   // unit tanpa HM = 0% (tetap dihitung di penyebut)
+      n++;   // unit tanpa data operasi = 0% (tetap dihitung di penyebut)
     });
     if(withData>0 && n>0) return { ma: sumMa/n, pa: sumPa/n };
   }
@@ -25389,6 +25394,9 @@ async function syncMaintenanceKPIToSheet(opts){
           const data = result.data || {};
           detail.push({ month:p.month, week:p.week, start:p.start, end:p.end, ok:true, updated:(data.updated||[]).length, skipped:(data.skipped||[]).length,
             sent: items.map(it=>it.key.toUpperCase()+' '+it.acu).join(' · '),
+            notWritten: (data.updated||[]).filter(u=>u && ((u.acu&&u.acu.written===false)||(u.score&&u.score.written===false)))
+              .map(u=>String(u.key||'').toUpperCase()+' ('+((u.acu&&u.acu.cell)||'?')+'/'+((u.score&&u.score.cell)||'?')+')').join(', '),
+            skippedKeys: (data.skipped||[]).map(x=>String(x.key||'?').toUpperCase()+': '+(x.reason||'')).join('; '),
             saNote: items.saApproved===0 ? ('SA tidak dikirim: tidak ada record Periodical Approved unit SEN'+(items.saPending? (' ('+items.saPending+' record belum Approved)'):'')) : '' });
         } else {
           failCount++;
@@ -25402,7 +25410,7 @@ async function syncMaintenanceKPIToSheet(opts){
         const lines = detail.map(d=>{
           if(d.skipped==='no_data') return `· ${d.month} ${d.week}: dilewati (belum ada data)`;
           if(d.skipped==='already_sent') return `· ${d.month} ${d.week}: sudah terkirim (tidak berubah)`;
-          if(d.ok) return `· ${d.month} ${d.week} (${d.start} s/d ${d.end}): ✓ ${d.updated} baris` + (d.sent ? `\n    dikirim: ${d.sent}` : '') + (d.saNote ? `\n    ⚠ ${d.saNote}` : '');
+          if(d.ok) return `· ${d.month} ${d.week} (${d.start} s/d ${d.end}): ✓ ${d.updated} baris` + (d.sent ? `\n    dikirim: ${d.sent}` : '') + (d.notWritten ? `\n    ⚠ TIDAK tertulis di sheet (sel berformula/terkunci): ${d.notWritten}` : '') + (d.skippedKeys ? `\n    ⚠ dilewati Apps Script: ${d.skippedKeys}` : '') + (d.saNote ? `\n    ⚠ ${d.saNote}` : '');
           return `· ${d.month} ${d.week}: ✗ ${d.error||'gagal'}`;
         });
         alert((failCount? '⚠ ' : '✓ ') + 'Sync KPI (unit SEN) → Sheet Maintenance · bulan ' + activeYm + '\n' +
