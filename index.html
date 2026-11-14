@@ -5206,6 +5206,7 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
                   <option value="WA-10">WA-10</option>
                   <option value="PC-11">PC-11</option>
                   <option value="PC-12">PC-12</option>
+                  <option value="PC-17">PC-17</option>
                 </select>
               </div>
               <div class="ps-live-field">
@@ -6392,7 +6393,7 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
             <div class="table-wrap">
               <table>
                 <thead id="sp-monthly-thead"><tr>
-                  <th>Bulan</th><th>SWA-101</th><th>SWA-102</th><th>SBD-103</th><th>SPC-104</th><th>DZ-04</th><th>DZ-09</th><th>WA-10</th><th>PC-11</th><th>PC-12</th><th>Total Biaya Sparepart</th>
+                  <th>Bulan</th><th>SWA-101</th><th>SWA-102</th><th>SBD-103</th><th>SPC-104</th><th>DZ-04</th><th>DZ-09</th><th>WA-10</th><th>PC-11</th><th>PC-12</th><th>PC-17</th><th>Total Biaya Sparepart</th>
                 </tr></thead>
                 <tbody id="sp-monthly-tbody"></tbody>
               </table>
@@ -6415,7 +6416,7 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
    Semua data yang masuk ke array di bawah (dari server, cache, realtime, upload) otomatis
    dibersihkan dari unit ini, sehingga TIDAK mempengaruhi MTBS, MTTR, PMR, SA, MA, PA maupun
    tabel/grafik KPI. Untuk mengaktifkan kembali: kosongkan KPI_EXCLUDED_UNITS. */
-const KPI_EXCLUDED_UNITS = ['HEX-17','PC-17','EX-17','XAZIS-17'];
+const KPI_EXCLUDED_UNITS = []; /* PC-17 diaktifkan kembali (dihapus dari daftar exclude) */
 function kpiIsExcludedUnit(code){
   const u = String(code==null?'':code).trim().toUpperCase().replace(/[\s_-]*DTJ$/i,'').trim();
   return !!u && KPI_EXCLUDED_UNITS.indexOf(u)>=0;
@@ -6468,6 +6469,7 @@ const UNITS = [
   { type:'WA380-6', code:'WA-10', category:'KOMATSU Wheel Loader', serial:'WA-10' },
   { type:'Zaxis ZX200-5G', code:'PC-11', category:'HITACHI Excavator', serial:'PC-11' },
   { type:'Zaxis ZX200-5G', code:'PC-12', category:'HITACHI Excavator', serial:'PC-12' },
+  { type:'Zaxis ZX200-5G', code:'PC-17', category:'HITACHI Excavator', serial:'PC-17' },
 ];
 /* Target KPI resmi — format skor mengikuti spreadsheet KEY PERFORMANCE INDICATOR Maintenance.
    Acv. = nilai aktual | Score = tier 60% / 80% / 100% dari bobot.
@@ -8613,9 +8615,9 @@ function updateStorageStatusUI(){
 /* PLAN SERVICE LOCK — unit SEN + DTJ yang diperbolehkan.
  * Semua generate, sync, render, dan penyimpanan Plan Service dibatasi ke unit ini.
  * SEN: SWA-101, SWA-102, SBD-103, SPC-104
- * DTJ: DZ-04, DZ-09, WA-10, PC-11, PC-12, HEX-17
+ * DTJ: DZ-04, DZ-09, WA-10, PC-11, PC-12, PC-17
  */
-const PLAN_SERVICE_ALLOWED_UNITS = new Set(['SWA-101','SWA-102','SBD-103','SPC-104','DZ-04','DZ-09','WA-10','PC-11','PC-12']);
+const PLAN_SERVICE_ALLOWED_UNITS = new Set(['SWA-101','SWA-102','SBD-103','SPC-104','DZ-04','DZ-09','WA-10','PC-11','PC-12','PC-17']);
 /**
  * Alias kode unit: sheet Monitoring HM memakai PC-11/PC-12/PC-17,
  * sedangkan master UNITS & menu Performance memakai PC-11/PC-12/HEX-17.
@@ -8637,7 +8639,18 @@ const UNIT_CODE_ALIASES = {
   'HEX-17': 'PC-17'
 };
 /** Kode kanonik (PC-xx). Input HEX-11 / EX-11 / "PC-11 DTJ" / PC-11 → PC-11. */
+const _ruc_cache = new Map();
 function resolveUnitCode(code){
+  const k = (code==null?'':code);
+  if(typeof k==='string'){
+    const c = _ruc_cache.get(k); if(c!==undefined) return c;
+    const v = _resolveUnitCodeRaw(k);
+    if(_ruc_cache.size>5000) _ruc_cache.clear();
+    _ruc_cache.set(k, v); return v;
+  }
+  return _resolveUnitCodeRaw(code);
+}
+function _resolveUnitCodeRaw(code){
   let u = String(code||'').trim().toUpperCase();
   if(!u) return '';
   u = u.replace(/[\s_-]*DTJ$/i, '').trim();
@@ -10635,7 +10648,7 @@ document.getElementById('accounts-refresh-btn')?.addEventListener('click', async
 ['accounts-filter-source','accounts-filter-position'].forEach(id=>{
   document.getElementById(id)?.addEventListener('change', renderAccountsTable);
 });
-document.getElementById('accounts-filter-search')?.addEventListener('input', renderAccountsTable);
+(function(){ let t=null; document.getElementById('accounts-filter-search')?.addEventListener('input', ()=>{ clearTimeout(t); t=setTimeout(renderAccountsTable,200); }); })();
 
 /* Isi ulang dropdown "Man Power" (Daily Maintenance) & "Operator / Mekanik" (P2H) dari daftar
    user role Mechanic yang sebenarnya (USERS + registeredUsers) — bukan daftar statis 2 nama.
@@ -11168,17 +11181,51 @@ function daysBetweenInclusive(startStr, endStr){
   const diff = Math.round((d2-d1)/86400000) + 1;
   return Math.max(diff, 1);
 }
+/* Index per-unit (kode kanonik) untuk hmRecords/dailyRecords. Hanya berlaku dalam 1 tick (dibuang
+   via setTimeout 0) supaya perubahan in-place tidak pernah memakai cache basi. */
+let _hmIdxC=null, _dailyIdxC=null;
+function _buildUnitIndex(arr){
+  const m = new Map();
+  (arr||[]).forEach(r=>{
+    const k = resolveUnitCode(r && r.unitCode);
+    let a = m.get(k); if(!a){ a=[]; m.set(k,a); } a.push(r);
+  });
+  return m;
+}
+function _hmIndexByUnit(){
+  if(!_hmIdxC || _hmIdxC.src!==hmRecords || _hmIdxC.n!==(hmRecords||[]).length){
+    _hmIdxC = { src:hmRecords, n:(hmRecords||[]).length, map:_buildUnitIndex(hmRecords) };
+    setTimeout(()=>{ _hmIdxC=null; },0);
+  }
+  return _hmIdxC.map;
+}
+function _dailyIndexByUnit(){
+  if(!_dailyIdxC || _dailyIdxC.src!==dailyRecords || _dailyIdxC.n!==(dailyRecords||[]).length){
+    _dailyIdxC = { src:dailyRecords, n:(dailyRecords||[]).length, map:_buildUnitIndex(dailyRecords) };
+    setTimeout(()=>{ _dailyIdxC=null; },0);
+  }
+  return _dailyIdxC.map;
+}
+let _wsrC = null;
 function hmWSRForUnit(unitCode, startStr, endStr){
+  /* memo per-tick: dashboard memanggil kombinasi unit/periode yang sama berulang kali */
+  if(!_wsrC || _wsrC.h!==hmRecords || _wsrC.d!==dailyRecords || _wsrC.hn!==(hmRecords||[]).length || _wsrC.dn!==(dailyRecords||[]).length){
+    _wsrC = { h:hmRecords, d:dailyRecords, hn:(hmRecords||[]).length, dn:(dailyRecords||[]).length, m:new Map() };
+    setTimeout(()=>{ _wsrC=null; },0);
+  }
+  const k = resolveUnitCode(unitCode)+'|'+(startStr||'')+'|'+(endStr||'');
+  if(_wsrC.m.has(k)){ const c=_wsrC.m.get(k); return c? Object.assign({},c) : c; }
+  const v = _hmWSRForUnitRaw(unitCode, startStr, endStr);
+  _wsrC.m.set(k, v);
+  return v ? Object.assign({},v) : v;
+}
+function _hmWSRForUnitRaw(unitCode, startStr, endStr){
   // Cocokkan PC-11 / PC-11 / EX-11 sebagai unit yang sama
   const matchSet = (typeof unitCodeMatchSet==='function')
     ? unitCodeMatchSet(unitCode)
     : new Set([String(unitCode||'').trim().toUpperCase()]);
-  let recs = (hmRecords||[]).filter(r=>{
-    const u = String(r.unitCode||'').trim().toUpperCase();
-    if(matchSet.has(u)) return true;
-    if(typeof resolveUnitCode==='function' && matchSet.has(resolveUnitCode(u))) return true;
-    return false;
-  });
+  const _canonU = resolveUnitCode(unitCode);
+  let recs = _hmIndexByUnit().get(_canonU) || [];
   if(startStr) recs = recs.filter(r=>r.tanggal && r.tanggal>=startStr);
   if(endStr) recs = recs.filter(r=>r.tanggal && r.tanggal<=endStr);
   if(!recs.length) return null;
@@ -11192,11 +11239,9 @@ function hmWSRForUnit(unitCode, startStr, endStr){
   const T = daysBetweenInclusive(rangeStart, rangeEnd) * MINE_WORK_HOURS_PER_DAY;
   // R = SEMUA jam maintenance Approved (Plan + Unplan): Breakdown, Periodical, Daily, dll.
   // Sebelumnya hanya category==='Breakdown' — sekarang Plan ikut mempengaruhi MA & PA.
-  const Rraw = (dailyRecords||[])
+  const Rraw = (_dailyIndexByUnit().get(_canonU) || [])
     .filter(r=>{
-      const u = String(r.unitCode||'').trim().toUpperCase();
-      const match = matchSet.has(u) || (typeof resolveUnitCode==='function' && matchSet.has(resolveUnitCode(u)));
-      return match && r.approvalStatus==='Approved'
+      return r.approvalStatus==='Approved'
         && r.tanggal && r.tanggal>=rangeStart && r.tanggal<=rangeEnd
         && (Number(r.duration)||0) > 0;
     })
@@ -14834,7 +14879,10 @@ function renderDailyTable(){
     if(nb!==-1) return 1;
     return String(b.codeBD||'').localeCompare(String(a.codeBD||''));
   });
-  tbody.innerHTML = sortedRecords.map(r=>{
+  const _dailyTotal = sortedRecords.length;
+  window.__dailyShowLimit = window.__dailyShowLimit || 150;
+  const _dailyShown = sortedRecords.slice(0, window.__dailyShowLimit);
+  tbody.innerHTML = _dailyShown.map(r=>{
     let actionCell;
     if(isSupervisor && canEditPanel('daily') && (r.approvalStatus||'Pending')==='Pending'){
       actionCell = `<div class="approval-actions">
@@ -14884,7 +14932,9 @@ function renderDailyTable(){
       <td>${approvalPillHTML(r)}</td>
       <td>${actionCell}${(isSupervisor && canEditPanel('daily')) ? `<button class="btn danger" style="margin-top:6px;" onclick="deleteDaily('${r.id}')">Hapus</button>` : ''}</td>
     </tr>`;
-  }).join('');
+  }).join('') + (_dailyTotal > _dailyShown.length
+    ? `<tr class="empty-row"><td colspan="24" style="text-align:center;padding:14px;"><button class="btn" onclick="window.__dailyShowLimit=(window.__dailyShowLimit||150)+300;renderDailyTable();">Tampilkan lebih banyak (${_dailyShown.length} dari ${_dailyTotal} record)</button></td></tr>`
+    : '');
   syncDailyTopScroll();
 }
 
@@ -16282,12 +16332,17 @@ function parseHmNumberLocal(v){
   return isNaN(n) ? NaN : n;
 }
 
+let _hmRawIdx = null;
 function getActualMonitoringHM(unitCode, periodStart, periodEnd){
   const code = String(unitCode||'').trim().toUpperCase();
   if(!code) return null;
-  const rows = (hmRecords||[]).filter(r=>{
-    const u = String(r.unitCode||'').trim().toUpperCase();
-    if(u !== code) return false;
+  if(!_hmRawIdx || _hmRawIdx.src!==hmRecords || _hmRawIdx.n!==(hmRecords||[]).length){
+    const m = new Map();
+    (hmRecords||[]).forEach(r=>{ const u = String(r.unitCode||'').trim().toUpperCase(); let a=m.get(u); if(!a){a=[];m.set(u,a);} a.push(r); });
+    _hmRawIdx = { src:hmRecords, n:(hmRecords||[]).length, map:m };
+    setTimeout(()=>{ _hmRawIdx=null; },0);
+  }
+  const rows = (_hmRawIdx.map.get(code)||[]).filter(r=>{
     const t = String(r.tanggal||'').slice(0,10);
     if(!t || t.length < 10) return false;
     const hm = parseHmNumberLocal(r.hmAkhir != null ? r.hmAkhir : r.hm_akhir);
@@ -16734,7 +16789,7 @@ function isPlanClosed(r){
 function resolvePlanPic(unitCode, hmTarget){
   const code = String(unitCode||'').trim().toUpperCase();
   // Unit DTJ → PIC = DTJ
-  const DTJ_UNITS = new Set(['DZ-04','DZ-09','WA-10','PC-11','PC-12','EX-11','EX-12']);
+  const DTJ_UNITS = new Set(['DZ-04','DZ-09','WA-10','PC-11','PC-12','PC-17','EX-11','EX-12','EX-17']);
   if(DTJ_UNITS.has(code) || code.endsWith(' DTJ') || code.includes('DTJ')) return 'DTJ';
   if(code === 'SPC-104'){
     const hm = (hmTarget===null || hmTarget===undefined || hmTarget==='') ? null : Number(hmTarget);
@@ -17396,7 +17451,18 @@ document.getElementById('plan-period-this-month-btn')?.addEventListener('click',
 });
 
 /* ---- HM terakhir per unit dari Monitoring HM (hmRecords) — fallback ---- */
+let _lhmC = null;
 function getLatestHMPerUnitFromMonitoring(){
+  /* cache 1 tick: dipanggil berulang per unit/baris saat render */
+  if(_lhmC && _lhmC.src===hmRecords && _lhmC.n===(hmRecords||[]).length){
+    const c = {}; Object.keys(_lhmC.map).forEach(k=>{ c[k] = Object.assign({}, _lhmC.map[k]); }); return c;
+  }
+  const res = _getLatestHMPerUnitFromMonitoringRaw();
+  _lhmC = { src:hmRecords, n:(hmRecords||[]).length, map:res };
+  setTimeout(()=>{ _lhmC=null; },0);
+  const c = {}; Object.keys(res).forEach(k=>{ c[k] = Object.assign({}, res[k]); }); return c;
+}
+function _getLatestHMPerUnitFromMonitoringRaw(){
   const map = {};
   (hmRecords||[]).forEach(r=>{
     const unitCode = String(r.unitCode||'').trim();
@@ -17464,13 +17530,14 @@ function getPlanServiceHMBase(){
  */
 /**
  * Interval Plan Service KHUSUS per unit.
- * PC-11 & PC-12: hanya paket PS 1000 / 2000 / 4000 Hrs (grid jadwal 1000 HM).
+ * PC-11, PC-12 & PC-17: hanya paket PS 1000 / 2000 / 4000 Hrs (grid jadwal 1000 HM).
  *   1000→PS 1000, 2000→PS 2000, 3000→PS 1000, 4000→PS 4000, 5000→PS 1000, 6000→PS 2000, 8000→PS 4000, dst.
  * Tidak ada PS 250 / 500 / 5000 untuk unit ini. Unit lain tidak terpengaruh.
  */
 const PLAN_UNIT_CUSTOM_PS_HRS = {
   'PC-11': [1000, 2000, 4000],
-  'PC-12': [1000, 2000, 4000]
+  'PC-12': [1000, 2000, 4000],
+  'PC-17': [1000, 2000, 4000]
 };
 function getCustomPsHrsForUnit(unitCode){
   if(!unitCode) return null;
@@ -17916,7 +17983,7 @@ function ensureAugustPlanServiceRecords(perfMap){
       execDate:'',
       hmBase:cur && cur.lastHm!=null ? cur.lastHm : null,
       hmBaseDate:cur ? (cur.lastDate||'') : '',
-      hmW:(perfRow ? Number(perfRow.w)||0 : 0) || ((typeof getWorkingHoursTotalForUnit==='function' && getWorkingHoursTotalForUnit(code||req.unitCode||''))||{}).w || 0,
+      hmW:(perfRow ? Number(perfRow.w)||0 : 0) || ((typeof getWorkingHoursTotalForUnit==='function' && getWorkingHoursTotalForUnit(req.unitCode||''))||{}).w || 0,
       hmAktual:hmAktual,
       hmAktualDate:new Date().toISOString().slice(0,10),
       hmAktualManual:false,
@@ -17935,6 +18002,30 @@ function ensureAugustPlanServiceRecords(perfMap){
  * - Jika target masa depan belum tersedia, baris baru otomatis ditambahkan.
  * - PIC / catatan / data manual pada baris OPEN yang masih valid tetap dipertahankan.
  */
+/**
+ * Hapus jadwal Open yang target HM-nya sudah terlewati jauh (HM sekarang > target + 25 toleransi)
+ * untuk unit yang BELUM pernah Close di Plan Service. Dikecualikan: jadwal Agustus yang dikunci
+ * dan baris yang HM Eksekusi-nya sudah diisi manual. Unit yang punya histori Close tidak disentuh
+ * (target yang terlewati sejak Close terakhir memang layak tampil sebagai OVERDUE).
+ * Return true jika ada baris yang dibuang.
+ */
+function purgePassedOpenPlans(unitCode, hmNow){
+  const code = String(unitCode||'').trim().toUpperCase();
+  const now = Number(hmNow)||0;
+  if(!code || !(now>0)) return false;
+  if(getLastClosedPlanHm(code) > 0) return false;
+  const before = planRecords.length;
+  planRecords = planRecords.filter(r=>{
+    if(!r || isPlanClosed(r)) return true;
+    if(String(r.unitCode||'').trim().toUpperCase()!==code) return true;
+    const hm = Number(r.hmPlan)||0;
+    if(!hm || now <= hm + 25) return true;
+    if(r.hmAktualManual) return true;
+    if(typeof isFixedAugustPlanRecord==='function' && isFixedAugustPlanRecord(r)) return true;
+    return false;
+  });
+  return planRecords.length !== before;
+}
 async function syncOpenPlanCoverage(perfMap){
   const perf = perfMap || getPerformanceWByUnit();
   sanitizePlanServiceUnits();
@@ -17976,6 +18067,9 @@ async function syncOpenPlanCoverage(perfMap){
 
     const unit = (UNITS||[]).find(u=>String(u.code).toUpperCase()===String(code).toUpperCase());
     const typeUnit = unit ? unit.type : '';
+    // Unit belum punya riwayat Close → tidak ada backlog: buang jadwal Open yang targetnya sudah
+    // terlewati (mis. 250…1500 padahal HM 1536,7); yang tampil hanya service BERIKUTNYA dst.
+    if(purgePassedOpenPlans(code, cur.hmNow)) updated++;
     const desiredTargets = buildFuturePlanTargets(cur.hmNow, 0, code);
     const desiredSet = new Set(desiredTargets.map(v=>String(v)));
 
@@ -20003,7 +20097,7 @@ function fillHistoryUnitFilter(){
 }
 fillHistoryUnitFilter();
 ['h-unit','h-category','h-status','h-approval','h-from','h-to'].forEach(id=>{
-  document.getElementById(id).addEventListener('input', renderHistory);
+  document.getElementById(id).addEventListener('input', ()=>{ window.__histShowLimit = 200; renderHistory(); });
 });
 document.getElementById('h-clear').addEventListener('click', ()=>{
   ['h-unit','h-category','h-status','h-approval','h-from','h-to'].forEach(id=>document.getElementById(id).value='');
@@ -20032,6 +20126,9 @@ function renderHistory(){
   if(!rows.length){
     tbody.innerHTML = `<tr class="empty-row"><td colspan="12">Tidak ada data sesuai filter.</td></tr>`;
   } else {
+    window.__histShowLimit = window.__histShowLimit || 200;
+    const _histAll = rows.length;
+    rows = rows.slice(0, window.__histShowLimit);
     tbody.innerHTML = rows.map(r=>`
       <tr>
         <td>${formatDateDMY(r.tanggal)}</td><td>${r.unitCode}</td><td>${r.typeUnit}</td><td>${r.hm||'—'}</td>
@@ -20041,7 +20138,9 @@ function renderHistory(){
         <td><span class="pill ${pillClass(r.status)}">${r.status==='Progress'?'On Progress':r.status}</span></td>
         <td>${approvalPillHTML(r)}</td>
         <td>${r.approvedBy||'—'}</td>
-      </tr>`).join('');
+      </tr>`).join('') + (_histAll > rows.length
+        ? `<tr class="empty-row"><td colspan="12" style="text-align:center;padding:14px;"><button class="btn" onclick="window.__histShowLimit=(window.__histShowLimit||200)+400;renderHistory();">Tampilkan lebih banyak (${rows.length} dari ${_histAll} record)</button></td></tr>`
+        : '');
   }
   attachTopScroll('history');
 }
@@ -24818,7 +24917,7 @@ let _perfAutoTimer = null;
  */
 function enrichMapaDataFromHm(periodStart, periodEnd){
   if(!mapaData || !Array.isArray(mapaData.rows)) return 0;
-  const hexUnits = ['PC-11','PC-12'];
+  const hexUnits = ['PC-11','PC-12','PC-17'];
   const existing = new Set(mapaData.rows.map(r=>String(r.unit||'').trim().toUpperCase()));
   // juga tandai alias yang sudah ada sebagai "ada"
   existing.forEach(u=>{
@@ -27717,7 +27816,16 @@ let cbmActiveTab = 'overview';
 let cbmSelectedComp = '';
 let cbmSelectedUnit = '';
 
+const _ncc_cache = new Map();
 function normalizeCBMComponent(bdCat, jobDesc){
+  const key = String(bdCat||'')+'\u0001'+String(jobDesc||'');
+  if(_ncc_cache.has(key)) return _ncc_cache.get(key);
+  const v = _normalizeCBMComponentRaw(bdCat, jobDesc);
+  if(_ncc_cache.size>20000) _ncc_cache.clear();
+  _ncc_cache.set(key, v); return v;
+}
+let _cbmMasterSorted = null, _cbmMasterSrc = null;
+function _normalizeCBMComponentRaw(bdCat, jobDesc){
   const raw = `${bdCat||''} ${jobDesc||''}`.toLowerCase();
   const bd = String(bdCat||'').trim();
   const desc = String(jobDesc||'').toLowerCase();
@@ -27750,11 +27858,15 @@ function normalizeCBMComponent(bdCat, jobDesc){
      && !/(bocor|leak|putus|rusak|ganti\s*hose|hose)/i.test(raw)) return null;
 
   // 1) Match sub-komponen detail dari master Excel (nama terpanjang dulu)
-  const allMaster = [];
-  Object.keys(CBM_MASTER_BY_TYPE||{}).forEach(t=>{
-    (CBM_MASTER_BY_TYPE[t] || CBM_MASTER_BY_TYPE['D85ESS-2A'] || []).forEach(c=> allMaster.push(c));
-  });
-  allMaster.sort((a,b)=> String(b.key).length - String(a.key).length);
+  if(_cbmMasterSrc!==CBM_MASTER_BY_TYPE || !_cbmMasterSorted){
+    const _am = [];
+    Object.keys(CBM_MASTER_BY_TYPE||{}).forEach(t=>{
+      (CBM_MASTER_BY_TYPE[t] || CBM_MASTER_BY_TYPE['D85ESS-2A'] || []).forEach(c=> _am.push(c));
+    });
+    _am.sort((a,b)=> String(b.key).length - String(a.key).length);
+    _cbmMasterSorted = _am; _cbmMasterSrc = CBM_MASTER_BY_TYPE;
+  }
+  const allMaster = _cbmMasterSorted;
   for(const c of allMaster){
     const names = [c.key].concat(c.match||[]).map(s=>String(s).toLowerCase());
     if(names.some(n => n && raw.includes(n))) return c.key;
@@ -30212,7 +30324,7 @@ const PK_CATS = [
 /* Grup unit: SEN (unit milik SEN) & DTJ. Nomor unit dikunci otomatis sesuai grup. */
 const PK_UNIT_GROUPS = {
   SEN: ['SWA-101','SWA-102','SBD-103','SPC-104'],
-  DTJ: ['DZ-04','DZ-09','WA-10','PC-11','PC-12','EX-11','EX-12']
+  DTJ: ['DZ-04','DZ-09','WA-10','PC-11','PC-12','PC-17','EX-11','EX-12','EX-17']
 };
 const PK_GROUP_META = {
   SEN:   { label:'SEN',     color:'#FFC72C' },
@@ -31260,7 +31372,7 @@ function psUnitInGroup(code){
 function psGroupUnitCodes(){
   return (PLAN_SERVICE_UNIT_ORDER||[]).filter(c => PLAN_SERVICE_ALLOWED_UNITS.has(c) && psUnitInGroup(c));
 }
-const PLAN_SERVICE_UNIT_ORDER = ['SWA-101','SWA-102','SBD-103','SPC-104','DZ-04','DZ-09','WA-10','PC-11','PC-12'];
+const PLAN_SERVICE_UNIT_ORDER = ['SWA-101','SWA-102','SBD-103','SPC-104','DZ-04','DZ-09','WA-10','PC-11','PC-12','PC-17'];
 /** Sinkronkan tampilan: tombol grup, jumlah unit, tag judul, opsi dropdown unit Live HM. */
 function psApplyGroupUI(){
   document.querySelectorAll('[data-ps-group]').forEach(b=>{
@@ -31330,7 +31442,7 @@ const SPAREPART_DATA = {"WA500-6R": [{"title": "CONSUMABLE SPAREPART SERVICE 500
  *  - DZ-04 / DZ-09 (D85ESS-2 / D85ESS-2A) memakai katalog DOZER D85ESS-2 (sama dgn SBD-103).
  *  - WA-10 (WA380-6) memakai katalog 'WA380-6' (dari Wear Parts List). Harga part (price/total)
  *    belum diisi → biaya budget WA-10 tampil '—' sampai harga dilengkapi di SPAREPART_DATA['WA380-6']. */
-const SP_BUDGET_UNITS = ['SWA-101','SWA-102','SBD-103','SPC-104','DZ-04','DZ-09','WA-10','PC-11','PC-12'];
+const SP_BUDGET_UNITS = ['SWA-101','SWA-102','SBD-103','SPC-104','DZ-04','DZ-09','WA-10','PC-11','PC-12','PC-17'];
 const SP_MONTH_ABBR = {1:'Jan',2:'Feb',3:'Mar',4:'Apr',5:'Mei',6:'Jun',7:'Jul',8:'Aug',9:'Sep',10:'Okt',11:'Nov',12:'Dec'};
 
 function spParseServiceHours(serviceType){
@@ -32222,7 +32334,7 @@ const spBudgetSel = { month:new Set(), unit:new Set() };
 const spMonthlySel = { month:new Set(), unit:new Set() };
 const spMonthlyOpen = new Set();
 function spSelOf(scope){ return scope==='monthly' ? spMonthlySel : spBudgetSel; }
-const SP_FILTER_UNITS = ['SWA-101','SWA-102','SBD-103','SPC-104','DZ-04','DZ-09','WA-10','PC-11','PC-12'];
+const SP_FILTER_UNITS = ['SWA-101','SWA-102','SBD-103','SPC-104','DZ-04','DZ-09','WA-10','PC-11','PC-12','PC-17'];
 const spMsOptions = { month:[], unit:SP_FILTER_UNITS.map(u=>({val:u,label:u})) };
 const SP_MS_ALL = { month:'All Months', unit:'All Units' };
 
@@ -32631,27 +32743,60 @@ function migrateLegacyUnitCodesAll(){
       .forEach(arr=>{ if(Array.isArray(arr)) kpiMigrateLegacyUnits(arr); });
   }catch(_e){}
 }
+/* ===== PERFORMANCE: render lazy per-menu =====
+   Sebelumnya renderAll() merender SEMUA menu (tabel, KPI, CBM, sparepart, dst.) setiap kali ada
+   simpan data / update realtime / timer, walau menunya tidak sedang dibuka → UI lag.
+   Sekarang hanya menu yang AKTIF yang dirender; menu lain ditandai "dirty" dan dirender
+   satu kali saat dibuka. renderAllSoon() menggabungkan banyak panggilan beruntun jadi satu. */
+const RENDER_VIEW_FNS = {
+  dashboard:     [()=>renderDashboard()],
+  database:      [()=>renderUnitCards()],
+  accounts:      [()=>renderAccountsTable()],
+  preinspection: [()=>renderPreInspectionTable(), ()=>renderPreInspectionPlans(), ()=>renderPreInspectionMechanicNotify()],
+  daily:         [()=>renderDailyTable()],
+  plan:          [()=>renderPlanTable()],
+  planningsystem:[()=>renderPlanningTable(), ()=>renderPlanDailyTable()],
+  summary:       [()=>renderSummary(), ()=>renderHistory()],
+  bdreport:      [()=>renderBreakdownReportTable()],
+  cbm:           [()=>renderCBM()],
+  sparepart:     [()=>renderSparepart()]
+};
+const _dirtyViews = new Set(Object.keys(RENDER_VIEW_FNS));
+function _activeViewName(){
+  const el = document.querySelector('section.view.active');
+  return el && el.id ? el.id.replace(/^view-/,'') : '';
+}
+function renderViewNow(view){
+  const fns = RENDER_VIEW_FNS[view];
+  if(!fns) return;
+  _dirtyViews.delete(view);
+  fns.forEach(f=>{ try{ f(); }catch(e){ console.error('render '+view, e); } });
+}
 function renderAll(){
   migrateLegacyUnitCodesAll();
   sanitizePlanServiceUnits();
-  renderUnitCards();
-  renderDailyTable();
-  renderPlanTable();
-  renderPlanningTable();
-  renderPlanDailyTable();
-  renderPreInspectionTable();
-  renderPreInspectionPlans();
-  renderPreInspectionMechanicNotify();
-  renderBreakdownReportTable();
-  renderAccountsTable();
-  renderHistory();
-  renderSummary();
-  renderDashboard();
+  const active = _activeViewName();
+  Object.keys(RENDER_VIEW_FNS).forEach(v=>{
+    if(v===active || !active) renderViewNow(v); else _dirtyViews.add(v);
+  });
   renderNotificationCenter();
-  renderCBM();
-  renderSparepart();
   applyPanelAccessLocks();
 }
+let _renderAllTimer = null;
+function renderAllSoon(){
+  if(_renderAllTimer) return;
+  _renderAllTimer = setTimeout(()=>{ _renderAllTimer = null; renderAll(); }, 250);
+}
+/* Saat menu dibuka: render hanya jika data berubah sejak terakhir dirender. */
+document.querySelectorAll('#main-nav .nav-item').forEach(item=>{
+  item.addEventListener('click', ()=>{
+    const v = item.dataset.view;
+    if(!v || !_dirtyViews.has(v)) return;
+    /* menu yang sudah dirender oleh handler navigasi utama → cukup tandai bersih (hindari render ganda) */
+    if(['dashboard','database','daily','summary','planningsystem','preinspection','cbm','sparepart','bdreport','accounts'].indexOf(v)>=0){ _dirtyViews.delete(v); return; }
+    setTimeout(()=>{ if(_dirtyViews.has(v) && _activeViewName()===v) renderViewNow(v); }, 0);
+  });
+});
 
 /* ---- Realtime: auto-refresh dailyRecords kalau berubah dari luar panel
    (misalnya dari Google Sheets lewat Apps Script, atau device lain). ---- */
@@ -32673,7 +32818,7 @@ function subscribeDailyRealtime(){
             await enforceCodeBDLock();
             await syncCodeBDChronological();
           }
-          renderAll();
+          renderAllSoon();
         }catch(e){ console.error('Gagal proses update realtime', e); }
         })();
       }
@@ -32783,7 +32928,7 @@ function subscribeDailyRealtime(){
     // Sample HM for units
     try{
       if(typeof calcHmSekarang==='function'){
-        ['SWA-101','SWA-102','SBD-103','SPC-104','DZ-04','DZ-09','WA-10','PC-11','PC-12'].forEach(u=>{
+        ['SWA-101','SWA-102','SBD-103','SPC-104','DZ-04','DZ-09','WA-10','PC-11','PC-12','PC-17'].forEach(u=>{
           const v = calcHmSekarang(u);
           log('HM Sekarang '+u+': '+(v!=null?v:'—'), v!=null?'ok':'warn');
         });
@@ -32983,7 +33128,7 @@ function subscribeDailyRealtime(){
       await enforceCodeBDLock();
       await syncCodeBDChronological();
       const after = JSON.stringify(dailyRecords.map(r=>r.id+r.updatedAt));
-      if(before!==after) renderAll();
+      if(before!==after) renderAllSoon();
     }, 30000);
     // Jaring pengaman: refresh planningSystemRecords dari database setiap 30 detik, supaya
     // mekanik yang sedang login otomatis mendapat notifikasi (lonceng, banner, & notifikasi
@@ -32994,14 +33139,14 @@ function subscribeDailyRealtime(){
       const before = JSON.stringify(planningSystemRecords.map(r=>r.id+r.status));
       await refreshPlanningSystemRecords();
       const after = JSON.stringify(planningSystemRecords.map(r=>r.id+r.status));
-      if(before!==after) renderAll();
+      if(before!==after) renderAllSoon();
     }, 30000);
     // Cek ulang notifikasi (Plan Service jatuh tempo, approval baru, dll) tiap 1 menit —
     // supaya lonceng & notifikasi sistem tetap up-to-date walau tidak ada perubahan data lain.
     setInterval(()=>{ if(loggedInUser) renderNotificationCenter(); }, 60000);
     // Render ulang tabel Daily Maintenance tiap 1 menit supaya tautan "Edit" milik mekanik
     // otomatis hilang begitu lewat batas 24 jam, walau tidak ada perubahan data lain.
-    setInterval(()=>{ if(loggedInUser && !document.hidden && document.getElementById('daily-tbody')) renderDailyTable(); }, 60000);
+    setInterval(()=>{ if(loggedInUser && !document.hidden && _activeViewName()==='daily') renderDailyTable(); }, 60000);
   } else {
     showLoginScreen();
   }
@@ -33809,5 +33954,62 @@ html:has(.app.launcher-mode:not([style*="display: none"]))::-webkit-scrollbar, b
 #view-database .perf-sticky .period-panel{ margin-bottom:10px !important; }
 @media (max-width:860px){ #view-database .perf-sticky{ position:static; box-shadow:none; margin-top:0; padding-top:0; } }
 </style>
+<script id="sen-perf-hover">
+/* PERFORMANCE: hover baris tabel.
+   Aturan CSS `tr:hover { background }` (±13 aturan, !important) memaksa browser menggambar ulang
+   tabel besar setiap kursor pindah baris → lag/ngeframe saat mouse digerakkan. Aturan itu
+   dibuang, diganti satu lapisan highlight tunggal (composited, tanpa repaint tabel). */
+(function(){
+  'use strict';
+  function strip(rules, owner){
+    for(var i=rules.length-1;i>=0;i--){
+      var r=rules[i];
+      if(r.cssRules && r.type!==1){ try{ strip(r.cssRules, r); }catch(e){} continue; }
+      var sel=r.selectorText;
+      if(sel && sel.indexOf(':hover')>=0 && /\btr\b[^,{]*:hover/.test(sel)){
+        try{ (owner||r.parentStyleSheet).deleteRule(i); }catch(e){}
+      }
+    }
+  }
+  try{
+    Array.prototype.forEach.call(document.styleSheets, function(sh){
+      var rules; try{ rules=sh.cssRules; }catch(e){ return; }
+      strip(rules, sh);
+    });
+  }catch(e){}
+  var st=document.createElement('style');
+  st.textContent='tbody tr,tbody td,.dash-sum-table tr{transition:none!important}'+
+    '#sen-row-hl{position:fixed;left:0;top:0;width:0;height:0;pointer-events:none;z-index:1;display:none;'+
+    'background:rgba(255,199,44,.07);will-change:transform;contain:strict}';
+  document.head.appendChild(st);
+  if(window.matchMedia && window.matchMedia('(hover: none)').matches) return;
+  var hl=document.createElement('div'); hl.id='sen-row-hl'; document.body.appendChild(hl);
+  var cur=null, raf=0;
+  function clipRect(tr){
+    var r=tr.getBoundingClientRect(), c=tr.closest('.table-wrap,.data-table-wrap,[id$="-table-wrap"]');
+    if(c){ var cr=c.getBoundingClientRect(); var th=tr.closest('table').querySelector('thead');
+      var top=Math.max(r.top, cr.top + (th? th.getBoundingClientRect().height : 0));
+      var bot=Math.min(r.bottom, cr.bottom), l=Math.max(r.left,cr.left), rt=Math.min(r.right,cr.right);
+      return {top:top,height:bot-top,left:l,width:rt-l};
+    }
+    return {top:r.top,height:r.height,left:r.left,width:r.width};
+  }
+  function show(tr){
+    var q=clipRect(tr);
+    if(q.height<=0||q.width<=0){ hl.style.display='none'; return; }
+    hl.style.display='block'; hl.style.width=q.width+'px'; hl.style.height=q.height+'px';
+    hl.style.transform='translate('+q.left+'px,'+q.top+'px)';
+  }
+  document.addEventListener('mouseover', function(e){
+    var t=e.target; if(!t||!t.closest) return;
+    var tr=t.closest('tbody tr');
+    if(!tr || tr.classList.contains('empty-row') || tr===cur){ if(!tr){ cur=null; hl.style.display='none'; } return; }
+    cur=tr; if(raf) cancelAnimationFrame(raf);
+    raf=requestAnimationFrame(function(){ raf=0; if(cur) show(cur); });
+  }, {passive:true});
+  document.addEventListener('mouseleave', function(){ cur=null; hl.style.display='none'; }, true);
+  window.addEventListener('scroll', function(){ if(cur){ cur=null; hl.style.display='none'; } }, {passive:true, capture:true});
+})();
+</script>
 </body>
 </html>
