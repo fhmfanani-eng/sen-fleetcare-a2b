@@ -4584,20 +4584,7 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
             </div>
           </div>
           <div class="perf-tbl-wrap"><table class="perf-tbl" id="unit-perf-table"><tbody></tbody></table></div>
-          <div class="perf-tbl-note">Tabel mengikuti filter periode di atas. Jam dari Monitoring HM (T = hari × 18 jam). PA = (W+S)/T · MA = W/(W+R) · UA = W/(W+S) · EU = W/T. Warna: hijau ≥ 90%, kuning ≥ 75%, merah &lt; 75%.</div>
-        </div>
-
-        <!-- TABEL KPI PERFORMANCE PER UNIT — mengikuti filter periode di atas -->
-        <div class="panel perf-tbl-panel" id="unit-kpi-table-panel">
-          <div class="perf-tbl-head">
-            <div class="perf-tbl-title"><span class="tag">KPI</span><h2>KPI Performance per Unit</h2></div>
-            <div class="perf-tbl-tools">
-              <span class="perf-tbl-period" id="unit-kpi-table-period">All Periods</span>
-              <button type="button" class="btn small secondary" id="unit-kpi-table-export" title="Unduh tabel KPI (sesuai filter periode) sebagai Excel">⬇ Excel</button>
-            </div>
-          </div>
-          <div class="perf-tbl-wrap"><table class="perf-tbl unit-kpi-tbl" id="unit-kpi-table"><tbody></tbody></table></div>
-          <div class="perf-tbl-note">Tabel mengikuti filter periode di atas. Warna nilai mengikuti tier KPI resmi: hijau = 100% bobot, kuning = 80%, merah = 60%. Average Achievement = Σ Score ÷ Σ Bobot × 100. Status: ACHIEVED ≥ 100% · ON TRACK ≥ 80% · BELOW &lt; 80%. “—” = belum ada data pada periode tsb.</div>
+          <div class="perf-tbl-note">Tabel mengikuti filter periode di atas. Jam dari Monitoring HM (T = hari × 18 jam). PA = (W+S)/T · MA = W/(W+R) · UA = W/(W+S) · EU = W/T. Warna: hijau ≥ 90%, kuning ≥ 75%, merah &lt; 75%. Panah ▲ hijau = naik, ▼ merah = turun dibanding periode sebelumnya (panjang sama); pada All Periods = 30 hari terakhir vs 30 hari sebelumnya. Arahkan kursor ke panah untuk melihat selisihnya.</div>
         </div>
 
         <div class="grid grid-2" id="unit-cards"></div>
@@ -12073,33 +12060,37 @@ function unitKpiDataTableHTML(months){
     if(key==='mtbs' || key==='mttr') return n.toFixed(1);
     return n.toFixed(1);
   }
-  function kpiCell(key, v, unit){
+  function kpiCell(key, v, unit, pv){
     const n = Number(v)||0;
     let ok = false;
     if(key==='mttr') ok = n>0 ? n < (KPI_TARGET.mttr||36) : true;
     else if(key==='mtbs') ok = n >= (KPI_TARGET.mtbs||80);
     else ok = n >= (KPI_TARGET[key]||90);
     const col = ok ? '#4CAF6D' : (n>0 ? '#FFC72C' : 'var(--text-dim)');
-    return `<td style="text-align:center;padding:7px 8px;font-family:'JetBrains Mono',monospace;font-weight:600;color:${col};white-space:nowrap;">${fmtVal(key,n)}${unit||''}</td>`;
+    return `<td style="text-align:center;padding:7px 8px;font-family:'JetBrains Mono',monospace;font-weight:600;color:${col};white-space:nowrap;">${fmtVal(key,n)}${unit||''}${pv!=null ? kpiTrendArrow(key,n,pv,'bulan sebelumnya') : ''}</td>`;
   }
   if(!months || !months.length){
     return `<div style="padding:20px;text-align:center;color:var(--text-faint);font-size:12px">No month period available.</div>`;
   }
+  const _hasD = r => !!r && ['mtbs','mttr','pmr','sa','ma','pa'].some(k => (Number(r[k])||0) > 0);
   return months.map(m=>{
+    const pmo = kpiPrevMonthObj(m.start);
     const rows = UNITS_G.map(u=>{
       const r = computeUnitMonthlyAchievement(u.code, m);
+      const pr = computeUnitMonthlyAchievement(u.code, pmo);
+      const pOk = _hasD(r) && _hasD(pr);
       const avgCol = cellColor(r.avgAch);
       return `<tr style="border-top:1px solid rgba(255,255,255,.06)">
         <td style="padding:7px 10px;font-family:'JetBrains Mono',monospace;color:var(--yellow);font-weight:700;white-space:nowrap;">${escUH(u.code)}</td>
         <td style="padding:7px 8px;color:var(--text-dim);font-size:11px;white-space:nowrap;">${escUH(u.type||'')}</td>
         <td style="padding:7px 8px;color:var(--text-faint);font-size:10px;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap;">${escUH(u.category||'')}</td>
-        ${kpiCell('mtbs', r.mtbs, '')}
-        ${kpiCell('mttr', r.mttr, '')}
-        ${kpiCell('pmr', r.pmr, '')}
-        ${kpiCell('sa', r.sa, '')}
-        ${kpiCell('ma', r.ma, '')}
-        ${kpiCell('pa', r.pa, '')}
-        <td style="text-align:center;padding:7px 10px;font-family:'JetBrains Mono',monospace;font-weight:700;color:${avgCol};white-space:nowrap;">${(r.avgAch||0).toFixed(1)}%</td>
+        ${kpiCell('mtbs', r.mtbs, '', pOk?pr.mtbs:null)}
+        ${kpiCell('mttr', r.mttr, '', pOk?pr.mttr:null)}
+        ${kpiCell('pmr', r.pmr, '', pOk?pr.pmr:null)}
+        ${kpiCell('sa', r.sa, '', pOk?pr.sa:null)}
+        ${kpiCell('ma', r.ma, '', pOk?pr.ma:null)}
+        ${kpiCell('pa', r.pa, '', pOk?pr.pa:null)}
+        <td style="text-align:center;padding:7px 10px;font-family:'JetBrains Mono',monospace;font-weight:700;color:${avgCol};white-space:nowrap;">${(r.avgAch||0).toFixed(1)}%${pOk?kpiTrendArrow('up',r.avgAch,pr.avgAch,'bulan sebelumnya'):''}</td>
       </tr>`;
     }).join('');
     // Rata-rata baris
@@ -12111,10 +12102,15 @@ function unitKpiDataTableHTML(months){
     });
     const avgAchVals = UNITS_G.map(u=>computeUnitMonthlyAchievement(u.code,m).avgAch);
     const avgAch = avgAchVals.length ? avgAchVals.reduce((s,v)=>s+v,0)/avgAchVals.length : 0;
+    const prevRes = UNITS_G.map(u=>computeUnitMonthlyAchievement(u.code,pmo));
+    const pAny = prevRes.some(_hasD) && UNITS_G.some(u=>_hasD(computeUnitMonthlyAchievement(u.code,m)));
+    const pavgs = {};
+    keys.forEach(k=>{ pavgs[k] = prevRes.length ? prevRes.reduce((s,r)=>s+(Number(r[k])||0),0)/prevRes.length : 0; });
+    const pAvgAch = prevRes.length ? prevRes.reduce((s,r)=>s+(r.avgAch||0),0)/prevRes.length : 0;
     const avgRow = `<tr style="border-top:2px solid rgba(255,199,44,.35);background:rgba(255,199,44,.04)">
       <td colspan="3" style="padding:7px 10px;font-weight:700;white-space:nowrap;"></td>
-      ${keys.map(k=>`<td style="text-align:center;padding:7px 8px;font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--text);white-space:nowrap;">${fmtVal(k,avgs[k])}</td>`).join('')}
-      <td style="text-align:center;padding:7px 10px;font-family:'JetBrains Mono',monospace;font-weight:700;color:${cellColor(avgAch)};white-space:nowrap;">${avgAch.toFixed(1)}%</td>
+      ${keys.map(k=>`<td style="text-align:center;padding:7px 8px;font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--text);white-space:nowrap;">${fmtVal(k,avgs[k])}${pAny?kpiTrendArrow(k,avgs[k],pavgs[k],'bulan sebelumnya'):''}</td>`).join('')}
+      <td style="text-align:center;padding:7px 10px;font-family:'JetBrains Mono',monospace;font-weight:700;color:${cellColor(avgAch)};white-space:nowrap;">${avgAch.toFixed(1)}%${pAny?kpiTrendArrow('up',avgAch,pAvgAch,'bulan sebelumnya'):''}</td>
     </tr>`;
     const curBadge = '';
     return `<div style="margin-bottom:16px">
@@ -12184,11 +12180,11 @@ function unitKpiAllMonthsSummaryHTML(){
     return n>=(KPI_TARGET[mk]||90) ? '#4CAF6D' : '#FFC72C';
   }
   const mean = arr => arr.length ? arr.reduce((s,v)=>s+v,0)/arr.length : 0;
-  const cell = (v, bold, extra) => {
+  const cell = (v, bold, extra, pv) => {
     const base = `text-align:center;padding:7px 8px;font-family:'JetBrains Mono',monospace;white-space:nowrap;${extra||''}`;
     return (v===null || v===undefined)
       ? `<td style="${base}color:var(--text-faint);">–</td>`
-      : `<td style="${base}font-weight:${bold?700:600};color:${colorFor(v)};">${(Number(v)||0).toFixed(1)}</td>`;
+      : `<td style="${base}font-weight:${bold?700:600};color:${colorFor(v)};">${(Number(v)||0).toFixed(1)}${pv!=null ? kpiTrendArrow(mk,v,pv,'bulan sebelumnya') : ''}</td>`;
   };
   const stickyBg = 'position:sticky;left:0;background:#12171f;';
   const sepL = 'border-left:1px solid rgba(255,199,44,.25);';
@@ -12199,7 +12195,7 @@ function unitKpiAllMonthsSummaryHTML(){
     return `<tr style="border-top:1px solid rgba(255,255,255,.06)">
       <td style="padding:7px 10px;font-family:'JetBrains Mono',monospace;color:var(--yellow);font-weight:700;white-space:nowrap;${stickyBg}">${escUH(u.code)}</td>
       <td style="padding:7px 8px;color:var(--text-dim);font-size:11px;white-space:nowrap;">${escUH(u.type||'')}</td>
-      ${vals.map(v => cell(v,false)).join('')}
+      ${vals.map((v,i) => cell(v,false,'',i>0?vals[i-1]:null)).join('')}
       ${cell(present.length ? mean(present) : null, true, sepL)}
     </tr>`;
   }).join('');
@@ -12211,7 +12207,7 @@ function unitKpiAllMonthsSummaryHTML(){
   const fleetPresent = fleetVals.filter(v=>v!==null);
   const fleetRow = `<tr style="border-top:2px solid rgba(255,199,44,.35);background:rgba(255,199,44,.04)">
     <td colspan="2" style="padding:7px 10px;font-weight:700;white-space:nowrap;${stickyBg}">Fleet average</td>
-    ${fleetVals.map(v => cell(v,true)).join('')}
+    ${fleetVals.map((v,i) => cell(v,true,'',i>0?fleetVals[i-1]:null)).join('')}
     ${cell(fleetPresent.length ? mean(fleetPresent) : null, true, sepL)}
   </tr>`;
 
@@ -12285,6 +12281,75 @@ function buildUnitPerfRows(weekPeriod, rangeStart, rangeEnd){
     return { u, grp: PERF_SEN_UNITS.indexOf(u.code)>=0 ? 'SEN' : 'DTJ', jobs: jobs.length, wh, k, avgAch, hasData };
   });
 }
+/* ---- Indikator naik/turun (panah) di samping persentase PA/MA/UA/EU ----
+   • Periode dipilih  : dibandingkan dengan periode SEBELUMNYA yang panjangnya sama.
+   • All Periods      : 30 hari terakhir (s/d tanggal HM terbaru) vs 30 hari sebelumnya. */
+function perfShiftDate(str, days){
+  const d = new Date(str+'T00:00:00'); d.setDate(d.getDate()+days);
+  const p = n=>String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());
+}
+function perfLatestHmDate(){
+  let m = '';
+  (hmRecords||[]).forEach(r=>{ const t = String(r.tanggal||'').slice(0,10); if(t>m) m=t; });
+  if(m) return m;
+  const n = new Date(), p = x=>String(x).padStart(2,'0');
+  return n.getFullYear()+'-'+p(n.getMonth()+1)+'-'+p(n.getDate());
+}
+function perfTrendWindows(weekPeriod, rangeStart, rangeEnd){
+  if(weekPeriod && rangeStart && rangeEnd){
+    const len = Math.round((new Date(rangeEnd+'T00:00:00') - new Date(rangeStart+'T00:00:00'))/86400000) + 1;
+    const pe = perfShiftDate(rangeStart, -1), ps = perfShiftDate(pe, -(len-1));
+    return { cur:[rangeStart, rangeEnd], prev:[ps, pe], mode:'period' };
+  }
+  const end = perfLatestHmDate(), cs = perfShiftDate(end, -29), pe = perfShiftDate(cs, -1), ps = perfShiftDate(pe, -29);
+  return { cur:[cs, end], prev:[ps, pe], mode:'recent' };
+}
+function perfRatiosCalc(w,s,r,t,k){
+  const ok = w!=null && t!=null && t>0;
+  const div = (n,d)=> (d>0 ? n/d*100 : null);
+  return {
+    pa: k && k.pa!=null ? Number(k.pa) : (ok ? div(w+s,t) : null),
+    ma: k && k.ma!=null ? Number(k.ma) : (ok ? div(w,w+r) : null),
+    ua: ok ? div(w,w+s) : null,
+    eu: ok ? div(w,t) : null
+  };
+}
+function perfWindowStats(code, start, end){
+  const wh = getUnitWorkingHours(code, start, end);
+  const has = wh && wh.t!=null && wh.t>0;
+  let k = null; try{ k = computeUnitKPIsForRange(code, start, end); }catch(_e){}
+  return { wh, has, ratio: has ? perfRatiosCalc(wh.w, wh.s, wh.r, wh.t, k) : {pa:null,ma:null,ua:null,eu:null} };
+}
+/* Indikator tren umum untuk tabel KPI Dashboard: ▲ hijau = membaik, ▼ merah = memburuk (MTTR: lebih rendah = lebih baik) */
+function kpiTrendArrow(key, cur, prev, basis){
+  if(cur==null || prev==null || cur==='' || prev==='') return '';
+  cur = Number(cur); prev = Number(prev);
+  if(!isFinite(cur) || !isFinite(prev)) return '';
+  const d = cur - prev, b = basis || 'periode sebelumnya';
+  const f = v => Math.abs(v)>=100 ? v.toFixed(0) : v.toFixed(1);
+  if(Math.abs(d) < 0.05) return `<span class="trend-ind flat" title="Stabil dibanding ${b}">▬</span>`;
+  const good = key==='mttr' ? d<0 : d>0;
+  const sg = (d>0?'+':'−') + Math.abs(d).toFixed(1);
+  return `<span class="trend-ind ${good?'up':'down'}" title="${good?'Membaik':'Memburuk'} ${sg} dibanding ${b} (${f(prev)} → ${f(cur)})">${good?'▲':'▼'}</span>`;
+}
+function kpiPrevMonthObj(startStr){
+  const d = new Date(startStr+'T00:00:00');
+  const s0 = new Date(d.getFullYear(), d.getMonth()-1, 1), e0 = new Date(d.getFullYear(), d.getMonth(), 0);
+  return { key: s0.getFullYear()+'-'+String(s0.getMonth()+1).padStart(2,'0'), start: toDateStr(s0), end: toDateStr(e0) };
+}
+function kpiPrevQuarterVal(qVal){
+  const a = String(qVal||'').split('-Q'); const y = Number(a[0]), q = Number(a[1]);
+  return q>1 ? (y+'-Q'+(q-1)) : ((y-1)+'-Q4');
+}
+function perfTrendArrow(cur, prev, mode){
+  if(cur==null || prev==null || isNaN(cur) || isNaN(prev)) return '';
+  const d = cur - prev;
+  const basis = mode==='period' ? 'periode sebelumnya' : '30 hari sebelumnya';
+  if(Math.abs(d) < 0.05) return `<span class="trend-ind flat" title="Stabil (±0,0 poin) dibanding ${basis}">▬</span>`;
+  const up = d > 0, sg = (up?'+':'−') + Math.abs(d).toFixed(1);
+  return `<span class="trend-ind ${up?'up':'down'}" title="${up?'Naik':'Turun'} ${sg} poin dibanding ${basis} (${prev.toFixed(1)}% → ${cur.toFixed(1)}%)">${up?'▲':'▼'}</span>`;
+}
 function renderUnitPerfTable(weekPeriod, rangeStart, rangeEnd, weekPeriodLabel){
   const tbl = document.getElementById('unit-perf-table');
   if(!tbl) return;
@@ -12306,114 +12371,73 @@ function renderUnitPerfTable(weekPeriod, rangeStart, rangeEnd, weekPeriodLabel){
   };
   const colOf = (key,v)=> v==null ? 'dim' : (v>=90 ? 'g' : v>=75 ? 'y' : 'r');
   rows.forEach(r=>{ r.ratio = r.hasData ? ratios(r.wh.w, r.wh.s, r.wh.r, r.wh.t, r.k) : {pa:null,ma:null,ua:null,eu:null}; });
+  /* tren: bandingkan jendela waktu sekarang vs sebelumnya (rumus sama dengan nilai yang ditampilkan) */
+  const win = perfTrendWindows(weekPeriod, rangeStart, rangeEnd);
+  const noTr = {pa:'',ma:'',ua:'',eu:''};
+  rows.forEach(r=>{
+    r.tr = noTr;
+    if(!r.hasData) return;
+    try{
+      const base = win.mode==='period' ? { ratio: r.ratio } : perfWindowStats(r.u.code, win.cur[0], win.cur[1]);
+      r._cw = win.mode==='period' ? r.wh : base.wh;
+      const prev = perfWindowStats(r.u.code, win.prev[0], win.prev[1]);
+      r._pw = prev.wh; r._phas = prev.has;
+      const cur = base.ratio;
+      r.tr = { pa:perfTrendArrow(cur.pa, prev.ratio.pa, win.mode), ma:perfTrendArrow(cur.ma, prev.ratio.ma, win.mode),
+               ua:perfTrendArrow(cur.ua, prev.ratio.ua, win.mode), eu:perfTrendArrow(cur.eu, prev.ratio.eu, win.mode) };
+    }catch(_e){ r.tr = noTr; }
+  });
   const body = rows.map(r=>{
     const dim = (r.hasData && r.wh.t!=null) ? '' : 'dim';
     const rt = r.ratio;
     return `<tr class="${r.hasData?'':'empty'}">
-      <td class="u"><b>${escUH(r.u.code)}</b><small>${escUH(r.u.type)}</small></td>
+      <td class="u"><b>${escUH(r.u.code)}</b></td>
+      <td class="t">${escUH(r.u.type)}</td>
       <td class="${dim}">${n1(r.wh.w)}</td><td class="${dim}">${n1(r.wh.s)}</td><td class="${dim}">${n1(r.wh.r)}</td><td class="${dim}">${n1(r.wh.t)}</td>
-      <td class="${colOf('pa',rt.pa)}">${pc(rt.pa)}</td><td class="${colOf('ma',rt.ma)}">${pc(rt.ma)}</td>
-      <td class="${colOf('ua',rt.ua)}">${pc(rt.ua)}</td><td class="${colOf('eu',rt.eu)}">${pc(rt.eu)}</td>
+      <td class="${colOf('pa',rt.pa)}">${pc(rt.pa)}${r.tr.pa}</td><td class="${colOf('ma',rt.ma)}">${pc(rt.ma)}${r.tr.ma}</td>
+      <td class="${colOf('ua',rt.ua)}">${pc(rt.ua)}${r.tr.ua}</td><td class="${colOf('eu',rt.eu)}">${pc(rt.eu)}${r.tr.eu}</td>
     </tr>`;
   }).join('');
   const act = rows.filter(r=>r.hasData && r.wh.t!=null);
   const sum = f => act.reduce((s,r)=> s + (Number(f(r))||0), 0);
   const W = sum(r=>r.wh.w), S = sum(r=>r.wh.s), R = sum(r=>r.wh.r), T = sum(r=>r.wh.t);
   const tot = act.length ? ratios(W,S,R,T,null) : {pa:null,ma:null,ua:null,eu:null};
+  let totTr = {pa:'',ma:'',ua:'',eu:''};
+  try{
+    const cw = act.filter(r=>r._cw && r._cw.t>0), pw = act.filter(r=>r._pw && r._phas);
+    if(cw.length && pw.length){
+      const sm = (arr,f)=> arr.reduce((a,r)=> a + (Number(f(r))||0), 0);
+      const c = ratios(sm(cw,r=>r._cw.w), sm(cw,r=>r._cw.s), sm(cw,r=>r._cw.r), sm(cw,r=>r._cw.t), null);
+      const p0 = ratios(sm(pw,r=>r._pw.w), sm(pw,r=>r._pw.s), sm(pw,r=>r._pw.r), sm(pw,r=>r._pw.t), null);
+      totTr = { pa:perfTrendArrow(c.pa,p0.pa,win.mode), ma:perfTrendArrow(c.ma,p0.ma,win.mode), ua:perfTrendArrow(c.ua,p0.ua,win.mode), eu:perfTrendArrow(c.eu,p0.eu,win.mode) };
+    }
+  }catch(_e){}
   const foot = `<tr>
-    <td class="u">TOTAL</td>
+    <td class="u">TOTAL</td><td class="t"></td>
     <td>${n1(act.length?W:null)}</td><td>${n1(act.length?S:null)}</td><td>${n1(act.length?R:null)}</td><td>${n1(act.length?T:null)}</td>
-    <td>${pc(tot.pa)}</td><td>${pc(tot.ma)}</td><td>${pc(tot.ua)}</td><td>${pc(tot.eu)}</td>
+    <td>${pc(tot.pa)}${totTr.pa}</td><td>${pc(tot.ma)}${totTr.ma}</td><td>${pc(tot.ua)}${totTr.ua}</td><td>${pc(tot.eu)}${totTr.eu}</td>
   </tr>`;
   tbl.innerHTML = `<thead>
-    <tr><th class="u">Unit / Waktu</th><th>Waktu Operasi</th><th>Standby</th><th>Breakdown</th><th>Total Jam Kerja</th><th>PA</th><th>MA</th><th>UA</th><th>EU</th></tr>
+    <tr><th class="u">Unit</th><th class="t">Type</th><th>Waktu Operasi</th><th>Standby</th><th>Breakdown</th><th>Total Jam Kerja</th><th>PA</th><th>MA</th><th>UA</th><th>EU</th></tr>
   </thead><tbody>${body}</tbody><tfoot>${foot}</tfoot>`;
   _perfTableData = { weekPeriod, weekPeriodLabel, rows, act, tot, W, S, R, T };
 }
 function exportUnitPerfTable(){
   if(!_perfTableData || typeof XLSX==='undefined'){ alert('Tabel belum siap / library Excel belum termuat.'); return; }
   const d = _perfTableData;
-  const head = ['Unit / Waktu','Waktu Operasi','Standby','Breakdown','Total Jam Kerja','PA (%)','MA (%)','UA (%)','EU (%)'];
+  const head = ['Unit','Type','Waktu Operasi','Standby','Breakdown','Total Jam Kerja','PA (%)','MA (%)','UA (%)','EU (%)'];
   const num = v => (v==null||isNaN(v)) ? '' : Math.round(Number(v)*10)/10;
   const aoa = [['Performance per Unit'],[d.weekPeriod ? ('Periode: '+d.weekPeriodLabel) : 'Periode: All Periods'],[],head];
-  d.rows.forEach(r=> aoa.push([r.u.code,num(r.wh.w),num(r.wh.s),num(r.wh.r),num(r.wh.t),num(r.ratio.pa),num(r.ratio.ma),num(r.ratio.ua),num(r.ratio.eu)]));
-  aoa.push(['TOTAL',num(d.W),num(d.S),num(d.R),num(d.T),num(d.tot.pa),num(d.tot.ma),num(d.tot.ua),num(d.tot.eu)]);
+  d.rows.forEach(r=> aoa.push([r.u.code,r.u.type||'',num(r.wh.w),num(r.wh.s),num(r.wh.r),num(r.wh.t),num(r.ratio.pa),num(r.ratio.ma),num(r.ratio.ua),num(r.ratio.eu)]));
+  aoa.push(['TOTAL','',num(d.W),num(d.S),num(d.R),num(d.T),num(d.tot.pa),num(d.tot.ma),num(d.tot.ua),num(d.tot.eu)]);
   const ws = XLSX.utils.aoa_to_sheet(aoa);
-  ws['!cols'] = [{wch:14},{wch:15},{wch:11},{wch:12},{wch:16},{wch:9},{wch:9},{wch:9},{wch:9}];
+  ws['!cols'] = [{wch:12},{wch:18},{wch:15},{wch:11},{wch:12},{wch:16},{wch:9},{wch:9},{wch:9},{wch:9}];
   const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Performance');
   const tag = d.weekPeriod ? d.weekPeriod.replace('_','_sd_') : 'all';
   XLSX.writeFile(wb, 'Performance_Unit_'+tag+'.xlsx');
 }
 document.getElementById('unit-perf-table-export')?.addEventListener('click', exportUnitPerfTable);
 
-/* ============ TABEL KPI PERFORMANCE PER UNIT (menu Performance) — mengikuti filter periode ============ */
-let _unitKpiTableData = null;
-function renderUnitKpiTable(weekPeriod, weekPeriodLabel){
-  const tbl = document.getElementById('unit-kpi-table');
-  if(!tbl) return;
-  const lbl = document.getElementById('unit-kpi-table-period');
-  if(lbl) lbl.textContent = weekPeriod ? ('PERIODE ' + weekPeriodLabel) : 'ALL PERIODS';
-  const rows = (_perfTableData && _perfTableData.rows) ? _perfTableData.rows : buildUnitPerfRows(weekPeriod, null, null);
-  const KEYS = ['mtbs','mttr','pmr','sa','ma','pa'];
-  const UNIT = { mtbs:' jam', mttr:' jam', pmr:'%', sa:'%', ma:'%', pa:'%' };
-  const tierCls = (key,v) => { const t = kpiTierScore(key, v); return t>=100 ? 'g' : t>=80 ? 'y' : t>0 ? 'r' : 'dim'; };
-  const fmtV = (key,v) => {
-    const n = Number(v);
-    if(v==null || isNaN(n)) return '—';
-    return (Math.round(n*10)/10).toFixed(1) + (key==='mtbs'||key==='mttr' ? '' : '%');
-  };
-  const achCls = v => v>=100 ? 'g' : v>=80 ? 'y' : 'r';
-  const statusOf = v => v>=100 ? {c:'g',t:'ACHIEVED'} : v>=80 ? {c:'y',t:'ON TRACK'} : {c:'r',t:'BELOW'};
-  const achCell = (v, ok) => {
-    if(!ok) return '<td class="dim">—</td>';
-    const w = Math.max(0, Math.min(100, v));
-    const col = v>=100 ? '#4cd48a' : v>=80 ? '#ffc72c' : '#ff6b6f';
-    return `<td class="${achCls(v)}"><div class="ach"><b>${v.toFixed(1)}%</b><i><s style="width:${w}%;background:${col}"></s></i></div></td>`;
-  };
-  const stCell = (v, ok) => { if(!ok) return '<td><span class="pill2 dim">NO DATA</span></td>'; const st = statusOf(v); return `<td><span class="pill2 ${st.c}">${st.t}</span></td>`; };
-  const ordered = rows.slice().sort((a,b)=> (a.grp===b.grp ? 0 : (a.grp==='SEN' ? -1 : 1)));
-  const body = ordered.map(r=>{
-    const ok = !!r.hasData;
-    const cells = KEYS.map(key => ok ? `<td class="${tierCls(key, r.k[key])}">${fmtV(key, r.k[key])}</td>` : '<td class="dim">—</td>').join('');
-    return `<tr class="${ok?'':'empty'}">
-      <td class="u"><b>${escUH(r.u.code)}</b><small>${escUH(r.u.type)}</small></td>
-      <td><span class="grpchip ${r.grp==='SEN'?'sen':'dtj'}">${r.grp}</span></td>
-      ${cells}
-      ${achCell(r.avgAch, ok)}${stCell(r.avgAch, ok)}
-    </tr>`;
-  }).join('');
-  const mean = a => a.length ? a.reduce((x,y)=>x+y,0)/a.length : null;
-  const avgRow = (label, list) => {
-    const act = list.filter(r=>r.hasData);
-    const cells = KEYS.map(key => { const m = mean(act.map(r=>Number(r.k[key])||0)); return `<td>${m==null?'—':fmtV(key,m)}</td>`; }).join('');
-    const a = mean(act.map(r=>r.avgAch||0));
-    return `<tr><td class="u">${label}</td><td>${act.length}/${list.length}</td>${cells}<td>${a==null?'—':a.toFixed(1)+'%'}</td><td>${a==null?'—':statusOf(a).t}</td></tr>`;
-  };
-  const sen = rows.filter(r=>r.grp==='SEN'), dtj = rows.filter(r=>r.grp==='DTJ');
-  const th = (key, name, extra) => `<th title="${escUH(KPI_INFO && KPI_INFO[key] ? KPI_INFO[key].full : name)}">${name}</th>`;
-  const tgt = key => (key==='mttr' ? '&lt; ' : key==='mtbs' ? '&gt; ' : '≥ ') + KPI_TARGET[key] + (UNIT[key]===' jam' ? ' jam' : '%');
-  tbl.innerHTML = `<thead>
-    <tr><th class="u">Unit</th><th>Grup</th>${KEYS.map(k=>th(k,k.toUpperCase())).join('')}<th>Avg Achievement</th><th>Status</th></tr>
-    <tr class="grp"><th class="u">Target</th><th></th>${KEYS.map(k=>`<th>${tgt(k)}</th>`).join('')}<th></th><th></th></tr>
-    <tr class="grp"><th class="u">Bobot</th><th></th>${KEYS.map(k=>`<th>${KPI_WEIGHT[k]}%</th>`).join('')}<th>100%</th><th></th></tr>
-  </thead><tbody>${body}</tbody><tfoot>${avgRow('AVG SEN', sen)}${avgRow('AVG DTJ', dtj)}${avgRow('FLEET AVG', rows)}</tfoot>`;
-  _unitKpiTableData = { weekPeriod, weekPeriodLabel, rows: ordered, KEYS };
-}
-function exportUnitKpiTable(){
-  const d = _unitKpiTableData;
-  if(!d || typeof XLSX==='undefined'){ alert('Tabel belum siap / library Excel belum termuat.'); return; }
-  const num = v => (v==null||isNaN(v)) ? '' : Math.round(Number(v)*10)/10;
-  const head = ['Unit','Type','Grup','MTBS (jam)','MTTR (jam)','PMR (%)','SA (%)','MA (%)','PA (%)','Avg Achievement (%)'];
-  const aoa = [['KPI Performance per Unit'],[d.weekPeriod ? ('Periode: '+d.weekPeriodLabel) : 'Periode: All Periods'],
-    ['Target','','',KPI_TARGET.mtbs,KPI_TARGET.mttr,KPI_TARGET.pmr,KPI_TARGET.sa,KPI_TARGET.ma,KPI_TARGET.pa,''],[],head];
-  d.rows.forEach(r=> aoa.push([r.u.code, r.u.type||'', r.grp].concat(d.KEYS.map(k=> r.hasData ? num(r.k[k]) : '')).concat([r.hasData ? num(r.avgAch) : ''])));
-  const ws = XLSX.utils.aoa_to_sheet(aoa);
-  ws['!cols'] = [{wch:14},{wch:22},{wch:8},{wch:12},{wch:12},{wch:10},{wch:10},{wch:10},{wch:10},{wch:20}];
-  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'KPI per Unit');
-  const tag = d.weekPeriod ? d.weekPeriod.replace('_','_sd_') : 'all';
-  XLSX.writeFile(wb, 'KPI_Performance_Unit_'+tag+'.xlsx');
-}
-document.getElementById('unit-kpi-table-export')?.addEventListener('click', exportUnitKpiTable);
 
 function renderUnitCards(){
   populateUnitWeekPeriodSelect();
@@ -12468,7 +12492,6 @@ function renderUnitCards(){
     </div>`;
   }).join('');
   try{ renderUnitPerfTable(weekPeriod, rangeStart, rangeEnd, weekPeriodLabel); }catch(e){ console.warn('renderUnitPerfTable', e); }
-  try{ renderUnitKpiTable(weekPeriod, weekPeriodLabel); }catch(e){ console.warn('renderUnitKpiTable', e); }
   renderUnitMonthlySummary();
 }
 
@@ -22473,12 +22496,12 @@ function buildServiceAchievementTableHTML(stats){
   const body = stats.unitRows.map(u=>{
     const overallPct = u.total ? Math.round(u.closed/u.total*100) : 0;
     const col = overallPct>=80?'#4CAF6D':overallPct>=50?'#FFC72C':'#E5484D';
-    const monthCells = months.map(m=>{
+    const monthCells = months.map((m,mi)=>{
       const c = cell[u.unit+'|'+m];
       if(!c || !c.total) return `<td style="text-align:center;color:var(--text-faint)">—</td>`;
       const p = Math.round(c.closed/c.total*100);
       const pc = p>=80?'#4CAF6D':p>=50?'#FFC72C':'#E5484D';
-      return `<td style="text-align:center;font-family:JetBrains Mono,monospace;font-size:11px;color:${pc}">${c.closed}/${c.total}<div style="font-size:9px;opacity:.85">${p}%</div></td>`;
+      return `<td style="text-align:center;font-family:JetBrains Mono,monospace;font-size:11px;color:${pc}">${c.closed}/${c.total}<div style="font-size:9px;opacity:.85">${p}%${(()=>{ const pc0 = mi>0 ? cell[u.unit+'|'+months[mi-1]] : null; return (pc0 && pc0.total) ? kpiTrendArrow('up', p, Math.round(pc0.closed/pc0.total*100), 'bulan sebelumnya') : ''; })()}</div></td>`;
     }).join('');
     return `<tr>
       <td style="font-family:JetBrains Mono,monospace;color:var(--yellow);font-weight:600">${escUH(u.unit)}</td>
@@ -23180,17 +23203,20 @@ function renderKPIChartDashboardImpl(k, globalStats, _opts){
       if(p > 0)    return '#E5484D';
       return 'var(--text-faint)';
     }
-    const heatHeadCols = trendMonths.map(m=>`<th style="text-align:center;min-width:48px;font-size:10px;background:transparent">${m.short}</th>`).join('') +
+    const heatHeadCols = trendMonths.map(m=>`<th style="text-align:center;min-width:58px;font-size:10px;background:transparent">${m.short}</th>`).join('') +
       `<th style="text-align:center;min-width:56px;font-size:10px;color:var(--yellow);background:transparent">Average</th>`;
     // MA/PA/PMR/SA: sel bulanan & kolom AVERAGE = nilai % AKTUAL (rawPct), sama seperti kartu KPI.
     // MTBS/MTTR: skor tier 60/80/100 (pct) karena satuan jam.
     // Baris "Average" (lintas KPI per bulan) tetap skor tier agar sebanding.
     const heatBodyRows = monthlyKpiDefs.map(d=>{
       const useRaw = (d.key==='ma' || d.key==='pa' || d.key==='pmr' || d.key==='sa');
-      const cells = trendMonths.map(m=>{
+      const cells = trendMonths.map((m,mi)=>{
         const src = useRaw ? m.rawPct : m.pct;
         const pct = (src && src[d.key] != null) ? src[d.key] : 0;
-        return `<td style="text-align:center;font-family:JetBrains Mono,monospace;font-weight:700;font-size:12px;color:${heatFg(pct)};background:transparent;border:1px solid rgba(255,255,255,0.04)">${Math.round(pct)}</td>`;
+        const _ps = mi>0 ? (useRaw ? trendMonths[mi-1].rawPct : trendMonths[mi-1].pct) : null;
+        const _pp = (_ps && _ps[d.key] != null) ? Number(_ps[d.key]) : 0;
+        const hArrow = (mi>0 && pct>0 && _pp>0) ? kpiTrendArrow('up', pct, _pp, 'bulan sebelumnya') : '';
+        return `<td style="text-align:center;font-family:JetBrains Mono,monospace;font-weight:700;font-size:12px;color:${heatFg(pct)};background:transparent;border:1px solid rgba(255,255,255,0.04);white-space:nowrap">${Math.round(pct)}${hArrow}</td>`;
       }).join('');
       const rowAvg = trendMonths.length
         ? trendMonths.reduce((s,m)=>{
@@ -23204,10 +23230,13 @@ function renderKPIChartDashboardImpl(k, globalStats, _opts){
         <td style="text-align:center;font-family:JetBrains Mono,monospace;font-weight:700;font-size:12px;color:${heatFg(rowAvg)};background:transparent;border:1px solid rgba(255,255,255,0.06)">${rowAvg.toFixed(1)}%</td>
       </tr>`;
     }).join('');
-    const heatAvgCells = trendMonths.map(m=>{
+    const _heatMonthAvg = mm => { const v = monthlyKpiDefs.map(d => (mm.pct && mm.pct[d.key] != null) ? mm.pct[d.key] : 0); return v.length ? v.reduce((a,b)=>a+b,0)/v.length : 0; };
+    const heatAvgCells = trendMonths.map((m,mi)=>{
       const vals = monthlyKpiDefs.map(d => (m.pct && m.pct[d.key] != null) ? m.pct[d.key] : 0);
       const avg = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0;
-      return `<td style="text-align:center;font-family:JetBrains Mono,monospace;font-weight:700;font-size:12px;color:${heatFg(avg)};background:transparent;border:1px solid rgba(255,255,255,0.08);border-top:1px solid rgba(255,199,44,0.25)">${Math.round(avg)}</td>`;
+      const _pAvg = mi>0 ? _heatMonthAvg(trendMonths[mi-1]) : 0;
+      const aArrow = (mi>0 && avg>0 && _pAvg>0) ? kpiTrendArrow('up', avg, _pAvg, 'bulan sebelumnya') : '';
+      return `<td style="text-align:center;font-family:JetBrains Mono,monospace;font-weight:700;font-size:12px;color:${heatFg(avg)};background:transparent;border:1px solid rgba(255,255,255,0.08);border-top:1px solid rgba(255,199,44,0.25);white-space:nowrap">${Math.round(avg)}${aArrow}</td>`;
     }).join('');
     const grandAvg = overallAvg;
     // Teks target di header tabel — diambil langsung dari targetHint tiap KPI (nilai formula
@@ -23581,7 +23610,11 @@ function renderKPIChartDashboardImpl(k, globalStats, _opts){
       if(_f >= 0) _curT = _f;
     }
     const _prevT = Math.max(0, _curT - 1);
-    const trendUp = (trendMonthsG[_curT]?.pct[d.key]||0) >= (trendMonthsG[_prevT]?.pct[d.key]||0);
+    const _tCur = trendMonthsG[_curT]?.pct[d.key]||0, _tPrev = trendMonthsG[_prevT]?.pct[d.key]||0;
+    const _tDiff = _curT===_prevT ? 0 : (_tCur - _tPrev);
+    const trendArrowHtml = _curT===_prevT ? '' : kpiTrendArrow('up', _tCur, _tPrev, 'bulan sebelumnya');
+    const trendTxt = _tDiff>0.05 ? 'Naik' : (_tDiff<-0.05 ? 'Turun' : 'Stabil');
+    const trendCol = _tDiff>0.05 ? '#2fd37a' : (_tDiff<-0.05 ? '#ff4d52' : 'var(--text-dim)');
     const achieveTxt = pct>=100 ? 'Achieved' : (pct>=80 ? 'On Track' : 'Below');
     return `<tr class="${isActive?'active':''}" onclick="onKpiMonthlyRowClick('${d.key}')">
       <td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${d.color};margin-right:6px;"></span><b>${d.label}</b></td>
@@ -23589,7 +23622,7 @@ function renderKPIChartDashboardImpl(k, globalStats, _opts){
       <td style="font-family:JetBrains Mono,monospace">${valTxt}</td>
       <td><span class="kpi-dash-status ${st.cls}">${pct.toFixed(0)}% · ${st.text}</span>
         <div style="font-size:9.5px;color:var(--text-faint);margin-top:3px">${achieveTxt}</div></td>
-      <td style="color:${trendUp?'#4CAF6D':'#E5484D'};font-weight:700">${trendUp?'↗ Naik':'↘ Turun'}</td>
+      <td style="color:${trendCol};font-weight:700;white-space:nowrap">${trendArrowHtml||'<span class="trend-ind flat">▬</span>'} ${trendTxt}</td>
     </tr>`;
   }).join('');
 
@@ -23613,10 +23646,13 @@ function renderKPIChartDashboardImpl(k, globalStats, _opts){
     const st = kpiStatusIdLabel(pct);
     const valTxt = d.unit==='%' ? d.value.toFixed(1)+'%' : (Math.round(d.value)+' jam');
 
-    const quarterCells = quarterSummaryTableSeries.map(q=>{
+    const quarterCells = quarterSummaryTableSeries.map((q,qi)=>{
       const qv = (q.kpis && q.kpis[d.key]!=null) ? Number(q.kpis[d.key]) : 0;
       const qTxt = d.unit==='%' ? qv.toFixed(1)+'%' : (Math.round(qv)+' jam');
-      return `<td style="font-family:JetBrains Mono,monospace;color:var(--text-dim);white-space:nowrap;text-align:center">${qTxt}</td>`;
+      const _pq = qi>0 ? quarterSummaryTableSeries[qi-1] : null;
+      const _pqv = (_pq && _pq.kpis && _pq.kpis[d.key]!=null) ? Number(_pq.kpis[d.key]) : 0;
+      const qArrow = (_pq && qv>0 && _pqv>0) ? kpiTrendArrow(d.key, qv, _pqv, 'triwulan sebelumnya') : '';
+      return `<td style="font-family:JetBrains Mono,monospace;color:var(--text-dim);white-space:nowrap;text-align:center">${qTxt}${qArrow}</td>`;
     }).join('');
 
     return `<tr>
@@ -23651,8 +23687,8 @@ function renderKPIChartDashboardImpl(k, globalStats, _opts){
     return sumWeight > 0 ? (sumScore / sumWeight) * 100 : null;
   });
 
-  const quarterAverageCells = quarterAveragePctByQuarter.map(avg => {
-    const txt = Number.isFinite(avg) ? avg.toFixed(1) + '%' : '—';
+  const quarterAverageCells = quarterAveragePctByQuarter.map((avg,ai) => {
+    const txt = (Number.isFinite(avg) ? avg.toFixed(1) + '%' : '—') + ((ai>0 && Number.isFinite(avg) && Number.isFinite(quarterAveragePctByQuarter[ai-1])) ? kpiTrendArrow('up', avg, quarterAveragePctByQuarter[ai-1], 'triwulan sebelumnya') : '');
     return `<td style="text-align:center;font-family:JetBrains Mono,monospace;font-weight:700;color:${Number.isFinite(avg) ? cellColor(avg) : 'var(--text-faint)'};white-space:nowrap">${txt}</td>`;
   }).join('');
 
@@ -24619,6 +24655,12 @@ function quarterAchievementDetailHTML(qVal){
   }
   const kQ = computeKPIsForQuarter(qVal) || {};
   const hasData = k => !!k && KEYS.some(x => (Number(k[x])||0) > 0);
+  const pqVal = kpiPrevQuarterVal(qVal), pqR = getQuarterRange(pqVal);
+  const kPQ = computeKPIsForQuarter(pqVal) || {};
+  const pm0Obj = kpiPrevMonthObj(months[0].start);
+  const kPM0 = computeKPIsFor(pm0Obj.key) || {};
+  const prevMonKpis = i => i>0 ? months[i-1].kpis : kPM0;
+  const arrK = (key,cur,prev,basis) => (hasData(cur) && hasData(prev)) ? kpiTrendArrow(key, cur[key], prev[key], basis) : '';
   const isOk = (key,v) => { const n=Number(v)||0; return key==='mttr' ? (n>0 ? n<(KPI_TARGET.mttr||36) : true) : key==='mtbs' ? n>=(KPI_TARGET.mtbs||80) : n>=(KPI_TARGET[key]||90); };
   const fmt = (key,v) => (Number(v)||0).toFixed(1) + (META[key].unit==='%' ? '%' : ' hrs');
   const statusOf = pct => pct>=100 ? {cls:'ok',text:'ACHIEVED'} : pct>=80 ? {cls:'mid',text:'ON TRACK'} : {cls:'bad',text:'BELOW'};
@@ -24634,27 +24676,29 @@ function quarterAchievementDetailHTML(qVal){
     const m = META[key];
     const pct = kpiAchievePct(key, kQ[key]||0);
     const st = statusOf(pct);
-    const mc = months.map(mo => hasData(mo.kpis)
-      ? td(`<span style="font-family:${FONT_M};font-weight:600;color:${isOk(key,mo.kpis[key])?'#4CAF6D':'#FFC72C'}">${fmt(key,mo.kpis[key])}</span>`)
+    const mc = months.map((mo,mi) => hasData(mo.kpis)
+      ? td(`<span style="font-family:${FONT_M};font-weight:600;color:${isOk(key,mo.kpis[key])?'#4CAF6D':'#FFC72C'}">${fmt(key,mo.kpis[key])}</span>${arrK(key,mo.kpis,prevMonKpis(mi),'bulan sebelumnya')}`)
       : td(dash)).join('');
     return `<tr style="border-top:1px solid rgba(255,255,255,.06)">
       <td style="padding:7px 10px;white-space:nowrap"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${m.color};margin-right:6px"></span><b>${m.label}</b><div style="color:var(--text-faint);font-size:10px;margin-top:1px">${m.name}</div></td>
       ${td(`<span style="color:var(--text-dim)">${m.tgt}</span>`)}
       ${td(`<span style="color:var(--text-dim)">${KPI_WEIGHT[key]}%</span>`)}
       ${mc}
-      ${td(`<b style="font-family:${FONT_M};color:${!hasData(kQ)?'var(--text-faint)':isOk(key,kQ[key])?'#4CAF6D':'#FFC72C'}">${hasData(kQ)?fmt(key,kQ[key]):'–'}</b>`, 'border-left:1px solid rgba(255,199,44,.25);')}
-      ${td(hasData(kQ)?`<span style="font-family:${FONT_M}">${pct.toFixed(0)}%</span>`:dash)}
+      ${td(`<b style="font-family:${FONT_M};color:${!hasData(kQ)?'var(--text-faint)':isOk(key,kQ[key])?'#4CAF6D':'#FFC72C'}">${hasData(kQ)?fmt(key,kQ[key]):'–'}</b>${arrK(key,kQ,kPQ,'triwulan sebelumnya')}`, 'border-left:1px solid rgba(255,199,44,.25);')}
+      ${td(hasData(kQ)?`<span style="font-family:${FONT_M}">${pct.toFixed(0)}%</span>${hasData(kPQ)?kpiTrendArrow('up', pct, kpiAchievePct(key, kPQ[key]||0), 'triwulan sebelumnya'):''}`:dash)}
       ${td(hasData(kQ)?`<span class="kpi-dash-status ${st.cls}">${st.text}</span>`:dash)}
     </tr>`;
   }).join('');
   const mAvg = months.map(mo => hasData(mo.kpis) ? wAvg(mo.kpis) : null);
   const qAvg = (typeof computeQuarterAvgFromMonthlyAchievements==='function') ? computeQuarterAvgFromMonthlyAchievements(qVal) : null;
-  const avgCell = v => Number.isFinite(v) ? td(`<b style="font-family:${FONT_M};color:${cellColor(v)}">${v.toFixed(1)}%</b>`) : td(dash);
+  const mPrevAvg = i => i>0 ? mAvg[i-1] : (hasData(kPM0) ? wAvg(kPM0) : null);
+  const pqAvg = (typeof computeQuarterAvgFromMonthlyAchievements==='function') ? computeQuarterAvgFromMonthlyAchievements(pqVal) : null;
+  const avgCell = (v,i) => Number.isFinite(v) ? td(`<b style="font-family:${FONT_M};color:${cellColor(v)}">${v.toFixed(1)}%</b>${Number.isFinite(mPrevAvg(i))?kpiTrendArrow('up', v, mPrevAvg(i), 'bulan sebelumnya'):''}`) : td(dash);
   const qSt = Number.isFinite(qAvg) ? statusOf(qAvg) : null;
   const footer1 = `<tr style="border-top:2px solid rgba(255,199,44,.35);background:rgba(255,199,44,.05)">
       <td colspan="3" style="padding:7px 10px;font-weight:700;color:var(--yellow)">Weighted Achievement</td>
       ${mAvg.map(avgCell).join('')}
-      ${Number.isFinite(qAvg) ? td(`<b style="font-family:${FONT_M};color:${cellColor(qAvg)}">${qAvg.toFixed(1)}%</b>`,'border-left:1px solid rgba(255,199,44,.25);') : td(dash,'border-left:1px solid rgba(255,199,44,.25);')}
+      ${Number.isFinite(qAvg) ? td(`<b style="font-family:${FONT_M};color:${cellColor(qAvg)}">${qAvg.toFixed(1)}%</b>${Number.isFinite(pqAvg)?kpiTrendArrow('up', qAvg, pqAvg, 'triwulan sebelumnya'):''}`,'border-left:1px solid rgba(255,199,44,.25);') : td(dash,'border-left:1px solid rgba(255,199,44,.25);')}
       ${td(Number.isFinite(qAvg)?`<span style="font-family:${FONT_M}">${qAvg.toFixed(0)}%</span>`:dash)}
       ${td(qSt?`<span class="kpi-dash-status ${qSt.cls}">${qSt.text}</span>`:dash)}
     </tr>`;
@@ -24675,28 +24719,32 @@ function quarterAchievementDetailHTML(qVal){
   const unitRows = (UNITS||[]).filter(u=>kpiScopeOk(u.code)).map(u=>{
     const q = computeUnitMonthlyAchievement(u.code, qObj);
     const ms = months.map(mo => computeUnitMonthlyAchievement(u.code, mo));
-    return { u, q, ms };
+    const pq = computeUnitMonthlyAchievement(u.code, { start:pqR.startStr, end:pqR.endStr });
+    const pm0 = computeUnitMonthlyAchievement(u.code, pm0Obj);
+    return { u, q, ms, pq, pm0 };
   }).sort((a,b)=>(b.q.avgAch||0)-(a.q.avgAch||0));
-  const uCell = (key,v,ok) => ok ? td(`<span style="font-family:${FONT_M};font-weight:600;color:${isOk(key,v)?'#4CAF6D':'#FFC72C'}">${(Number(v)||0).toFixed(1)}</span>`) : td(dash);
-  const aCell = (v,ok,extra) => ok ? td(`<b style="font-family:${FONT_M};color:${cellColor(v)}">${(Number(v)||0).toFixed(1)}%</b>`, extra) : td(dash, extra);
+  const uCell = (key,v,ok,pv) => ok ? td(`<span style="font-family:${FONT_M};font-weight:600;color:${isOk(key,v)?'#4CAF6D':'#FFC72C'}">${(Number(v)||0).toFixed(1)}</span>${hasData(pv)?kpiTrendArrow(key,v,pv[key],'triwulan sebelumnya'):''}`) : td(dash);
+  const aCell = (v,ok,extra,pv,basis) => ok ? td(`<b style="font-family:${FONT_M};color:${cellColor(v)}">${(Number(v)||0).toFixed(1)}%</b>${hasData(pv)?kpiTrendArrow('up',v,pv.avgAch,basis):''}`, extra) : td(dash, extra);
   const body2 = unitRows.map((r,i)=>{
     const ok = hasData(r.q);
     return `<tr style="border-top:1px solid rgba(255,255,255,.06)">
       ${td(`<span style="color:var(--text-faint)">${i+1}</span>`)}
       <td style="padding:7px 8px;font-family:${FONT_M};color:var(--yellow);font-weight:700;white-space:nowrap">${escUH(r.u.code)}</td>
       <td style="padding:7px 8px;color:var(--text-dim);font-size:11px;white-space:nowrap">${escUH(r.u.type||'')}</td>
-      ${KEYS.map(k=>uCell(k, r.q[k], ok)).join('')}
-      ${r.ms.map(m=>aCell(m.avgAch, hasData(m))).join('')}
-      ${aCell(r.q.avgAch, ok, 'border-left:1px solid rgba(255,199,44,.25);')}
+      ${KEYS.map(k=>uCell(k, r.q[k], ok, r.pq)).join('')}
+      ${r.ms.map((m,i)=>aCell(m.avgAch, hasData(m), '', i>0?r.ms[i-1]:r.pm0, 'bulan sebelumnya')).join('')}
+      ${aCell(r.q.avgAch, ok, 'border-left:1px solid rgba(255,199,44,.25);', r.pq, 'triwulan sebelumnya')}
     </tr>`;
   }).join('');
   const active = unitRows.filter(r=>hasData(r.q));
   const mean = a => a.length ? a.reduce((x,y)=>x+y,0)/a.length : 0;
+  const prevActive = unitRows.filter(r=>hasData(r.pq));
+  const fArrow = (key, cur, prevArr, basis) => prevArr.length ? kpiTrendArrow(key, cur, mean(prevArr), basis) : '';
   const foot2 = `<tr style="border-top:2px solid rgba(255,199,44,.35);background:rgba(255,199,44,.05)">
       <td colspan="3" style="padding:7px 10px;font-weight:700;color:var(--yellow)">Fleet average</td>
-      ${KEYS.map(k=> active.length ? td(`<b style="font-family:${FONT_M}">${mean(active.map(r=>Number(r.q[k])||0)).toFixed(1)}</b>`) : td(dash)).join('')}
-      ${months.map((mo,i)=>{ const a=unitRows.filter(r=>hasData(r.ms[i])).map(r=>r.ms[i].avgAch||0); return a.length ? td(`<b style="font-family:${FONT_M};color:${cellColor(mean(a))}">${mean(a).toFixed(1)}%</b>`) : td(dash); }).join('')}
-      ${active.length ? td(`<b style="font-family:${FONT_M};color:${cellColor(mean(active.map(r=>r.q.avgAch||0)))}">${mean(active.map(r=>r.q.avgAch||0)).toFixed(1)}%</b>`,'border-left:1px solid rgba(255,199,44,.25);') : td(dash,'border-left:1px solid rgba(255,199,44,.25);')}
+      ${KEYS.map(k=> active.length ? td(`<b style="font-family:${FONT_M}">${mean(active.map(r=>Number(r.q[k])||0)).toFixed(1)}</b>${fArrow(k, mean(active.map(r=>Number(r.q[k])||0)), prevActive.map(r=>Number(r.pq[k])||0), 'triwulan sebelumnya')}`) : td(dash)).join('')}
+      ${months.map((mo,i)=>{ const a=unitRows.filter(r=>hasData(r.ms[i])).map(r=>r.ms[i].avgAch||0); const pa=unitRows.filter(r=>hasData(i>0?r.ms[i-1]:r.pm0)).map(r=>(i>0?r.ms[i-1]:r.pm0).avgAch||0); return a.length ? td(`<b style="font-family:${FONT_M};color:${cellColor(mean(a))}">${mean(a).toFixed(1)}%</b>${fArrow('up', mean(a), pa, 'bulan sebelumnya')}`) : td(dash); }).join('')}
+      ${active.length ? td(`<b style="font-family:${FONT_M};color:${cellColor(mean(active.map(r=>r.q.avgAch||0)))}">${mean(active.map(r=>r.q.avgAch||0)).toFixed(1)}%</b>${fArrow('up', mean(active.map(r=>r.q.avgAch||0)), prevActive.map(r=>r.pq.avgAch||0), 'triwulan sebelumnya')}`,'border-left:1px solid rgba(255,199,44,.25);') : td(dash,'border-left:1px solid rgba(255,199,44,.25);')}
     </tr>`;
   const table2 = `<div style="overflow-x:auto;border:1px solid rgba(255,255,255,0.08);border-radius:10px">
     <table class="qd-unit" style="width:100%;border-collapse:collapse;font-size:12px;min-width:860px">
@@ -33875,6 +33923,8 @@ function subscribeDailyRealtime(){
 .perf-tbl td.u, .perf-tbl th.u{ text-align:left; position:sticky; left:0; z-index:1; background:#11171f; min-width:150px; }
 .perf-tbl thead th.u{ z-index:3; background:#10151c; }
 .perf-tbl tbody tr:hover td.u{ background:#161d27; }
+.perf-tbl td.t, .perf-tbl th.t{ text-align:left; }
+.perf-tbl td.t{ color:#8b95a3; font-size:11px; }
 .perf-tbl td.u b{ display:block; font-family:'Oswald',sans-serif; font-size:13.5px; font-weight:600; letter-spacing:.4px; color:#fff; }
 .perf-tbl td.u small{ display:block; font-size:10px; color:#8b95a3; margin-top:1px; }
 .perf-tbl td.n{ color:#8b95a3; width:34px; }
@@ -33883,6 +33933,14 @@ function subscribeDailyRealtime(){
 .perf-tbl .grpchip.dtj{ color:#7fb6ee; background:rgba(74,144,217,.12); border:1px solid rgba(74,144,217,.35); }
 .perf-tbl td.g{ color:#4cd48a; font-weight:600; } .perf-tbl td.y{ color:#ffc72c; font-weight:600; } .perf-tbl td.r{ color:#ff6b6f; font-weight:600; }
 .perf-tbl td.dim{ color:#5c6672; }
+.trend-ind{ display:inline-block; margin-left:4px; font-size:10px; line-height:1; font-weight:700; vertical-align:middle; cursor:help; }
+.trend-ind.up{ color:#2fd37a; text-shadow:0 0 8px rgba(47,211,122,.45); }
+.trend-ind.down{ color:#ff4d52; text-shadow:0 0 8px rgba(255,77,82,.45); }
+.trend-ind.flat{ color:#6b7683; font-size:8px; }
+.perf-tbl .trend-ind{ display:inline-block; margin-left:6px; font-size:11px; line-height:1; font-weight:700; vertical-align:middle; cursor:help; }
+.perf-tbl .trend-ind.up{ color:#2fd37a; text-shadow:0 0 8px rgba(47,211,122,.45); }
+.perf-tbl .trend-ind.down{ color:#ff4d52; text-shadow:0 0 8px rgba(255,77,82,.45); }
+.perf-tbl .trend-ind.flat{ color:#6b7683; font-size:9px; }
 .perf-tbl tr.empty td:not(.u){ color:#5c6672; }
 .perf-tbl .ach{ display:flex; align-items:center; gap:7px; justify-content:center; min-width:112px; }
 .perf-tbl .ach i{ flex:1; max-width:56px; height:5px; border-radius:3px; background:#232a34; overflow:hidden; display:block; }
@@ -33893,12 +33951,6 @@ function subscribeDailyRealtime(){
 .perf-tbl .pill2.dim{ color:#6b7683; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.12); }
 .perf-tbl .pill2.r{ color:#ff6b6f; background:rgba(229,72,77,.13); border:1px solid rgba(229,72,77,.4); }
 .perf-tbl tfoot td{ padding:10px 8px; text-align:center; font-weight:700; color:#fff; background:linear-gradient(180deg,rgba(255,199,44,.10),rgba(255,199,44,.04)); border-top:1px solid rgba(255,199,44,.35); white-space:nowrap; font-variant-numeric:tabular-nums; }
-/* Tabel KPI Performance per Unit */
-.unit-kpi-tbl{ min-width:900px; }
-.unit-kpi-tbl thead tr.grp th{ font-weight:500; color:#8b95a3; letter-spacing:.3px; text-transform:none; }
-.unit-kpi-tbl thead tr.grp th.u{ color:#ffc72c; text-transform:uppercase; }
-.unit-kpi-tbl tfoot td{ border-top:1px solid rgba(255,199,44,.18); }
-.unit-kpi-tbl .ach b{ font-family:'JetBrains Mono',monospace; font-size:12px; min-width:48px; text-align:right; }
 .perf-tbl tfoot td.u{ background:#1b1a12; font-family:'Oswald',sans-serif; letter-spacing:.8px; color:#ffc72c; }
 .perf-tbl-note{ margin-top:9px; font-size:10.5px; color:#8b95a3; line-height:1.45; }
 
@@ -33953,6 +34005,26 @@ html:has(.app.launcher-mode:not([style*="display: none"]))::-webkit-scrollbar, b
 #view-database .perf-sticky .panel-head{ margin-bottom:10px !important; }
 #view-database .perf-sticky .period-panel{ margin-bottom:10px !important; }
 @media (max-width:860px){ #view-database .perf-sticky{ position:static; box-shadow:none; margin-top:0; padding-top:0; } }
+</style>
+<style id="sen-perf-table-fit">
+/* Tabel Performance per Unit: muat lebar & tinggi layar (tanpa scroll kanan-kiri / atas-bawah di desktop) */
+@media (min-width:861px){
+  #unit-perf-table-panel{ padding:12px 14px 10px !important; margin-bottom:10px !important; }
+  #unit-perf-table-panel .perf-tbl-head{ margin-bottom:8px !important; }
+  #unit-perf-table-panel .perf-tbl-wrap{ overflow:visible !important; }
+  #unit-perf-table{ min-width:0 !important; width:100% !important; table-layout:auto; }
+  #unit-perf-table thead th{ position:static !important; padding:8px 6px !important; font-size:clamp(9.5px,.8vw,12px) !important; white-space:nowrap; }
+  #unit-perf-table thead th.u{ min-width:0 !important; text-align:left !important; padding-left:12px !important; }
+  #unit-perf-table tbody td, #unit-perf-table tfoot td{
+    padding:2px 6px !important; height:clamp(24px, calc((100vh - 480px) / 11), 46px); font-size:clamp(11px,.85vw,13px); white-space:nowrap;
+  }
+  #unit-perf-table td.u{ position:static !important; min-width:0 !important; padding-left:12px !important; }
+  #unit-perf-table td.u b{ display:inline !important; font-size:clamp(12px,.9vw,14px) !important; }
+  #unit-perf-table td.t, #unit-perf-table th.t{ text-align:left !important; padding-left:10px !important; }
+  #unit-perf-table td.t{ color:#8b95a3 !important; font-size:clamp(10px,.75vw,12px) !important; }
+  #unit-perf-table tfoot td{ padding:3px 6px !important; }
+  #unit-perf-table-panel .perf-tbl-note{ margin-top:6px !important; font-size:10px !important; }
+}
 </style>
 <script id="sen-perf-hover">
 /* PERFORMANCE: hover baris tabel.
