@@ -4508,11 +4508,13 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
           <button type="button" class="dash-menu-tab" data-dashtab="kpiunit" onclick="setDashboardTab('kpiunit')">🏭 KPI Unit</button>
           <button type="button" class="dash-menu-tab" data-dashtab="trend" onclick="setDashboardTab('trend')">📈 Trend &amp; Comparison</button>
           <button type="button" class="dash-menu-tab" data-dashtab="quarter" onclick="setDashboardTab('quarter')">🗓 Quarter Summary</button>
+          <button type="button" class="dash-menu-tab" data-dashtab="mechact" onclick="setDashboardTab('mechact')">👷 Mechanic Activity Report</button>
           <span id="dash-menu-topbar-sync-slot" style="margin-left:auto;display:flex;align-items:center;"></span>
         </div>
         </div><!-- /dash-sticky-header -->
 
         <div id="kpi-chart-dashboard" style="margin-bottom:20px;"></div>
+        <div id="dash-mechact" style="display:none;margin-bottom:20px;"></div>
 
 <!-- MA & PA Data Source: di-render di atas kartu KPI (grup topbar "KPI Maintenance") lewat placeMapaSourceAboveKpiCards() -->
         <div id="mapa-source-block" style="margin-bottom:20px;">
@@ -20327,6 +20329,19 @@ const MECHANIC_NAME_ALIAS = {
   'bonaventura iswan meleng': 'Bonaventura Iswan Meleng',
   'bonaventura iswan meleng': 'Bonaventura Iswan Meleng',
   'bonaventura': 'Bonaventura Iswan Meleng',
+  /* Endy (Muhammad Endy = Endy) */
+  'endy': 'Endy',
+  'muhammad endy': 'Endy',
+  'muhammad endy ariadana': 'Endy',
+  'endy ariadana': 'Endy',
+  'muh endy ariadana': 'Endy',
+  'muh. endy ariadana': 'Endy',
+  'm endy ariadana': 'Endy',
+  'm. endy ariadana': 'Endy',
+  'muh endy': 'Endy',
+  'muh. endy': 'Endy',
+  'm endy': 'Endy',
+  'm. endy': 'Endy',
   /* Nama lain yang sering bervariasi kapitalisasi */
   'agil': 'Agil',
   'hajrin': 'Hajrin',
@@ -22535,7 +22550,8 @@ const DASH_TAB_GROUPS = {
   monthlykpi:  ['monthly kpi achievement'],
   kpiunit:     ['kpi unit monthly summary', 'trend kpi per unit'],
   trend:       ['trend kpi maintenance', 'comparison vs target', 'mtbs', 'mttr', 'contribution to reliability'],
-  quarter:     ['quarter summary — grup unit', 'grafik quarter', 'kpi summary quarter', 'quarter achievement detail']
+  quarter:     ['quarter summary — grup unit', 'grafik quarter', 'kpi summary quarter', 'quarter achievement detail'],
+  mechact:     []
 };
 function setDashboardTab(tab){
   if(!DASH_TAB_GROUPS[tab]) return;
@@ -22583,6 +22599,16 @@ function applyDashboardTabFilter(){
     const chart = document.getElementById('kpi-chart-dashboard');
     if(!chart) return;
     const tab = activeDashboardTab;
+    const _mp = document.getElementById('dash-mechact');
+    if(_mp){
+      if(tab === 'mechact'){
+        chart.style.display = 'none'; _mp.style.display = '';
+        if(typeof renderMechActDash === 'function') renderMechActDash();
+        renderDashboardTopbarSync();
+        return;
+      }
+      chart.style.display = ''; _mp.style.display = 'none';
+    }
     Array.prototype.forEach.call(chart.children, function(el){
       // Header judul dashboard & overlay detail: selalu tampil, tidak ikut difilter topbar.
       if(el.classList && (el.classList.contains('dash-hero-row') || el.classList.contains('kpi-detail-overlay'))){
@@ -33920,10 +33946,10 @@ function subscribeDailyRealtime(){
 .perf-tbl thead tr.grp th.sep, .perf-tbl td.sep, .perf-tbl thead th.sep{ border-left:1px solid rgba(255,255,255,.07); }
 .perf-tbl tbody td{ padding:9px 8px; text-align:center; color:#dfe4ea; border-bottom:1px solid rgba(255,255,255,.05); white-space:nowrap; font-variant-numeric:tabular-nums; }
 .perf-tbl tbody tr:hover td{ background:rgba(255,199,44,.045); }
-.perf-tbl td.u, .perf-tbl th.u{ text-align:left; position:sticky; left:0; z-index:1; background:#11171f; min-width:150px; }
+.perf-tbl td.u, .perf-tbl th.u{ text-align:center; position:sticky; left:0; z-index:1; background:#11171f; min-width:150px; }
 .perf-tbl thead th.u{ z-index:3; background:#10151c; }
 .perf-tbl tbody tr:hover td.u{ background:#161d27; }
-.perf-tbl td.t, .perf-tbl th.t{ text-align:left; }
+.perf-tbl td.t, .perf-tbl th.t{ text-align:center; }
 .perf-tbl td.t{ color:#8b95a3; font-size:11px; }
 .perf-tbl td.u b{ display:block; font-family:'Oswald',sans-serif; font-size:13.5px; font-weight:600; letter-spacing:.4px; color:#fff; }
 .perf-tbl td.u small{ display:block; font-size:10px; color:#8b95a3; margin-top:1px; }
@@ -33977,7 +34003,7 @@ html:has(.app.launcher-mode:not([style*="display: none"]))::-webkit-scrollbar, b
 /* v93: DESKTOP (>=861px) — bar menu tab di halaman Dashboard & CBM dipanjangkan memenuhi lebar & diperbesar. */
 @media (min-width:861px){
   #dash-menu-topbar{ gap:8px; padding:10px; }
-  #dash-menu-topbar .dash-menu-tab{ flex:1 1 auto; min-width:0; text-align:center; font-size:clamp(9.5px,0.84vw,12px); letter-spacing:.2px; padding:13px clamp(6px,0.9vw,14px); border-radius:10px; white-space:nowrap; }
+  #dash-menu-topbar .dash-menu-tab{ flex:1 1 auto; min-width:0; text-align:center; font-size:clamp(9px,0.74vw,12px); letter-spacing:.2px; padding:13px clamp(5px,0.7vw,14px); border-radius:10px; white-space:nowrap; }
   #cbm-tabs .blk-tab-group{ flex:1 1 auto; gap:6px; }
   #cbm-tabs .blk-tab-group .chip{ flex:1 1 auto; justify-content:center; font-size:12.5px; padding:12px 14px 13px; }
 }
@@ -33990,7 +34016,7 @@ html:has(.app.launcher-mode:not([style*="display: none"]))::-webkit-scrollbar, b
 }
 @media (min-width:861px) and (max-width:1399px){
   #dash-menu-topbar:has(#dash-menu-topbar-sync-slot button){ flex-wrap:wrap; }
-  #dash-menu-topbar:has(#dash-menu-topbar-sync-slot button) .dash-menu-tab{ font-size:clamp(9.5px,0.84vw,12px); padding:13px clamp(6px,0.9vw,14px); }
+  #dash-menu-topbar:has(#dash-menu-topbar-sync-slot button) .dash-menu-tab{ font-size:clamp(9px,0.74vw,12px); padding:13px clamp(6px,0.9vw,14px); }
   #dash-menu-topbar:has(#dash-menu-topbar-sync-slot button) #dash-menu-topbar-sync-slot{ flex:1 1 100%; justify-content:flex-end; }
 }
 /* v101: tombol/perintah Auto Sync di bawah tab Dashboard disembunyikan */
@@ -34014,13 +34040,13 @@ html:has(.app.launcher-mode:not([style*="display: none"]))::-webkit-scrollbar, b
   #unit-perf-table-panel .perf-tbl-wrap{ overflow:visible !important; }
   #unit-perf-table{ min-width:0 !important; width:100% !important; table-layout:auto; }
   #unit-perf-table thead th{ position:static !important; padding:8px 6px !important; font-size:clamp(9.5px,.8vw,12px) !important; white-space:nowrap; }
-  #unit-perf-table thead th.u{ min-width:0 !important; text-align:left !important; padding-left:12px !important; }
+  #unit-perf-table thead th.u, #unit-perf-table td.u{ min-width:0 !important; text-align:center !important; padding-left:6px !important; }
   #unit-perf-table tbody td, #unit-perf-table tfoot td{
     padding:2px 6px !important; height:clamp(24px, calc((100vh - 480px) / 11), 46px); font-size:clamp(11px,.85vw,13px); white-space:nowrap;
   }
-  #unit-perf-table td.u{ position:static !important; min-width:0 !important; padding-left:12px !important; }
+  #unit-perf-table td.u{ position:static !important; min-width:0 !important; }
   #unit-perf-table td.u b{ display:inline !important; font-size:clamp(12px,.9vw,14px) !important; }
-  #unit-perf-table td.t, #unit-perf-table th.t{ text-align:left !important; padding-left:10px !important; }
+  #unit-perf-table td.t, #unit-perf-table th.t{ text-align:center !important; }
   #unit-perf-table td.t{ color:#8b95a3 !important; font-size:clamp(10px,.75vw,12px) !important; }
   #unit-perf-table tfoot td{ padding:3px 6px !important; }
   #unit-perf-table-panel .perf-tbl-note{ margin-top:6px !important; font-size:10px !important; }
@@ -34083,5 +34109,222 @@ html:has(.app.launcher-mode:not([style*="display: none"]))::-webkit-scrollbar, b
   window.addEventListener('scroll', function(){ if(cur){ cur=null; hl.style.display='none'; } }, {passive:true, capture:true});
 })();
 </script>
+<style id="sen-mechact-css">
+.ma-wrap{ display:flex; flex-direction:column; gap:14px; }
+.ma-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:14px 16px; border:1px solid rgba(255,199,44,.18); border-radius:14px;
+  background:linear-gradient(135deg,rgba(255,199,44,.08),rgba(74,144,217,.05) 60%,rgba(255,255,255,.02)); }
+.ma-title{ font-family:'Oswald',sans-serif; font-size:16px; font-weight:600; letter-spacing:.7px; text-transform:uppercase; display:flex; align-items:center; gap:10px; }
+.ma-title i{ width:3px; height:16px; border-radius:2px; background:linear-gradient(180deg,#ffc72c,#c99a10); box-shadow:0 0 8px rgba(255,199,44,.45); display:inline-block; }
+.ma-sub{ font:500 10.5px 'JetBrains Mono',monospace; color:var(--text-dim); margin-top:4px; }
+.ma-tools{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.ma-tools label{ font-size:10px; letter-spacing:.5px; text-transform:uppercase; color:var(--text-dim); }
+.ma-live{ font-size:9px; color:var(--green); text-transform:uppercase; letter-spacing:.5px; display:inline-flex; align-items:center; gap:4px; }
+.ma-kpis{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+.ma-kpi{ position:relative; overflow:hidden; padding:14px 16px 12px; border-radius:14px; border:1px solid rgba(255,255,255,.08);
+  background:linear-gradient(165deg,rgba(255,255,255,.045),rgba(255,255,255,.012)); }
+.ma-kpi::before{ content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--ac,#ffc72c); box-shadow:0 0 12px var(--ac,#ffc72c); }
+.ma-kpi .l{ font:600 10px 'JetBrains Mono',monospace; letter-spacing:.8px; text-transform:uppercase; color:var(--text-dim); }
+.ma-kpi .v{ font-family:'Oswald',sans-serif; font-size:30px; font-weight:600; line-height:1.15; margin-top:6px; color:var(--ac,#fff); display:flex; align-items:baseline; gap:6px; }
+.ma-kpi .v small{ font-size:13px; font-weight:500; color:var(--text-dim); }
+.ma-kpi .v .trend-ind{ font-size:14px; }
+.ma-kpi .d{ margin-top:6px; font:500 10.5px 'JetBrains Mono',monospace; color:var(--text-faint); }
+.ma-kpi .d b{ font-weight:700; }
+.ma-kpi .d .up{ color:#2fd37a; } .ma-kpi .d .down{ color:#ff4d52; }
+.ma-grid{ display:grid; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); gap:14px; }
+.ma-panel{ padding:16px; border:1px solid rgba(255,255,255,.08); border-radius:14px; background:linear-gradient(165deg,rgba(255,255,255,.035),rgba(255,255,255,.01)); min-width:0; }
+.ma-ptitle{ font:700 11px 'JetBrains Mono',monospace; letter-spacing:.9px; text-transform:uppercase; color:var(--text-dim); margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+.ma-legend{ display:flex; gap:12px; flex-wrap:wrap; font:500 10px 'JetBrains Mono',monospace; letter-spacing:.3px; color:var(--text-dim); text-transform:none; }
+.ma-legend i{ display:inline-block; width:9px; height:9px; border-radius:3px; margin-right:5px; vertical-align:-1px; }
+.ma-rank{ display:flex; flex-direction:column; gap:9px; }
+.ma-rrow{ display:grid; grid-template-columns:26px minmax(90px,150px) 1fr 44px 58px; align-items:center; gap:10px; }
+.ma-rrow .n{ width:24px; height:24px; border-radius:8px; display:grid; place-items:center; font:700 11px 'JetBrains Mono',monospace; color:#9aa3af; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); }
+.ma-rrow:nth-child(1) .n{ color:#1a1300; background:linear-gradient(135deg,#ffd75e,#e0a800); border-color:#ffc72c; }
+.ma-rrow:nth-child(2) .n{ color:#10161d; background:linear-gradient(135deg,#e5e9ee,#aeb7c2); border-color:#c5ccd5; }
+.ma-rrow:nth-child(3) .n{ color:#1b0f06; background:linear-gradient(135deg,#e6a46b,#b8702f); border-color:#d58a4a; }
+.ma-rrow .nm{ font-weight:600; font-size:12.5px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ma-track{ height:12px; border-radius:7px; background:rgba(255,255,255,.06); overflow:hidden; display:flex; }
+.ma-track s{ display:block; height:100%; text-decoration:none; }
+.ma-rrow .tv{ font:700 13px 'JetBrains Mono',monospace; text-align:right; color:#fff; }
+.ma-pill{ display:inline-block; min-width:44px; text-align:center; font:700 10.5px 'JetBrains Mono',monospace; padding:3px 8px; border-radius:999px; }
+.ma-pill.g{ color:#4cd48a; background:rgba(76,212,138,.12); border:1px solid rgba(76,212,138,.35); }
+.ma-pill.y{ color:#ffc72c; background:rgba(255,199,44,.12); border:1px solid rgba(255,199,44,.35); }
+.ma-pill.r{ color:#ff6b6f; background:rgba(255,107,111,.12); border:1px solid rgba(255,107,111,.35); }
+.ma-side{ display:flex; flex-direction:column; gap:14px; }
+.ma-donutwrap{ display:flex; justify-content:center; }
+.ma-stat{ display:flex; flex-direction:column; gap:9px; }
+.ma-srow .t{ display:flex; justify-content:space-between; font:600 11px 'JetBrains Mono',monospace; color:var(--text-dim); margin-bottom:4px; }
+.ma-srow .t b{ color:#fff; }
+.ma-bar{ height:8px; border-radius:5px; background:rgba(255,255,255,.07); overflow:hidden; } .ma-bar s{ display:block; height:100%; border-radius:5px; text-decoration:none; }
+.ma-trend{ display:grid; grid-auto-flow:column; grid-auto-columns:1fr; gap:10px; align-items:end; height:190px; padding-top:8px; }
+.ma-tcol{ display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; gap:6px; min-width:0; }
+.ma-tcol .val{ font:700 12px 'JetBrains Mono',monospace; color:#fff; white-space:nowrap; }
+.ma-tcol .bw{ flex:1 1 auto; min-height:0; width:100%; display:flex; align-items:flex-end; justify-content:center; }
+.ma-tcol .bar{ width:min(46px,70%); border-radius:8px 8px 3px 3px; background:linear-gradient(180deg,rgba(74,144,217,.95),rgba(74,144,217,.35)); border:1px solid rgba(74,144,217,.6); min-height:3px; }
+.ma-tcol.cur .bar{ background:linear-gradient(180deg,#ffd75e,rgba(255,199,44,.4)); border-color:#ffc72c; box-shadow:0 0 14px rgba(255,199,44,.35); }
+.ma-tcol .mo{ font:600 10px 'JetBrains Mono',monospace; color:var(--text-dim); text-transform:uppercase; }
+.ma-tcol.cur .mo{ color:#ffc72c; }
+.ma-tbl-wrap{ overflow-x:auto; border:1px solid rgba(255,255,255,.08); border-radius:12px; }
+.ma-tbl{ width:100%; border-collapse:collapse; font-size:12px; min-width:820px; }
+.ma-tbl th{ padding:9px 10px; text-align:center; font:600 10px 'JetBrains Mono',monospace; letter-spacing:.6px; text-transform:uppercase; color:#aab3c0; background:rgba(255,255,255,.04); white-space:nowrap; }
+.ma-tbl td{ padding:8px 10px; text-align:center; border-top:1px solid rgba(255,255,255,.06); white-space:nowrap; font-variant-numeric:tabular-nums; color:#dfe4ea; }
+.ma-tbl td.nm{ text-align:left; font-weight:700; color:#ffc72c; }
+.ma-tbl tfoot td{ background:rgba(255,199,44,.05); border-top:2px solid rgba(255,199,44,.35); font-weight:700; }
+.ma-empty{ padding:30px; text-align:center; color:var(--text-faint); font-size:12px; }
+@media (max-width:1100px){ .ma-kpis{ grid-template-columns:repeat(2,minmax(0,1fr)); } .ma-grid{ grid-template-columns:1fr; } }
+@media (max-width:640px){ .ma-rrow{ grid-template-columns:24px 1fr 40px 54px; } .ma-rrow .ma-track{ grid-column:1 / -1; order:5; } .ma-kpi .v{ font-size:26px; } }
+
+/* ===== Fit layar desktop: semua panel + tabel terlihat tanpa scroll atas-bawah ===== */
+.ma-main{ display:grid; grid-template-columns:minmax(0,1.75fr) minmax(0,1fr); gap:12px; align-items:stretch; }
+.ma-side{ display:flex; flex-direction:column; gap:12px; min-width:0; }
+.ma-side .ma-panel.grow{ flex:1 1 auto; display:flex; flex-direction:column; min-height:0; }
+.ma-row2{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; }
+.ma-row2 .ma-panel{ min-width:0; }
+.ma-tbl td.nm{ max-width:140px; overflow:hidden; text-overflow:ellipsis; }
+.ma-cat{ display:flex; align-items:center; justify-content:center; gap:14px; }
+.ma-cat svg{ width:104px; height:104px; flex:none; }
+.ma-cat > div{ min-width:130px !important; } .ma-cat > div > div{ margin-bottom:5px !important; font-size:11px !important; }
+.ma-tbl td .ma-track{ min-width:54px; height:9px; }
+.ma-tbl td.bar{ padding-left:6px; padding-right:6px; }
+@media (min-width:1101px){
+  .ma-wrap{ gap:10px; }
+  .ma-head{ padding:8px 14px; border-radius:12px; }
+  .ma-title{ font-size:14px; } .ma-sub{ margin-top:2px; font-size:10px; }
+  .ma-kpis{ gap:10px; }
+  .ma-kpi{ padding:8px 14px 7px; border-radius:12px; display:grid; grid-template-columns:1fr auto; align-items:center; column-gap:8px; }
+  .ma-kpi .l{ grid-column:1 / -1; font-size:9.5px; }
+  .ma-kpi .v{ font-size:24px; margin-top:2px; } .ma-kpi .v small{ font-size:11px; } .ma-kpi .v .trend-ind{ font-size:12px; }
+  .ma-kpi .d{ margin-top:0; font-size:10px; text-align:right; max-width:130px; line-height:1.25; }
+  .ma-panel{ padding:10px 12px; border-radius:12px; }
+  .ma-ptitle{ margin-bottom:6px; font-size:10px; }
+  .ma-tbl{ min-width:0 !important; font-size:11.5px; }
+  .ma-tbl th{ padding:6px 3px; font-size:8.5px; letter-spacing:.2px; }
+  .ma-tbl td{ padding-left:3px !important; padding-right:3px !important; }
+  .ma-tbl td.nm{ max-width:120px; }
+  .ma-tbl td{ padding:2px 5px; }
+  .ma-tbl-wrap{ overflow:visible; }
+  .ma-tbl .ma-pill{ min-width:38px; padding:1px 6px; font-size:10px; }
+  .ma-main{ height:calc(100vh - 530px); min-height:330px; }
+  #dash-mechact{ margin-bottom:0 !important; }
+  .ma-main > .ma-panel{ display:flex; flex-direction:column; min-height:0; }
+  .ma-main > .ma-panel .ma-tbl-wrap{ flex:1 1 auto; min-height:0; }
+  .ma-main > .ma-panel .ma-tbl-wrap{ display:flex; flex-direction:column; }
+  .ma-main > .ma-panel .ma-tbl{ flex:1 1 auto; height:100%; }
+  .ma-tbl tbody td{ height:22px; }
+  .ma-tbl tfoot td{ height:30px; }
+  .ma-cat svg{ width:80px; height:80px; } .ma-cat{ gap:8px; } .ma-cat > div{ min-width:0 !important; }
+  .ma-trend{ height:auto; flex:1 1 auto; min-height:0; }
+  .ma-tcol .bar{ width:min(34px,60%); }
+  .ma-tcol{ gap:3px; }
+  .ma-tcol .val{ font-size:11px; }
+  .ma-srow .t{ margin-bottom:2px; } .ma-stat{ gap:6px; }
+}
+</style>
+<script id="sen-mechact-js">
+(function(){
+  'use strict';
+  var maMonth = '';
+  var CAT = [ {k:'Breakdown',l:'Breakdown',c:'#E5484D'}, {k:'Daily',l:'Daily Maintenance',c:'#4A90D9'}, {k:'Periodical',l:'Periodical',c:'#FFC72C'} ];
+  function esc(s){ return (typeof escUH==='function') ? escUH(s) : String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function aggregate(month){
+    var rows = (dailyRecords||[]).filter(function(r){ return r && r.tanggal && String(r.tanggal).slice(0,7)===month; });
+    var by = {};
+    rows.forEach(function(r){
+      var names = (typeof collectMechanicNamesFromRecord==='function') ? collectMechanicNamesFromRecord(r) : [];
+      names.forEach(function(n){
+        if(!n) return;
+        var s = by[n] || (by[n] = {total:0,bd:0,daily:0,per:0,dur:0,close:0});
+        s.total++; if(r.category==='Breakdown') s.bd++; else if(r.category==='Daily') s.daily++; else if(r.category==='Periodical') s.per++;
+        s.dur += Number(r.duration)||0; if(r.status==='Close') s.close++;
+      });
+    });
+    var close = rows.filter(function(r){return r.status==='Close';}).length;
+    return { rows:rows, by:by, jobs:rows.length, mech:Object.keys(by).length, close:close,
+      prog: rows.filter(function(r){return r.status==='Progress';}).length, open: rows.filter(function(r){return r.status==='Open';}).length,
+      dur: rows.reduce(function(a,r){return a+(Number(r.duration)||0);},0),
+      cat:{ Breakdown:rows.filter(function(r){return r.category==='Breakdown';}).length, Daily:rows.filter(function(r){return r.category==='Daily';}).length, Periodical:rows.filter(function(r){return r.category==='Periodical';}).length },
+      pct: rows.length ? close/rows.length*100 : 0 };
+  }
+  function monthList(){
+    var set = {}; (dailyRecords||[]).forEach(function(r){ if(r && r.tanggal) set[String(r.tanggal).slice(0,7)] = 1; });
+    var now = new Date(); set[now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')] = 1;
+    return Object.keys(set).filter(function(k){return /^\d{4}-\d{2}$/.test(k);}).sort().reverse();
+  }
+  function monLabel(k){ var a=k.split('-'); return new Date(+a[0],+a[1]-1,1).toLocaleDateString('en-US',{month:'long',year:'numeric'}); }
+  function monShort(k){ var a=k.split('-'); return new Date(+a[0],+a[1]-1,1).toLocaleDateString('en-US',{month:'short'}); }
+  function prevKey(k){ return kpiPrevMonthObj(k+'-01').key; }
+  function pctCls(p){ return p>=90?'g':p>=70?'y':'r'; }
+  function delta(cur, prev, unit, digits){
+    if(prev==null) return '<span style="color:var(--text-faint)">belum ada data bulan lalu</span>';
+    var d = cur-prev; if(Math.abs(d)<0.05) return 'sama dengan bulan lalu';
+    return '<b class="'+(d>0?'up':'down')+'">'+(d>0?'+':'−')+Math.abs(d).toFixed(digits||0)+unit+'</b> vs bulan lalu';
+  }
+  function render(){
+    var host = document.getElementById('dash-mechact'); if(!host) return;
+    var months = monthList();
+    if(!maMonth || months.indexOf(maMonth)<0){
+      var withData = months.filter(function(m){ return (dailyRecords||[]).some(function(r){ return r && r.tanggal && String(r.tanggal).slice(0,7)===m; }); });
+      maMonth = withData[0] || months[0];
+    }
+    var cur = aggregate(maMonth), pk = prevKey(maMonth), prv = aggregate(pk), hasPrev = prv.jobs>0;
+    var opts = months.map(function(m){ return '<option value="'+m+'"'+(m===maMonth?' selected':'')+'>'+monLabel(m)+'</option>'; }).join('');
+    var arrow = function(key,c,p){ return hasPrev ? kpiTrendArrow(key,c,p,'bulan lalu') : ''; };
+    var pctCol = cur.pct>=90?'#4cd48a':cur.pct>=70?'#ffc72c':'#ff6b6f';
+    var kpis = '<div class="ma-kpis">'
+      + kpiCard('Active Mechanics', cur.mech, '', arrow('up',cur.mech,prv.mech), delta(cur.mech, hasPrev?prv.mech:null,'',0), '#4A90D9')
+      + kpiCard('Total Jobs', cur.jobs, '', arrow('up',cur.jobs,prv.jobs), delta(cur.jobs, hasPrev?prv.jobs:null,'',0), '#ffc72c')
+      + kpiCard('Total Duration', cur.dur.toFixed(1), 'hrs', arrow('up',cur.dur,prv.dur), delta(cur.dur, hasPrev?prv.dur:null,' jam',1), '#A78BFA')
+      + kpiCard('Avg % Completion', cur.pct.toFixed(0)+'%', '', arrow('up',cur.pct,prv.pct), delta(cur.pct, hasPrev?prv.pct:null,' poin',0), pctCol)
+      + '</div>';
+    var names = Object.keys(cur.by).sort(function(a,b){ return cur.by[b].total-cur.by[a].total || a.localeCompare(b); });
+    var maxT = names.length ? cur.by[names[0]].total : 1;
+    var rank = names.length ? names.slice(0,12).map(function(n,i){
+      var s = cur.by[n], p = s.total ? s.close/s.total*100 : 0;
+      var seg = function(v,c,t){ return v? '<s style="width:'+(v/maxT*100).toFixed(2)+'%;background:'+c+'" title="'+t+': '+v+'"></s>' : ''; };
+      return '<div class="ma-rrow"><span class="n">'+(i+1)+'</span><span class="nm" title="'+esc(n)+'">'+esc(n)+'</span>'
+        + '<div class="ma-track">'+seg(s.bd,'#E5484D','Breakdown')+seg(s.daily,'#4A90D9','Daily Maintenance')+seg(s.per,'#FFC72C','Periodical')+'</div>'
+        + '<span class="tv">'+s.total+'</span><span class="ma-pill '+pctCls(p)+'">'+p.toFixed(0)+'%</span></div>';
+    }).join('') : '<div class="ma-empty">Belum ada data Daily Maintenance pada bulan ini.</div>';
+    var legend = '<span class="ma-legend">'+CAT.map(function(c){return '<span><i style="background:'+c.c+'"></i>'+c.l+'</span>';}).join('')+'</span>';
+    var donut = (typeof summaryDonutChart==='function') ? summaryDonutChart(CAT.map(function(c){ return {label:c.k, value:cur.cat[c.k], color:c.c}; })) : '';
+    var tot = Math.max(1, cur.close+cur.prog+cur.open);
+    var st = function(l,v,c){ return '<div class="ma-srow"><div class="t"><span>'+l+'</span><b>'+v+' <span style="color:var(--text-faint);font-weight:500">('+(v/tot*100).toFixed(0)+'%)</span></b></div><div class="ma-bar"><s style="width:'+(v/tot*100).toFixed(1)+'%;background:'+c+'"></s></div></div>'; };
+    // tren 6 bulan terakhir sampai bulan terpilih
+    var tm = [], k = maMonth; for(var i=0;i<6;i++){ tm.unshift(k); k = prevKey(k); }
+    var tv = tm.map(function(m){ return m===maMonth ? cur.jobs : aggregate(m).jobs; });
+    var tmax = Math.max.apply(null, tv.concat([1]));
+    var trend = '<div class="ma-trend">'+tm.map(function(m,i){
+      var a = (i>0 && tv[i]>0 && tv[i-1]>0) ? kpiTrendArrow('up', tv[i], tv[i-1], 'bulan sebelumnya') : '';
+      return '<div class="ma-tcol'+(m===maMonth?' cur':'')+'"><span class="val">'+tv[i]+a+'</span><div class="bw"><div class="bar" style="height:'+Math.max(2,tv[i]/tmax*100).toFixed(1)+'%"></div></div><span class="mo">'+monShort(m)+'</span></div>';
+    }).join('')+'</div>';
+    var body = names.map(function(n,i){
+      var s = cur.by[n], p = s.total ? s.close/s.total*100 : 0, ps = prv.by[n];
+      var pp = (ps && ps.total) ? ps.close/ps.total*100 : null;
+      var aT = ps ? kpiTrendArrow('up', s.total, ps.total, 'bulan lalu') : '';
+      var aP = pp!=null ? kpiTrendArrow('up', p, pp, 'bulan lalu') : '';
+      var sg = function(v,c,t){ return v? '<s style="width:'+(v/maxT*100).toFixed(2)+'%;background:'+c+'" title="'+t+': '+v+'"></s>' : ''; };
+      return '<tr><td>'+(i+1)+'</td><td class="nm">'+esc(n)+'</td><td class="bar"><div class="ma-track">'+sg(s.bd,'#E5484D','Breakdown')+sg(s.daily,'#4A90D9','Daily Maintenance')+sg(s.per,'#FFC72C','Periodical')+'</div></td><td>'+s.total+aT+'</td><td>'+s.bd+'</td><td>'+s.daily+'</td><td>'+s.per+'</td><td>'+s.dur.toFixed(1)+'</td><td>'+(s.total?(s.dur/s.total):0).toFixed(1)+'</td><td>'+s.close+'</td><td><span class="ma-pill '+pctCls(p)+'">'+p.toFixed(0)+'%</span>'+aP+'</td></tr>';
+    }).join('');
+    var tbl = names.length ? '<div class="ma-tbl-wrap"><table class="ma-tbl"><thead><tr><th>#</th><th style="text-align:left">Mechanic</th><th>Komposisi</th><th>Total Jobs</th><th>Breakdown</th><th>Daily Maint.</th><th>Periodical</th><th>Duration (hrs)</th><th>Avg (hrs)</th><th>Job Close</th><th>% Completion</th></tr></thead><tbody>'+body
+      + '</tbody><tfoot><tr><td></td><td class="nm">TOTAL</td><td></td><td>'+cur.jobs+'</td><td>'+cur.cat.Breakdown+'</td><td>'+cur.cat.Daily+'</td><td>'+cur.cat.Periodical+'</td><td>'+cur.dur.toFixed(1)+'</td><td>'+(cur.jobs?cur.dur/cur.jobs:0).toFixed(1)+'</td><td>'+cur.close+'</td><td>'+cur.pct.toFixed(0)+'%'+(hasPrev?kpiTrendArrow('up',cur.pct,prv.pct,'bulan lalu'):'')+'</td></tr></tfoot></table></div>'
+      : '<div class="ma-empty">Belum ada data.</div>';
+    host.innerHTML = '<div class="ma-wrap">'
+      + '<div class="ma-head"><div><div class="ma-title"><i></i>Mechanic Activity Report</div><div class="ma-sub">Ringkasan aktivitas mekanik dari Daily Maintenance · '+monLabel(maMonth)+'</div></div>'
+      + '<div class="ma-tools"><span class="ma-live"><span class="status-dot" style="margin-right:0"></span>Live Sync</span><label for="ma-month-sel">Month</label><select id="ma-month-sel" class="trend-quarter-select" style="width:190px" onchange="onMechActMonthChange(this)">'+opts+'</select></div></div>'
+      + kpis
+      + '<div class="ma-main" style="--ma-n:'+Math.max(1,names.length+1)+'">'
+      + '<div class="ma-panel"><div class="ma-ptitle"><span>Detail per Mechanic</span><span class="ma-legend">'+legend+'</span></div>'+tbl+'</div>'
+      + '<div class="ma-side"><div class="ma-row2"><div class="ma-panel"><div class="ma-ptitle"><span>Job Category</span></div><div class="ma-donutwrap ma-cat">'+donut+'</div></div>'
+      + '<div class="ma-panel"><div class="ma-ptitle"><span>Job Status</span></div><div class="ma-stat">'+st('Close',cur.close,'#4CAF6D')+st('Progress',cur.prog,'#FFC72C')+st('Open',cur.open,'#E5484D')+'</div></div></div>'
+      + '<div class="ma-panel grow"><div class="ma-ptitle"><span>Total Job — 6 Bulan Terakhir</span></div>'+trend+'</div></div></div>'
+      + '</div>';
+  }
+  function kpiCard(label, val, unit, arrowHtml, deltaHtml, color){
+    return '<div class="ma-kpi" style="--ac:'+color+'"><div class="l">'+label+'</div><div class="v">'+val+(unit?'<small>'+unit+'</small>':'')+arrowHtml+'</div><div class="d">'+deltaHtml+'</div></div>';
+  }
+  window.renderMechActDash = function(){ try{ render(); }catch(e){ console.warn('renderMechActDash', e); } };
+  window.onMechActMonthChange = function(sel){ maMonth = sel ? sel.value : ''; window.renderMechActDash(); };
+})();
+</script>
+
 </body>
 </html>
