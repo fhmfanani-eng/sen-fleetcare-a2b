@@ -33763,19 +33763,26 @@ function psXlBuild(kind){
   const BN = ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
   filterTxt = 'Tahun: '+(yS||'Semua')+' | Bulan: '+(mS?BN[+mS]:'Semua')+' | Status: Open & Close';
   const head = ['No.','Plan Date','Bulan','Unit','Target HM','Service Type','Working Hours','WH/Hari','HM Actual','Est. Sisa HM','Status','HM Eksekusi','Status Eksekusi','Tgl Eksekusi','PIC'];
-  const aoa = [head];
-  raw.forEach(function(r,i){
-    const sisaTxt = String(r[8]||'');
-    const sisa = /^0\b/.test(sisaTxt) ? 0 : psXlNum(sisaTxt);
-    aoa.push([ i+1, psXlDateCell(r[0]), r[1], r[2], psXlNumCell(r[3],'#,##0'), r[4],
-      psXlNumCell(r[5]), psXlNumCell(r[6]), psXlNumCell(r[7]),
-      sisa==='' ? '' : { t:'n', v:sisa, z:'#,##0' }, r[9], psXlNumCell(r[10]), r[11], psXlDateCell(r[12]), r[13] ]);
+  // Sheet terpisah: Open (Planned/Overdue) dan Closed
+  const isCl = function(r){ return /^close/i.test(r[11]||''); };
+  const openRaw = raw.filter(function(r){ return !isCl(r); });
+  const closedRaw = raw.filter(isCl);
+  [['Plan Schedule Service', openRaw, 'jadwal Open'], ['Service Closed', closedRaw, 'jadwal Close']].forEach(function(S){
+    const rows = S[1]; if(!rows.length) return;
+    const aoa = [head];
+    rows.forEach(function(r,i){
+      const sisaTxt = String(r[8]||'');
+      const sisa = /^0\b/.test(sisaTxt) ? 0 : psXlNum(sisaTxt);
+      aoa.push([ i+1, psXlDateCell(r[0]), r[1], r[2], psXlNumCell(r[3],'#,##0'), r[4],
+        psXlNumCell(r[5]), psXlNumCell(r[6]), psXlNumCell(r[7]),
+        sisa==='' ? '' : { t:'n', v:sisa, z:'#,##0' }, r[9], psXlNumCell(r[10]), r[11], psXlDateCell(r[12]), r[13] ]);
+    });
+    aoa.push(['TOTAL','','','','','','','','','','', '', '', '', rows.length+' '+S[2]]);
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    ws['!cols'] = [{wch:5},{wch:13},{wch:16},{wch:11},{wch:11},{wch:14},{wch:14},{wch:10},{wch:12},{wch:13},{wch:11},{wch:13},{wch:14},{wch:14},{wch:22}];
+    ws['!autofilter'] = { ref:'A1:O'+(aoa.length-1) };
+    XLSX.utils.book_append_sheet(wb, ws, S[0]);
   });
-  aoa.push(['TOTAL','','','','','','','','','','', '', '', '', raw.length+' jadwal']);
-  const ws = XLSX.utils.aoa_to_sheet(aoa);
-  ws['!cols'] = [{wch:5},{wch:13},{wch:16},{wch:11},{wch:11},{wch:14},{wch:14},{wch:10},{wch:12},{wch:13},{wch:11},{wch:13},{wch:14},{wch:14},{wch:22}];
-  ws['!autofilter'] = { ref:'A1:O'+(aoa.length-1) };
-  XLSX.utils.book_append_sheet(wb, ws, 'Plan Schedule Service');
   // ---- Ringkasan per Unit ----
   const per = {};
   raw.forEach(function(r){
@@ -33800,7 +33807,9 @@ function psXlBuild(kind){
 }
 function psXlStyle(wb, XS, kind){
   const N = SP_XL, O = SP_LH;
-  const main = wb.Sheets[kind==='record' ? 'Record Service Unit' : 'Plan Schedule Service'];
+  const mains = kind==='record' ? ['Record Service Unit'] : ['Plan Schedule Service','Service Closed'];
+  mains.forEach(function(mn){
+  const main = wb.Sheets[mn]; const isClosedSheet = (mn==='Service Closed');
   if(main){
     const rg = spXlRange(XS, main);
     if(kind==='record'){
@@ -33809,7 +33818,7 @@ function psXlStyle(wb, XS, kind){
       for(let r=O+1;r<rg.e.r;r++) spXlPut(XS, main, r, 8, spXlStyle({ bold:true, color:N.green, fill:N.greenLt, h:'center' }));
     } else {
       spXlTable(XS, main, { headRow:O, lastRow:rg.e.r-1, money:[4,6,7,8,9,11], center:[0,1,2,3,5,10,12,13],
-        wrapCols:[], groups:function(c){ return c<=5 ? N.navy : (c<=9 ? N.teal : (c===10 ? N.amber : N.gray)); },
+        wrapCols:[], groups:function(c){ return c<=5 ? N.navy : (c<=9 ? N.teal : (c===10 ? (isClosedSheet?'2E7D32':N.amber) : (isClosedSheet?'548235':N.gray))); },
         freezeCols:4, headH:34 });
       const moneyC = [4,6,7,8,9,11], centerC = [0,1,2,3,5,10,12,13];
       for(let r=O+1;r<rg.e.r;r++){
@@ -33828,6 +33837,7 @@ function psXlStyle(wb, XS, kind){
     spXlTotalRow(XS, main, rg.e.r, 0, rg.e.c);
     main['!rows'][rg.e.r] = { hpt:22 };
   }
+  });
   const sm = wb.Sheets['Ringkasan per Unit'];
   if(sm){
     const rg = spXlRange(XS, sm);
