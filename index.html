@@ -5006,7 +5006,68 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
               <div class="field"><label>Total Breakdown (auto)</label><input type="text" id="d-totalbreakdown" disabled placeholder="—"></div>
             </div>
 
-            <div class="field"><label>Keterangan Part Consumable</label><textarea id="d-keterangan" class="no-enter-nl" rows="2" placeholder="Catatan part consumable (opsional)..." title="Enter dinonaktifkan — teks tetap satu alur"></textarea></div>
+            <style>
+              .dpc-box{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:14px;}
+              .dpc-top{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px;}
+              .dpc-badge{font-size:12px;font-weight:700;letter-spacing:.3px;color:#0a0e14;background:var(--yellow);border-radius:999px;padding:4px 12px;}
+              .dpc-badge.none{background:var(--text-faint);color:#fff;}
+              .dpc-top select{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:12px;max-width:230px;}
+              .dpc-search{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px;}
+              .dpc-search input{flex:1 1 220px;min-width:0;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;}
+              .dpc-chip{border:1px solid var(--line);background:var(--panel);color:var(--text-dim);border-radius:999px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;}
+              .dpc-chip.on{background:var(--yellow);color:#0a0e14;border-color:var(--yellow);font-weight:700;}
+              .dpc-list{max-height:230px;overflow:auto;border:1px solid var(--line);border-radius:10px;background:var(--panel);}
+              .dpc-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--line);cursor:pointer;}
+              .dpc-row:last-child{border-bottom:0}
+              .dpc-row:hover{background:rgba(255,199,44,.08)}
+              .dpc-row .nm{flex:1;min-width:0;font-size:13px;color:var(--text);}
+              .dpc-row .nm small{display:block;color:var(--text-faint);font-size:11px;margin-top:2px;font-family:'JetBrains Mono',monospace;}
+              .dpc-tag{font-size:10px;font-weight:700;border-radius:6px;padding:2px 7px;white-space:nowrap;}
+              .dpc-tag.oil{background:rgba(255,107,53,.18);color:var(--orange);}
+              .dpc-tag.part{background:rgba(74,144,217,.18);color:var(--blue-soft);}
+              .dpc-add{border:1px solid var(--yellow-dim);background:transparent;color:var(--yellow);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;}
+              .dpc-add.added{background:rgba(76,175,109,.18);color:var(--green);border-color:var(--green);}
+              .dpc-empty{padding:16px;text-align:center;color:var(--text-faint);font-size:12px;}
+              .dpc-sel-title{margin:14px 0 6px;font-size:13px;font-weight:700;color:var(--yellow);}
+              .dpc-tbl{width:100%;border-collapse:collapse;font-size:13px;}
+              .dpc-tbl th{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--text-faint);text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);}
+              .dpc-tbl td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:middle;}
+              .dpc-tbl td.pn{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);}
+              .dpc-tbl input.q{width:84px;background:var(--panel);color:var(--yellow);border:1px solid var(--yellow-dim);border-radius:6px;padding:5px 6px;text-align:center;font-weight:700;font-family:'JetBrains Mono',monospace;}
+              .dpc-x{border:0;background:transparent;color:var(--red);font-size:16px;cursor:pointer;padding:2px 8px;}
+              .dpc-manual{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);}
+              .dpc-manual input,.dpc-manual select{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-size:12px;}
+              .dpc-manual input.nm{flex:1 1 200px;min-width:0}.dpc-manual input.qt{width:80px}
+              .dpc-hint{font-size:11px;color:var(--text-faint);margin-top:6px;}
+            </style>
+            <div class="field" id="dpc-wrap"><label>Keterangan Part Consumable</label>
+              <div class="dpc-box">
+                <div class="dpc-top">
+                  <span class="dpc-badge none" id="dpc-badge">Pilih Equipment Code dulu</span>
+                  <select id="dpc-model" title="Katalog otomatis mengikuti Equipment Code. Ubah di sini bila perlu."></select>
+                </div>
+                <div class="dpc-search">
+                  <input type="text" id="dpc-q" placeholder="Cari part / oli / part number..." autocomplete="off">
+                  <button type="button" class="dpc-chip on" data-dpc-g="all">Semua</button>
+                  <button type="button" class="dpc-chip" data-dpc-g="oil">Oli &amp; Pelumas</button>
+                  <button type="button" class="dpc-chip" data-dpc-g="part">Filter &amp; Part</button>
+                </div>
+                <div class="dpc-list" id="dpc-list"></div>
+                <div class="dpc-hint">Klik baris untuk menambahkan ke daftar terpakai. Klik lagi untuk menambah jumlah.</div>
+                <div class="dpc-sel-title">Part terpakai (<span id="dpc-count">0</span>)</div>
+                <table class="dpc-tbl" id="dpc-sel"><thead><tr><th>Part / Oli</th><th>Part Number</th><th>Qty</th><th>Satuan</th><th></th></tr></thead><tbody id="dpc-sel-body"></tbody></table>
+                <div class="dpc-manual">
+                  <span style="font-size:12px;color:var(--text-dim);">＋ Part lain (di luar katalog):</span>
+                  <input type="text" class="nm" id="dpc-m-name" placeholder="Nama part / oli">
+                  <input type="text" id="dpc-m-pn" placeholder="Part Number (ops.)" style="width:150px;">
+                  <input type="number" class="qt" id="dpc-m-qty" min="0" step="0.5" placeholder="Qty">
+                  <select id="dpc-m-unit"><option>Pcs</option><option>Liter</option><option>Pail</option><option>Set</option><option>Meter</option></select>
+                  <button type="button" class="dpc-add" id="dpc-m-add">Tambah</button>
+                </div>
+              </div>
+              <label style="margin-top:12px;">Catatan tambahan (opsional)</label>
+              <textarea id="d-keterangan" class="no-enter-nl" rows="2" placeholder="Catatan tambahan part consumable (opsional)..." title="Enter dinonaktifkan — teks tetap satu alur"></textarea>
+            </div>
 
             <div class="toolbar">
               <button type="submit" class="btn" id="d-submit-btn">＋ Simpan Record</button>
@@ -9138,6 +9199,7 @@ async function loadData(){
       dailyRecords = d ? JSON.parse(d.value) : [];
     }
   }catch(e){ dailyRecords = []; }
+  try{ await dpcStoreLoad(); }catch(_e){}
   try{
     const p = await appStorage.get('plan-records');
     planRecords = p ? JSON.parse(p.value) : [];
@@ -9601,6 +9663,7 @@ async function saveDaily(){
    jaring pengaman: dipanggil ulang setiap kali panel Daily Maintenance/Historical/Mechanic Activity Report
    dibuka, dan juga berkala lewat polling, supaya data yang tampil selalu sesuai database. */
 async function refreshDailyRecords(){
+  try{ await dpcStoreLoad(); }catch(_e){}
   try{
     if(usingDailyTable()){
       await loadDailyFromTable();
@@ -13002,7 +13065,7 @@ window.editDaily = function(id){
   document.getElementById('d-start').value = r.start || '';
   document.getElementById('d-enddate').value = r.endDate || '';
   document.getElementById('d-end').value = r.end || '';
-  document.getElementById('d-keterangan').value = r.keterangan || '';
+  if(typeof dpcLoad==='function') dpcLoad(r); else document.getElementById('d-keterangan').value = r.keterangan || '';
   document.getElementById('d-codebd').value = r.codeBD || '';
   updateDurationPreview();
 
@@ -13137,7 +13200,7 @@ document.getElementById('form-daily').addEventListener('submit', async (e)=>{
 
   if(!wasEditing && !saveFailed){
     const rec = {
-      id: uid(),
+      id: (window.__dpcNewId = uid()),
       codeBD: await generateUniqueCodeBD(),
       ...fields,
       submittedBy: currentUserName(),
@@ -13163,6 +13226,12 @@ document.getElementById('form-daily').addEventListener('submit', async (e)=>{
     return;
   }
 
+  // Simpan part consumable ke dataset terpisah (kv_store) — hanya jika ada perubahan
+  try{
+    const _dpcId = wasEditing ? editingDailyId : window.__dpcNewId;
+    const _okPart = await dpcPersistFor(_dpcId, fields);
+    if(!_okPart) alert('⚠ Record tersimpan, tetapi data Part Consumable GAGAL tersimpan ke server. Buka record tersebut (Edit) dan simpan ulang, atau hubungi admin.');
+  }catch(_e){ console.error('simpan part consumable', _e); }
   cancelEditDaily();
   document.getElementById('form-daily').reset();
   syncTypeFromUnit(dUnitSelect, document.getElementById('d-typeunit'));
@@ -13238,6 +13307,19 @@ async function syncCodeBDChronological(){
   if(!canWriteToDb){ await saveDaily(); }
 }
 
+/* POST ke Apps Script. Bila browser memblokir pembacaan respons ("Failed to fetch" — umum saat halaman dibuka
+   dari file lokal D:/... atau Apps Script mengembalikan respons tanpa header CORS), kirim ulang sebagai no-cors:
+   request tetap diproses Apps Script, hanya isi respons yang tidak bisa dibaca. Kalau benar-benar offline, tetap error. */
+async function sheetsPostFetch(url, init){
+  try{
+    return await fetch(url, init);
+  }catch(e){
+    if(!(e instanceof TypeError)) throw e;
+    await fetch(url, Object.assign({}, init, { mode:'no-cors', redirect:'follow' }));
+    return { ok:true, opaque:true, status:0, json: async function(){ return { ok:true, opaque:true }; }, text: async function(){ return ''; } };
+  }
+}
+
 /* ---- Sinkron ke Google Sheets (target: sheet "data") ----
    Dipanggil tiap kali dailyRecords berubah (simpan/approve/reject/hapus).
    Dikirim sebagai text/plain supaya tidak kena CORS preflight ke Apps Script.
@@ -13245,6 +13327,11 @@ async function syncCodeBDChronological(){
    konsisten dengan skema tabel Supabase — bukan nama field internal JS (camelCase). */
 async function syncDailyToSheets(opts){
   opts = opts || {};
+  // Daily Maintenance disimpan di tabel Supabase (bukan appStorage), jadi live backup tidak otomatis terpicu:
+  // jadwalkan manual setiap ada perubahan supaya spreadsheet backup ikut terbarui.
+  try{ if(typeof scheduleLiveDatabaseBackup==='function') scheduleLiveDatabaseBackup('daily-change'); }catch(_e){}
+  // Pastikan data part consumable terbaru (bisa diinput dari perangkat lain) ikut terkirim
+  try{ if(typeof dpcStoreLoad==='function') await dpcStoreLoad(); }catch(_e){}
   if(!BACKEND_CONFIG.sheetsWebAppUrl){
     if(opts.manual) alert('⚠ sheetsWebAppUrl belum diisi di BACKEND_CONFIG. Deploy Apps Script dulu, lalu tempel URL /exec.');
     return { ok:false, error:'no_url' };
@@ -13254,7 +13341,7 @@ async function syncDailyToSheets(opts){
     return { ok:true, written:0 };
   }
   try{
-    const res = await fetch(BACKEND_CONFIG.sheetsWebAppUrl, {
+    const res = await sheetsPostFetch(BACKEND_CONFIG.sheetsWebAppUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({
@@ -13263,6 +13350,8 @@ async function syncDailyToSheets(opts){
         spreadsheetId: BACKEND_CONFIG.sheetsSpreadsheetId || '',
         records: dailyRecords.map(r=>{
           const row = dailyRecToRow(r);
+          // Kolom keterangan di sheet = part consumable terpakai + catatan (data part ada di dataset terpisah)
+          if(typeof dpcPlainText==='function'){ const _kt = dpcPlainText(r); if(_kt) row.keterangan = _kt; }
           // Samakan dengan data validation Google Sheet kolom Category:
           // Breakdown | Daily Maintenance | Priodic Maintenance
           const c = String(row.category||'').trim();
@@ -13282,7 +13371,9 @@ async function syncDailyToSheets(opts){
     let data = null;
     try{ data = await res.json(); }catch(_e){ data = null; }
     if(opts.manual){
-      if(data && data.ok){
+      if(data && data.opaque){
+        alert('✓ Permintaan sync terkirim ('+ dailyRecords.length +' record).\nBrowser tidak mengizinkan membaca balasan Apps Script (halaman dibuka dari file lokal), jadi hasilnya tidak bisa dikonfirmasi di sini. Buka spreadsheet, refresh tab "data", lalu cek isinya.');
+      } else if(data && data.ok){
         alert('✓ Berhasil sync '+ (data.written||dailyRecords.length) +' record ke sheet "data".\nBuka spreadsheet dan refresh tab data.');
       } else if(data && data.error){
         alert('⚠ Sync gagal: '+ data.error);
@@ -13323,7 +13414,7 @@ async function syncPlanServiceToSheets(opts){
   }
   const closed = (planRecords||[]).filter(r=> typeof isPlanClosed==='function' ? isPlanClosed(r) : false);
   try{
-    const res = await fetch(BACKEND_CONFIG.sheetsWebAppUrl, {
+    const res = await sheetsPostFetch(BACKEND_CONFIG.sheetsWebAppUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({
@@ -13411,7 +13502,7 @@ async function syncBreakdownHistoryToSheets(opts){
     return cat === 'breakdown' || pu === 'unplan' || pu.indexOf('unplan') >= 0;
   });
   try{
-    const res = await fetch(BACKEND_CONFIG.sheetsWebAppUrl, {
+    const res = await sheetsPostFetch(BACKEND_CONFIG.sheetsWebAppUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({
@@ -13434,8 +13525,8 @@ async function syncBreakdownHistoryToSheets(opts){
           planUnplan: r.planUnplan || r.plan_unplan || '',
           job_desc: r.jobDesc || r.job_desc || '',
           jobDesc: r.jobDesc || r.job_desc || '',
-          keterangan: r.keterangan || '',
-          part_consumable: r.keterangan || '',
+          keterangan: (typeof dpcPlainText==='function' ? dpcPlainText(r) : (r.keterangan || '')),
+          part_consumable: (typeof dpcPlainText==='function' ? dpcPlainText(r) : (r.keterangan || '')),
           repair_action: r.repairAction || r.repair_action || '',
           repairAction: r.repairAction || r.repair_action || '',
           breakdown_date: r.breakdownDate || r.breakdown_date || '',
@@ -13505,7 +13596,7 @@ async function syncRcaToSheets(opts){
   }
   const list = (rcaRecords||[]).slice();
   try{
-    const res = await fetch(BACKEND_CONFIG.sheetsWebAppUrl, {
+    const res = await sheetsPostFetch(BACKEND_CONFIG.sheetsWebAppUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({
@@ -13627,7 +13718,7 @@ async function syncCbmBacklogToSheets(opts){
   }));
 
   try{
-    const res = await fetch(BACKEND_CONFIG.sheetsWebAppUrl, {
+    const res = await sheetsPostFetch(BACKEND_CONFIG.sheetsWebAppUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({
@@ -14396,7 +14487,11 @@ async function collectFullDatabaseTables(){
 
   // 3) Daily Maintenance (pakai mapper yang sama dengan sync sheet "data")
   tables['Daily Maintenance'] = (typeof dailyRecords!=='undefined' ? dailyRecords : []).map(r=>{
-    try{ return (typeof dailyRecToRow==='function') ? dailyRecToRow(r) : r; }catch(_e){ return r; }
+    try{
+      const row = (typeof dailyRecToRow==='function') ? dailyRecToRow(r) : r;
+      if(row && typeof dpcPlainText==='function'){ const _kt = dpcPlainText(r); if(_kt) row.keterangan = _kt; }
+      return row;
+    }catch(_e){ return r; }
   });
   coveredKeys.add('daily-records');
 
@@ -14773,6 +14868,7 @@ function startLiveDatabaseBackupSystem(){
 
 async function runFullDatabaseBackupSync(opts){
   opts = opts || {};
+  try{ if(typeof dpcStoreLoad==='function') await dpcStoreLoad(); }catch(_e){}
   const FB_URL_KEY = 'hemc_fullBackupWebAppUrl';
   let url = _fbGetBackupUrl();
   if(!url){
@@ -14808,7 +14904,7 @@ async function runFullDatabaseBackupSync(opts){
     const snapNames = Object.keys(snapshots);
     const snapSummary = snapNames.map(n=>`• ${n}: ${snapshots[n].nRows} baris tabel, ${(snapshots[n].images||[]).length} grafik`).join('\n');
 
-    const res = await fetch(url, {
+    const res = await sheetsPostFetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({
@@ -14955,7 +15051,7 @@ function renderDailyTable(){
       <td>${[r.mechanic, r.mechanic2, r.mechanic3].filter(Boolean).join(', ') || '—'}</td>
       <td>${r.area}</td>
       <td><span class="pill ${pillClass(r.status)}">${r.status==='Progress'?'On Progress':r.status}</span></td>
-      <td style="white-space:normal; min-width:140px;">${r.bdCategory ? `<b>${bdCatDisplay(r)}</b>${r.keterangan?' — '+r.keterangan:''}` : (r.keterangan||'—')}</td>
+      <td style="white-space:normal; min-width:140px;">${r.bdCategory ? `<b>${bdCatDisplay(r)}</b>${(r.keterangan||(dpcStore&&dpcStore[r.id]))?' — '+dpcCellHtml(r):''}` : ((r.keterangan||(dpcStore&&dpcStore[r.id])) ? dpcCellHtml(r) : '—')}</td>
       <td>${approvalPillHTML(r)}</td>
       <td>${actionCell}${(isSupervisor && canEditPanel('daily')) ? `<button class="btn danger" style="margin-top:6px;" onclick="deleteDaily('${r.id}')">Hapus</button>` : ''}</td>
     </tr>`;
@@ -15046,7 +15142,7 @@ window.openDailyDetail = function(id, ev){
   const fullItems = [
     ['Breakdown Deskripsi', r.jobDesc],
     ['Repair Action', r.repairAction],
-    ['Keterangan Part Consumable', r.bdCategory ? `${bdCatDisplay(r)}${r.keterangan ? ' — '+r.keterangan : ''}` : (r.keterangan||'—')],
+    ['Keterangan Part Consumable', r.bdCategory ? `${bdCatDisplay(r)}${dpcPlainText(r) ? ' — '+dpcPlainText(r) : ''}` : (dpcPlainText(r)||'—')],
     ['Approval', approvalInfo],
   ];
   const grid = document.getElementById('daily-detail-grid');
@@ -15093,6 +15189,7 @@ window.deleteDaily = async function(id){
     const ok = await deleteDailyRecordDb(id);
     if(!ok){ dailyRecords = backup; alert('⚠ Gagal menghapus record di server. Coba lagi.'); }
   } else { await saveDaily(); }
+  try{ await dpcRemoveFor(id); }catch(_e){}
   renderAll();
   syncDailyToSheets();
 }
@@ -21284,7 +21381,7 @@ async function syncBreakdownCategoryToSheets(opts){
     return { ok:true, skipped:true };
   }
   try{
-    const res = await fetch(BACKEND_CONFIG.sheetsWebAppUrl, {
+    const res = await sheetsPostFetch(BACKEND_CONFIG.sheetsWebAppUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({
@@ -21395,7 +21492,7 @@ async function syncMonthlyKpiAchievementToSheets(trendMonths, monthlyKpiDefs, op
   }
   const statusEl = document.getElementById('mkpi-sync-status');
   try{
-    const res = await fetch(BACKEND_CONFIG.sheetsWebAppUrl, {
+    const res = await sheetsPostFetch(BACKEND_CONFIG.sheetsWebAppUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({
@@ -25074,7 +25171,7 @@ async function fetchPerformanceFromSheets(opts){
     try{ data = await res.json(); }catch(_e){ data = null; }
 
     if(!data || data.ok!==true){
-      const res2 = await fetch(BACKEND_CONFIG.sheetsWebAppUrl, {
+      const res2 = await sheetsPostFetch(BACKEND_CONFIG.sheetsWebAppUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action: 'getPerformance' }),
@@ -25234,8 +25331,8 @@ async function fetchMaintenancePeriods(force){
       data = await res.json();
     }catch(_e){ data = null; }
     if(!data || data.ok!==true){
-      const res2 = await fetch(BACKEND_CONFIG.sheetsWebAppUrl, {
-        method:'POST',
+      const res2 = await sheetsPostFetch(BACKEND_CONFIG.sheetsWebAppUrl, {
+        method: 'POST',
         headers:{ 'Content-Type':'text/plain;charset=utf-8' },
         body: JSON.stringify({
           action:'getMaintenancePeriods',
@@ -25504,7 +25601,7 @@ async function syncMaintenanceKPIToSheet(opts){
         let lastErr = null;
         for(let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++){
           try{
-            const res = await fetch(BACKEND_CONFIG.sheetsWebAppUrl, {
+            const res = await sheetsPostFetch(BACKEND_CONFIG.sheetsWebAppUrl, {
               method: 'POST',
               headers: { 'Content-Type': 'text/plain;charset=utf-8' },
               body: JSON.stringify(payload),
@@ -25744,7 +25841,7 @@ async function fetchHMFromSheets(opts){
       let res = await fetch(url, { method:'GET', redirect:'follow', cache:'no-store' });
       try{ data = await res.json(); }catch(_e){ data = null; }
       if(data && data.ok===true && Array.isArray(data.rows) && data.rows.length) break;
-      const res2 = await fetch(BACKEND_CONFIG.sheetsWebAppUrl, {
+      const res2 = await sheetsPostFetch(BACKEND_CONFIG.sheetsWebAppUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action }),
@@ -25906,8 +26003,8 @@ async function fetchDailyWorkingHoursFromSheets(opts){
 
     if(!data || data.ok!==true){
       try{
-        const res2 = await fetch(BACKEND_CONFIG.sheetsWebAppUrl, {
-          method:'POST',
+        const res2 = await sheetsPostFetch(BACKEND_CONFIG.sheetsWebAppUrl, {
+          method: 'POST',
           headers:{ 'Content-Type':'text/plain;charset=utf-8' },
           body: JSON.stringify({ action:'getDailyWorkingHours' }),
           cache:'no-store'
@@ -33530,6 +33627,268 @@ function exportSpMonthlyCsv(){
   setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
 }
 
+
+
+/* =====================================================================
+ * DAILY MAINTENANCE — Input Keterangan Part Consumable berbasis katalog Plan Budgeting
+ * Katalog part & oli diambil dari SPAREPART_DATA sesuai model unit (unitModels / type unit).
+ * Disimpan di kolom keterangan (teks) dengan format terstruktur agar bisa dimuat ulang saat edit:
+ *   Part Terpakai: <nama> (PN: <pn>) Qty: <n> <satuan>; ... | Catatan: <teks>
+ * ===================================================================== */
+var DPC_PREFIX = 'Part Terpakai: ';
+var DPC_NOTE_SEP = ' | Catatan: ';
+var dpcSel = [];            // [{name,pn,unit,qty,key}]
+var dpcGroup = 'all';
+var dpcCatalogCache = {};
+
+/** Kunci unik part: part number bila ada (satu part number = satu baris), selain itu nama. */
+function dpcKey(pn, name){ const p = String(pn||'').trim(); return p ? p.toUpperCase() : ('|'+String(name||'').trim().toUpperCase()); }
+function dpcNorm(s){ return String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,''); }
+function dpcModelKeys(){
+  const D = (typeof SPAREPART_DATA!=='undefined' && SPAREPART_DATA) || {};
+  return Object.keys(D).filter(k=>Array.isArray(D[k]) && D[k].length && D[k][0] && Array.isArray(D[k][0].items));
+}
+/** Model katalog otomatis dari Equipment Code → (unitModels) lalu type unit. */
+function dpcAutoModel(){
+  const D = (typeof SPAREPART_DATA!=='undefined' && SPAREPART_DATA) || {};
+  const map = D.unitModels || {};
+  const code = String((document.getElementById('d-unitcode')||{}).value||'').trim().toUpperCase();
+  const codeNew = String((document.getElementById('d-unitcode-new')||{}).value||'').trim().toUpperCase();
+  if(map[code]) return map[code];
+  if(map[codeNew]) return map[codeNew];
+  const type = dpcNorm((document.getElementById('d-typeunit-new')||{}).value || (document.getElementById('d-typeunit')||{}).value);
+  if(!type) return '';
+  const keys = dpcModelKeys();
+  const hit = keys.find(k=>{ const core = dpcNorm(k).replace(/^(DOZER|EXCA)/,''); return core && (type.includes(core) || core.includes(type)); });
+  return hit || '';
+}
+function dpcCurrentModel(){
+  const sel = document.getElementById('dpc-model');
+  return (sel && sel.value) ? sel.value : dpcAutoModel();
+}
+/** Gabungan semua part unik dari seluruh paket service model tsb (Filter, Oli, Grease, dst). */
+function dpcCatalog(model){
+  if(!model) return [];
+  if(dpcCatalogCache[model]) return dpcCatalogCache[model];
+  const D = SPAREPART_DATA || {};
+  const map = {};
+  (D[model]||[]).forEach(function(pkg){
+    (pkg.items||[]).forEach(function(it){
+      const desc = String(it.desc||'').trim(), item = String(it.item||'').trim();
+      const name = (desc + (item && item.toLowerCase()!==desc.toLowerCase() ? ' · ' + item : '')).trim();
+      const pn = String(it.partNumber||'').trim();
+      const unit = String(it.unit||'Pcs').trim();
+      const key = dpcKey(pn, name);
+      const o = map[key] || (map[key] = { key:key, name:name, pn:pn, unit:unit, kind: /^(liter|pail|drum|kg)$/i.test(unit) ? 'oil' : 'part' });
+      if(name.length < o.name.length) o.name = name;   /* part number sama → pakai deskripsi paling ringkas */
+    });
+  });
+  const list = Object.keys(map).map(k=>map[k]);
+  list.sort((a,b)=> (a.kind===b.kind ? 0 : (a.kind==='oil'?-1:1)) || a.name.localeCompare(b.name));
+  dpcCatalogCache[model] = list;
+  return list;
+}
+function dpcEsc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function dpcClean(s){ return String(s==null?'':s).replace(/[\r\n\u2028\u2029]+/g,' ').replace(/;/g,',').replace(/\|/g,'/').replace(/[ \t]{2,}/g,' ').trim(); }
+
+function dpcRenderModelSelect(){
+  const sel = document.getElementById('dpc-model'); if(!sel) return;
+  const prev = sel.value;
+  const auto = dpcAutoModel();
+  sel.innerHTML = '<option value="">Otomatis' + (auto ? ' ('+dpcEsc(auto)+')' : '') + '</option>' +
+    dpcModelKeys().map(k=>'<option value="'+dpcEsc(k)+'">'+dpcEsc(k)+'</option>').join('');
+  if(prev && dpcModelKeys().indexOf(prev)>=0) sel.value = prev;
+}
+function dpcRenderList(){
+  const box = document.getElementById('dpc-list'); if(!box) return;
+  const model = dpcCurrentModel();
+  const badge = document.getElementById('dpc-badge');
+  if(badge){
+    badge.textContent = model ? ('Katalog: ' + model) : 'Katalog belum ditemukan';
+    badge.classList.toggle('none', !model);
+  }
+  if(!model){
+    box.innerHTML = '<div class="dpc-empty">Pilih Equipment Code (atau pilih model katalog di kanan atas). Part di luar katalog bisa ditambah manual di bawah.</div>';
+    return;
+  }
+  const q = String((document.getElementById('dpc-q')||{}).value||'').trim().toLowerCase();
+  const items = dpcCatalog(model).filter(function(o){
+    if(dpcGroup!=='all' && o.kind!==dpcGroup) return false;
+    return !q || (o.name+' '+o.pn).toLowerCase().indexOf(q)>=0;
+  });
+  if(!items.length){ box.innerHTML = '<div class="dpc-empty">Tidak ada part yang cocok.</div>'; return; }
+  const inSel = {}; dpcSel.forEach(s=>{ inSel[s.key]=1; });
+  box.innerHTML = items.map(function(o){
+    return '<div class="dpc-row" data-key="'+dpcEsc(o.key)+'">' +
+      '<span class="dpc-tag '+o.kind+'">'+(o.kind==='oil'?'OLI':'PART')+'</span>' +
+      '<div class="nm">'+dpcEsc(o.name)+'<small>'+dpcEsc(o.pn||'—')+' · '+dpcEsc(o.unit)+'</small></div>' +
+      '<button type="button" class="dpc-add'+(inSel[o.key]?' added':'')+'">'+(inSel[o.key]?'✓ Dipilih':'＋ Tambah')+'</button></div>';
+  }).join('');
+}
+function dpcRenderSel(){
+  const body = document.getElementById('dpc-sel-body'); if(!body) return;
+  const cnt = document.getElementById('dpc-count'); if(cnt) cnt.textContent = String(dpcSel.length);
+  if(!dpcSel.length){ body.innerHTML = '<tr><td colspan="5" class="dpc-empty">Belum ada part dipilih. Kosongkan jika tidak ada part consumable terpakai.</td></tr>'; return; }
+  body.innerHTML = dpcSel.map(function(s,i){
+    return '<tr><td>'+dpcEsc(s.name)+'</td><td class="pn">'+dpcEsc(s.pn||'—')+'</td>' +
+      '<td><input class="q" type="number" min="0" step="'+(/^(liter|kg)$/i.test(s.unit)?'0.5':'1')+'" value="'+dpcEsc(s.qty)+'" data-i="'+i+'"></td>' +
+      '<td>'+dpcEsc(s.unit)+'</td><td><button type="button" class="dpc-x" data-i="'+i+'" title="Hapus">✕</button></td></tr>';
+  }).join('');
+}
+function dpcAdd(o, qty){
+  const ex = dpcSel.find(s=>s.key===o.key);
+  if(ex){ ex.qty = Math.round((Number(ex.qty||0) + Number(qty||1))*100)/100; }
+  else dpcSel.push({ key:o.key, name:o.name, pn:o.pn, unit:o.unit, qty: qty||1, kind:o.kind||'part' });
+  dpcRenderSel(); dpcRenderList();
+}
+/* ---- Dataset terpisah "Part Consumable Daily Maintenance" (kv_store: daily-part-consumable) ----
+ * Bentuk: { "<id record daily>": { codeBD, tanggal, unitCode, typeUnit, model, mechanic, updatedAt,
+ *            parts:[{name,pn,unit,qty,kind}] } }
+ * Kolom Keterangan di record daily hanya berisi catatan teks biasa. */
+var DPC_STORE_KEY = 'daily-part-consumable';
+var dpcStore = {};
+async function dpcStoreLoad(){
+  try{
+    if(typeof appStorage!=='undefined' && appStorage && appStorage.get){
+      const raw = await appStorage.get(DPC_STORE_KEY);
+      if(raw && raw.value){ const p = JSON.parse(raw.value); if(p && typeof p==='object' && !Array.isArray(p)) dpcStore = p; }
+    }
+  }catch(e){ console.warn('dpcStoreLoad', e); }
+  return dpcStore;
+}
+/** Simpan/hapus entri satu record. Baca versi terbaru dulu supaya input mekanik lain tidak tertimpa. */
+async function dpcStoreWrite(recId, entry){
+  if(!recId) return true;
+  try{
+    let latest = {};
+    if(appStorage && appStorage.get){
+      const raw = await appStorage.get(DPC_STORE_KEY);
+      if(raw && raw.value){ const p = JSON.parse(raw.value); if(p && typeof p==='object' && !Array.isArray(p)) latest = p; }
+    }
+    if(entry && entry.parts && entry.parts.length) latest[recId] = entry; else delete latest[recId];
+    const res = await appStorage.set(DPC_STORE_KEY, JSON.stringify(latest));
+    if(res===null) return false;
+    dpcStore = latest;
+    return true;
+  }catch(e){ console.error('dpcStoreWrite', e); return false; }
+}
+/** Part terpilih (bersih, qty > 0) untuk disimpan. */
+function dpcParts(){
+  return dpcSel.filter(s=>Number(s.qty)>0).map(function(s){
+    return { name:dpcClean(s.name), pn:dpcClean(s.pn).replace(/[()]/g,''), unit:dpcClean(s.unit||'Pcs'), qty:Math.round(Number(s.qty)*100)/100, kind:s.kind||'part' };
+  });
+}
+/** Simpan part untuk record yang baru disimpan/diedit. Kembali false bila gagal. */
+async function dpcPersistFor(recId, fields){
+  const entry = {
+    codeBD: (dailyRecords.find(r=>r.id===recId)||{}).codeBD || '',
+    tanggal: fields.tanggal||'', unitCode: fields.unitCode||'', typeUnit: fields.typeUnit||'',
+    model: dpcCurrentModel() || '', mechanic: fields.mechanic||'',
+    updatedAt: new Date().toISOString(), parts: dpcParts()
+  };
+  if(!entry.parts.length && !dpcStore[recId]) return true;   // tidak ada yang perlu ditulis
+  return await dpcStoreWrite(recId, entry);
+}
+async function dpcRemoveFor(recId){ if(dpcStore[recId]) await dpcStoreWrite(recId, null); }
+/** Urai teks lama berformat "Part Terpakai: ..." (versi awal) → { parts, note }. */
+function dpcParse(text){
+  const t = String(text||'');
+  if(t.indexOf(DPC_PREFIX)!==0) return { parts:[], note:t };
+  let body = t.slice(DPC_PREFIX.length), note = '';
+  const ni = body.indexOf(DPC_NOTE_SEP);
+  if(ni>=0){ note = body.slice(ni+DPC_NOTE_SEP.length); body = body.slice(0,ni); }
+  const parts = [];
+  body.split('; ').forEach(function(seg){
+    const m = seg.match(/^(.*) \(PN: ([^)]*)\) Qty: ([\d.,]+) ?(.*)$/);
+    if(m) parts.push({ name:m[1].trim(), pn: m[2]==='-' ? '' : m[2].trim(), qty: Number(m[3].replace(',','.'))||0, unit:(m[4]||'Pcs').trim(), kind:'part' });
+  });
+  if(!parts.length) return { parts:[], note:t };
+  return { parts:parts, note:note };
+}
+/** Part + catatan sebuah record (dataset terpisah; fallback ke format teks lama). */
+function dpcGet(r){
+  const legacy = dpcParse(r && r.keterangan);
+  const st = r && dpcStore[r.id];
+  if(st && st.parts && st.parts.length) return { parts:st.parts, note:legacy.note };
+  return legacy;
+}
+/** Muat ke panel (mode edit). */
+function dpcLoad(r){
+  const g = dpcGet(r||{});
+  dpcSel = g.parts.map(p=>({ key:dpcKey(p.pn,p.name), name:p.name, pn:p.pn, unit:p.unit, qty:p.qty, kind:p.kind||'part' }));
+  const ta = document.getElementById('d-keterangan'); if(ta) ta.value = g.note;
+  dpcRenderModelSelect(); dpcRenderSel(); dpcRenderList();
+}
+function dpcReset(){
+  dpcSel = []; dpcGroup = 'all';
+  const q = document.getElementById('dpc-q'); if(q) q.value = '';
+  const ms = document.getElementById('dpc-model'); if(ms) ms.value = '';
+  document.querySelectorAll('[data-dpc-g]').forEach(b=>b.classList.toggle('on', b.getAttribute('data-dpc-g')==='all'));
+  setTimeout(function(){ dpcRenderModelSelect(); dpcRenderSel(); dpcRenderList(); }, 0);
+}
+/** Teks polos (Sheets / detail): "Qty Satuan Nama (PN); ... | catatan". */
+function dpcPlainText(r){
+  const g = dpcGet(r||{});
+  if(!g.parts.length) return g.note || '';
+  return g.parts.map(p=>p.qty+' '+p.unit+' '+p.name+(p.pn?' ('+p.pn+')':'')).join('; ') + (g.note ? ' | '+g.note : '');
+}
+/** Tampilan ringkas di tabel Record Daily Maintenance. */
+function dpcCellHtml(r){
+  const g = dpcGet(r||{});
+  if(!g.parts.length) return dpcEsc(g.note);
+  return g.parts.map(function(p){
+    return '<div style="margin:2px 0;"><b style="color:var(--yellow);">'+dpcEsc(p.qty)+' '+dpcEsc(p.unit)+'</b> '+dpcEsc(p.name)+(p.pn?' <span style="color:var(--text-faint);font-size:11px;">('+dpcEsc(p.pn)+')</span>':'')+'</div>';
+  }).join('') + (g.note ? '<div style="margin-top:4px;color:var(--text-dim);font-size:12px;">'+dpcEsc(g.note)+'</div>' : '');
+}
+(function initDpc(){
+  const wrap = document.getElementById('dpc-wrap'); if(!wrap) return;
+  dpcRenderModelSelect(); dpcRenderSel(); dpcRenderList();
+  const refresh = function(){ setTimeout(function(){ dpcRenderModelSelect(); dpcRenderList(); }, 0); };
+  ['d-unitcode','d-unitcode-new','d-typeunit-new'].forEach(function(id){
+    const el = document.getElementById(id); if(!el) return;
+    el.addEventListener('change', refresh); el.addEventListener('input', refresh);
+  });
+  document.getElementById('dpc-model').addEventListener('change', dpcRenderList);
+  document.getElementById('dpc-q').addEventListener('input', dpcRenderList);
+  document.getElementById('dpc-q').addEventListener('keydown', function(e){ if(e.key==='Enter') e.preventDefault(); });
+  wrap.querySelectorAll('[data-dpc-g]').forEach(function(b){
+    b.addEventListener('click', function(){
+      dpcGroup = b.getAttribute('data-dpc-g');
+      wrap.querySelectorAll('[data-dpc-g]').forEach(x=>x.classList.toggle('on', x===b));
+      dpcRenderList();
+    });
+  });
+  document.getElementById('dpc-list').addEventListener('click', function(e){
+    const row = e.target.closest('.dpc-row'); if(!row) return;
+    const model = dpcCurrentModel();
+    const o = dpcCatalog(model).find(x=>x.key===row.getAttribute('data-key'));
+    if(o) dpcAdd(o, 1);
+  });
+  const body = document.getElementById('dpc-sel-body');
+  body.addEventListener('input', function(e){
+    const inp = e.target.closest('input.q'); if(!inp) return;
+    const s = dpcSel[Number(inp.getAttribute('data-i'))]; if(s) s.qty = inp.value;
+  });
+  body.addEventListener('click', function(e){
+    const x = e.target.closest('.dpc-x'); if(!x) return;
+    dpcSel.splice(Number(x.getAttribute('data-i')),1); dpcRenderSel(); dpcRenderList();
+  });
+  document.getElementById('dpc-m-add').addEventListener('click', function(){
+    const name = dpcClean(document.getElementById('dpc-m-name').value);
+    const qty = Number(document.getElementById('dpc-m-qty').value);
+    if(!name){ alert('Isi nama part / oli terlebih dahulu.'); return; }
+    if(!(qty>0)){ alert('Isi Qty (lebih dari 0).'); return; }
+    const pn = dpcClean(document.getElementById('dpc-m-pn').value).replace(/[()]/g,'');
+    const unit = document.getElementById('dpc-m-unit').value || 'Pcs';
+    dpcAdd({ key:dpcKey(pn,name), name:name, pn:pn, unit:unit, kind:'manual' }, qty);
+    ['dpc-m-name','dpc-m-pn','dpc-m-qty'].forEach(id=>{ document.getElementById(id).value=''; });
+  });
+  ['dpc-m-name','dpc-m-pn','dpc-m-qty'].forEach(function(id){
+    document.getElementById(id).addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); document.getElementById('dpc-m-add').click(); } });
+  });
+  const form = document.getElementById('form-daily');
+  if(form) form.addEventListener('reset', dpcReset);
+})();
 
 /* ---- Daily Maintenance: kunci Enter di kolom deskripsi panjang ----
    Breakdown Deskripsi (#d-jobdesc), Repair Action (#d-repairaction),
