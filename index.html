@@ -5039,6 +5039,43 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
               .dpc-manual input,.dpc-manual select{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-size:12px;}
               .dpc-manual input.nm{flex:1 1 200px;min-width:0}.dpc-manual input.qt{width:80px}
               .dpc-hint{font-size:11px;color:var(--text-faint);margin-top:6px;}
+              .dpc-box{min-width:0;max-width:100%;box-sizing:border-box;}
+              #dpc-wrap{min-width:0;max-width:100%;}
+              @media(max-width:700px){
+                .dpc-box{padding:10px;border-radius:10px;overflow:hidden;}
+                .dpc-top{gap:8px;}
+                .dpc-top select{flex:1 1 100%;max-width:100%;width:100%;min-width:0;}
+                .dpc-badge{max-width:100%;white-space:normal;line-height:1.35;}
+                .dpc-search input{flex:1 1 100%;width:100%;}
+                .dpc-search{gap:6px;}
+                .dpc-chip{flex:1 1 auto;text-align:center;padding:6px 8px;}
+                .dpc-list{max-height:260px;-webkit-overflow-scrolling:touch;}
+                .dpc-row{gap:8px;padding:8px 10px;align-items:flex-start;}
+                .dpc-row .nm{font-size:13px;overflow-wrap:anywhere;word-break:break-word;}
+                .dpc-row .nm small{overflow-wrap:anywhere;word-break:break-all;}
+                .dpc-row .dpc-add{padding:5px 8px;font-size:11px;align-self:center;}
+                .dpc-tag{align-self:center;}
+                /* tabel part terpilih → kartu per part (tanpa scroll horizontal) */
+                .dpc-tbl,.dpc-tbl tbody,.dpc-tbl tr,.dpc-tbl td{display:block !important;width:100% !important;box-sizing:border-box;min-width:0 !important;}
+                .dpc-tbl thead{display:none !important;}
+                .dpc-tbl tr{position:relative;border:1px solid var(--line);border-radius:10px;padding:8px 36px 8px 10px;margin-bottom:8px;background:var(--panel);}
+                .dpc-tbl td{border:0 !important;padding:2px 0 !important;text-align:left !important;overflow-wrap:anywhere;word-break:break-word;}
+                .dpc-tbl td:first-child{font-weight:600;color:var(--text);}
+                .dpc-tbl td.pn{word-break:break-all;}
+                .dpc-tbl td[data-l]::before{content:attr(data-l) ": ";font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--text-faint);}
+                .dpc-tbl td.dpc-qrow,.dpc-tbl td.dpc-unit{display:inline-flex !important;align-items:center;width:auto !important;vertical-align:middle;}
+                .dpc-tbl td.dpc-qrow{margin-right:8px;}
+                .dpc-tbl td.dpc-qrow::before{margin-right:6px;}
+                .dpc-tbl td.dpc-xcell{position:absolute;top:6px;right:4px;width:auto !important;padding:0 !important;}
+                .dpc-tbl td.dpc-empty{padding:12px !important;text-align:center !important;}
+                .dpc-tbl tr:has(td.dpc-empty){padding:0;border-style:dashed;}
+                .dpc-tbl input.q{width:96px;}
+                .dpc-manual{flex-direction:column;align-items:stretch;gap:8px;}
+                .dpc-manual>span{display:block;}
+                .dpc-manual input,.dpc-manual select,.dpc-manual input.nm,.dpc-manual input.qt{width:100% !important;max-width:100%;min-width:0;flex:none;box-sizing:border-box;font-size:14px;}
+                .dpc-manual .dpc-add{align-self:flex-start;padding:7px 18px;}
+                #d-keterangan{width:100%;box-sizing:border-box;}
+              }
             </style>
             <div class="field" id="dpc-wrap"><label>Keterangan Part Consumable</label>
               <div class="dpc-box">
@@ -33730,9 +33767,10 @@ function dpcRenderSel(){
   const cnt = document.getElementById('dpc-count'); if(cnt) cnt.textContent = String(dpcSel.length);
   if(!dpcSel.length){ body.innerHTML = '<tr><td colspan="5" class="dpc-empty">Belum ada part dipilih. Kosongkan jika tidak ada part consumable terpakai.</td></tr>'; return; }
   body.innerHTML = dpcSel.map(function(s,i){
-    return '<tr><td>'+dpcEsc(s.name)+'</td><td class="pn">'+dpcEsc(s.pn||'—')+'</td>' +
-      '<td><input class="q" type="number" min="0" step="'+(/^(liter|kg)$/i.test(s.unit)?'0.5':'1')+'" value="'+dpcEsc(s.qty)+'" data-i="'+i+'"></td>' +
-      '<td>'+dpcEsc(s.unit)+'</td><td><button type="button" class="dpc-x" data-i="'+i+'" title="Hapus">✕</button></td></tr>';
+    return '<tr><td>'+dpcEsc(s.name)+'</td><td class="pn" data-l="Part Number">'+dpcEsc(s.pn||'—')+'</td>' +
+      '<td class="dpc-qrow" data-l="Qty"><input class="q" type="number" min="0" step="'+(/^(liter|kg)$/i.test(s.unit)?'0.5':'1')+'" value="'+dpcEsc(s.qty)+'" data-i="'+i+'"></td>' +
+      '<td class="dpc-unit">'+dpcEsc(s.unit)+'</td>' +
+      '<td class="dpc-xcell"><button type="button" class="dpc-x" data-i="'+i+'" title="Hapus">✕</button></td></tr>';
   }).join('');
 }
 function dpcAdd(o, qty){
