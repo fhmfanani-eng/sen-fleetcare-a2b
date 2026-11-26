@@ -3812,6 +3812,73 @@ button.wa-green:hover, button.wa-sync-only-fahmi:hover{
 #cbm-unit-cards .cbm-health-row .hp{ grid-area:p; flex:none; }
 #cbm-unit-cards .cbm-health-row .cbm-health-bar{ grid-area:b; }
 #cbm-unit-cards .cbm-asset-body .hint{ margin-top:auto !important; padding-top:8px; }
+
+.ps-wh-panel{margin-top:12px;border:1px solid var(--line);border-radius:14px;background:var(--panel-2,var(--panel));overflow:hidden;}
+.ps-wh-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--line);}
+.ps-wh-toggle{display:inline-flex;align-items:center;gap:8px;background:none;border:0;cursor:pointer;padding:0;color:var(--yellow);}
+.ps-wh-title{font-family:Oswald,sans-serif;font-size:15px;letter-spacing:.5px;}
+.ps-wh-caret{display:inline-block;transition:transform .2s;color:var(--text-dim);}
+.ps-wh-panel.collapsed .ps-wh-caret{transform:rotate(-90deg);}
+.ps-wh-panel.collapsed .ps-wh-body{display:none;}
+.ps-wh-panel.collapsed .ps-wh-top{border-bottom:0;}
+.ps-wh-seg{display:inline-flex;padding:2px;border:1px solid var(--line);border-radius:999px;background:var(--panel);}
+.ps-wh-seg button{background:transparent;border:0;color:var(--text-dim);padding:5px 14px;font-size:12px;border-radius:999px;cursor:pointer;transition:background .15s,color .15s;}
+.ps-wh-seg button.active{background:var(--yellow);color:#111;font-weight:700;}
+.ps-wh-sum{margin-left:auto;font-size:12px;color:var(--text-dim);}
+.ps-wh-sum b{color:var(--yellow);font-size:14px;}
+.ps-wh-body{padding:12px 14px 14px;}
+.ps-wh-formula{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 10px;border:1px solid var(--line);border-radius:10px;background:var(--panel);}
+.ps-wh-in{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--text-dim);white-space:nowrap;}
+.ps-wh-in input,.ps-wh-in select{width:52px;height:26px;text-align:center;font-size:13px;font-weight:700;border-radius:6px;border:1px solid var(--line);background:var(--panel-2,#141c28);color:var(--text);box-sizing:border-box;padding:0 4px;}
+.ps-wh-in select{width:52px;text-align-last:center;cursor:pointer;}
+.ps-wh-in input:focus,.ps-wh-in select:focus{outline:2px solid var(--yellow);outline-offset:1px;}
+.ps-wh-op{font-size:14px;color:var(--text-faint);}
+.ps-wh-res{display:inline-flex;align-items:baseline;gap:5px;padding:2px 10px;border-radius:8px;background:rgba(255,199,44,.12);}
+.ps-wh-res b{font-family:Oswald,sans-serif;font-size:16px;color:var(--yellow);}
+.ps-wh-res span{font-size:11px;color:var(--text-dim);}
+.ps-wh-ref{margin-left:auto;font-size:11px;color:var(--text-dim);text-align:right;white-space:nowrap;}
+.ps-wh-ref b{color:var(--text);}
+.ps-wh-panel[data-mode="actual"] .ps-wh-formula{opacity:.55;}
+.ps-wh-cards{margin-top:12px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel);}
+.ps-wh-row{display:grid;grid-template-columns:78px 86px minmax(110px,1.3fr) 92px 78px 72px 60px 112px 98px;align-items:center;column-gap:12px;padding:7px 12px;border-top:1px solid var(--line);font-size:12px;color:var(--text);}
+.ps-wh-row.hd{border-top:0;background:rgba(255,255,255,.03);font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--text-faint);padding-top:6px;padding-bottom:6px;}
+.ps-wh-row:not(.hd):hover{background:rgba(255,199,44,.05);}
+.ps-wh-row .n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.ps-wh-row .c{text-align:center;}
+.ps-wh-row .u{font-weight:700;font-size:13px;}
+.ps-wh-row .ps{font-size:10px;font-weight:700;color:var(--yellow);border:1px solid rgba(255,199,44,.55);border-radius:999px;padding:1px 8px;white-space:nowrap;justify-self:start;}
+.ps-wh-row .dt{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.ps-wh-row .pg{display:flex;align-items:center;gap:8px;}
+.ps-wh-row .pg em{font-style:normal;font-size:10px;color:var(--text-dim);width:30px;text-align:right;font-variant-numeric:tabular-nums;}
+.ps-wh-bar{flex:1;height:5px;border-radius:999px;background:var(--line);overflow:hidden;}
+.ps-wh-bar i{display:block;height:100%;border-radius:999px;background:var(--green,#4caf6d);}
+.ps-wh-bar i.soon{background:var(--yellow);} .ps-wh-bar i.od{background:var(--red,#e5534b);}
+.ps-wh-chip{display:inline-block;min-width:78px;text-align:center;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap;box-sizing:border-box;}
+.ps-wh-chip.ok{background:rgba(76,175,109,.15);color:var(--green,#4caf6d);}
+.ps-wh-chip.soon{background:rgba(255,199,44,.16);color:var(--yellow);}
+.ps-wh-chip.od{background:rgba(229,83,75,.16);color:var(--red,#e5534b);}
+.ps-wh-row .sisa.od{color:var(--red,#e5534b);}
+.ps-wh-empty{font-size:12px;color:var(--text-dim);padding:10px 12px;}
+.ps-wh-lbl{display:none;}
+.ps-wh-row .m{display:contents;}
+.ps-wh-note{margin-top:10px;font-size:11px;color:var(--text-faint);line-height:1.5;}
+@media(max-width:900px){
+  .ps-wh-row{grid-template-columns:70px 78px 1fr 84px 70px 64px 56px 104px 92px;column-gap:8px;padding:7px 8px;}
+}
+@media(max-width:700px){
+  .ps-wh-sum{margin-left:0;width:100%;}
+  .ps-wh-ref{margin-left:0;width:100%;text-align:left;white-space:normal;}
+  .ps-wh-formula{justify-content:flex-start;}
+  .ps-wh-row.hd{display:none;}
+  .ps-wh-row{grid-template-columns:auto auto 1fr;row-gap:8px;padding:10px 12px;}
+  .ps-wh-row .c{grid-column:3;grid-row:1;justify-self:end;}
+  .ps-wh-row .pg{grid-column:1 / -1;grid-row:2;}
+  .ps-wh-row .m{display:grid;grid-column:1 / -1;grid-row:3;grid-template-columns:repeat(4,1fr);gap:6px;}
+  .ps-wh-row .m .n{text-align:left;font-size:12px;font-weight:600;}
+  .ps-wh-row .dt{grid-column:1 / -1;grid-row:4;display:flex;justify-content:space-between;font-size:12px;}
+  .ps-wh-lbl{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.4px;color:var(--text-faint);font-weight:400;}
+  .ps-wh-row .dt .ps-wh-lbl{font-size:10px;}
+}
 </style>
 
 
@@ -5186,6 +5253,31 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
               </div>
               <button type="button" class="btn secondary small" id="plan-period-reset-btn" title="Tampilkan semua jadwal Open">✕ Reset</button>
               <button type="button" class="btn small secondary" id="plan-period-this-month-btn" title="Filter ke bulan berjalan (Open)">Bulan Ini</button>
+            </div>
+            <div class="ps-wh-panel" id="ps-wh-panel">
+              <div class="ps-wh-top">
+                <button type="button" class="ps-wh-toggle" id="ps-wh-toggle" aria-expanded="true" title="Lipat / buka panel">
+                  <span class="ps-wh-caret">▾</span>
+                  <span class="ps-wh-title">Proyeksi Jam Kerja</span>
+                </button>
+                <div class="ps-wh-seg" role="tablist" aria-label="Basis jam kerja">
+                  <button type="button" data-wh-mode="standard" title="Pakai standar jam/shift × shift">Standar Working Hours</button>
+                  <button type="button" data-wh-mode="actual" title="Pakai rata-rata WH aktual">Aktual</button>
+                </div>
+                <div class="ps-wh-sum" id="ps-wh-eq">—</div>
+              </div>
+              <div class="ps-wh-body" id="ps-wh-body">
+                <div class="ps-wh-formula" id="ps-wh-formula">
+                  <label class="ps-wh-in"><input type="number" id="ps-wh-pershift" min="1" max="12" step="0.5" inputmode="decimal"><span>jam/shift</span></label>
+                  <span class="ps-wh-op">×</span>
+                  <label class="ps-wh-in"><select id="ps-wh-shifts"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select><span>shift/hari</span></label>
+                  <span class="ps-wh-op">=</span>
+                  <div class="ps-wh-res"><b id="ps-wh-res-val">20</b><span>jam/hari</span></div>
+                  <div class="ps-wh-ref" id="ps-wh-ref"></div>
+                </div>
+                <div class="ps-wh-cards" id="ps-wh-cards"></div>
+                <div class="ps-wh-note" id="ps-wh-note"></div>
+              </div>
             </div>
             <div class="hint" id="plan-daily-wh-status" style="margin-top:10px; margin-bottom:0;">source: <b>performance sheet</b> (WH/day) · daily auto-sync active · Last Synced: —</div>
             <div class="ps-sync-status" id="plan-schedule-sync-status">Schedule sync: <b>AUTO LIVE</b> · Continuous sync active</div>
@@ -16193,6 +16285,29 @@ function getRecentActualWhPerDay(unitCode, lookbackDays){
   return Math.round(Math.min(24, Math.max(0, avg)) * 10) / 10;
 }
 
+/* ===== Standar Working Hours Plan Service =====
+ * Rata-rata jam kerja unit = 10 jam / shift × 2 shift = 20 jam/hari (bisa diubah di panel Plan Service).
+ * mode 'standard' : proyeksi HM berjalan & tanggal plan memakai standar ini
+ *                   (hari yang sudah punya data jam kerja harian aktual tetap memakai data aktualnya).
+ * mode 'actual'   : memakai rata-rata WH aktual 7 hari / sheet performance (standar hanya fallback). */
+const PLAN_WH_CFG_KEY = 'sen_plan_wh_cfg_v1';
+const PLAN_WH_CFG = { mode:'standard', perShift:10, shifts:2 };
+(function(){
+  try{
+    const j = JSON.parse(localStorage.getItem(PLAN_WH_CFG_KEY)||'null');
+    if(j && typeof j==='object'){
+      if(j.mode==='actual' || j.mode==='standard') PLAN_WH_CFG.mode = j.mode;
+      if(Number(j.perShift)>0) PLAN_WH_CFG.perShift = Math.min(12, Number(j.perShift));
+      if(Number(j.shifts)>0) PLAN_WH_CFG.shifts = Math.min(3, Math.round(Number(j.shifts)));
+    }
+  }catch(_e){}
+})();
+function savePlanWhCfg(){ try{ localStorage.setItem(PLAN_WH_CFG_KEY, JSON.stringify(PLAN_WH_CFG)); }catch(_e){} }
+/** Jam kerja standar per hari (jam/shift × shift/hari), maks 24. */
+function planStdWhPerDay(){
+  return Math.round(Math.min(24, Math.max(1, PLAN_WH_CFG.perShift * PLAN_WH_CFG.shifts)) * 10) / 10;
+}
+
 /**
  * WH/hari untuk proyeksi HM Plan Service & CBM.
  * Prioritas:
@@ -16201,6 +16316,7 @@ function getRecentActualWhPerDay(unitCode, lookbackDays){
  *  3) Fallback 18 hanya jika tidak ada keduanya
  */
 function getDailyWorkingHours(unitCode){
+  if(PLAN_WH_CFG.mode === 'standard') return planStdWhPerDay();
   try{
     const actual = getRecentActualWhPerDay(unitCode, 7);
     if(actual !== null && actual !== undefined && !isNaN(Number(actual))){
@@ -16220,7 +16336,7 @@ function getDailyWorkingHours(unitCode){
       return Math.round(Math.min(24, Math.max(0, Number(perf.whPerDay))) * 10) / 10;
     }
   }catch(_e){}
-  return 18;
+  return planStdWhPerDay();
 }
 
 /**
@@ -16878,7 +16994,7 @@ function estimateDaysToHmPlan(unitCode, hmPlan, hmAktual){
   if(remain===null) return null;
   if(remain <= 0) return 0;
   let wPerDay = getDailyWorkingHours(unitCode);
-  if(!(wPerDay > 0)) wPerDay = 18; // fallback: cegah tanggal collapse ke "hari ini"
+  if(!(wPerDay > 0)) wPerDay = planStdWhPerDay(); // fallback: cegah tanggal collapse ke "hari ini"
   return Math.ceil(remain / wPerDay);
 }
 
@@ -17267,6 +17383,7 @@ function renderPlanTable(){
   if(!openPlans.length){
     tbody.innerHTML = `<tr class="empty-row"><td colspan="14">Belum ada jadwal open untuk grup <b>${psUnitGroup}</b>. Klik <b>Sync &amp; Generate Otomatis</b> atau semua sudah Close (lihat Record Service Unit).</td></tr>`;
     attachTopScroll('plan');
+    try{ renderPsWhPanel(); }catch(_e){}
     renderRecordServiceTable();
     try{ if(typeof renderSparepart==='function') renderSparepart(); }catch(_e){}
     return;
@@ -17317,6 +17434,7 @@ function updatePlanDailyWhStatusUI(){
   if(!rows.length){
     tbody.innerHTML = `<tr class="empty-row"><td colspan="14">Tidak ada jadwal Open untuk Tahun/Bulan yang dipilih.</td></tr>`;
     attachTopScroll('plan');
+    try{ renderPsWhPanel(); }catch(_e){}
     renderRecordServiceTable();
     try{ if(typeof renderSparepart==='function') renderSparepart(); }catch(_e){}
     return;
@@ -17428,6 +17546,7 @@ function updatePlanDailyWhStatusUI(){
     </tr>`;
   }).join('') + _missingNote;
   attachTopScroll('plan');
+  try{ renderPsWhPanel(); }catch(_e){}
   renderRecordServiceTable();
   try{ if(typeof renderSparepart==='function') renderSparepart(); }catch(_e){}
 }
@@ -17582,6 +17701,96 @@ window.reopenPlanService = async function(id){
 };
 
 // Filter bulan Plan Service
+
+/* ---------- Panel Basis Jam Kerja + ringkasan proyeksi per unit ---------- */
+function renderPsWhPanel(){
+  const panel = document.getElementById('ps-wh-panel');
+  if(!panel) return;
+  const std = planStdWhPerDay();
+  const isStd = PLAN_WH_CFG.mode === 'standard';
+  panel.dataset.mode = PLAN_WH_CFG.mode;
+  panel.querySelectorAll('[data-wh-mode]').forEach(b=> b.classList.toggle('active', b.dataset.whMode===PLAN_WH_CFG.mode));
+  const inp = document.getElementById('ps-wh-pershift'); if(inp && document.activeElement!==inp) inp.value = PLAN_WH_CFG.perShift;
+  const sel = document.getElementById('ps-wh-shifts'); if(sel) sel.value = String(PLAN_WH_CFG.shifts);
+  const fmt1 = n=> (Math.round(n*10)/10).toLocaleString('id-ID');
+  const rv = document.getElementById('ps-wh-res-val'); if(rv) rv.textContent = fmt1(std);
+  const eq = document.getElementById('ps-wh-eq');
+  if(eq) eq.innerHTML = (isStd ? 'Standar Working Hours <b>'+fmt1(std)+' jam/hari</b>' : 'Aktual (rata-rata 7 hari / sheet)');
+  const ref = document.getElementById('ps-wh-ref');
+  if(ref) ref.innerHTML = 'PS 250 HM ≈ <b>'+fmt1(250/std)+' hari</b> &nbsp;·&nbsp; PS 500 HM ≈ <b>'+fmt1(500/std)+' hari</b>';
+  const note = document.getElementById('ps-wh-note');
+  if(note) note.textContent = isStd
+    ? 'HM berjalan = HM terakhir + hari berjalan × '+fmt1(std)+' jam. Hari dengan data jam kerja harian aktual tetap memakai data aktual. Tanggal plan = hari ini + (Sisa HM ÷ '+fmt1(std)+').'
+    : 'Memakai rata-rata WH aktual 7 hari terakhir / sheet performance tiap unit. Standar Working Hours '+fmt1(std)+' jam/hari hanya cadangan bila data belum ada.';
+  const host = document.getElementById('ps-wh-cards');
+  if(!host) return;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const codes = (typeof psGroupUnitCodes==='function') ? psGroupUnitCodes() : [];
+  const fmtDate = ds=>{ try{ return new Date(ds+'T00:00:00').toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}); }catch(_e){ return ds; } };
+  const hdr = '<div class="ps-wh-row hd"><span>Unit</span><span>Service</span><span>Progress ke target</span><span class="n">HM Sekarang</span><span class="n">Target HM</span><span class="n">Sisa HM</span><span class="n">WH/hari</span><span>Est. Service</span><span class="c">Status</span></div>';
+  const rows = codes.map(code=>{
+    const open = (planRecords||[]).filter(r=>r && String(r.unitCode||'').trim().toUpperCase()===code && !(typeof isPlanClosed==='function' && isPlanClosed(r)) && Number(r.hmPlan)>0)
+      .sort((a,b)=>Number(a.hmPlan)-Number(b.hmPlan));
+    let cur = null; try{ cur = calcHmSekarang(code, undefined, {live:true}); }catch(_e){}
+    const hm = cur && cur.hmNow!=null ? Number(cur.hmNow) : null;
+    const wh = Number(getDailyWorkingHours(code))||std;
+    const nx = open[0];
+    if(!nx || hm==null) return '<div class="ps-wh-row"><span class="u">'+escUH(code)+'</span><span class="ps-wh-empty" style="grid-column:2 / -1;padding:0">Belum ada data HM / jadwal Open</span></div>';
+    const target = Number(nx.hmPlan);
+    const sisa = Math.round((target-hm)*10)/10;
+    const days = sisa<=0 ? 0 : Math.ceil(sisa/wh);
+    const d = new Date(today); d.setDate(d.getDate()+days);
+    const ds = d.toISOString().slice(0,10);
+    const step = (typeof getCustomPlanStepForUnit==='function' && getCustomPlanStepForUnit(code)) || (/^(SBD|DZ)-/.test(code) ? 250 : 500);
+    const pct = Math.max(0, Math.min(100, Math.round((hm-(target-step))/step*100)));
+    const st = sisa<=0 ? 'od' : (days<=7 ? 'soon' : 'ok');
+    const chip = sisa<=0 ? 'Lewat target' : (days+' hari lagi');
+    const f1 = n=>n.toLocaleString('id-ID',{maximumFractionDigits:1});
+    return '<div class="ps-wh-row">'
+      +'<span class="u">'+escUH(code)+'</span>'
+      +'<span class="ps">'+escUH((nx.serviceType||'').replace(/\s*Hrs?$/i,''))+'</span>'
+      +'<span class="pg"><span class="ps-wh-bar"><i class="'+st+'" style="width:'+pct+'%"></i></span><em>'+pct+'%</em></span>'
+      +'<span class="m">'
+        +'<span class="n"><small class="ps-wh-lbl">HM Sekarang</small>'+f1(hm)+'</span>'
+        +'<span class="n"><small class="ps-wh-lbl">Target HM</small>'+target.toLocaleString('id-ID')+'</span>'
+        +'<span class="n sisa '+(sisa<=0?'od':'')+'"><small class="ps-wh-lbl">Sisa HM</small>'+(sisa<=0?'−'+f1(Math.abs(sisa)):f1(sisa))+'</span>'
+        +'<span class="n"><small class="ps-wh-lbl">WH/hari</small>'+f1(wh)+'</span>'
+      +'</span>'
+      +'<span class="dt"><small class="ps-wh-lbl">Est. Service</small>'+(sisa<=0?'Segera':fmtDate(ds))+'</span>'
+      +'<span class="c"><span class="ps-wh-chip '+st+'">'+chip+'</span></span>'
+      +'</div>';
+  });
+  host.innerHTML = rows.length ? hdr + rows.join('') : '<div class="ps-wh-empty">Belum ada unit pada grup ini.</div>';
+}
+// lipat / buka panel (diingat di browser)
+(function(){
+  const panel = document.getElementById('ps-wh-panel'), btn = document.getElementById('ps-wh-toggle');
+  if(!panel || !btn) return;
+  const K = 'sen_plan_wh_panel_collapsed';
+  const apply = c=>{ panel.classList.toggle('collapsed', c); btn.setAttribute('aria-expanded', String(!c)); };
+  let c = false; try{ c = localStorage.getItem(K)==='1'; }catch(_e){}
+  apply(c);
+  btn.addEventListener('click', ()=>{ c = !panel.classList.contains('collapsed'); apply(c); try{ localStorage.setItem(K, c?'1':'0'); }catch(_e){} });
+})();
+async function onPlanWhCfgChange(){
+  savePlanWhCfg();
+  try{ if(typeof spRefreshOpenPlanDatesLive==='function') spRefreshOpenPlanDatesLive(true); }catch(_e){}
+  try{ if(planRecords && planRecords.length) await syncOpenPlanCoverage(getPerformanceWByUnit()); }catch(_e){}
+  try{ if(typeof savePlan==='function') await savePlan(); }catch(_e){}
+  try{ renderPlanTable(); }catch(_e){}
+  try{ if(typeof renderSparepart==='function') renderSparepart(); }catch(_e){}
+  try{ if(typeof renderCBM==='function') renderCBM(); }catch(_e){}
+}
+document.querySelectorAll('#ps-wh-panel [data-wh-mode]').forEach(b=> b.addEventListener('click', ()=>{
+  PLAN_WH_CFG.mode = b.dataset.whMode; onPlanWhCfgChange();
+}));
+document.getElementById('ps-wh-pershift')?.addEventListener('change', e=>{
+  const v = Number(e.target.value); if(v>0) PLAN_WH_CFG.perShift = Math.min(12, v); onPlanWhCfgChange();
+});
+document.getElementById('ps-wh-shifts')?.addEventListener('change', e=>{
+  PLAN_WH_CFG.shifts = Number(e.target.value)||2; onPlanWhCfgChange();
+});
+
 async function onPlanPeriodChange(){
   // 1) Sync HM terakhir per unit dari sheet View-SEN-HM (HM Akhir)
   try{ if(typeof ensureHmSynced==='function') await ensureHmSynced({ force:true }); }catch(_e){}
@@ -17795,7 +18004,7 @@ const PLAN_SERVICE_HORIZON_MONTHS = 36;
 
 function getPlanGenerationMaxHm(unitCode, hmNow){
   const current = Number(hmNow)||0;
-  const whDay = Number(getDailyWorkingHours(unitCode)) || 18;
+  const whDay = Number(getDailyWorkingHours(unitCode)) || planStdWhPerDay();
   const horizonDays = PLAN_SERVICE_HORIZON_MONTHS * 30.4375;
   const projected = current + (Math.max(whDay, 1) * horizonDays);
   return Math.ceil(projected / 250) * 250;
