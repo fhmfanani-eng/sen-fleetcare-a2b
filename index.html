@@ -3971,7 +3971,7 @@ button.wa-green:hover, button.wa-sync-only-fahmi:hover{
     </div>
     <div class="detail-modal-foot">
       <button type="button" class="btn secondary" id="ps-close-cancel">Batal</button>
-      <button type="button" class="btn" id="ps-close-save">＋ Simpan</button>
+      <button type="button" class="btn" id="ps-close-save">Submit</button>
     </div>
   </div>
 </div>
@@ -4737,7 +4737,7 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
               </div>
             </div>
             <div class="toolbar">
-              <button type="submit" class="btn">＋ Simpan Jadwal Pre Inspection</button>
+              <button type="submit" class="btn">Submit</button>
               <button type="reset" class="btn secondary">Reset</button>
             </div>
           </form>
@@ -4831,7 +4831,7 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
             <div class="hint">Catatan: Tandai Close jika defect langsung dikerjakan/selesai. Tandai Open jika defect masih Backlog/Perbaikan Next Service dan Waiting Part.</div>
 
             <div class="toolbar" style="margin-top:14px;">
-              <button type="submit" class="btn">＋ Simpan Pre Inspection</button>
+              <button type="submit" class="btn">Submit</button>
               <button type="reset" class="btn secondary" id="preins-reset">Reset Form</button>
             </div>
           </form>
@@ -4922,7 +4922,7 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
             </div>
 
             <div class="toolbar" style="margin-top:14px;">
-              <button type="submit" class="btn">＋ Simpan P2H</button>
+              <button type="submit" class="btn">Submit</button>
               <button type="reset" class="btn secondary" id="p2h-reset">Reset Form</button>
             </div>
           </form>
@@ -5174,7 +5174,7 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
             </div>
 
             <div class="toolbar">
-              <button type="submit" class="btn" id="d-submit-btn">＋ Simpan Record</button>
+              <button type="submit" class="btn" id="d-submit-btn">Submit</button>
               <button type="reset" class="btn secondary" id="d-reset-btn">Reset Form</button>
               <span class="hint" id="d-edit-hint" style="display:none;">✎ Mode edit: memperbarui record yang sudah pernah diinput (masih Pending Approval).</span>
             </div>
@@ -5480,7 +5480,7 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
               </div>
             </div>
             <div class="toolbar">
-              <button type="submit" class="btn">＋ Simpan Rencana</button>
+              <button type="submit" class="btn">Submit</button>
               <button type="reset" class="btn secondary">Reset Form</button>
             </div>
           </form>
@@ -5722,7 +5722,7 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
             <div class="field"><label>Breakdown Description / Keterangan Kerusakan</label><textarea id="bdr-keterangan" required placeholder="Uraikan gejala/kerusakan yang dialami unit..."></textarea></div>
 
             <div class="toolbar">
-              <button type="submit" class="btn" id="bdr-submit-btn">＋ Simpan Laporan Breakdown</button>
+              <button type="submit" class="btn" id="bdr-submit-btn">Submit</button>
               <button type="reset" class="btn secondary" id="bdr-reset-btn">Reset Form</button>
             </div>
           </form>
@@ -6292,7 +6292,7 @@ html.sen-lite *, html.sen-lite *::before, html.sen-lite *::after{ animation:none
             <div class="field"><label for="sp-oil-f-note">Catatan</label><input type="text" id="sp-oil-f-note" placeholder="Keterangan…"></div>
             <div class="form-actions">
               <input type="hidden" id="sp-oil-f-dir" value="in">
-              <button type="button" class="btn" id="sp-oil-save">💾 Simpan</button>
+              <button type="button" class="btn" id="sp-oil-save">Submit</button>
               <button type="button" class="btn secondary" id="sp-oil-reset">Reset</button>
             </div>
           </div>
@@ -10343,11 +10343,16 @@ function currentPanelAccess(viewKey){
   const map = getEffectivePanelAccess(loggedInUser);
   return map[viewKey] || 'none';
 }
+/* Daftar menu yang disembunyikan dari UI (kosong = semua menu tampil, termasuk Database Akun).
+ * Contoh menyembunyikan lagi: APP_HIDDEN_VIEWS = ['accounts'] + CSS .nav-item[data-view="accounts"]{display:none} */
+const APP_HIDDEN_VIEWS = [];
 function canViewPanel(viewKey){
+  if(APP_HIDDEN_VIEWS.indexOf(viewKey) >= 0) return false;
   const a = currentPanelAccess(viewKey);
   return a === 'full' || a === 'view';
 }
 function canEditPanel(viewKey){
+  if(APP_HIDDEN_VIEWS.indexOf(viewKey) >= 0) return false;
   return currentPanelAccess(viewKey) === 'full';
 }
 
@@ -13213,7 +13218,7 @@ window.editDaily = function(id){
 
 function cancelEditDaily(){
   editingDailyId = null;
-  document.getElementById('d-submit-btn').textContent = '＋ Simpan Record';
+  document.getElementById('d-submit-btn').textContent = 'Submit';
   document.getElementById('d-edit-hint').style.display = 'none';
 }
 document.getElementById('form-daily').addEventListener('reset', ()=>{
@@ -32326,7 +32331,7 @@ async function spOilSaveTxn(){
 function spOilCanEdit(){ return (typeof isFahmiFanani==='function') && isFahmiFanani(); }
 function spOilSetEditUI(on){
   const save=document.getElementById('sp-oil-save');
-  if(save) save.textContent = on ? '💾 Update' : '💾 Simpan';
+  if(save) save.textContent = on ? '💾 Update' : 'Submit';
   const title=document.querySelector('#sp-oil-form .sp-oil-form-title');
   if(title){
     let tag=title.querySelector('.sp-oil-edit-tag');
@@ -36140,5 +36145,107 @@ html:has(.app.launcher-mode:not([style*="display: none"]))::-webkit-scrollbar, b
 })();
 </script>
 
+
+<style id="theme-green-actions">
+/* ===== TOP BAR — selaras tema (navy kebiruan seperti sidebar & panel) ===== */
+.topbar, .app:not(.launcher-mode) .topbar{
+  background:
+    linear-gradient(180deg, rgba(74,144,217,0.16) 0%, rgba(74,144,217,0.04) 100%),
+    linear-gradient(145deg, #172231 0%, #0f1722 100%) !important;
+  border-bottom: 1px solid rgba(74,144,217,0.30) !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,.32), inset 0 -2px 0 rgba(255,199,44,0.20) !important;
+}
+.topbar::after{ background: linear-gradient(90deg, transparent, rgba(74,144,217,0.55), rgba(255,199,44,0.35), transparent) !important; opacity:.8 !important; }
+
+/* ===== HIJAU: Approve · Submit/Simpan · Sync ===== */
+body #d-submit-btn, body #bdr-submit-btn, body #sp-oil-save, body #ps-close-save, body #access-modal-save,
+body #rca-edit-save, body #cbm-bl-edit-save, body #pk-save,
+body button[id*="save"]:not(.secondary):not(.danger),
+body button[id*="submit"]:not(.secondary):not(.danger),
+body button[id*="simpan"]:not(.secondary):not(.danger),
+body button[id*="Save"]:not(.secondary):not(.danger),
+body form:not(#form-login):not(#form-register):not(#form-recover) button.btn[type="submit"]:not(.secondary):not(.danger),
+body button.btn[type="submit"]:not(.secondary):not(.danger):not(.wa-green):not(#form-login *):not(#form-register *):not(#form-recover *),
+body #mapa-sync-kpi-btn, body #mapa-sync-perf-btn, body #unit-sync-perf-btn, body #daily-sync-sheets-btn,
+body #btn-sync-plan-all, body #btn-sync-daily-wh, body #plan-record-sync-sheets-btn, body #rca-sync-sheets-btn,
+body #btn-live-hm-sync, body #maint-resync, body #db-fullbackup-sync-btn,
+body .sync-gold, body .btn.sync-gold, body .btn.secondary.sync-gold, body .sync-only-fahmi.btn,
+body button[id*="sync-sheets"], body button[id*="sync-kpi"], body button[id*="sync-plan"],
+body button[id*="sync-daily"], body button[id*="sync-perf"], body button[id*="-sync-"],
+body .btn.approve, body button[id*="approve"]{
+  background: rgba(76,175,109,0.14) !important;
+  border: 1px solid rgba(76,175,109,0.60) !important;
+  color: #7BE0A0 !important;
+  font-weight: 700 !important;
+  box-shadow: inset 0 0 0 1px rgba(76,175,109,0.12) !important;
+}
+body #d-submit-btn:hover, body #bdr-submit-btn:hover, body #sp-oil-save:hover, body #ps-close-save:hover,
+body button[id*="save"]:not(.secondary):not(.danger):hover, body button[id*="submit"]:not(.secondary):not(.danger):hover,
+body form:not(#form-login):not(#form-register):not(#form-recover) button.btn[type="submit"]:not(.secondary):not(.danger):hover,
+body .sync-gold:hover, body .btn.sync-gold:hover, body .sync-only-fahmi.btn:hover,
+body button[id*="sync-sheets"]:hover, body button[id*="-sync-"]:hover, body #btn-sync-plan-all:hover, body #btn-sync-daily-wh:hover,
+body #btn-live-hm-sync:hover, body #maint-resync:hover, body .btn.approve:hover{
+  background: rgba(76,175,109,0.26) !important;
+  border-color: rgba(76,175,109,0.85) !important;
+  color: #A6F0C1 !important;
+  box-shadow: 0 4px 14px rgba(76,175,109,0.22) !important;
+}
+body .btn.approve{ padding:6px 11px; }
+
+/* ===== MENU TOP BAR (tab menu + banner tips) — dari emas ke biru tema ===== */
+body .ps-subnav{ border-color: rgba(74,144,217,.28) !important; background: linear-gradient(180deg, rgba(74,144,217,.10), rgba(74,144,217,.03)) !important; }
+body .ps-subtab:hover, body .dash-menu-tab:hover{ color:#fff !important; border-color: rgba(74,144,217,.55) !important; background: rgba(74,144,217,.12) !important; }
+body .ps-subtab.active, body #plan-service-subnav .ps-subtab.active{
+  color:#fff !important; background: linear-gradient(135deg, #4A90D9 0%, #2F6DB5 100%) !important;
+  border-color: #6AA8E8 !important; box-shadow: 0 5px 16px rgba(74,144,217,.35) !important;
+}
+body .dash-menu-tab.active, body #dash-menu-topbar .dash-menu-tab.active{
+  color:#fff !important; background: linear-gradient(135deg, #4A90D9 0%, #2F6DB5 100%) !important;
+  border-color: #6AA8E8 !important; box-shadow: 0 4px 14px rgba(74,144,217,.35) !important;
+}
+body .dash-menu-topbar{ border-color: rgba(74,144,217,.22) !important; background: linear-gradient(165deg, #162231 0%, #0f1722 100%) !important; }
+body .dash-sticky-header .dash-menu-topbar{ background: transparent !important; border: none !important; }
+/* banner Maintenance Tips */
+body .topbar .sen-maint-tips{
+  background: radial-gradient(120% 140% at 0% 50%, rgba(74,144,217,.20) 0%, rgba(74,144,217,0) 55%), linear-gradient(145deg,#162231,#0d141d) !important;
+  border: 1px solid rgba(74,144,217,.40) !important;
+}
+body .topbar .sen-maint-tips:before{ background: linear-gradient(180deg,#6AA8E8,#2F6DB5) !important; }
+body .topbar .sen-tip-iconbox{ background: linear-gradient(145deg, rgba(74,144,217,.30), rgba(74,144,217,.08)) !important; border-color: rgba(74,144,217,.55) !important; box-shadow: 0 0 18px rgba(74,144,217,.22), inset 0 1px 0 rgba(255,255,255,.12) !important; }
+body .topbar .sen-maint-tips .sen-tip-kicker{ background: linear-gradient(90deg,#6AA8E8,#3C7DC4) !important; color:#fff !important; }
+body .topbar .sen-tip-nav, body .sen-tip-nav{ border-color: rgba(74,144,217,.45) !important; background: rgba(74,144,217,.12) !important; color:#8ec0f5 !important; }
+body .topbar .sen-tip-nav:hover, body .sen-tip-nav:hover{ background: rgba(74,144,217,.28) !important; }
+body .topbar .sen-maint-tips .sen-tip-progress{ background: linear-gradient(90deg,#2F6DB5,#6AA8E8) !important; box-shadow: 0 0 8px rgba(74,144,217,.6) !important; }
+body .topbar .topbar-datetime .dt-icon, body .topbar .dt-clock{ color:#8ec0f5 !important; }
+
+/* ===== Tab Plan Service: warna berbeda per tab (Plan = biru · Record = ungu · Live HM = teal) ===== */
+body .ps-subtab .ps-subtab-dot{ opacity:1 !important; }
+body .ps-subtab[data-ps-tab="schedule"] .ps-subtab-dot{ background:#4A90D9 !important; }
+body .ps-subtab[data-ps-tab="record"]   .ps-subtab-dot{ background:#9B7BE8 !important; }
+body .ps-subtab[data-ps-tab="livehm"]   .ps-subtab-dot{ background:#22C3B1 !important; }
+body .ps-subtab[data-ps-tab="schedule"]:hover{ border-color:rgba(74,144,217,.6) !important; background:rgba(74,144,217,.14) !important; }
+body .ps-subtab[data-ps-tab="record"]:hover{ border-color:rgba(155,123,232,.6) !important; background:rgba(155,123,232,.14) !important; }
+body .ps-subtab[data-ps-tab="livehm"]:hover{ border-color:rgba(34,195,177,.6) !important; background:rgba(34,195,177,.14) !important; }
+body .ps-subtab[data-ps-tab="schedule"].active, body #plan-service-subnav .ps-subtab[data-ps-tab="schedule"].active{
+  background:linear-gradient(135deg,#4A90D9 0%,#2F6DB5 100%) !important; border-color:#6AA8E8 !important; box-shadow:0 5px 16px rgba(74,144,217,.38) !important; color:#fff !important; }
+body .ps-subtab[data-ps-tab="record"].active, body #plan-service-subnav .ps-subtab[data-ps-tab="record"].active{
+  background:linear-gradient(135deg,#9B7BE8 0%,#6F4FC4 100%) !important; border-color:#B7A0F2 !important; box-shadow:0 5px 16px rgba(155,123,232,.38) !important; color:#fff !important; }
+body .ps-subtab[data-ps-tab="livehm"].active, body #plan-service-subnav .ps-subtab[data-ps-tab="livehm"].active{
+  background:linear-gradient(135deg,#22C3B1 0%,#14907F 100%) !important; border-color:#5EDACB !important; box-shadow:0 5px 16px rgba(34,195,177,.38) !important; color:#fff !important; }
+body .ps-subtab.active .ps-subtab-dot{ background:#fff !important; }
+
+/* ===== Tab Plan Service aktif: transparan (kaca), hanya garis & teks berwarna ===== */
+body .ps-subtab[data-ps-tab="schedule"].active, body #plan-service-subnav .ps-subtab[data-ps-tab="schedule"].active{
+  background:rgba(74,144,217,.10) !important; border-color:#4A90D9 !important; color:#8ec0f5 !important; box-shadow:0 0 0 1px rgba(74,144,217,.35) inset !important; }
+body .ps-subtab[data-ps-tab="record"].active, body #plan-service-subnav .ps-subtab[data-ps-tab="record"].active{
+  background:rgba(155,123,232,.10) !important; border-color:#9B7BE8 !important; color:#C3B0F5 !important; box-shadow:0 0 0 1px rgba(155,123,232,.35) inset !important; }
+body .ps-subtab[data-ps-tab="livehm"].active, body #plan-service-subnav .ps-subtab[data-ps-tab="livehm"].active{
+  background:rgba(34,195,177,.10) !important; border-color:#22C3B1 !important; color:#6FE0D3 !important; box-shadow:0 0 0 1px rgba(34,195,177,.35) inset !important; }
+body .ps-subtab[data-ps-tab="schedule"].active .ps-subtab-dot{ background:#4A90D9 !important; }
+body .ps-subtab[data-ps-tab="record"].active .ps-subtab-dot{ background:#9B7BE8 !important; }
+body .ps-subtab[data-ps-tab="livehm"].active .ps-subtab-dot{ background:#22C3B1 !important; }
+body .dash-menu-tab.active, body #dash-menu-topbar .dash-menu-tab.active{
+  background:rgba(74,144,217,.10) !important; border-color:#4A90D9 !important; color:#8ec0f5 !important; box-shadow:0 0 0 1px rgba(74,144,217,.35) inset !important; }
+</style>
 </body>
 </html>
